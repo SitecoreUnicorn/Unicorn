@@ -1,0 +1,21 @@
+######## GENERAL IGNORES #######
+
+# ignore logs, OS cache files
+*.log
+.DS_Store*
+ehthumbs.db
+Icon?
+Thumbs.db
+
+######## GENERAL .NET IGNORES ########
+
+# Ignore binaries in the source
+Source/*/bin
+Source/*/obj
+
+# Ignore user-scoped solution and project settings
+*.user
+*.suo
+
+# Ignore generated Version.cs files
+Source/*/Properties/Version.cs
