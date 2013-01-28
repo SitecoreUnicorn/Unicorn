@@ -14,10 +14,27 @@ namespace Unicorn
 			get { return "Serialization Sync Tool"; }
 		}
 
+		protected override void OnInit(EventArgs e)
+		{
+			base.OnInit(e);
+			
+			// make sure you can actually run this page
+			if (!IsAuthorized())
+			{
+				Response.StatusCode = 404;
+				Response.End();
+			}
+		}
+
 		protected override void Process(WebConsole console)
 		{
-			// iterate through existing Sitecore items (eg includeentry.process)
-			var presets = SerializationUtility.GetPreset();
+			// load the requested (or default) preset
+			var presets = GetPresetName(console);
+			if (presets == null)
+			{
+				console.WriteLine("Preset did not exist in configuration.", MessageType.Error);
+				return;
+			}
 
 			for (int i = 0; i < presets.Count; i++)
 			{
@@ -26,7 +43,33 @@ namespace Unicorn
 					ProcessPreset(presets[i], progress);
 				}
 			}
-			
+		}
+
+		private IList<IncludeEntry> GetPresetName(WebConsole console)
+		{
+			string presetName = Request.QueryString["preset"] ?? "default";
+
+			console.WriteLine("Using preset name {0}", MessageType.Info, presetName);
+
+			return SerializationUtility.GetPreset(presetName);
+		}
+
+		private bool IsAuthorized()
+		{
+			var user = AuthenticationManager.GetActiveUser();
+
+			if (user.IsAdministrator)
+				return true;
+
+			var authToken = Request.Headers["Authenticate"];
+			var correctAuthToken = ConfigurationManager.AppSettings["DeploymentToolAuthToken"];
+
+			if (!string.IsNullOrWhiteSpace(correctAuthToken) && 
+				!string.IsNullOrWhiteSpace(authToken) &&
+				authToken.Equals(correctAuthToken, StringComparison.Ordinal))
+				return true;
+
+			return false;
 		}
 
 		private static void ProcessPreset(IncludeEntry preset, IProgressStatus progress)
