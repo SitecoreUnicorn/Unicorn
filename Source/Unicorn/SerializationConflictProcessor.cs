@@ -78,7 +78,7 @@ namespace Unicorn
 		{
 			var desyncs = new List<FieldDesynchronization>();
 
-			var serializedVersion = serializedItem.Versions.FirstOrDefault(x => x.Version == item.Version.Number.ToString(CultureInfo.InvariantCulture));
+			var serializedVersion = serializedItem.Versions.FirstOrDefault(x => x.Version == item.Version.Number.ToString(CultureInfo.InvariantCulture) && x.Language == item.Language.Name);
 			
 			if (serializedVersion == null)
 			{
