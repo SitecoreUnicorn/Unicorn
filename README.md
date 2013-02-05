@@ -1,6 +1,6 @@
 # Unicorn
 
-Unicorn is a utility for Sitecore that solves the issue of moving templates, renderings, and other database items between instances. It accomplishes this with some tweaks to the way the default item serialization works and some conventions.
+Unicorn is a utility for Sitecore that solves the issue of moving templates, renderings, and other database items between Sitecore instances. This becomes problematic when developers have their own local instances - packages are error-prone and tend to be forgotten on the way to production. Unicorn solves this issue by using the Serialization APIs to keep copies of Sitecore items on disk along with the code - this way, a copy of the necessary database items for a given codebase accompanies it in source control.
 
 There are two major pieces to Unicorn:
 * Event Handlers - these are based on the default Item Serialization handlers, but they interface with the serialization preset system. Once these are attached, any changes within the Sitecore site that match the serialization preset are automatically updated to disk. This means that at any given time, what's on disk is the "master copy."
@@ -8,8 +8,10 @@ There are two major pieces to Unicorn:
 
 Unicorn avoids the need to manually select changes to merge unlike some other serialization-based solutions because the disk is always kept up to date by the event handlers. This means that if you pull changes in from someone else's Sitecore instance you will have to immediately merge and/or conflict resolve the serialized files in your source control system - leaving the disk still the master copy of everything. Then if you execute the sync page, the merged changes are synced into your Sitecore database.
 
+Before using Unicorn you should review the Sitecore Serialization Guide available on SDN (http://sdn.sitecore.net/upload/sitecore6/64/serialization_guide_sc60-64-a4.pdf) and familiarize yourself with how item serialization works.
+
 ## Initial Setup
-* Install Unicorn. This can be as simple as referencing Unicorn.dll, copying the Serialization.config to App_Config/Include, and installing the Serialization Sync Tool page somewhere convenient.
+* Install Unicorn. This can be as simple as referencing Unicorn.dll and Kamsar.WebConsole.dll, copying the Serialization.config to App_Config/Include, and installing the Serialization Sync Tool page somewhere convenient.
 * Configure what to serialize as a serialization preset. Usually you'd use the Documentation/Serialization.config config-include file to do this (there's an example there already)
 * Next use the serialization page (/sitecore/admin/serialization.aspx) to serialize the preset to disk so you have a baseline copy of the items
 * Commit your serialized items to source control
