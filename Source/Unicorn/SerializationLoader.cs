@@ -136,7 +136,7 @@ namespace Unicorn
 
 			if (options.Preset.Exclude.MatchesPath(path))
 			{
-				options.Progress.ReportStatus("[SKIPPED] " + PathUtils.MakeItemPath(path) + " (and children) because it was excluded by the preset.", MessageType.Debug);
+				options.Progress.ReportStatus("[SKIPPED] " + PathUtils.MakeItemPath(path) + " (and children) because it was excluded by the preset, but it was present on disk", MessageType.Warning);
 				return;
 			}
 
@@ -238,7 +238,13 @@ namespace Unicorn
 					{
 						foreach (Item child in rootItem.Children)
 						{
-							deleteCandidates[child.ID] = child;
+							// if the preset includes the child add it to the delete-candidate list (if we don't deserialize it below, it will be deleted if the right options are present)
+							if(options.Preset.Includes(child))
+								deleteCandidates[child.ID] = child;
+							else
+							{
+								options.Progress.ReportStatus(string.Format("[SKIPPED] {0}:{1} (and children) because it was excluded by the preset.", child.Database.Name, child.Paths.FullPath), MessageType.Debug);
+							}
 						}
 					}
 				}
@@ -328,13 +334,12 @@ namespace Unicorn
 							var serializedItem = SyncItem.ReadItem(new Tokenizer(fileReader));
 
 							_itemsProcessed++;
-							if(_itemsProcessed % 200 == 0 && _itemsProcessed > 1)
+							if(_itemsProcessed % 500 == 0 && _itemsProcessed > 1)
 								options.Progress.ReportStatus(string.Format("Processed {0} items", _itemsProcessed), MessageType.Debug);
 
 							if (options.Preset.Exclude.MatchesTemplate(serializedItem.TemplateName))
 							{
-								options.Progress.ReportStatus("[SKIPPED] " + PathUtils.MakeItemPath(path) + " because the preset excluded its template name",
-															MessageType.Debug);
+								options.Progress.ReportStatus(string.Format("[SKIPPED] {0}:{1} because the preset excluded its template name, but the item was on disk", serializedItem.DatabaseName, serializedItem.ItemPath), MessageType.Warning);
 
 								loadResult = ItemLoadResult.Skipped;
 								return null;
@@ -342,8 +347,7 @@ namespace Unicorn
 
 							if (options.Preset.Exclude.MatchesTemplateId(serializedItem.TemplateID))
 							{
-								options.Progress.ReportStatus("[SKIPPED] " + PathUtils.MakeItemPath(path) + " because the preset excluded its template ID",
-															MessageType.Debug);
+								options.Progress.ReportStatus(string.Format("[SKIPPED] {0}:{1} because the preset excluded its template ID, but the item was on disk", serializedItem.DatabaseName, serializedItem.ItemPath), MessageType.Warning);
 
 								loadResult = ItemLoadResult.Skipped;
 								return null;
@@ -351,8 +355,16 @@ namespace Unicorn
 
 							if (options.Preset.Exclude.MatchesId(serializedItem.ID))
 							{
-								options.Progress.ReportStatus("[SKIPPED] " + PathUtils.MakeItemPath(path) + " because the preset excluded it by ID",
-															MessageType.Debug);
+								options.Progress.ReportStatus(string.Format("[SKIPPED] {0}:{1} because the preset excluded it by ID, but the item was on disk", serializedItem.DatabaseName, serializedItem.ItemPath), MessageType.Warning);
+
+
+								loadResult = ItemLoadResult.Skipped;
+								return null;
+							}
+
+							if (options.Preset.Exclude.MatchesPath(path))
+							{
+								options.Progress.ReportStatus(string.Format("[SKIPPED] {0}:{1} because the preset excluded it by path, but the item was on disk", serializedItem.DatabaseName, serializedItem.ItemPath), MessageType.Warning);
 
 								loadResult = ItemLoadResult.Skipped;
 								return null;
@@ -363,7 +375,7 @@ namespace Unicorn
 							// in some cases we want to force an update for this item only
 							if (!options.ForceUpdate && ShouldForceUpdate(serializedItem, options.Progress))
 							{
-								options.Progress.ReportStatus(string.Format("[FORCED] {0}", serializedItem.ItemPath), MessageType.Info);
+								options.Progress.ReportStatus(string.Format("[FORCED] {0}:{1}", serializedItem.DatabaseName, serializedItem.ItemPath), MessageType.Info);
 								newOptions.ForceUpdate = true;
 							}
 
@@ -487,8 +499,7 @@ namespace Unicorn
 				db.Caches.DataCache.RemoveItemInformation(id);
 			}
 
-			if (!item.Name.Equals("__Standard values", StringComparison.OrdinalIgnoreCase)) // it's expected that some standard values get deleted non-permanently so they can restore values later in the sync
-				progress.ReportStatus("[DELETED] {0}:{1} because it did not exist on disk".FormatWith(db.Name, path), MessageType.Warning);
+			progress.ReportStatus("[DELETED] {0}:{1} because it did not exist on disk".FormatWith(db.Name, path), MessageType.Warning);
 
 			if (!resetFromChild && item.Database.Engines.TemplateEngine.IsTemplatePart(item))
 			{
