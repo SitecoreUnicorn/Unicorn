@@ -3,8 +3,10 @@
 Unicorn is a utility for Sitecore that solves the issue of moving templates, renderings, and other database items between instances. It accomplishes this with some tweaks to the way the default item serialization works and some conventions.
 
 There are two major pieces to Unicorn:
-* Event Handlers - these are based on the default Item Serialization handlers, but they interface with the serialization preset system. Once these are attached, any changes within the Sitecore site that match the serialization preset are automatically updated to disk.
+* Event Handlers - these are based on the default Item Serialization handlers, but they interface with the serialization preset system. Once these are attached, any changes within the Sitecore site that match the serialization preset are automatically updated to disk. This means that at any given time, what's on disk is the "master copy."
 * Serialization Sync Tool - this tool is a page that is run that syncs the state of Sitecore to the state stored on disk (respecting presets and exclusions).
+
+Unicorn avoids the need to manually select changes to merge unlike some other serialization-based solutions because the disk is always kept up to date by the event handlers. This means that if you pull changes in from someone else's Sitecore instance you will have to immediately merge and/or conflict resolve the serialized files in your source control system - leaving the disk still the master copy of everything. Then if you execute the sync page, the merged changes are synced into your Sitecore database.
 
 ## Initial Setup
 * Install Unicorn. This can be as simple as referencing Unicorn.dll, copying the Serialization.config to App_Config/Include, and installing the Serialization Sync Tool page somewhere convenient.
