@@ -38,7 +38,7 @@ namespace Unicorn
 
 			for (int i = 0; i < presets.Count; i++)
 			{
-				using (var progress = new WebConsoleProgressStatus("Syncing preset path " + new ItemReference(presets[i].Database, presets[i].Path), console, i+1, presets.Count))
+				using (var progress = new WebConsoleTaskProgressStatus("Syncing preset path " + new ItemReference(presets[i].Database, presets[i].Path), console, i+1, presets.Count))
 				{
 					ProcessPreset(presets[i], progress);
 				}
