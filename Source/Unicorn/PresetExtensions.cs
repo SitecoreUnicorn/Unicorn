@@ -34,6 +34,9 @@ namespace Unicorn
 			// check for path match
 			if (!item.Paths.Path.StartsWith(entry.Path, StringComparison.OrdinalIgnoreCase)) return false;
 
+			// check excluded paths (*our* path exclusions are case-insensitive, whereas Sitecore's are case-sensitive - this can result in unexpected deletions)
+			if (entry.Exclude.Any(x => x.Type == "path" && x.Value.Equals(item.Paths.FullPath, StringComparison.OrdinalIgnoreCase))) return false;
+
 			// check excludes
 			if (entry.Exclude.Any(exclude => exclude.Matches(item))) return false;
 
