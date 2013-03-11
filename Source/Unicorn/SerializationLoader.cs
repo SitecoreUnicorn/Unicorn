@@ -390,7 +390,7 @@ namespace Unicorn
 							result = null;
 							loadResult = ItemLoadResult.Error;
 							string error =
-								"Cannot load item from path '{0}'. Possible reason: parent item with ID '{1}' not found.".FormatWith(
+								"Cannot load item from path '{0}'. Probable reason: parent item with ID '{1}' not found.".FormatWith(
 									PathUtils.UnmapItemPath(path, options.Root), ex.ParentID);
 
 							options.Progress.ReportStatus(error, MessageType.Error);
@@ -607,16 +607,16 @@ namespace Unicorn
 		/// <summary>
 		/// Logs localized strings.
 		/// </summary>
-		private static void LogLocalizedError(string message, params object[] parameters)
+		private static void LogLocalizedError(string message)
 		{
 			Assert.IsNotNullOrEmpty(message, "message");
 			Job job = Context.Job;
 			if (job != null)
 			{
-				job.Status.LogError(message.FormatWith(parameters));
+				job.Status.LogError(message);
 				return;
 			}
-			Log.Error(message.FormatWith(parameters), new object());
+			Log.Error(message, new object());
 		}
 
 		private class StandardValuesException : Exception
