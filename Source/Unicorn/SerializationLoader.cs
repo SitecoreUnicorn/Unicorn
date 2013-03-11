@@ -40,6 +40,8 @@ namespace Unicorn
 
 			options.Progress.ReportStatus("Loading serialized items from " + physicalPath, MessageType.Info);
 
+			if (!Directory.Exists(physicalPath)) throw new FileNotFoundException("The root serialization path " + physicalPath + " did not exist!", physicalPath);
+
 			if (options.DisableEvents)
 			{
 				using (new EventDisabler())
