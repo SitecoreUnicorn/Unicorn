@@ -21,7 +21,7 @@ namespace Unicorn
 		public AdvancedLoadOptions(IncludeEntry preset)
 		{
 			DeleteOrphans = false;
-			Progress = new FakeProgress();
+			Progress = new StringProgressStatus();
 			Preset = preset;
 		}
 
@@ -39,42 +39,5 @@ namespace Unicorn
 		/// If true items not present on disk will be deleted (subset of ForceUpdate behavior) - update behavior remains non-forced
 		/// </summary>
 		public bool DeleteOrphans { get; set; }
-
-		/// <summary>
-		/// Fake implementation of IProgressStatus that's used by default so if you dont provide a progress implementation it won't be null.
-		/// </summary>
-		private class FakeProgress : IProgressStatus
-		{
-			public void Report(int percent)
-			{
-				
-			}
-
-			public void Report(int percent, string statusMessage)
-			{
-				
-			}
-
-			public void Report(int percent, string statusMessage, MessageType type)
-			{
-				
-			}
-
-			public void ReportException(Exception exception)
-			{
-				
-			}
-
-			public void ReportStatus(string statusMessage)
-			{
-				
-			}
-
-			public void ReportStatus(string statusMessage, MessageType type)
-			{
-				
-			}
-		}
-
 	}
 }
