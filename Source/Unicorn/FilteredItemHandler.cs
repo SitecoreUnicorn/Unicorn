@@ -58,10 +58,9 @@ namespace Unicorn
 		}
 
 		// NOTE on DELETION
-		// Because the item:deleted event does not have a full path assigned to it, we cannot filter deletes
-		// So, all deleted items will cause associated serialization deletes just like the stock handler.
-		// Most of the time this shouldn't be a problem at all since if you remove something that isn't already serialized this does nothing,
-		// and if it is serialized you probably want it dead anyway since it's gone from Sitecore.
+		// Because the item:deleted event does not have a full path assigned to it, we cannot filter deletes other than by their parent item path if that exists
+		// This shouldn't be a problem in general because includes and excludes are recursive unless I haven't thought of something.
+		//
 		// NOTE: this method works around a bug in Sitecore (380479) that causes it to kill the app pool if a delete is sent for an item without an
 		// existing parent serialization folder. It verifies the parent directory exists before passing it to the base method.
 		public new void OnItemDeleted(object sender, EventArgs e)
@@ -76,7 +75,7 @@ namespace Unicorn
 
 				var parentSerializationPath = PathUtils.GetDirectoryPath(new ItemReference(parentItem).ToString());
 
-				if(Directory.Exists(parentSerializationPath))
+				if(Directory.Exists(parentSerializationPath) && Presets.Includes(parentItem))
 					base.OnItemDeleted(sender, e);
 			}
 		}
