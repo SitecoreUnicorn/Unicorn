@@ -28,33 +28,56 @@ namespace Unicorn
 		{
 			var item = Event.ExtractParameter<Item>(e, 0);
 
-			if (item != null)
-			{
-				if (Presets.Includes(item))
-					base.OnItemSaved(sender, e);
-			}
+			if (item == null) return;
+
+			if (!Presets.Includes(item)) return;
+
+			base.OnItemSaved(sender, e);
 		}
 
 		public new void OnItemMoved(object sender, EventArgs e)
 		{
 			var item = Event.ExtractParameter<Item>(e, 0);
 
-			if (item != null)
-			{
-				if (Presets.Includes(item))
-					base.OnItemMoved(sender, e);
-			}
+			if (item == null) return;
+
+			if (!Presets.Includes(item)) return;
+		
+			base.OnItemMoved(sender, e);
+		}
+
+		/// <summary>
+		/// The default serialization event handler does not catch duplications (bug 384823)
+		/// </summary>
+		public void OnItemCopied(object sender, EventArgs e)
+		{
+			if (DisabledLocally) return;
+
+			// param 0 = source item, param 1 = destination item
+			var item = Event.ExtractParameter<Item>(e, 1);
+
+			if (item == null) return;
+
+			if (!Presets.Includes(item)) return;	
+		
+			ShadowWriter.PutItem(Operation.Updated, item, item.Parent);
+
+			// putting the root isn't enough; if it has children those also need to get serialized
+			var descendants = item.Axes.GetDescendants();
+
+			foreach(var descendant in descendants)
+				ShadowWriter.PutItem(Operation.Updated, descendant, descendant.Parent);
 		}
 
 		public new void OnItemVersionRemoved(object sender, EventArgs e)
 		{
 			var item = Event.ExtractParameter<Item>(e, 0);
 
-			if (item != null)
-			{
-				if (Presets.Includes(item))
-					base.OnItemVersionRemoved(sender, e);
-			}
+			if (item == null) return;
+
+			if (!Presets.Includes(item)) return;
+
+			base.OnItemVersionRemoved(sender, e);
 		}
 
 		// NOTE on DELETION
