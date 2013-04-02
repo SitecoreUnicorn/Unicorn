@@ -35,13 +35,37 @@ namespace Unicorn
 			base.OnItemSaved(sender, e);
 		}
 
+		/// <summary>
+		/// The default serialization event handler does not properly move serialized subitems when the parent is moved (bug 384931)
+		/// </summary>
 		public new void OnItemMoved(object sender, EventArgs e)
 		{
-			var item = Event.ExtractParameter<Item>(e, 0);
+			if (DisabledLocally) return;
 
-			if (item == null) return;
+			// [0] is the moved item, [1] is the ID of the previous parent item
+			var item = Event.ExtractParameter<Item>(e, 0);
+			var oldParentId = Event.ExtractParameter<ID>(e, 1);
+
+			if (item == null || oldParentId == (ID)null) return;
+
+			var oldParent = item.Database.GetItem(oldParentId);
+
+			if (oldParent == null) return;
 
 			if (!Presets.Includes(item)) return;
+
+			// get references to new and old paths
+			var reference = new ItemReference(item).ToString();
+			var oldReference = new ItemReference(oldParent).ToString();
+
+			// fix the reference to the old parent to be a reference to the old item path
+			oldReference = oldReference + '/' + item.Name;
+
+			var oldSerializationPath = PathUtils.GetDirectoryPath(oldReference);
+			var newSerializationPath = PathUtils.GetDirectoryPath(reference);
+
+			if (Directory.Exists(oldSerializationPath) && !Directory.Exists(newSerializationPath))
+				Directory.Move(oldSerializationPath, newSerializationPath);
 		
 			base.OnItemMoved(sender, e);
 		}
