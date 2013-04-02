@@ -69,6 +69,31 @@ namespace Unicorn
 				ShadowWriter.PutItem(Operation.Updated, descendant, descendant.Parent);
 		}
 
+		/// <summary>
+		/// The default serialization event handler actually deletes serialized subitems if the parent item is renamed. This patches that behavior to preserve subitem files. (bug 384931)
+		/// </summary>
+		public void OnItemRenamed(object sender, EventArgs e)
+		{
+			if (DisabledLocally) return;
+
+			// param 0 = renamed item, param 1 = old item name
+			var item = Event.ExtractParameter<Item>(e, 0);
+			var oldName = Event.ExtractParameter<string>(e, 1);
+
+			if (item == null || oldName == null) return;
+
+			if (!Presets.Includes(item)) return;
+
+			var reference = new ItemReference(item).ToString();
+			var oldReference = reference.Substring(0, reference.LastIndexOf('/') + 1) + oldName;
+			
+			var oldSerializationPath = PathUtils.GetDirectoryPath(oldReference);
+			var newSerializationPath = PathUtils.GetDirectoryPath(reference);
+
+			if(Directory.Exists(oldSerializationPath) && !Directory.Exists(newSerializationPath))
+				Directory.Move(oldSerializationPath, newSerializationPath);
+		}
+
 		public new void OnItemVersionRemoved(object sender, EventArgs e)
 		{
 			var item = Event.ExtractParameter<Item>(e, 0);
