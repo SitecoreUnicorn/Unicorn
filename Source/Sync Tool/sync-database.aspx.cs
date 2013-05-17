@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using Kamsar.WebConsole;
 using Sitecore.Data.Serialization;
 using Sitecore.Data.Serialization.Presets;
@@ -26,30 +28,30 @@ namespace Unicorn
 			}
 		}
 
-		protected override void Process(WebConsole console)
+		protected override void Process(IProgressStatus progress)
 		{
 			// load the requested (or default) preset
-			var presets = GetPresetName(console);
+			var presets = GetPresetName(progress);
 			if (presets == null)
 			{
-				console.WriteLine("Preset did not exist in configuration.", MessageType.Error);
+				progress.ReportStatus("Preset did not exist in configuration.", MessageType.Error);
 				return;
 			}
 
 			for (int i = 0; i < presets.Count; i++)
 			{
-				using (var progress = new WebConsoleTaskProgressStatus("Syncing preset path " + new ItemReference(presets[i].Database, presets[i].Path), console, i+1, presets.Count))
+				using (var subtask = new SubtaskProgressStatus("Syncing preset path " + new ItemReference(presets[i].Database, presets[i].Path), progress, i+1, presets.Count))
 				{
-					ProcessPreset(presets[i], progress);
+					ProcessPreset(presets[i], subtask);
 				}
 			}
 		}
 
-		private IList<IncludeEntry> GetPresetName(WebConsole console)
+		private IList<IncludeEntry> GetPresetName(IProgressStatus progress)
 		{
 			string presetName = Request.QueryString["preset"] ?? "default";
 
-			console.WriteLine("Using preset name {0}", MessageType.Info, presetName);
+			progress.ReportStatus("Using preset name {0}", MessageType.Info, presetName);
 
 			return SerializationUtility.GetPreset(presetName);
 		}
@@ -89,6 +91,7 @@ namespace Unicorn
 			}
 			catch (Exception ex)
 			{
+				if(Debugger.IsAttached) Debugger.Break();
 				progress.ReportException(ex);
 			}
 		}
