@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Configuration;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Kamsar.WebConsole;
 using Sitecore.Data.Serialization;
 using Sitecore.Data.Serialization.Presets;
+using Sitecore.Security.Authentication;
 using Sitecore.SecurityModel;
 using Unicorn;
 
