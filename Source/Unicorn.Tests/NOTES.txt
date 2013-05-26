@@ -1,0 +1,5 @@
+﻿* Should test case insensitivity of path preset rules
+* Should test excluded items not directly under the root
+* Test interaction of multiple preset rules - one case: one rule excludes an item, another includes it
+* Should test for duplicate copies of the same serialized item present
+* Obviously deletes should be well tested

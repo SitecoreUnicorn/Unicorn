@@ -1,7 +1,6 @@
-﻿using System;
-using Kamsar.WebConsole;
+﻿using Kamsar.WebConsole;
 using Sitecore.Data.Serialization;
-using Sitecore.Data.Serialization.Presets;
+using Unicorn.Predicates;
 
 namespace Unicorn
 {
@@ -13,12 +12,7 @@ namespace Unicorn
 	/// </summary>
 	public class AdvancedLoadOptions : LoadOptions
 	{
-		public AdvancedLoadOptions(string path) : this(new IncludeEntry(path))
-		{
-			
-		}
-
-		public AdvancedLoadOptions(IncludeEntry preset)
+		public AdvancedLoadOptions(IPredicate preset)
 		{
 			DeleteOrphans = false;
 			Progress = new StringProgressStatus();
@@ -33,7 +27,7 @@ namespace Unicorn
 		/// <summary>
 		/// The serialization preset we'll be loading with the loader
 		/// </summary>
-		public IncludeEntry Preset { get; set; }
+		public IPredicate Preset { get; set; }
 
 		/// <summary>
 		/// If true items not present on disk will be deleted (subset of ForceUpdate behavior) - update behavior remains non-forced

@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using Sitecore.Configuration;
-using Sitecore.Data.Serialization.Presets;
+﻿using Unicorn.Predicates;
 
 namespace Unicorn
 {
@@ -9,21 +7,9 @@ namespace Unicorn
 		/// <summary>
 		/// Gets the default presets specified in configuration/sitecore/serialization/default
 		/// </summary>
-		public static IList<IncludeEntry> GetPreset()
+		public static IPredicate GetDefaultPreset()
 		{
-			return GetPreset("default");
-		}
-
-		/// <summary>
-		/// Gets the default presets specified in configuration/sitecore/serialization/name
-		/// </summary>
-		public static IList<IncludeEntry> GetPreset(string name)
-		{
-			var config = Factory.GetConfigNode("serialization/" + name);
-			if(config != null)
-				return PresetFactory.Create(config);
-
-			return null;
+			return new SerializationPresetPredicate("default");
 		}
 	}
 }

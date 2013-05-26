@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using Sitecore.Data.Items;
 using Sitecore.Data.Serialization;
-using Sitecore.Data.Serialization.Presets;
 using Sitecore.Events;
 using Sitecore.Data;
 using System.IO;
+using Unicorn.Predicates;
 
 namespace Unicorn
 {
@@ -17,11 +16,11 @@ namespace Unicorn
 	/// </summary>
 	public class FilteredItemHandler : ItemHandler
 	{
-		private static readonly IList<IncludeEntry> Presets = new List<IncludeEntry>(); 
+		private static readonly IPredicate Preset; 
 
 		static FilteredItemHandler()
 		{
-			Presets = SerializationUtility.GetPreset();
+			Preset = SerializationUtility.GetDefaultPreset();
 		}
 
 		public new void OnItemSaved(object sender, EventArgs e)
@@ -30,7 +29,7 @@ namespace Unicorn
 
 			if (item == null) return;
 
-			if (!Presets.Includes(item)) return;
+			if (!Preset.Includes(item).IsIncluded) return;
 
 			base.OnItemSaved(sender, e);
 		}
@@ -52,7 +51,7 @@ namespace Unicorn
 
 			if (oldParent == null) return;
 
-			if (!Presets.Includes(item)) return;
+			if (!Preset.Includes(item).IsIncluded) return;
 
 			// get references to new and old paths
 			var reference = new ItemReference(item).ToString();
@@ -82,7 +81,7 @@ namespace Unicorn
 
 			if (item == null) return;
 
-			if (!Presets.Includes(item)) return;	
+			if (!Preset.Includes(item).IsIncluded) return;	
 		
 			ShadowWriter.PutItem(Operation.Updated, item, item.Parent);
 
@@ -106,7 +105,7 @@ namespace Unicorn
 
 			if (item == null || oldName == null) return;
 
-			if (!Presets.Includes(item)) return;
+			if (!Preset.Includes(item).IsIncluded) return;
 
 			var reference = new ItemReference(item).ToString();
 			var oldReference = reference.Substring(0, reference.LastIndexOf('/') + 1) + oldName;
@@ -124,7 +123,7 @@ namespace Unicorn
 
 			if (item == null) return;
 
-			if (!Presets.Includes(item)) return;
+			if (!Preset.Includes(item).IsIncluded) return;
 
 			base.OnItemVersionRemoved(sender, e);
 		}
@@ -147,7 +146,7 @@ namespace Unicorn
 
 				var parentSerializationPath = PathUtils.GetDirectoryPath(new ItemReference(parentItem).ToString());
 
-				if(Directory.Exists(parentSerializationPath) && Presets.Includes(parentItem))
+				if(Directory.Exists(parentSerializationPath) && Preset.Includes(parentItem).IsIncluded)
 					base.OnItemDeleted(sender, e);
 			}
 		}
