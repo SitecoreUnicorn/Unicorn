@@ -129,7 +129,7 @@ namespace Unicorn
 		}
 
 		// NOTE on DELETION
-		// Because the item:deleted event does not have a full path assigned to it, we cannot filter deletes other than by their parent item path if that exists
+		// Because the item:deleted event does not have a full path assigned to it, we cannot filter deletes other than by the original parent item path if that exists
 		// This shouldn't be a problem in general because includes and excludes are recursive unless I haven't thought of something.
 		//
 		// NOTE: this method works around a bug in Sitecore (380479) that causes it to kill the app pool if a delete is sent for an item without an

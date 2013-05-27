@@ -46,7 +46,7 @@ namespace Unicorn.Predicates
 			return priorityResult ?? result; // return the last failure
 		}
 
-		public PredicateResult Includes(ISerializedItem item)
+		public PredicateResult Includes(ISerializedReference item)
 		{
 			var result = new PredicateResult(true);
 			PredicateResult priorityResult = null;
@@ -84,7 +84,7 @@ namespace Unicorn.Predicates
 		/// <summary>
 		/// Checks if a preset includes a given serialized item
 		/// </summary>
-		protected PredicateResult Includes(IncludeEntry entry, ISerializedItem item)
+		protected PredicateResult Includes(IncludeEntry entry, ISerializedReference item)
 		{
 			// check for db match
 			if (item.DatabaseName != entry.Database) return new PredicateResult(false);
@@ -115,17 +115,23 @@ namespace Unicorn.Predicates
 			return result;
 		}
 
-		protected virtual PredicateResult ExcludeMatches(IncludeEntry entry, ISerializedItem item)
+		protected virtual PredicateResult ExcludeMatches(IncludeEntry entry, ISerializedReference reference)
 		{
-			PredicateResult result = ExcludeMatchesTemplate(entry.Exclude, item.TemplateName);
+			PredicateResult result = ExcludeMatchesPath(entry.Exclude, reference.ItemPath);
 
 			if (!result.IsIncluded) return result;
+
+			// many times the ISerializedReference may also have an item ref in it (e.g. be a serialized item)
+			// in this case we can check additional criteria
+			var item = reference as ISerializedItem;
+
+			if (item == null) return result;
 
 			result = ExcludeMatchesTemplateId(entry.Exclude, ID.Parse(item.TemplateId));
 
 			if (!result.IsIncluded) return result;
 
-			result = ExcludeMatchesPath(entry.Exclude, item.ItemPath);
+			result = ExcludeMatchesTemplate(entry.Exclude, item.TemplateName);
 
 			if (!result.IsIncluded) return result;
 

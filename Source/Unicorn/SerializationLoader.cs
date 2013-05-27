@@ -1,21 +1,18 @@
 using Kamsar.WebConsole;
-using Sitecore;
 using Sitecore.Configuration;
 using Sitecore.Data;
 using Sitecore.Data.Events;
 using Sitecore.Data.Items;
 using Sitecore.Data.Serialization;
-using Sitecore.Data.Serialization.Exceptions;
 using Sitecore.Diagnostics;
 using Sitecore.Eventing;
-using Sitecore.Globalization;
-using Sitecore.Jobs;
-using Sitecore.StringExtensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Sitecore.Data.Serialization.ObjectModel;
+using Unicorn.Predicates;
+using Unicorn.Serialization;
+using Unicorn.Evaluators;
 
 namespace Unicorn
 {
@@ -25,57 +22,59 @@ namespace Unicorn
 	public class SerializationLoader
 	{
 		private int _itemsProcessed = 0;
+		private readonly ISerializationProvider _serializationProvider;
+		private readonly IPredicate _predicate;
+		private readonly IEvaluator _evaluator;
+
+		public SerializationLoader(ISerializationProvider serializationProvider, IPredicate predicate, IEvaluator evaluator)
+		{
+			Assert.ArgumentNotNull(serializationProvider, "serializationProvider");
+			Assert.ArgumentNotNull(predicate, "predicate");
+			Assert.ArgumentNotNull(evaluator, "evaluator");
+
+			_evaluator = evaluator;
+			_predicate = predicate;
+			_serializationProvider = serializationProvider;
+		}
 
 		/// <summary>
 		/// Loads a preset from serialized items on disk.
 		/// </summary>
-		public void LoadTree(AdvancedLoadOptions options)
+		public void LoadTree(Database database, string sitecorePath, IProgressStatus progress)
 		{
-			Assert.ArgumentNotNull(options, "options");
-
 			_itemsProcessed = 0;
 
-			var reference = new ItemReference(options.Preset.Database, options.Preset.Path);
-			var physicalPath = PathUtils.GetDirectoryPath(reference.ToString());
+			var rootSerializedItem = _serializationProvider.GetReference(sitecorePath, database.Name);
 
-			options.Progress.ReportStatus("Loading serialized items from " + physicalPath, MessageType.Info);
-
-			if (!Directory.Exists(physicalPath)) throw new FileNotFoundException("The root serialization path " + physicalPath + " did not exist!", physicalPath);
-
-			if (options.DisableEvents)
+			if (rootSerializedItem == null)
 			{
-				using (new EventDisabler())
-				{
-					LoadTreePaths(physicalPath, options);
-				}
-
-				string targetDatabase = GetTargetDatabase(physicalPath, options);
-				DeserializationFinished(targetDatabase);
-
+				progress.ReportStatus("{0} was unable to find a root serialized item for {1}:{2}", MessageType.Error, _serializationProvider.GetType().Name, database.Name, sitecorePath);
 				return;
 			}
 
-			LoadTreePaths(physicalPath, options);	
-		}
+			progress.ReportStatus("Loading serialized items under {0}:{1}", MessageType.Debug, database.Name, sitecorePath);
+			progress.ReportStatus("Provider root ID: " + rootSerializedItem.ProviderId, MessageType.Debug);
 
-		private void LoadTreePaths(string physicalPath, AdvancedLoadOptions options)
-		{
-			DoLoadTree(physicalPath, options);
-			DoLoadTree(PathUtils.GetShortPath(physicalPath), options);
-			options.Progress.ReportStatus(string.Format("Finished loading serialized items from {0} ({1} total items synchronized)", physicalPath, _itemsProcessed), MessageType.Info);
+			using (new EventDisabler())
+			{
+				DoLoadTree(rootSerializedItem, progress);
+			}
+
+			DeserializationFinished(database.Name);
 		}
 
 		/// <summary>
 		/// Loads a specific path recursively, using any exclusions in the options' preset
 		/// </summary>
-		private void DoLoadTree(string path, AdvancedLoadOptions options)
+		private void DoLoadTree(ISerializedReference root, IProgressStatus progress)
 		{
-			Assert.ArgumentNotNullOrEmpty(path, "path");
-			Assert.ArgumentNotNull(options, "options");
+			Assert.ArgumentNotNull(root, "root");
+			Assert.ArgumentNotNull(progress, "progress");
+
 			var failures = new List<Failure>();
 
 			// go load the tree and see what failed, if anything
-			LoadTreeRecursive(path, options, failures);
+			LoadTreeRecursive(root, failures, progress);
 
 			if (failures.Count > 0)
 			{
@@ -94,23 +93,23 @@ namespace Unicorn
 					foreach (var failure in originalFailures)
 					{
 						// retry loading a single item failure
-						if (failure.Directory.EndsWith(PathUtils.Extension, StringComparison.InvariantCultureIgnoreCase))
+						var item = failure.Reference as ISerializedItem;
+						if (item != null)
 						{
 							try
 							{
-								ItemLoadResult result;
-								DoLoadItem(failure.Directory, options, out result);
+								DoLoadItem(item, progress);
 							}
 							catch (Exception reason)
 							{
-								failures.Add(new Failure(failure.Directory, reason));
+								failures.Add(new Failure(failure.Reference, reason));
 							}
 
 							continue;
 						}
 
-						// retry loading a directory item failure (note the continues in the above ensure execution never arrives here for files)
-						LoadTreeRecursive(failure.Directory, options, failures);
+						// retry loading a reference failure (note the continues in the above ensure execution never arrives here for items)
+						LoadTreeRecursive(failure.Reference, failures, progress);
 					}
 				}
 				while (failures.Count > 0 && failures.Count < originalFailures.Count); // continue retrying until all possible failures have been fixed
@@ -120,58 +119,60 @@ namespace Unicorn
 			{
 				foreach (var failure in failures)
 				{
-					options.Progress.ReportStatus(string.Format("Failed to load {0} permanently because {1}", failure.Directory, failure.Reason), MessageType.Error);
+					progress.ReportStatus(string.Format("Failed to load {0} permanently because {1}", failure.Reference, failure.Reason), MessageType.Error);
 				}
 
-				throw new Exception("Some directories could not be loaded: " + failures[0].Directory, failures[0].Reason);
+				throw new Exception("Some directories could not be loaded: " + failures[0].Reference, failures[0].Reason);
 			}
 		}
 
 		/// <summary>
 		/// Recursive method that loads a given tree and retries failures already present if any
 		/// </summary>
-		private void LoadTreeRecursive(string path, AdvancedLoadOptions options, List<Failure> retryList)
+		private void LoadTreeRecursive(ISerializedReference root, List<Failure> retryList, IProgressStatus progress)
 		{
-			Assert.ArgumentNotNullOrEmpty(path, "path");
-			Assert.ArgumentNotNull(options, "options");
+			Assert.ArgumentNotNull(root, "root");
+			Assert.ArgumentNotNull(progress, "progress");
 			Assert.ArgumentNotNull(retryList, "retryList");
 
-			if (options.Preset.Exclude.MatchesPath(path))
+			var included = _predicate.Includes(root);
+			if (!included.IsIncluded)
 			{
-				options.Progress.ReportStatus("[SKIPPED] " + PathUtils.MakeItemPath(path) + " (and children) because it was excluded by the preset, but it was present on disk", MessageType.Warning);
+				// TODO: does this work?
+				progress.ReportStatus(
+					"[SKIPPED] {0}:{1} (and children) because it was excluded by {2}. However, it was present in {3}. {4}",
+					MessageType.Warning, root.DatabaseName, root.ItemPath, _predicate.GetType().Name,
+					_serializationProvider.GetType().Name, included.Justification ?? string.Empty);
 				return;
 			}
 
 			try
 			{
 				// load the current level
-				LoadOneLevel(path, options, retryList);
+				LoadOneLevel(root, retryList, progress);
 
-				// check if we have a directory path to recurse down
-				if (Directory.Exists(path))
+				// check if we have child paths to recurse down
+				var children = _serializationProvider.GetChildReferences(root);
+
+				if (children.Length > 0)
 				{
-					string[] directories = PathUtils.GetDirectories(path);
-
 					// make sure if a "templates" item exists in the current set, it goes first
-					if (directories.Length > 1)
+					if (children.Length > 1)
 					{
-						for (int i = 1; i < directories.Length; i++)
+						int templateIndex = Array.FindIndex(children, x => x.ItemPath.EndsWith("templates", StringComparison.OrdinalIgnoreCase));
+						
+						if (templateIndex > 0)
 						{
-							if ("templates".Equals(Path.GetFileName(directories[i]), StringComparison.OrdinalIgnoreCase))
-							{
-								string text = directories[0];
-								directories[0] = directories[i];
-								directories[i] = text;
-							}
+							var zero = children[0];
+							children[0] = children[templateIndex];
+							children[templateIndex] = zero;
 						}
 					}
 
-					foreach(var directory in directories)
+					// load each child path recursively
+					foreach (var child in children)
 					{
-						if (!CommonUtils.IsDirectoryHidden(directory))
-						{
-							LoadTreeRecursive(directory, options, retryList);
-						}
+						LoadTreeRecursive(child, retryList, progress);
 					}
 
 					// pull out any standard values failures for immediate retrying
@@ -182,351 +183,159 @@ namespace Unicorn
 					{
 						try
 						{
-							ItemLoadResult result;
-							DoLoadItem(current.Directory, options, out result);
+							var item = _serializationProvider.GetItem(current.Reference);
+							DoLoadItem(item, progress);
 						}
 						catch (Exception reason)
 						{
-							try
-							{
-								var directoryInfo = new DirectoryInfo(current.Directory);
-								if (directoryInfo.Parent != null && string.Compare(directoryInfo.Parent.FullName, path, StringComparison.InvariantCultureIgnoreCase) == 0)
-								{
-									retryList.Add(new Failure(current.Directory, reason));
-								}
-								else
-								{
-									retryList.Add(current);
-								}
-							}
-							catch
-							{
-								retryList.Add(new Failure(current.Directory, reason));
-							}
+							retryList.Add(new Failure(current.Reference, reason));
 						}
 					}
-				}
+				} // children.length > 0
 			}
 			catch (Exception ex)
 			{
-				retryList.Add(new Failure(path, ex));
+				retryList.Add(new Failure(root, ex));
 			}
 		}
 
 		/// <summary>
 		/// Loads a set of children from a serialized path
 		/// </summary>
-		private void LoadOneLevel(string path, AdvancedLoadOptions options, List<Failure> retryList)
+		private void LoadOneLevel(ISerializedReference root, List<Failure> retryList, IProgressStatus progress)
 		{
-			Assert.ArgumentNotNullOrEmpty(path, "path");
-			Assert.ArgumentNotNull(options, "options");
+			Assert.ArgumentNotNull(root, "root");
+			Assert.ArgumentNotNull(progress, "progress");
 			Assert.ArgumentNotNull(retryList, "retryList");
 
-			var deleteCandidates = new Dictionary<ID, Item>();
+			var orphanCandidates = new Dictionary<ID, Item>();
 
-			// look for a serialized file for the root item
-			if (File.Exists(path + PathUtils.Extension))
+			// grab the root item's full metadata
+			var rootSerializedItem = _serializationProvider.GetItem(root);
+
+			if (rootSerializedItem != null)
 			{
-				var itemReference = ItemReference.Parse(PathUtils.MakeItemPath(path, options.Root));
-				if (itemReference != null)
-				{
-					// get the corresponding item from Sitecore
-					Item rootItem = options.Database != null
-										? itemReference.GetItemInDatabase(options.Database)
-										: itemReference.GetItem();
+				// get the corresponding item from Sitecore
+				Item rootItem = GetExistingItem(rootSerializedItem);
 
-					// if we're reverting, we add all of the root item's direct children to the "to-delete" list (we'll remove them as we find matching serialized children)
-					if (rootItem != null && (options.ForceUpdate || options.DeleteOrphans))
-					{
-						foreach (Item child in rootItem.Children)
-						{
-							// if the preset includes the child add it to the delete-candidate list (if we don't deserialize it below, it will be deleted if the right options are present)
-							if(options.Preset.Includes(child))
-								deleteCandidates[child.ID] = child;
-							else
-							{
-								options.Progress.ReportStatus(string.Format("[SKIPPED] {0}:{1} (and children) because it was excluded by the preset.", child.Database.Name, child.Paths.FullPath), MessageType.Debug);
-							}
-						}
-					}
-				}
-			}
-
-			// check for a directory containing children of the target path
-			if (Directory.Exists(path))
-			{
-				string[] files = Directory.GetFiles(path, "*" + PathUtils.Extension);
-				foreach (string fileName in files)
+				// we add all of the root item's direct children to the "maybe orphan" list (we'll remove them as we find matching serialized children)
+				if (rootItem != null)
 				{
-					try
+					foreach (Item child in rootItem.Children)
 					{
-						ID itemId;
-						if (IsStandardValuesItem(fileName, out itemId))
-						{
-							deleteCandidates.Remove(itemId); // avoid deleting standard values items when forcing an update
-							retryList.Add(new Failure(fileName, new StandardValuesException(fileName)));
-						}
+						// if the preset includes the child add it to the orphan-candidate list (if we don't deserialize it below, it will be marked orphan)
+						var included = _predicate.Includes(child);
+						if (included.IsIncluded)
+							orphanCandidates[child.ID] = child;
 						else
 						{
-							// load a child item
-							ItemLoadResult result;
-							Item loadedItem = DoLoadItem(fileName, options, out result);
-							if (loadedItem != null)
-							{
-								deleteCandidates.Remove(loadedItem.ID);
-
-								// check if we have any child directories under this loaded child item (existing children) -
-								// if we do not, we can nuke any children of the loaded item as well
-								if ((options.ForceUpdate || options.DeleteOrphans) && !Directory.Exists(PathUtils.StripPath(fileName)))
-								{
-									foreach (Item child in loadedItem.Children)
-									{
-										deleteCandidates.Add(child.ID, child);
-									}
-								}
-							}
-							else if (result == ItemLoadResult.Skipped) // if the item got skipped we'll prevent it from being deleted
-								deleteCandidates.Remove(itemId);
+							progress.ReportStatus(
+								string.Format("[SKIPPED] {0}:{1} (and children) because it was excluded by {2}. {3}", child.Database.Name,
+											child.Paths.FullPath, _predicate.GetType().FullName, included.Justification ?? string.Empty),
+								MessageType.Debug);
 						}
-					}
-					catch (Exception ex)
-					{
-						// if a problem occurs we attempt to retry later
-						retryList.Add(new Failure(path, ex));
 					}
 				}
 			}
 
-			// if we're forcing an update (ie deleting stuff not on disk) we send the items that we found that weren't on disk off to get deleted from Sitecore
-			if ((options.ForceUpdate || options.DeleteOrphans) && deleteCandidates.Count > 0)
+			// check for direct children of the target path
+			var children = _serializationProvider.GetChildItems(rootSerializedItem);
+			foreach (var child in children)
 			{
-				Database db = deleteCandidates.Values.First().Database;
+				try
+				{
+					if (IsStandardValuesItem(child))
+					{
+						orphanCandidates.Remove(child.Id); // avoid deleting standard values items when forcing an update
+						retryList.Add(new Failure(child, new StandardValuesException(child.ItemPath)));
+					}
+					else
+					{
+						// load a child item
+						var loadedItem = DoLoadItem(child, progress);
+						if (loadedItem.Item != null)
+						{
+							orphanCandidates.Remove(loadedItem.Item.ID);
 
-				bool reset = DeleteItems(deleteCandidates.Values, options.Progress);
+							// check if we have any child serialized items under this loaded child item (existing children) -
+							// if we do not, we can orphan any children of the loaded item as well
+							var loadedItemsChildren = _serializationProvider.GetChildReferences(child);
 
-				if (reset)
-					db.Engines.TemplateEngine.Reset();
+							if (loadedItemsChildren.Length == 0) // no children were serialized on disk
+							{
+								foreach (Item loadedChild in loadedItem.Item.Children)
+								{
+									orphanCandidates.Add(loadedChild.ID, loadedChild);
+								}
+							}
+						}
+						else if (loadedItem.Status == ItemLoadStatus.Skipped) // if the item got skipped we'll prevent it from being deleted
+							orphanCandidates.Remove(child.Id);
+					}
+				}
+				catch (Exception ex)
+				{
+					// if a problem occurs we attempt to retry later
+					retryList.Add(new Failure(child, ex));
+				}
+			}
+
+			// if we're forcing an update (ie deleting stuff not on disk) we send the items that we found that weren't on disk off to get evaluated by the evaluator
+			if (orphanCandidates.Count > 0)
+			{
+				_evaluator.EvaluateOrphans(orphanCandidates.Values.ToArray(), progress);
 			}
 		}
 
 		/// <summary>
 		/// Loads a specific item from disk
 		/// </summary>
-		private Item DoLoadItem(string path, AdvancedLoadOptions options, out ItemLoadResult loadResult)
+		private ItemLoadResult DoLoadItem(ISerializedItem serializedItem, IProgressStatus progress)
 		{
-			Assert.ArgumentNotNullOrEmpty(path, "path");
-			Assert.ArgumentNotNull(options, "options");
+			Assert.ArgumentNotNull(serializedItem, "serializedItem");
+			Assert.ArgumentNotNull(progress, "progress");
 
-			if (File.Exists(path))
+			bool disabledLocally = ItemHandler.DisabledLocally;
+			try
 			{
-				using (TextReader fileReader = new StreamReader(File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read)))
+				ItemHandler.DisabledLocally = true;
+
+				_itemsProcessed++;
+				if (_itemsProcessed % 500 == 0 && _itemsProcessed > 1)
+					progress.ReportStatus(string.Format("Processed {0} items", _itemsProcessed), MessageType.Debug);
+
+				var included = _predicate.Includes(serializedItem);
+
+				if (!included.IsIncluded)
 				{
-					LogLocalized("Loading item from path {0}.", new object[]
-						{
-							PathUtils.UnmapItemPath(path, options.Root)
-						});
+					progress.ReportStatus("[SKIPPED] {0}:{1} because {2} excluded it, but it was in {3}. {4}", MessageType.Warning,
+										serializedItem.DatabaseName, serializedItem.ItemPath, _predicate.GetType().Name,
+										_serializationProvider.GetType().Name, included.Justification ?? string.Empty);
 
-					bool disabledLocally = ItemHandler.DisabledLocally;
-					try
-					{
-						ItemHandler.DisabledLocally = true;
-						Item result = null;
-						try
-						{
-							var serializedItem = SyncItem.ReadItem(new Tokenizer(fileReader));
-
-							_itemsProcessed++;
-							if(_itemsProcessed % 500 == 0 && _itemsProcessed > 1)
-								options.Progress.ReportStatus(string.Format("Processed {0} items", _itemsProcessed), MessageType.Debug);
-
-							if (options.Preset.Exclude.MatchesTemplate(serializedItem.TemplateName))
-							{
-								options.Progress.ReportStatus(string.Format("[SKIPPED] {0}:{1} because the preset excluded its template name, but the item was on disk", serializedItem.DatabaseName, serializedItem.ItemPath), MessageType.Warning);
-
-								loadResult = ItemLoadResult.Skipped;
-								return null;
-							}
-
-							if (options.Preset.Exclude.MatchesTemplateId(serializedItem.TemplateID))
-							{
-								options.Progress.ReportStatus(string.Format("[SKIPPED] {0}:{1} because the preset excluded its template ID, but the item was on disk", serializedItem.DatabaseName, serializedItem.ItemPath), MessageType.Warning);
-
-								loadResult = ItemLoadResult.Skipped;
-								return null;
-							}
-
-							if (options.Preset.Exclude.MatchesId(serializedItem.ID))
-							{
-								options.Progress.ReportStatus(string.Format("[SKIPPED] {0}:{1} because the preset excluded it by ID, but the item was on disk", serializedItem.DatabaseName, serializedItem.ItemPath), MessageType.Warning);
-
-
-								loadResult = ItemLoadResult.Skipped;
-								return null;
-							}
-
-							if (options.Preset.Exclude.MatchesPath(path))
-							{
-								options.Progress.ReportStatus(string.Format("[SKIPPED] {0}:{1} because the preset excluded it by path, but the item was on disk", serializedItem.DatabaseName, serializedItem.ItemPath), MessageType.Warning);
-
-								loadResult = ItemLoadResult.Skipped;
-								return null;
-							}
-
-							var newOptions = new LoadOptions(options);
-
-							// in some cases we want to force an update for this item only
-							if (!options.ForceUpdate && ShouldForceUpdate(serializedItem, options.Progress))
-							{
-								options.Progress.ReportStatus(string.Format("[FORCED] {0}:{1}", serializedItem.DatabaseName, serializedItem.ItemPath), MessageType.Info);
-								newOptions.ForceUpdate = true;
-							}
-
-							result = ItemSynchronization.PasteSyncItem(serializedItem, newOptions, true);
-
-							loadResult = ItemLoadResult.Success;
-						}
-						catch (ParentItemNotFoundException ex)
-						{
-							result = null;
-							loadResult = ItemLoadResult.Error;
-							string error =
-								"Cannot load item from path '{0}'. Probable reason: parent item with ID '{1}' not found.".FormatWith(
-									PathUtils.UnmapItemPath(path, options.Root), ex.ParentID);
-
-							options.Progress.ReportStatus(error, MessageType.Error);
-
-							LogLocalizedError(error);
-						}
-						catch (ParentForMovedItemNotFoundException ex2)
-						{
-							result = ex2.Item;
-							loadResult = ItemLoadResult.Error;
-							string error =
-								"Item from path '{0}' cannot be moved to appropriate location. Possible reason: parent item with ID '{1}' not found."
-									.FormatWith(PathUtils.UnmapItemPath(path, options.Root), ex2.ParentID);
-
-							options.Progress.ReportStatus(error, MessageType.Error);
-
-							LogLocalizedError(error);
-						}
-						return result;
-					}
-					finally
-					{
-						ItemHandler.DisabledLocally = disabledLocally;
-					}
+					return new ItemLoadResult(ItemLoadStatus.Skipped);
 				}
-			}
 
-			loadResult = ItemLoadResult.Error;
-
-			return null;
-		}
-
-		/// <summary>
-		/// Checks to see if we should force an item to be written from the serialized version.
-		/// This changes the rules slightly from the default deserializer by forcing if the dates are
-		/// different instead of only if they are newer on disk.
-		/// </summary>
-		private bool ShouldForceUpdate(SyncItem syncItem, IProgressStatus progress)
-		{
-			Database db = Factory.GetDatabase(syncItem.DatabaseName);
-
-			Assert.IsNotNull(db, "Database was null");
-
-			Item target = db.GetItem(syncItem.ID);
-
-			if (target == null) return true; // target item doesn't exist - must force
-
-			// see if the modified date is different in any version (because disk is master, ANY changes we want to force overwrite)
-			return syncItem.Versions.Any(version =>
+				// detect if we should run an update for the item or if it's already up to date
+				var existingItem = GetExistingItem(serializedItem);
+				if (existingItem == null || _evaluator.EvaluateUpdate(serializedItem, existingItem))
 				{
-					Item targetVersion = target.Database.GetItem(target.ID, Language.Parse(version.Language), Sitecore.Data.Version.Parse(version.Version));
-					var serializedModified = version.Values[FieldIDs.Updated.ToString()];
-					var itemModified = targetVersion[FieldIDs.Updated.ToString()];
+					string flag = (existingItem == null) ? "[A]" : "[U]";
 
-					if (!string.IsNullOrEmpty(serializedModified))
-					{
-						var result = string.Compare(serializedModified, itemModified, StringComparison.InvariantCulture) != 0;
+					progress.ReportStatus("{0} {1}:{2}", MessageType.Info, flag, serializedItem.DatabaseName, serializedItem.ItemPath);
 
+					Item updatedItem = _serializationProvider.DeserializeItem(serializedItem, progress);
 
-						if (result)
-							progress.ReportStatus(
-								string.Format("{0} ({1} #{2}): Disk modified {3}, Item modified {4}", syncItem.ItemPath, version.Language,
-											version.Version, serializedModified, itemModified), MessageType.Debug);
+					return new ItemLoadResult(ItemLoadStatus.Success, updatedItem);
+				}
 
-						return result;
-					}
-
-					// ocasionally a version will not have a modified date, only a revision so we compare those as a backup
-					var serializedRevision = version.Values[FieldIDs.Revision.ToString()];
-					var itemRevision = targetVersion.Statistics.Revision;
-
-					if (!string.IsNullOrEmpty(serializedRevision))
-					{
-						var result = string.Compare(serializedRevision, itemRevision, StringComparison.InvariantCulture) != 0;
-
-						if (result)
-							progress.ReportStatus(
-								string.Format("{0} ({1} #{2}): Disk revision {3}, Item revision {4}", syncItem.ItemPath, version.Language,
-											version.Version, serializedRevision, itemRevision), MessageType.Debug);
-
-						return result;
-					}
-
-					// if we get here we have no valid updated or revision to compare. Let's ignore the item as if it was a real item it'd have one of these.
-					if(!syncItem.ItemPath.StartsWith("/sitecore/templates/System") && !syncItem.ItemPath.StartsWith("/sitecore/templates/Sitecore Client")) // this occurs a lot in stock system templates - we ignore warnings for those as it's expected.
-						progress.ReportStatus(string.Format("{0} ({1} #{2}): Serialized version had no modified or revision field to check for update.", syncItem.ItemPath, version.Language, version.Version), MessageType.Warning);
-
-					return false;
-				});
+				return new ItemLoadResult(ItemLoadStatus.Success, existingItem);
+			}
+			finally
+			{
+				ItemHandler.DisabledLocally = disabledLocally;
+			}
 		}
 
-		/// <summary>
-		/// Deletes an item from Sitecore
-		/// </summary>
-		/// <returns>true if the item's database should have its template engine reloaded, false otherwise</returns>
-		private bool DeleteItem(Item item, IProgressStatus progress)
-		{
-			bool resetFromChild = DeleteItems(item.Children, progress);
-			Database db = item.Database;
-			ID id = item.ID;
-			string path = item.Paths.Path;
-
-			item.Delete();
-
-			if (EventDisabler.IsActive)
-			{
-				db.Caches.ItemCache.RemoveItem(id);
-				db.Caches.DataCache.RemoveItemInformation(id);
-			}
-
-			progress.ReportStatus("[DELETED] {0}:{1} because it did not exist on disk".FormatWith(db.Name, path), MessageType.Warning);
-
-			if (!resetFromChild && item.Database.Engines.TemplateEngine.IsTemplatePart(item))
-			{
-				return true;
-			}
-
-			return false;
-		}
-		/// <summary>
-		/// Deletes a list of items. Ensures that obsolete cache data is also removed.
-		/// </summary>
-		/// <returns>
-		/// Is set to <c>true</c> if template engine should reset afterwards.
-		/// </returns>
-		private bool DeleteItems(IEnumerable<Item> items, IProgressStatus progress)
-		{
-			bool reset = false;
-			foreach (Item item in items)
-			{
-				if (DeleteItem(item, progress))
-					reset = true;
-			}
-
-			return reset;
-		}
 		/// <summary>
 		/// Raises the "serialization finished" event.
 		/// </summary>
@@ -540,83 +349,38 @@ namespace Unicorn
 			}
 		}
 
-		private static string GetTargetDatabase(string path, LoadOptions options)
-		{
-			if (options.Database != null)
-			{
-				return options.Database.Name;
-			}
-			string path2 = PathUtils.UnmapItemPath(path, PathUtils.Root);
-			ItemReference itemReference = ItemReference.Parse(path2);
-			return itemReference.Database;
-		}
-
 		/// <summary>
-		/// Determines whether [is standard values item] [the specified file name].
+		/// Determines whether a serialized item is a __Standard values item.
 		/// </summary>
-		/// <param name="fileName">Name of the file.</param>
+		/// <param name="item">The serialized item to test</param>
 		/// <returns>
 		///   <c>true</c> if [is standard values item] [the specified file name]; otherwise, <c>false</c>.
 		/// </returns>
-		private static bool IsStandardValuesItem(string fileName, out ID itemId)
+		private static bool IsStandardValuesItem(ISerializedItem item)
 		{
-			Assert.ArgumentNotNull(fileName, "fileName");
-			string itemPath;
-			try
-			{
-				using (TextReader textReader = new StreamReader(File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read)))
-				{
-					var item = SyncItem.ReadItem(new Tokenizer(textReader));
+			Assert.ArgumentNotNull(item, "item");
 
-					itemId = ID.Parse(item.ID);
-					itemPath = item.ItemPath;
-				}
-			}
-			catch
-			{
-				itemId = null;
-				return false;
-			}
-
-			string[] array = itemPath.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+			string[] array = item.ItemPath.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
 			if (array.Length > 0)
 			{
-				if (array.Any(s => s.Equals("templates", StringComparison.InvariantCultureIgnoreCase)))
+				if (array.Any(s => s.Equals("templates", StringComparison.OrdinalIgnoreCase)))
 				{
-					return array.Last().Equals("__Standard Values");
+					return array.Last().Equals("__Standard Values", StringComparison.OrdinalIgnoreCase);
 				}
 			}
 
 			return false;
 		}
 
-		/// <summary>
-		/// Logs localized strings.
-		/// </summary>
-		private static void LogLocalized(string message, params object[] parameters)
+		protected Item GetExistingItem(ISerializedItem serializedItem)
 		{
-			Assert.IsNotNullOrEmpty(message, "message");
-			Job job = Context.Job;
-			if (job != null)
-			{
-				job.Status.LogInfo(message, parameters);
-				return;
-			}
-			Log.Info(message.FormatWith(parameters), new object());
-		}
-		/// <summary>
-		/// Logs localized strings.
-		/// </summary>
-		private static void LogLocalizedError(string message)
-		{
-			Assert.IsNotNullOrEmpty(message, "message");
-			Job job = Context.Job;
-			if (job != null)
-			{
-				job.Status.LogError(message);
-				return;
-			}
-			Log.Error(message, new object());
+			Assert.ArgumentNotNull(serializedItem, "serializedItem");
+
+			var db = Factory.GetDatabase(serializedItem.DatabaseName);
+
+			if (db == null) return null;
+
+			return db.GetItem(serializedItem.Id);
 		}
 
 		private class StandardValuesException : Exception
@@ -634,62 +398,45 @@ namespace Unicorn
 		}
 
 		/// <summary>
-		/// Represents a single failure in a recursive directory scan operation
+		/// Represents a single failure in a recursive serialization load operation
 		/// </summary>
 		private class Failure
 		{
-			/// <summary>
-			/// The directory.
-			/// </summary>
-			private readonly string _directory;
-			/// <summary>
-			/// The reason.
-			/// </summary>
-			private readonly Exception _reason;
-			/// <summary>
-			/// Gets the directory.
-			/// </summary>
-			/// <value>The directory.</value>
-			public string Directory
+			public ISerializedReference Reference { get; private set; }
+			public Exception Reason { get; private set; }
+
+			public Failure(ISerializedReference reference, Exception reason)
 			{
-				get
-				{
-					return _directory;
-				}
-			}
-			/// <summary>
-			/// Gets the reason.
-			/// </summary>
-			/// <value>The reason.</value>
-			public Exception Reason
-			{
-				get
-				{
-					return _reason;
-				}
-			}
-			/// <summary>
-			/// Initializes a new instance of the <see cref="T:Sitecore.Data.Serialization.Manager.Failure" /> class.
-			/// </summary>
-			/// <param name="directory">
-			/// The directory.
-			/// </param>
-			/// <param name="reason">
-			/// The reason.
-			/// </param>
-			public Failure(string directory, Exception reason)
-			{
-				Assert.ArgumentNotNullOrEmpty(directory, "directory");
+				Assert.ArgumentNotNull(reference, "reference");
 				Assert.ArgumentNotNull(reason, "reason");
-				_directory = directory;
-				_reason = reason;
+
+				Reference = reference;
+				Reason = reason;
 			}
+		}
+
+		private class ItemLoadResult
+		{
+			public ItemLoadResult(ItemLoadStatus status)
+			{
+				Item = null;
+				Status = status;
+			}
+
+			public ItemLoadResult(ItemLoadStatus status, Item item)
+			{
+				Item = item;
+				Status = status;
+			}
+
+			public Item Item { get; private set; }
+			public ItemLoadStatus Status { get; private set; }
 		}
 
 		/// <summary>
 		/// The result from loading a single item from disk
 		/// </summary>
-		private enum ItemLoadResult { Success, Error, Skipped }
+		private enum ItemLoadStatus { Success, Error, Skipped }
 
 	}
 }

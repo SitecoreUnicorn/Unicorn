@@ -51,7 +51,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AdvancedLoadOptions.cs" />
+    <Compile Include="Evaluators\DiskMasterEvaluator.cs" />
+    <Compile Include="Evaluators\EvaluatorUtility.cs" />
+    <Compile Include="Evaluators\IEvaluator.cs" />
     <Compile Include="FilteredItemHandler.cs" />
     <Compile Include="PresetExtensions.cs" />
     <Compile Include="Predicates\PredicateResult.cs" />
@@ -63,6 +65,10 @@
     <Compile Include="SerializationUtility.cs" />
     <Compile Include="Serialization\ISerializationProvider.cs" />
     <Compile Include="Serialization\ISerializedItem.cs" />
+    <Compile Include="Serialization\ISerializedReference.cs" />
+    <Compile Include="Serialization\SitecoreSerializationProvider.cs" />
+    <Compile Include="Serialization\SitecoreSerializedItem.cs" />
+    <Compile Include="Serialization\SitecoreSerializedReference.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -1,14 +1,13 @@
-﻿namespace Unicorn.Serialization
+﻿using Sitecore.Data;
+namespace Unicorn.Serialization
 {
-	public interface ISerializedItem
+	public interface ISerializedItem : ISerializedReference
 	{
-		string Id { get; }
-		string DatabaseName { get; }
-		string ParentId { get; }
+		ID Id { get; }
+		ID ParentId { get; }
 		string Name { get; }
-		string BranchId { get; }
-		string TemplateId { get; }
+		ID BranchId { get; }
+		ID TemplateId { get; }
 		string TemplateName { get; }
-		string ItemPath { get; }
 	}
 }

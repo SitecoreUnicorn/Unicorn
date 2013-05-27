@@ -82,7 +82,7 @@ namespace Unicorn
 			
 			if (serializedVersion == null)
 			{
-				desyncs.Add(new FieldDesynchronization("Version", item.Version.Number.ToString(CultureInfo.InvariantCulture), "Did not exist"));
+				desyncs.Add(new FieldDesynchronization("Version"));
 				return desyncs;
 			}
 
@@ -100,7 +100,7 @@ namespace Unicorn
 
 				if (!serializedField.FieldValue.Equals(field.Value, StringComparison.Ordinal))
 				{
-					desyncs.Add(new FieldDesynchronization(serializedField.FieldName, field.Value, serializedField.FieldValue));
+					desyncs.Add(new FieldDesynchronization(serializedField.FieldName));
 				}
 			}
 
@@ -124,16 +124,12 @@ namespace Unicorn
 
 		private class FieldDesynchronization
 		{
-			public FieldDesynchronization(string fieldName, string sitecoreValue, string serializedValue)
+			public FieldDesynchronization(string fieldName)
 			{
 				FieldName = fieldName;
-				SitecoreValue = sitecoreValue;
-				SerializedValue = serializedValue;
 			}
 
 			public string FieldName { get; private set; }
-			public string SitecoreValue { get; private set; }
-			public string SerializedValue { get; private set; }
 		}
 	}
 }

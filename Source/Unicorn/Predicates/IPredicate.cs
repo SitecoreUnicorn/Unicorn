@@ -7,7 +7,7 @@ namespace Unicorn.Predicates
 	{
 		string Name { get; }
 		PredicateResult Includes(Item item);
-		PredicateResult Includes(ISerializedItem item);
+		PredicateResult Includes(ISerializedReference item);
 
 		void SerializeAll(ISerializationProvider provider);
 	}
