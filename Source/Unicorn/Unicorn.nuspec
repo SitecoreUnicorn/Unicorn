@@ -10,8 +10,12 @@
     <projectUrl>https://github.com/kamsar/Unicorn</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Unicorn is a utility for Sitecore that solves the issue of moving templates, renderings, and other database items between Sitecore instances.</description>
-    <releaseNotes>Initial release on NuGet</releaseNotes>
+    <releaseNotes>Include config and sync tool</releaseNotes>
     <copyright>Copyright 2013</copyright>
     <tags>sitecore serialization</tags>
   </metadata>
+	<files>
+		<file src="..\..\Documentation\Serialization.config" target="content\App_Config\Include" />
+		<file src="..\Sync Tool\sync-database.aspx*" target="content" />
+	</files>
 </package>
