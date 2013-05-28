@@ -59,6 +59,7 @@
   <ItemGroup>
     <Compile Include="LoaderTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SitecorePresetPredicateTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="NOTES.txt" />

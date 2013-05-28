@@ -6,6 +6,7 @@ using Sitecore.Data;
 using Sitecore.Data.Items;
 using Sitecore.Data.Serialization.Presets;
 using Sitecore.Diagnostics;
+using Sitecore.StringExtensions;
 using Unicorn.Serialization;
 
 namespace Unicorn.Predicates
@@ -64,6 +65,21 @@ namespace Unicorn.Predicates
 		public void SerializeAll(ISerializationProvider provider)
 		{
 			// TODO
+		}
+
+		public Item[] GetRootItems()
+		{
+			var items = new List<Item>();
+
+			foreach (var include in _preset)
+			{
+				var item = Factory.GetDatabase(include.Database).GetItem(include.Path);
+
+				if (item != null) items.Add(item);
+				else Log.Warn("Unable to resolve root item for serialization preset {0}:{1}".FormatWith(include.Database, include.Path), this);
+			}
+
+			return items.ToArray();
 		}
 
 		/// <summary>
@@ -148,7 +164,7 @@ namespace Unicorn.Predicates
 			bool match = entries.Any(entry => entry.Type.Equals("path", StringComparison.Ordinal) && entry.Value.Equals(sitecorePath, StringComparison.OrdinalIgnoreCase));
 
 			return match
-						? new PredicateResult("Excluded because of explicit item path exclusion rule")
+						? new PredicateResult("Item path exclusion rule")
 						: new PredicateResult(true);
 		}
 
@@ -160,7 +176,7 @@ namespace Unicorn.Predicates
 			bool match = entries.Any(entry => entry.Type.Equals("id", StringComparison.Ordinal) && entry.Value.Equals(id.ToString(), StringComparison.OrdinalIgnoreCase));
 
 			return match
-						? new PredicateResult("Excluded because of explicit item ID exclusion rule")
+						? new PredicateResult("Item ID exclusion rule")
 						: new PredicateResult(true);
 		}
 
@@ -172,7 +188,7 @@ namespace Unicorn.Predicates
 			bool match = entries.Any(entry => entry.Type.Equals("template", StringComparison.Ordinal) && entry.Value.Equals(templateName, StringComparison.OrdinalIgnoreCase));
 
 			return match
-						? new PredicateResult("Excluded because of explicit item template name exclusion rule")
+						? new PredicateResult("Item template name exclusion rule")
 						: new PredicateResult(true);
 		}
 
@@ -184,8 +200,11 @@ namespace Unicorn.Predicates
 			bool match = entries.Any(entry => entry.Type.Equals("templateid", StringComparison.Ordinal) && entry.Value.Equals(templateId.ToString(), StringComparison.OrdinalIgnoreCase));
 
 			return match
-						? new PredicateResult("Excluded because of explicit item template ID exclusion rule")
+						? new PredicateResult("Item template ID exclusion rule")
 						: new PredicateResult(true);
 		}
+
+
+		
 	}
 }

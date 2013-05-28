@@ -4,6 +4,7 @@
 * Should test for duplicate copies of the same serialized item present
 * Obviously deletes should be well tested
 * Very long paths that cause hashed name folders should be tested
+* Test for orphaned paths (ie .item renamed, subitems folder not renamed)
 
 Here's some fun ASCII art for later in the webconsole!
 			progress.ReportStatus(@"  _    _ _   _ _____ _____ ____  _____  _   _  ", MessageType.Warning);

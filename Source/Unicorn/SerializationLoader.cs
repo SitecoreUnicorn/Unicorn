@@ -159,7 +159,7 @@ namespace Unicorn
 					if (children.Length > 1)
 					{
 						int templateIndex = Array.FindIndex(children, x => x.ItemPath.EndsWith("templates", StringComparison.OrdinalIgnoreCase));
-						
+
 						if (templateIndex > 0)
 						{
 							var zero = children[0];
@@ -212,30 +212,34 @@ namespace Unicorn
 			// grab the root item's full metadata
 			var rootSerializedItem = _serializationProvider.GetItem(root);
 
-			if (rootSerializedItem != null)
+			if (rootSerializedItem == null)
 			{
-				// get the corresponding item from Sitecore
-				Item rootItem = GetExistingItem(rootSerializedItem);
+				progress.ReportStatus("[S] {0}:{1}. Unable to get a serialized item for the path. <br />This usually indicates an orphaned serialized item tree in {2} which should be removed. <br />Less commonly, it could also indicate a sparsely serialized tree which is not supported.", MessageType.Warning, root.DatabaseName, root.ItemPath, _serializationProvider.GetType().Name);
+				return;
+			}
 
-				// we add all of the root item's direct children to the "maybe orphan" list (we'll remove them as we find matching serialized children)
-				if (rootItem != null)
+			// get the corresponding item from Sitecore
+			Item rootItem = GetExistingItem(rootSerializedItem);
+
+			// we add all of the root item's direct children to the "maybe orphan" list (we'll remove them as we find matching serialized children)
+			if (rootItem != null)
+			{
+				foreach (Item child in rootItem.Children)
 				{
-					foreach (Item child in rootItem.Children)
+					// if the preset includes the child add it to the orphan-candidate list (if we don't deserialize it below, it will be marked orphan)
+					var included = _predicate.Includes(child);
+					if (included.IsIncluded)
+						orphanCandidates[child.ID] = child;
+					else
 					{
-						// if the preset includes the child add it to the orphan-candidate list (if we don't deserialize it below, it will be marked orphan)
-						var included = _predicate.Includes(child);
-						if (included.IsIncluded)
-							orphanCandidates[child.ID] = child;
-						else
-						{
-							progress.ReportStatus(
-								string.Format("[SKIPPED] {0}:{1} (and children) because it was excluded by {2}. {3}", child.Database.Name,
-											child.Paths.FullPath, _predicate.GetType().FullName, included.Justification ?? string.Empty),
-								MessageType.Debug);
-						}
+						progress.ReportStatus(
+							string.Format("[S] {0}:{1} (and children) by {2}: {3}", child.Database.Name,
+										child.Paths.FullPath, _predicate.GetType().Name, included.Justification ?? string.Empty),
+							MessageType.Debug);
 					}
 				}
 			}
+
 
 			// check for direct children of the target path
 			var children = _serializationProvider.GetChildItems(rootSerializedItem);
@@ -307,7 +311,7 @@ namespace Unicorn
 
 				if (!included.IsIncluded)
 				{
-					progress.ReportStatus("[SKIPPED] {0}:{1} because {2} excluded it, but it was in {3}. {4}", MessageType.Warning,
+					progress.ReportStatus("[S] {0}:{1} by {2}; but it was in {3}. {4}<br />This usually indicates an extraneous excluded serialized item is present in the {3}, which should be removed.", MessageType.Warning,
 										serializedItem.DatabaseName, serializedItem.ItemPath, _predicate.GetType().Name,
 										_serializationProvider.GetType().Name, included.Justification ?? string.Empty);
 

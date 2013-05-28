@@ -1,0 +1,3 @@
+﻿Bug list:
+1. Seems that its not detecting modified timestamp changes correctly. The Evaluator does not appear to be being invoked at all, which makes me wonder if the SL's abilities to load the corresponding item are busted.
+2. Presets' serializeall method is not implemented. We should modify to take a progress.

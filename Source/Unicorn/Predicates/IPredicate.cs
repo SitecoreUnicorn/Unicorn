@@ -10,5 +10,6 @@ namespace Unicorn.Predicates
 		PredicateResult Includes(ISerializedReference item);
 
 		void SerializeAll(ISerializationProvider provider);
+		Item[] GetRootItems();
 	}
 }

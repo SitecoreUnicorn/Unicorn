@@ -28,7 +28,13 @@ namespace Unicorn.Serialization
 
 			var physicalPath = PathUtils.GetDirectoryPath(reference.ToString());
 
-			if (!Directory.Exists(physicalPath)) throw new FileNotFoundException("The reference path " + physicalPath + " did not exist!", physicalPath);
+			if (!Directory.Exists(physicalPath))
+			{
+				physicalPath = PathUtils.GetFilePath(reference.ToString());
+
+				if(!File.Exists(physicalPath))
+					throw new FileNotFoundException("The reference path " + physicalPath + " did not exist!", physicalPath);
+			}
 
 			return new SitecoreSerializedReference(physicalPath);
 		}
@@ -42,25 +48,43 @@ namespace Unicorn.Serialization
 
 			Func<string, string[]> parseDirectory = path =>
 				{
-					if (Directory.Exists(longPath))
+					if (Directory.Exists(path))
 					{
-						string[] directories = PathUtils.GetDirectories(longPath);
+						var resultSet = new HashSet<string>();
+
+						string[] files = Directory.GetFiles(path, "*" + PathUtils.Extension);
+
+						foreach (var file in files)
+							resultSet.Add(file);
+
+						string[] directories = PathUtils.GetDirectories(path);
+
+						// add directories that aren't already ref'd indirectly by a file
+						foreach (var directory in directories)
+						{
+							if (CommonUtils.IsDirectoryHidden(directory)) continue;
+							
+							if (!resultSet.Contains(directory + PathUtils.Extension))
+								resultSet.Add(directory);
+						}
+
+						string[] resultArray = resultSet.ToArray();
 
 						// make sure if a "templates" item exists in the current set, it goes first
-						if (directories.Length > 1)
+						if (resultArray.Length > 1)
 						{
-							for (int i = 1; i < directories.Length; i++)
+							for (int i = 1; i < resultArray.Length; i++)
 							{
-								if ("templates".Equals(Path.GetFileName(directories[i]), StringComparison.OrdinalIgnoreCase))
+								if ("templates".Equals(Path.GetFileName(resultArray[i]), StringComparison.OrdinalIgnoreCase))
 								{
-									string text = directories[0];
-									directories[0] = directories[i];
-									directories[i] = text;
+									string text = resultArray[0];
+									resultArray[0] = resultArray[i];
+									resultArray[i] = text;
 								}
 							}
 						}
 
-						return directories.Where(x => !CommonUtils.IsDirectoryHidden(x)).ToArray();
+						return resultArray;
 					}
 
 					return new string[0];

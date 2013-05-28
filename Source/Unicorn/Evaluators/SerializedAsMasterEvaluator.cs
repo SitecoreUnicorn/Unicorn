@@ -10,11 +10,11 @@ using Unicorn.Serialization;
 
 namespace Unicorn.Evaluators
 {
-	public class DiskMasterEvaluator : IEvaluator
+	public class SerializedAsMasterEvaluator : IEvaluator
 	{
 		public void EvaluateOrphans(Item[] orphanItems, IProgressStatus progress)
 		{
-			EvaluatorUtility.DeleteItems(orphanItems, progress, (innerProgress, item) => innerProgress.ReportStatus("[DELETING] {0}:{1} because it did not exist on disk".FormatWith(item.Database.Name, item.Paths.FullPath), MessageType.Warning));
+			EvaluatorUtility.DeleteItems(orphanItems, progress, (innerProgress, item) => innerProgress.ReportStatus("[D] {0}:{1} because it did not exist in the serialization provider.".FormatWith(item.Database.Name, item.Paths.FullPath), MessageType.Warning));
 		}
 
 		public bool EvaluateUpdate(ISerializedItem serializedItem, Item existingItem, IProgressStatus progress)
