@@ -23,3 +23,5 @@ Source/*/Properties/Version.cs
 # NuGet packages
 packages/*
 !packages/repositories.config
+
+Source/Unicorn/*.nupkg
