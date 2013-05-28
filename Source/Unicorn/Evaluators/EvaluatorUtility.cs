@@ -33,7 +33,7 @@ namespace Unicorn.Evaluators
 			ID id = item.ID;
 
 			deleteMessage(progress, item);
-
+			
 			item.Delete();
 
 			if (EventDisabler.IsActive)

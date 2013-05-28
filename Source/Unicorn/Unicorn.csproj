@@ -63,9 +63,11 @@
     <Compile Include="SerializationConflictProcessor.cs" />
     <Compile Include="SerializationLoader.cs" />
     <Compile Include="SerializationUtility.cs" />
+    <Compile Include="Serialization\SerializedFieldDictionary.cs" />
     <Compile Include="Serialization\ISerializationProvider.cs" />
     <Compile Include="Serialization\ISerializedItem.cs" />
     <Compile Include="Serialization\ISerializedReference.cs" />
+    <Compile Include="Serialization\SerializedVersion.cs" />
     <Compile Include="Serialization\SitecoreSerializationProvider.cs" />
     <Compile Include="Serialization\SitecoreSerializedItem.cs" />
     <Compile Include="Serialization\SitecoreSerializedReference.cs" />

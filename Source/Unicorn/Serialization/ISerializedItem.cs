@@ -9,5 +9,8 @@ namespace Unicorn.Serialization
 		ID BranchId { get; }
 		ID TemplateId { get; }
 		string TemplateName { get; }
+
+		SerializedFieldDictionary SharedFields { get; }
+		SerializedVersion[] Versions { get; }
 	}
 }

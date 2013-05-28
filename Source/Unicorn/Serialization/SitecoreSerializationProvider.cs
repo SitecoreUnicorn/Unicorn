@@ -1,123 +1,149 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Kamsar.WebConsole;
 using Sitecore.Data.Items;
 using Sitecore.Data.Serialization;
+using Sitecore.Data.Serialization.Exceptions;
+using Sitecore.Data.Serialization.ObjectModel;
+using Sitecore.Diagnostics;
+using Sitecore.StringExtensions;
 
 namespace Unicorn.Serialization
 {
 	public class SitecoreSerializationProvider : ISerializationProvider
 	{
-		public void SerializeSingleItem(Item item)
+		public void SerializeItem(Item item)
 		{
-			throw new NotImplementedException();
+			Manager.DumpItem(item);
 		}
 
 		public ISerializedReference GetReference(string sitecorePath, string databaseName)
 		{
+			Assert.ArgumentNotNullOrEmpty(sitecorePath, "sitecorePath");
+			Assert.ArgumentNotNullOrEmpty(databaseName, "databaseName");
+
 			var reference = new ItemReference(databaseName, sitecorePath);
 
 			var physicalPath = PathUtils.GetDirectoryPath(reference.ToString());
 
-			if (!Directory.Exists(physicalPath)) throw new FileNotFoundException("The root serialization path " + physicalPath + " did not exist!", physicalPath);
+			if (!Directory.Exists(physicalPath)) throw new FileNotFoundException("The reference path " + physicalPath + " did not exist!", physicalPath);
 
-			throw new Exception();
+			return new SitecoreSerializedReference(physicalPath);
 		}
 
 		public ISerializedReference[] GetChildReferences(ISerializedReference parent)
 		{
-			throw new NotImplementedException();
-			/*
-			 
-			private void LoadTreePaths(string physicalPath, LoaderParameters options)
-			{
-				DoLoadTree(physicalPath, options);
-				DoLoadTree(PathUtils.GetShortPath(physicalPath), options);
-				options.Progress.ReportStatus(string.Format("Finished loading serialized items from {0} ({1} total items synchronized)", physicalPath, _itemsProcessed), MessageType.Info);
-			}
-			 
-			// check if we have a directory path to recurse down
-				if (Directory.Exists(path))
-				{
-					string[] directories = PathUtils.GetDirectories(path);
+			Assert.ArgumentNotNull(parent, "parent");
 
-					// make sure if a "templates" item exists in the current set, it goes first
-					if (directories.Length > 1)
+			var longPath = PathUtils.StripPath(parent.ProviderId);
+			var shortPath = PathUtils.GetShortPath(longPath);
+
+			Func<string, string[]> parseDirectory = path =>
+				{
+					if (Directory.Exists(longPath))
 					{
-						for (int i = 1; i < directories.Length; i++)
+						string[] directories = PathUtils.GetDirectories(longPath);
+
+						// make sure if a "templates" item exists in the current set, it goes first
+						if (directories.Length > 1)
 						{
-							if ("templates".Equals(Path.GetFileName(directories[i]), StringComparison.OrdinalIgnoreCase))
+							for (int i = 1; i < directories.Length; i++)
 							{
-								string text = directories[0];
-								directories[0] = directories[i];
-								directories[i] = text;
+								if ("templates".Equals(Path.GetFileName(directories[i]), StringComparison.OrdinalIgnoreCase))
+								{
+									string text = directories[0];
+									directories[0] = directories[i];
+									directories[i] = text;
+								}
 							}
 						}
+
+						return directories.Where(x => !CommonUtils.IsDirectoryHidden(x)).ToArray();
 					}
 
-					foreach(var directory in directories)
-					{
-						if (!CommonUtils.IsDirectoryHidden(directory))
-						{
-							LoadTreeRecursive(directory, options, retryList);
-						}
-					}
-			 */
+					return new string[0];
+				};
+
+			var results = Enumerable.Concat(parseDirectory(longPath), parseDirectory(shortPath));
+
+			return results.Select(x => (ISerializedReference)new SitecoreSerializedReference(x)).ToArray();
 		}
-
 
 		public ISerializedItem GetItem(ISerializedReference reference)
 		{
-			// note PathUtils.StripPath(fileName) will turn an item path into a dir
-			throw new NotImplementedException();
+			Assert.ArgumentNotNull(reference, "reference");
+
+			var path = reference.ProviderId.EndsWith(PathUtils.Extension)
+							? reference.ProviderId
+							: reference.ProviderId + PathUtils.Extension;
+
+			if (!File.Exists(path)) return null;
+
+			using (var reader = new StreamReader(path))
+			{
+				var syncItem = SyncItem.ReadItem(new Tokenizer(reader), true);
+
+				return new SitecoreSerializedItem(syncItem, path);
+			}
 		}
 
 		public ISerializedItem[] GetChildItems(ISerializedReference parent)
 		{
-			/*
-			 if (Directory.Exists(path))
-			{
-				string[] files = Directory.GetFiles(path, "*" + PathUtils.Extension);
-				foreach (string fileName in files)
-			 */
-			throw new Exception();
-		}
+			Assert.ArgumentNotNull(parent, "parent");
 
+			var path = PathUtils.StripPath(parent.ProviderId);
+			if (!Directory.Exists(path)) return new ISerializedItem[0];
+
+			var results = new List<ISerializedItem>();
+
+			string[] files = Directory.GetFiles(path, "*" + PathUtils.Extension);
+			foreach (string fileName in files)
+			{
+				using (var reader = new StreamReader(fileName))
+				{
+					var syncItem = SyncItem.ReadItem(new Tokenizer(reader), true);
+
+					results.Add(new SitecoreSerializedItem(syncItem, fileName));
+				}
+			}
+
+			return results.ToArray();
+		}
 
 		public Item DeserializeItem(ISerializedItem serializedItem, IProgressStatus progress)
 		{
-			//var options = new LoadOptions { DisableEvents = true, ForceUpdate = true, UseNewID = false };
+			Assert.ArgumentNotNull(serializedItem, "serializedItem");
+			Assert.ArgumentNotNull(progress, "progress");
 
-			//result = ItemSynchronization.PasteSyncItem(serializedItem, newOptions, true);
+			
+			var typed = serializedItem as SitecoreSerializedItem;
 
-			/*
-			 catch (ParentItemNotFoundException ex)
-				{
-					result = null;
-					loadResult = ItemLoadStatus.Error;
-					string error =
-						"Cannot load item from path '{0}'. Probable reason: parent item with ID '{1}' not found.".FormatWith(
-							PathUtils.UnmapItemPath(path, options.Root), ex.ParentID);
+			if(typed == null) throw new ArgumentException("Serialized item must be a SitecoreSerializedItem", "serializedItem");
 
-					options.Progress.ReportStatus(error, MessageType.Error);
+			try
+			{
+				var options = new LoadOptions { DisableEvents = true, ForceUpdate = true, UseNewID = false };
 
-					LogLocalizedError(error);
-				}
-				catch (ParentForMovedItemNotFoundException ex2)
-				{
-					result = ex2.Item;
-					loadResult = ItemLoadStatus.Error;
-					string error =
-						"Item from path '{0}' cannot be moved to appropriate location. Possible reason: parent item with ID '{1}' not found."
-							.FormatWith(PathUtils.UnmapItemPath(path, options.Root), ex2.ParentID);
+				return ItemSynchronization.PasteSyncItem(typed.InnerItem, options, true);
+			}
+			catch (ParentItemNotFoundException ex)
+			{
+				string error = "Cannot load item from path '{0}'. Probable reason: parent item with ID '{1}' not found.".FormatWith(serializedItem.ProviderId, ex.ParentID);
 
-					options.Progress.ReportStatus(error, MessageType.Error);
+				progress.ReportStatus(error, MessageType.Error);
 
-					LogLocalizedError(error);
-				}
-				return result;*/
+				return null;
+			}
+			catch (ParentForMovedItemNotFoundException ex2)
+			{
+				string error = "Item from path '{0}' cannot be moved to appropriate location. Possible reason: parent item with ID '{1}' not found.".FormatWith(serializedItem.ProviderId, ex2.ParentID);
 
-			throw new Exception();
+				progress.ReportStatus(error, MessageType.Error);
+
+				return null;
+			}
 		}
 	}
 }

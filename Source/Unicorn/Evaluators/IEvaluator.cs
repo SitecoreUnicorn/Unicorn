@@ -21,6 +21,6 @@ namespace Unicorn.Evaluators
 		/// <param name="serializedItem">The serialized item to evaluate</param>
 		/// <param name="existingItem">The existing item in Sitecore</param>
 		/// <returns>True to cause the serialized item to overwrite the existing item, false to leave the existing database item alone.</returns>
-		bool EvaluateUpdate(ISerializedItem serializedItem, Item existingItem);
+		bool EvaluateUpdate(ISerializedItem serializedItem, Item existingItem, IProgressStatus progress);
 	}
 }

@@ -8,7 +8,6 @@ using Sitecore.Diagnostics;
 using Sitecore.Eventing;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Unicorn.Predicates;
 using Unicorn.Serialization;
@@ -21,7 +20,7 @@ namespace Unicorn
 	/// </summary>
 	public class SerializationLoader
 	{
-		private int _itemsProcessed = 0;
+		private int _itemsProcessed;
 		private readonly ISerializationProvider _serializationProvider;
 		private readonly IPredicate _predicate;
 		private readonly IEvaluator _evaluator;
@@ -317,7 +316,7 @@ namespace Unicorn
 
 				// detect if we should run an update for the item or if it's already up to date
 				var existingItem = GetExistingItem(serializedItem);
-				if (existingItem == null || _evaluator.EvaluateUpdate(serializedItem, existingItem))
+				if (existingItem == null || _evaluator.EvaluateUpdate(serializedItem, existingItem, progress))
 				{
 					string flag = (existingItem == null) ? "[A]" : "[U]";
 
@@ -393,7 +392,7 @@ namespace Unicorn
 
 			public override string ToString()
 			{
-				return "Reverting of Standard values of template is delayed. " + this.Message;
+				return "Reverting of Standard values of template is delayed. " + Message;
 			}
 		}
 
@@ -436,7 +435,7 @@ namespace Unicorn
 		/// <summary>
 		/// The result from loading a single item from disk
 		/// </summary>
-		private enum ItemLoadStatus { Success, Error, Skipped }
+		private enum ItemLoadStatus { Success, Skipped }
 
 	}
 }
