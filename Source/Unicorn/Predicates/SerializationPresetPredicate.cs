@@ -161,7 +161,7 @@ namespace Unicorn.Predicates
 		/// </summary>
 		protected virtual PredicateResult ExcludeMatchesPath(IEnumerable<ExcludeEntry> entries, string sitecorePath)
 		{
-			bool match = entries.Any(entry => entry.Type.Equals("path", StringComparison.Ordinal) && entry.Value.Equals(sitecorePath, StringComparison.OrdinalIgnoreCase));
+			bool match = entries.Any(entry => entry.Type.Equals("path", StringComparison.Ordinal) && sitecorePath.StartsWith(entry.Value, StringComparison.OrdinalIgnoreCase));
 
 			return match
 						? new PredicateResult("Item path exclusion rule")
