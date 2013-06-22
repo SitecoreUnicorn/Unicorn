@@ -1,5 +1,4 @@
-﻿using System;
-using Kamsar.WebConsole;
+﻿using Kamsar.WebConsole;
 using Sitecore.Data.Serialization;
 using Sitecore.Data.Serialization.Presets;
 
@@ -13,22 +12,28 @@ namespace Unicorn
 	/// </summary>
 	public class AdvancedLoadOptions : LoadOptions
 	{
-		public AdvancedLoadOptions(string path) : this(new IncludeEntry(path))
+		private IProgressStatus _progress;
+		public AdvancedLoadOptions(string path)
+			: this(new IncludeEntry(path))
 		{
-			
+
 		}
 
 		public AdvancedLoadOptions(IncludeEntry preset)
 		{
 			DeleteOrphans = false;
-			Progress = new StringProgressStatus();
+			Progress = new SitecoreLogProgressStatus();
 			Preset = preset;
 		}
 
 		/// <summary>
 		/// A progress implementation the loader can use to report progress of loading serialized items
 		/// </summary>
-		public IProgressStatus Progress { get; set; }
+		public IProgressStatus Progress
+		{
+			get { return _progress; } 
+			set { _progress = new TeeProgressStatus(new SitecoreLogProgressStatus(), value); }
+		}
 
 		/// <summary>
 		/// The serialization preset we'll be loading with the loader
