@@ -493,7 +493,7 @@ namespace Unicorn
 			ID id = item.ID;
 			string path = item.Paths.Path;
 
-			item.Delete();
+			item.Recycle();
 
 			if (EventDisabler.IsActive)
 			{
