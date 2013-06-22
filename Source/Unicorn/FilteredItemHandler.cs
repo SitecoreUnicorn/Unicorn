@@ -148,7 +148,7 @@ namespace Unicorn
 				var parentSerializationPath = PathUtils.GetDirectoryPath(new ItemReference(parentItem).ToString());
 
 				if(Directory.Exists(parentSerializationPath) && Presets.Includes(parentItem))
-					base.OnItemDeleted(sender, e);
+					Manager.CleanupPath(parentSerializationPath, false);
 			}
 		}
 	}
