@@ -11,6 +11,7 @@ using Sitecore.Data.Serialization.ObjectModel;
 using Sitecore.Data.Items;
 using Sitecore.Data.Serialization;
 using Sitecore.Data.Fields;
+using System.Threading;
 
 namespace Unicorn
 {
@@ -40,38 +41,69 @@ namespace Unicorn
 			// we had errors, and we got a post-back result of yes, allow overwrite
 			if (args.IsPostBack) return;
 
+			string error = GetErrorValue(args);
+
+			// no errors detected, we're good
+			if (string.IsNullOrEmpty(error)) return;
+
+			// occasionally if you serialize an item "too fast" after changing it, the ShadowWriter's async operations
+			// will be in process or have not yet begun to update the serialized item.
+			// in these circumstances, we wish to treat a "conflict" or exception as a possible false positive, wait a bit for the ShadowWriter,
+			// and try again. If it fails 4x in a row, 500ms apart, it's considered an unrecoverable conflict and we show the error.
+			const int retries = 4;
+			for (int retryCount = 0; retryCount < retries; retryCount++)
+			{
+				Thread.Sleep(500);
+				error = GetErrorValue(args);
+				if (string.IsNullOrEmpty(error)) return;
+			}
+
+			Sitecore.Web.UI.Sheer.SheerResponse.Confirm(error);		
+			args.WaitForPostBack();
+		}
+
+		private string GetErrorValue(SaveArgs args)
+		{
 			var results = new Dictionary<Item, IList<FieldDesynchronization>>();
 
-			foreach (var item in args.Items)
+			try
 			{
-				Item existingItem = Client.ContentDatabase.GetItem(item.ID);
-				SyncItem serializedVersion = ReadSerializedVersion(existingItem);
+				foreach (var item in args.Items)
+				{
+					Item existingItem = Client.ContentDatabase.GetItem(item.ID);
+					SyncItem serializedVersion = ReadSerializedVersion(existingItem);
 
-				// not having an existing serialized version means no possibility of conflict here
-				if (serializedVersion == null) continue;
+					// not having an existing serialized version means no possibility of conflict here
+					if (serializedVersion == null) continue;
 
-				var fieldIssues = GetFieldSyncStatus(existingItem, serializedVersion);
+					var fieldIssues = GetFieldSyncStatus(existingItem, serializedVersion);
 
-				if (fieldIssues.Count == 0) continue;
+					if (fieldIssues.Count == 0) continue;
 
-				results.Add(existingItem, fieldIssues);
+					results.Add(existingItem, fieldIssues);
+				}
+
+				// no problems
+				if (results.Count == 0) return null;
+
+				var sb = new StringBuilder();
+				sb.Append("CRITICAL:\n");
+				sb.Append(
+					"Item state conflicted with existing serialized value. Chances are you need to sync your database with the filesystem. The following fields had problems:\n");
+				foreach (var item in results)
+				{
+					sb.AppendFormat("\n{0}: {1}", item.Key.DisplayName, string.Join(", ", item.Value.Select(x => x.FieldName)));
+				}
+
+				sb.Append("\n\nDo you want to overwrite anyway? You may cause someone else to lose committed work by doing this.");
+
+				return sb.ToString();
 			}
-
-			// no problems
-			if (results.Count == 0) return;
-
-			var sb = new StringBuilder();
-			sb.Append("CRITICAL:\n");
-			sb.Append("Item state conflicted with existing serialized value. Chances are you need to sync your database with the filesystem. The following fields had problems:\n");
-			foreach (var item in results)
+			catch (Exception ex)
 			{
-				sb.AppendFormat("\n{0}: {1}", item.Key.DisplayName, string.Join(", ", item.Value.Select(x => x.FieldName)));
+				Log.Error("Exception occurred while performing serialization conflict check!", ex, this);
+				return "Exception occurred: " + ex.Message; // this will cause a few retries
 			}
-
-			sb.Append("\n\nDo you want to overwrite anyway? You may cause someone else to lose committed work by doing this.");
-
-			Sitecore.Web.UI.Sheer.SheerResponse.Confirm(sb.ToString());		
-			args.WaitForPostBack();
 		}
 
 		private IList<FieldDesynchronization> GetFieldSyncStatus(Item item, SyncItem serializedItem)
