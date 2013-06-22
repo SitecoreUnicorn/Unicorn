@@ -122,6 +122,9 @@ namespace Unicorn
 
 			foreach (Field field in item.Fields)
 			{
+				if (field.ID == FieldIDs.Revision || field.ID == FieldIDs.Updated) continue; // we're doing a data comparison here - revision and updated don't matter
+				// skipping these fields allows us to ignore spurious saves the template builder makes to unchanged items being conflicts
+			
 				// find the field in the serialized item in either versioned or shared fields
 				var serializedField = serializedVersion.Fields.FirstOrDefault(x => x.FieldID == field.ID.ToString()) ??
 									serializedItem.SharedFields.FirstOrDefault(x => x.FieldID == field.ID.ToString());

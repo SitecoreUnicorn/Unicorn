@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using Sitecore.Data.Items;
 using Sitecore.Data.Serialization;
 using Sitecore.Data.Serialization.Presets;
+using Sitecore.Diagnostics;
 using Sitecore.Events;
 using Sitecore.Data;
 using System.IO;
+using Sitecore;
 
 namespace Unicorn
 {
@@ -32,7 +34,27 @@ namespace Unicorn
 
 			if (!Presets.Includes(item)) return;
 
+			var changes = Event.ExtractParameter<ItemChanges>(e, 1);
+
+			if (!HasValidChanges(changes)) return;
+
 			base.OnItemSaved(sender, e);
+		}
+
+		private bool HasValidChanges(ItemChanges changes)
+		{
+			foreach (FieldChange change in changes.FieldChanges)
+			{
+				if(change.OriginalValue == change.Value) continue;
+				if (change.FieldID == FieldIDs.Revision) continue;
+				if (change.FieldID == FieldIDs.Updated) continue;
+
+				return true;
+			}
+
+			Log.Info("Item " + changes.Item.Paths.FullPath + " was saved, but contained no consequential changes so it was not serialized.", this);
+
+			return false;
 		}
 
 		/// <summary>
@@ -106,7 +128,14 @@ namespace Unicorn
 
 			if (item == null || oldName == null) return;
 
+			// the name wasn't actually changed, you sneaky template builder you. Don't write.
+			if (oldName.Equals(item.Name, StringComparison.Ordinal)) return;
+
 			if (!Presets.Includes(item)) return;
+
+			// we push this to get updated. Because saving now ignores "inconsquential" changes like a rename that do not change data fields,
+			// this keeps renames occurring even if the field changes are inconsequential
+			ShadowWriter.PutItem(Operation.Updated, item, item.Parent);
 
 			var reference = new ItemReference(item).ToString();
 			var oldReference = reference.Substring(0, reference.LastIndexOf('/') + 1) + oldName;
