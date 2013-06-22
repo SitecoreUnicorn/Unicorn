@@ -19,3 +19,6 @@ Source/*/obj
 
 # Ignore generated Version.cs files
 Source/*/Properties/Version.cs
+
+Packages/*
+!Packages/repositories.config
