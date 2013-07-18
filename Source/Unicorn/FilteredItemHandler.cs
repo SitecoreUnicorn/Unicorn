@@ -84,11 +84,9 @@ namespace Unicorn
 			oldReference = oldReference + '/' + item.Name;
 
 			var oldSerializationPath = PathUtils.GetDirectoryPath(oldReference);
-			var newSerializationPath = PathUtils.GetDirectoryPath(reference);
 
-			if (Directory.Exists(oldSerializationPath) && !Directory.Exists(newSerializationPath))
-				Directory.Move(oldSerializationPath, newSerializationPath);
-		
+			FixupDescendants(oldSerializationPath, item);
+
 			base.OnItemMoved(sender, e);
 		}
 
@@ -141,10 +139,9 @@ namespace Unicorn
 			var oldReference = reference.Substring(0, reference.LastIndexOf('/') + 1) + oldName;
 			
 			var oldSerializationPath = PathUtils.GetDirectoryPath(oldReference);
-			var newSerializationPath = PathUtils.GetDirectoryPath(reference);
 
-			if(Directory.Exists(oldSerializationPath) && !Directory.Exists(newSerializationPath))
-				Directory.Move(oldSerializationPath, newSerializationPath);
+			if(Directory.Exists(oldSerializationPath))
+				FixupDescendants(oldSerializationPath, item);
 		}
 
 		public new void OnItemVersionRemoved(object sender, EventArgs e)
@@ -178,6 +175,25 @@ namespace Unicorn
 
 				if(Directory.Exists(parentSerializationPath) && Presets.Includes(parentItem))
 					Manager.CleanupPath(parentSerializationPath, false);
+			}
+		}
+
+		private static void FixupDescendants(string oldSerializationPath, Item modifiedParentItem)
+		{
+			// if serialized children exist, we want to find children of the *new* item location and
+			// re-dump them (this will fix their paths and such)
+			if (Directory.Exists(oldSerializationPath))
+			{
+				// this could get ugly if you moved a giant folder, but that is unlikely unless abusing
+				// Unicorn for things it isn't meant for
+				var children = modifiedParentItem.Axes.GetDescendants();
+				foreach (var child in children)
+				{
+					if (Presets.Includes(child))
+						Manager.DumpItem(child);
+				}
+
+				Directory.Delete(oldSerializationPath, true);
 			}
 		}
 	}
