@@ -73,11 +73,7 @@ namespace Unicorn
 			var oldParent = item.Database.GetItem(oldParentId);
 
 			if (oldParent == null) return;
-
-			if (!Presets.Includes(item)) return;
-
-			// get references to new and old paths
-			var reference = new ItemReference(item).ToString();
+			
 			var oldReference = new ItemReference(oldParent).ToString();
 
 			// fix the reference to the old parent to be a reference to the old item path
@@ -86,6 +82,29 @@ namespace Unicorn
 			var oldSerializationPath = PathUtils.GetDirectoryPath(oldReference);
 
 			FixupDescendants(oldSerializationPath, item);
+
+			if (!Presets.Includes(item))
+			{
+				// If the preset does not include the destination path, we need to delete the old items from disk
+				// https://github.com/kamsar/Unicorn/issues/3
+				// Thanks Mike Edwards!
+				var oldSerializedItemPath = PathUtils.GetFilePath(oldReference);
+
+				if(File.Exists(oldSerializedItemPath)) File.Delete(oldSerializedItemPath);
+
+				return; // don't invoke the base behavior as we don't need serialization
+			}
+
+			// if the source location was not part of the preset, it probably isn't on disk
+			// which means base.OnItemMoved will explode quicker than you can say 'bonkers'!
+			// so instead we simply dump the new path and children
+			// NOTE: it's imperfect because hypothetically children of the new path could be excluded by the preset
+			// but whatever, that's a massive edge case.
+			if (!Presets.Includes(oldParent))
+			{
+				Manager.DumpTree(item);
+				return;
+			}
 
 			base.OnItemMoved(sender, e);
 		}
