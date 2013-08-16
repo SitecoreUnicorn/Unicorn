@@ -321,11 +321,6 @@ namespace Unicorn
 			{
 				using (TextReader fileReader = new StreamReader(File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read)))
 				{
-					LogLocalized("Loading item from path {0}.", new object[]
-						{
-							PathUtils.UnmapItemPath(path, options.Root)
-						});
-
 					bool disabledLocally = ItemHandler.DisabledLocally;
 					try
 					{
@@ -373,15 +368,19 @@ namespace Unicorn
 							}
 
 							var newOptions = new LoadOptions(options);
+							var targetItem = GetTargetItem(serializedItem);
 
 							// in some cases we want to force an update for this item only
-							if (!options.ForceUpdate && ShouldForceUpdate(serializedItem, options.Progress))
+							if (!options.ForceUpdate && ShouldForceUpdate(serializedItem, targetItem, options.Progress))
 							{
-								options.Progress.ReportStatus(string.Format("[FORCED] {0}:{1}", serializedItem.DatabaseName, serializedItem.ItemPath), MessageType.Info);
 								newOptions.ForceUpdate = true;
 							}
 
-							result = ItemSynchronization.PasteSyncItem(serializedItem, newOptions, true);
+							// we only load the item if the force has been enabled - we pre-calculate if forcing is necessary or no update is needed
+							if (newOptions.ForceUpdate)
+								result = ItemSynchronization.PasteSyncItem(serializedItem, newOptions, true);
+							else
+								result = targetItem; // we didn't make changes so the existing item is the 'load result'
 
 							loadResult = ItemLoadResult.Success;
 						}
@@ -389,9 +388,7 @@ namespace Unicorn
 						{
 							result = null;
 							loadResult = ItemLoadResult.Error;
-							string error =
-								"Cannot load item from path '{0}'. Probable reason: parent item with ID '{1}' not found.".FormatWith(
-									PathUtils.UnmapItemPath(path, options.Root), ex.ParentID);
+							string error = "Cannot load item from path '{0}'. Probable reason: parent item with ID '{1}' not found.".FormatWith(PathUtils.UnmapItemPath(path, options.Root), ex.ParentID);
 
 							options.Progress.ReportStatus(error, MessageType.Error);
 
@@ -401,9 +398,7 @@ namespace Unicorn
 						{
 							result = ex2.Item;
 							loadResult = ItemLoadResult.Error;
-							string error =
-								"Item from path '{0}' cannot be moved to appropriate location. Possible reason: parent item with ID '{1}' not found."
-									.FormatWith(PathUtils.UnmapItemPath(path, options.Root), ex2.ParentID);
+							string error = "Item from path '{0}' cannot be moved to appropriate location. Possible reason: parent item with ID '{1}' not found.".FormatWith(PathUtils.UnmapItemPath(path, options.Root), ex2.ParentID);
 
 							options.Progress.ReportStatus(error, MessageType.Error);
 
@@ -428,20 +423,19 @@ namespace Unicorn
 		/// This changes the rules slightly from the default deserializer by forcing if the dates are
 		/// different instead of only if they are newer on disk.
 		/// </summary>
-		private bool ShouldForceUpdate(SyncItem syncItem, IProgressStatus progress)
+		private bool ShouldForceUpdate(SyncItem syncItem, Item targetItem, IProgressStatus progress)
 		{
-			Database db = Factory.GetDatabase(syncItem.DatabaseName);
-
-			Assert.IsNotNull(db, "Database was null");
-
-			Item target = db.GetItem(syncItem.ID);
-
-			if (target == null) return true; // target item doesn't exist - must force
+			if (targetItem == null)
+			{
+				progress.ReportStatus(string.Format("[NEW] {0}:{1}", syncItem.DatabaseName, syncItem.ItemPath), MessageType.Info);
+				return true; // target item doesn't exist - must force
+			}
 
 			// see if the modified date is different in any version (because disk is master, ANY changes we want to force overwrite)
 			return syncItem.Versions.Any(version =>
 				{
-					Item targetVersion = target.Database.GetItem(target.ID, Language.Parse(version.Language), Sitecore.Data.Version.Parse(version.Version));
+					bool passedComparisons = false; // this flag lets us differentiate between items that we could not determine equality for, and items that just matched every criteria and dont force
+					Item targetVersion = targetItem.Database.GetItem(targetItem.ID, Language.Parse(version.Language), Sitecore.Data.Version.Parse(version.Version));
 					var serializedModified = version.Values[FieldIDs.Updated.ToString()];
 					var itemModified = targetVersion[FieldIDs.Updated.ToString()];
 
@@ -451,14 +445,18 @@ namespace Unicorn
 
 
 						if (result)
-							progress.ReportStatus(
-								string.Format("{0} ({1} #{2}): Disk modified {3}, Item modified {4}", syncItem.ItemPath, version.Language,
-											version.Version, serializedModified, itemModified), MessageType.Debug);
+						{
+							progress.ReportStatus(string.Format("[MODIFIED] {0}:{1} (Date)", syncItem.DatabaseName, syncItem.ItemPath), MessageType.Info);
+							progress.ReportStatus(string.Format("{0} #{1}: Disk modified {2}, Item modified {3}", version.Language,	version.Version, FormatIsoDate(serializedModified), FormatIsoDate(itemModified)), MessageType.Debug);
 
-						return result;
+							return true;
+						}
+
+						passedComparisons = true;
+						// if the dates matched we still want to verify revision and name
 					}
 
-					// ocasionally a version will not have a modified date, only a revision so we compare those as a backup
+					// ocasionally a version will not have a modified date or a modified date will not get updated, only a revision change so we compare those as a backup
 					var serializedRevision = version.Values[FieldIDs.Revision.ToString()];
 					var itemRevision = targetVersion.Statistics.Revision;
 
@@ -467,19 +465,51 @@ namespace Unicorn
 						var result = string.Compare(serializedRevision, itemRevision, StringComparison.InvariantCulture) != 0;
 
 						if (result)
-							progress.ReportStatus(
-								string.Format("{0} ({1} #{2}): Disk revision {3}, Item revision {4}", syncItem.ItemPath, version.Language,
-											version.Version, serializedRevision, itemRevision), MessageType.Debug);
+						{
+							progress.ReportStatus(string.Format("[MODIFIED] {0}:{1} (Revision)", syncItem.DatabaseName, syncItem.ItemPath), MessageType.Info);
+							progress.ReportStatus(string.Format("{0} #{1}: Disk revision {2}, Item revision {3}", version.Language, version.Version, serializedRevision, itemRevision), MessageType.Debug);
 
-						return result;
+							return true;
+						}
+
+						passedComparisons = true;
+						// if the revisions matched, we still want to verify the names match
 					}
 
-					// if we get here we have no valid updated or revision to compare. Let's ignore the item as if it was a real item it'd have one of these.
-					if(!syncItem.ItemPath.StartsWith("/sitecore/templates/System") && !syncItem.ItemPath.StartsWith("/sitecore/templates/Sitecore Client")) // this occurs a lot in stock system templates - we ignore warnings for those as it's expected.
+					// as a last check, see if the names do not match. Renames, for example, only change the name and not the revision or modified date (wtf?)
+					// unlike other checks, this one does not count as 'passing a comparison' if it fails to match a force. Having names be equal is not a strong enough measure of equality.
+					if (!syncItem.Name.Equals(targetItem.Name))
+					{
+						progress.ReportStatus(string.Format("[MODIFIED] {0}:{1} (Name)", syncItem.DatabaseName, syncItem.ItemPath), MessageType.Info);
+						progress.ReportStatus(string.Format("Disk name {0}, Item name {1}", syncItem.Name, targetItem.Name), MessageType.Debug);
+						return true;
+					}
+
+					// if we get here and no comparisons were passed, we have no valid updated or revision to compare. Let's ignore the item as if it was a real item it'd have one of these.
+					if(!passedComparisons && !syncItem.ItemPath.StartsWith("/sitecore/templates/System") && !syncItem.ItemPath.StartsWith("/sitecore/templates/Sitecore Client")) // this occurs a lot in stock system templates - we ignore warnings for those as it's expected.
 						progress.ReportStatus(string.Format("{0} ({1} #{2}): Serialized version had no modified or revision field to check for update.", syncItem.ItemPath, version.Language, version.Version), MessageType.Warning);
 
+					// the items are the same as far as we're concerned - don't update
 					return false;
 				});
+		}
+
+		private Item GetTargetItem(SyncItem syncItem)
+		{
+			Database db = Factory.GetDatabase(syncItem.DatabaseName);
+
+			Assert.IsNotNull(db, "Database was null");
+
+			Item target = db.GetItem(syncItem.ID);
+
+			return target;
+		}
+
+		private string FormatIsoDate(string isoDate)
+		{
+			if (!DateUtil.IsIsoDate(isoDate)) return isoDate;
+
+			return DateUtil.IsoDateToDateTime(isoDate).ToString("G");
 		}
 
 		/// <summary>
