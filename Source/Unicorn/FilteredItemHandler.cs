@@ -212,7 +212,8 @@ namespace Unicorn
 						Manager.DumpItem(child);
 				}
 
-				Directory.Delete(oldSerializationPath, true);
+				if (Directory.Exists(oldSerializationPath))
+					Directory.Delete(oldSerializationPath, true);
 			}
 		}
 	}
