@@ -40,8 +40,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\packages\Kamsar.WebConsole.1.2.2.0\lib\net40\Kamsar.WebConsole.dll</HintPath>
     </Reference>
-    <Reference Include="Sitecore.Kernel">
-      <HintPath>..\Sitecore\Sitecore.Kernel.dll</HintPath>
+    <Reference Include="Sitecore.Kernel, Version=6.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\lib\Sitecore\Sitecore.Kernel.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
@@ -55,6 +56,7 @@
     <Compile Include="Evaluators\EvaluatorUtility.cs" />
     <Compile Include="Evaluators\IEvaluator.cs" />
     <Compile Include="FilteredItemHandler.cs" />
+    <Compile Include="Data\ISitecoreItem.cs" />
     <Compile Include="PresetExtensions.cs" />
     <Compile Include="Predicates\PredicateResult.cs" />
     <Compile Include="Predicates\IPredicate.cs" />
@@ -64,6 +66,7 @@
     <Compile Include="SerializationLoader.cs" />
     <Compile Include="SerializationUtility.cs" />
     <Compile Include="Serialization\SerializedFieldDictionary.cs" />
+    <Compile Include="Data\SitecoreItem.cs" />
     <Compile Include="SitecoreLogProgressStatus.cs" />
     <Compile Include="Serialization\ISerializationProvider.cs" />
     <Compile Include="Serialization\ISerializedItem.cs" />
@@ -81,7 +84,6 @@
     <Content Include="TODO.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="..\..\Build\KernelResolver.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
 	   Other similar extension points exist, see Microsoft.Common.targets.

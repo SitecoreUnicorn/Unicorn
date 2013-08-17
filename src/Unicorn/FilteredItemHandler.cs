@@ -1,10 +1,12 @@
 ﻿using System;
+using Sitecore;
 using Sitecore.Data.Items;
 using Sitecore.Data.Serialization;
 using Sitecore.Diagnostics;
 using Sitecore.Events;
 using Sitecore.Data;
 using System.IO;
+using Unicorn.Predicates;
 
 namespace Unicorn
 {
