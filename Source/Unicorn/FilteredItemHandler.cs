@@ -1,10 +1,10 @@
 ﻿using System;
 using Sitecore.Data.Items;
 using Sitecore.Data.Serialization;
+using Sitecore.Diagnostics;
 using Sitecore.Events;
 using Sitecore.Data;
 using System.IO;
-using Unicorn.Predicates;
 
 namespace Unicorn
 {
@@ -31,7 +31,27 @@ namespace Unicorn
 
 			if (!Preset.Includes(item).IsIncluded) return;
 
+			var changes = Event.ExtractParameter<ItemChanges>(e, 1);
+
+			if (!HasValidChanges(changes)) return;
+
 			base.OnItemSaved(sender, e);
+		}
+
+		private bool HasValidChanges(ItemChanges changes)
+		{
+			foreach (FieldChange change in changes.FieldChanges)
+			{
+				if(change.OriginalValue == change.Value) continue;
+				if (change.FieldID == FieldIDs.Revision) continue;
+				if (change.FieldID == FieldIDs.Updated) continue;
+
+				return true;
+			}
+
+			Log.Info("Item " + changes.Item.Paths.FullPath + " was saved, but contained no consequential changes so it was not serialized.", this);
+
+			return false;
 		}
 
 		/// <summary>
@@ -50,22 +70,40 @@ namespace Unicorn
 			var oldParent = item.Database.GetItem(oldParentId);
 
 			if (oldParent == null) return;
-
-			if (!Preset.Includes(item).IsIncluded) return;
-
-			// get references to new and old paths
-			var reference = new ItemReference(item).ToString();
+			
+			if (!Presets.Includes(item)) return;
 			var oldReference = new ItemReference(oldParent).ToString();
 
 			// fix the reference to the old parent to be a reference to the old item path
 			oldReference = oldReference + '/' + item.Name;
 
 			var oldSerializationPath = PathUtils.GetDirectoryPath(oldReference);
-			var newSerializationPath = PathUtils.GetDirectoryPath(reference);
 
-			if (Directory.Exists(oldSerializationPath) && !Directory.Exists(newSerializationPath))
-				Directory.Move(oldSerializationPath, newSerializationPath);
-		
+			FixupDescendants(oldSerializationPath, item);
+
+			if (!Presets.Includes(item))
+			{
+				// If the preset does not include the destination path, we need to delete the old items from disk
+				// https://github.com/kamsar/Unicorn/issues/3
+				// Thanks Mike Edwards!
+				var oldSerializedItemPath = PathUtils.GetFilePath(oldReference);
+
+				if(File.Exists(oldSerializedItemPath)) File.Delete(oldSerializedItemPath);
+
+				return; // don't invoke the base behavior as we don't need serialization
+			}
+
+			// if the source location was not part of the preset, it probably isn't on disk
+			// which means base.OnItemMoved will explode quicker than you can say 'bonkers'!
+			// so instead we simply dump the new path and children
+			// NOTE: it's imperfect because hypothetically children of the new path could be excluded by the preset
+			// but whatever, that's a massive edge case.
+			if (!Presets.Includes(oldParent))
+			{
+				Manager.DumpTree(item);
+				return;
+			}
+
 			base.OnItemMoved(sender, e);
 		}
 
@@ -105,16 +143,22 @@ namespace Unicorn
 
 			if (item == null || oldName == null) return;
 
+			// the name wasn't actually changed, you sneaky template builder you. Don't write.
+			if (oldName.Equals(item.Name, StringComparison.Ordinal)) return;
+
 			if (!Preset.Includes(item).IsIncluded) return;
+
+			// we push this to get updated. Because saving now ignores "inconsquential" changes like a rename that do not change data fields,
+			// this keeps renames occurring even if the field changes are inconsequential
+			ShadowWriter.PutItem(Operation.Updated, item, item.Parent);
 
 			var reference = new ItemReference(item).ToString();
 			var oldReference = reference.Substring(0, reference.LastIndexOf('/') + 1) + oldName;
 			
 			var oldSerializationPath = PathUtils.GetDirectoryPath(oldReference);
-			var newSerializationPath = PathUtils.GetDirectoryPath(reference);
 
-			if(Directory.Exists(oldSerializationPath) && !Directory.Exists(newSerializationPath))
-				Directory.Move(oldSerializationPath, newSerializationPath);
+			if(Directory.Exists(oldSerializationPath))
+				FixupDescendants(oldSerializationPath, item);
 		}
 
 		public new void OnItemVersionRemoved(object sender, EventArgs e)
@@ -147,7 +191,27 @@ namespace Unicorn
 				var parentSerializationPath = PathUtils.GetDirectoryPath(new ItemReference(parentItem).ToString());
 
 				if(Directory.Exists(parentSerializationPath) && Preset.Includes(parentItem).IsIncluded)
-					base.OnItemDeleted(sender, e);
+					Manager.CleanupPath(parentSerializationPath, false);
+			}
+		}
+
+		private static void FixupDescendants(string oldSerializationPath, Item modifiedParentItem)
+		{
+			// if serialized children exist, we want to find children of the *new* item location and
+			// re-dump them (this will fix their paths and such)
+			if (Directory.Exists(oldSerializationPath))
+			{
+				// this could get ugly if you moved a giant folder, but that is unlikely unless abusing
+				// Unicorn for things it isn't meant for
+				var children = modifiedParentItem.Axes.GetDescendants();
+				foreach (var child in children)
+				{
+					if (Presets.Includes(child))
+						Manager.DumpItem(child);
+				}
+
+				if (Directory.Exists(oldSerializationPath))
+					Directory.Delete(oldSerializationPath, true);
 			}
 		}
 	}

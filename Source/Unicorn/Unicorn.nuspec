@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>$id$</id>
+    <version>$version$</version>
+    <title>$title$</title>
+    <authors>Kam Figy</authors>
+    <owners>Kam Figy</owners>
+    <licenseUrl>http://opensource.org/licenses/MIT</licenseUrl>
+    <projectUrl>https://github.com/kamsar/Unicorn</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Unicorn is a utility for Sitecore that solves the issue of moving templates, renderings, and other database items between Sitecore instances.</description>
+    <releaseNotes>Renaming fixes, modification-check fixes, output format improvements</releaseNotes>
+    <copyright>Copyright 2013</copyright>
+    <tags>sitecore serialization</tags>
+	<dependencies>
+		<dependency id="Kamsar.WebConsole" version="1.2.2" />
+	</dependencies>
+  </metadata>
+	
+	<files>
+		<file src="..\..\Documentation\Serialization.config" target="content\App_Config\Include" />
+		<file src="..\Sync Tool\sync-database.aspx*" target="content" />
+	</files>
+</package>

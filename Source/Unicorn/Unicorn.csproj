@@ -36,9 +36,9 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Kamsar.WebConsole, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Kamsar.WebConsole, Version=1.2.2.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\packages\Kamsar.WebConsole.1.2.0.0\lib\net40\Kamsar.WebConsole.dll</HintPath>
+      <HintPath>..\..\packages\Kamsar.WebConsole.1.2.2.0\lib\net40\Kamsar.WebConsole.dll</HintPath>
     </Reference>
     <Reference Include="Sitecore.Kernel">
       <HintPath>..\Sitecore\Sitecore.Kernel.dll</HintPath>
@@ -64,6 +64,7 @@
     <Compile Include="SerializationLoader.cs" />
     <Compile Include="SerializationUtility.cs" />
     <Compile Include="Serialization\SerializedFieldDictionary.cs" />
+    <Compile Include="SitecoreLogProgressStatus.cs" />
     <Compile Include="Serialization\ISerializationProvider.cs" />
     <Compile Include="Serialization\ISerializedItem.cs" />
     <Compile Include="Serialization\ISerializedReference.cs" />
