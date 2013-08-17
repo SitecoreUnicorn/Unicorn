@@ -3,20 +3,28 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Kamsar.WebConsole;
+using Sitecore.Configuration;
 using Sitecore.Data.Items;
 using Sitecore.Data.Serialization;
 using Sitecore.Data.Serialization.Exceptions;
 using Sitecore.Data.Serialization.ObjectModel;
 using Sitecore.Diagnostics;
 using Sitecore.StringExtensions;
+using Unicorn.Data;
 
 namespace Unicorn.Serialization
 {
 	public class SitecoreSerializationProvider : ISerializationProvider
 	{
-		public void SerializeItem(Item item)
+		public void SerializeItem(ISourceItem item)
 		{
-			Manager.DumpItem(item);
+			Assert.ArgumentNotNull(item, "item");
+
+			var sitecoreItem = Factory.GetDatabase(item.Database).GetItem(item.Id);
+
+			Assert.IsNotNull(sitecoreItem, "Item to dump did not exist!");
+
+			Manager.DumpItem(sitecoreItem);
 		}
 
 		public ISerializedReference GetReference(string sitecorePath, string databaseName)
@@ -136,7 +144,7 @@ namespace Unicorn.Serialization
 			return results.ToArray();
 		}
 
-		public Item DeserializeItem(ISerializedItem serializedItem, IProgressStatus progress)
+		public ISourceItem DeserializeItem(ISerializedItem serializedItem, IProgressStatus progress)
 		{
 			Assert.ArgumentNotNull(serializedItem, "serializedItem");
 			Assert.ArgumentNotNull(progress, "progress");
@@ -150,7 +158,7 @@ namespace Unicorn.Serialization
 			{
 				var options = new LoadOptions { DisableEvents = true, ForceUpdate = true, UseNewID = false };
 
-				return ItemSynchronization.PasteSyncItem(typed.InnerItem, options, true);
+				return new SitecoreSourceItem(ItemSynchronization.PasteSyncItem(typed.InnerItem, options, true));
 			}
 			catch (ParentItemNotFoundException ex)
 			{

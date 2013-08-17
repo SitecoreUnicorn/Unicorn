@@ -1,68 +1,38 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using Kamsar.WebConsole;
-using Sitecore.Data;
-using Sitecore.Data.Events;
-using Sitecore.Data.Items;
 using Sitecore.Diagnostics;
+using Unicorn.Data;
 
 namespace Unicorn.Evaluators
 {
 	public static class EvaluatorUtility
 	{
-		public static void RecycleItems(Item[] items, IProgressStatus progress, Action<IProgressStatus, Item> deleteMessage)
+		/// <summary>
+		/// Recycles a whole tree of items and reports their progress
+		/// </summary>
+		/// <param name="items">The item(s) to delete. Note that their children will be deleted before them, and also be reported upon.</param>
+		/// <param name="progress">Progress object to write status to</param>
+		/// <param name="deleteMessage">The status message to write for each deleted item</param>
+		public static void RecycleItems(ISourceItem[] items, IProgressStatus progress, Action<IProgressStatus, ISourceItem> deleteMessage)
 		{
 			Assert.ArgumentNotNull(items, "items");
 			Assert.ArgumentNotNull(progress, "progress");
 
-			Database db = items.First().Database;
-
-			if(DoRecycleItems(items, progress, deleteMessage))
-				db.Engines.TemplateEngine.Reset();
+			foreach (var item in items)
+				RecycleItem(item, progress, deleteMessage);
 		}
 
 		/// <summary>
-		/// Deletes an item from Sitecore
+		/// Deletes an item from the source data provider
 		/// </summary>
-		/// <returns>true if the item's database should have its template engine reloaded, false otherwise</returns>
-		private static bool RecycleItem(Item item, IProgressStatus progress, Action<IProgressStatus, Item> deleteMessage)
+		private static void RecycleItem(ISourceItem item, IProgressStatus progress, Action<IProgressStatus, ISourceItem> deleteMessage)
 		{
-			bool resetFromChild = DoRecycleItems(item.Children, progress, deleteMessage);
-			Database db = item.Database;
-			ID id = item.ID;
-
+			RecycleItems(item.Children, progress, deleteMessage);
+			
 			deleteMessage(progress, item);
 			
 			item.Recycle();
-
-			if (EventDisabler.IsActive)
-			{
-				db.Caches.ItemCache.RemoveItem(id);
-				db.Caches.DataCache.RemoveItemInformation(id);
-			}
-
-			if (!resetFromChild && item.Database.Engines.TemplateEngine.IsTemplatePart(item)) return true;
-
-			return false;
-		}
-
-		/// <summary>
-		/// Deletes a list of items. Ensures that obsolete cache data is also removed.
-		/// </summary>
-		/// <returns>
-		/// Is set to <c>true</c> if template engine should reset afterwards.
-		/// </returns>
-		private static bool DoRecycleItems(IEnumerable<Item> items, IProgressStatus progress, Action<IProgressStatus, Item> deleteMessage)
-		{
-			bool reset = false;
-			foreach (Item item in items)
-			{
-				if (RecycleItem(item, progress, deleteMessage))
-					reset = true;
-			}
-
-			return reset;
 		}
 	}
 }

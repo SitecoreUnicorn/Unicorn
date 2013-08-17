@@ -2,6 +2,7 @@
 using Moq;
 using NUnit.Framework;
 using Sitecore.Configuration;
+using Unicorn.Data;
 using Unicorn.Evaluators;
 using Unicorn.Predicates;
 using Unicorn.Serialization;
@@ -20,11 +21,11 @@ namespace Unicorn.Tests
 			var serializationProvider = new Mock<ISerializationProvider>();
 			serializationProvider.Setup(x => x.GetReference(root, db)).Returns((ISerializedReference)null);
 
-			var loader = new SerializationLoader(serializationProvider.Object, new Mock<IPredicate>().Object, new Mock<IEvaluator>().Object);
+			var loader = new SerializationLoader(serializationProvider.Object, new Mock<ISourceDataProvider>().Object, new Mock<IPredicate>().Object, new Mock<IEvaluator>().Object);
 
 			var progress = new StringProgressStatus();
 
-			loader.LoadTree(Factory.GetDatabase(db), root, progress);
+			loader.LoadTree(db, root, progress);
 
 			Assert.IsTrue(progress.Output.Contains("was unable to find a root serialized item for"));
 		}

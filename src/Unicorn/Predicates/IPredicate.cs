@@ -1,4 +1,5 @@
 ﻿using Sitecore.Data.Items;
+using Unicorn.Data;
 using Unicorn.Serialization;
 
 namespace Unicorn.Predicates
@@ -6,7 +7,7 @@ namespace Unicorn.Predicates
 	public interface IPredicate
 	{
 		string Name { get; }
-		PredicateResult Includes(Item item);
+		PredicateResult Includes(ISourceItem item);
 		PredicateResult Includes(ISerializedReference item);
 
 		void SerializeAll(ISerializationProvider provider);

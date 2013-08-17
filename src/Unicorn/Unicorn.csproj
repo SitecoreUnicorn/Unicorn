@@ -52,12 +52,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Data\ISourceDataProvider.cs" />
+    <Compile Include="Data\SitecoreSourceDataProvider.cs" />
     <Compile Include="Evaluators\SerializedAsMasterEvaluator.cs" />
     <Compile Include="Evaluators\EvaluatorUtility.cs" />
     <Compile Include="Evaluators\IEvaluator.cs" />
     <Compile Include="FilteredItemHandler.cs" />
-    <Compile Include="Data\ISitecoreItem.cs" />
-    <Compile Include="PresetExtensions.cs" />
+    <Compile Include="Data\ISourceItem.cs" />
     <Compile Include="Predicates\PredicateResult.cs" />
     <Compile Include="Predicates\IPredicate.cs" />
     <Compile Include="Predicates\SerializationPresetPredicate.cs" />
@@ -66,7 +67,7 @@
     <Compile Include="SerializationLoader.cs" />
     <Compile Include="SerializationUtility.cs" />
     <Compile Include="Serialization\SerializedFieldDictionary.cs" />
-    <Compile Include="Data\SitecoreItem.cs" />
+    <Compile Include="Data\SitecoreSourceItem.cs" />
     <Compile Include="SitecoreLogProgressStatus.cs" />
     <Compile Include="Serialization\ISerializationProvider.cs" />
     <Compile Include="Serialization\ISerializedItem.cs" />
@@ -75,6 +76,7 @@
     <Compile Include="Serialization\SitecoreSerializationProvider.cs" />
     <Compile Include="Serialization\SitecoreSerializedItem.cs" />
     <Compile Include="Serialization\SitecoreSerializedReference.cs" />
+    <Compile Include="WrappedDataProvider.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

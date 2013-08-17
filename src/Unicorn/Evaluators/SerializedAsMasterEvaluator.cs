@@ -1,23 +1,20 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using Kamsar.WebConsole;
-using Sitecore;
-using Sitecore.Data.Items;
 using Sitecore.Diagnostics;
-using Sitecore.Globalization;
 using Sitecore.StringExtensions;
+using Unicorn.Data;
 using Unicorn.Serialization;
 
 namespace Unicorn.Evaluators
 {
 	public class SerializedAsMasterEvaluator : IEvaluator
 	{
-		public void EvaluateOrphans(Item[] orphanItems, IProgressStatus progress)
+		public void EvaluateOrphans(ISourceItem[] orphanItems, IProgressStatus progress)
 		{
-			EvaluatorUtility.RecycleItems(orphanItems, progress, (innerProgress, item) => innerProgress.ReportStatus("[D] {0}:{1} because it did not exist in the serialization provider.".FormatWith(item.Database.Name, item.Paths.FullPath), MessageType.Warning));
+			EvaluatorUtility.RecycleItems(orphanItems, progress, (innerProgress, item) => innerProgress.ReportStatus("[D] {0} because it did not exist in the serialization provider.".FormatWith(item.DisplayIdentifier), MessageType.Warning));
 		}
 
-		public bool EvaluateUpdate(ISerializedItem serializedItem, Item existingItem, IProgressStatus progress)
+		public bool EvaluateUpdate(ISerializedItem serializedItem, ISourceItem existingItem, IProgressStatus progress)
 		{
 			Assert.ArgumentNotNull(serializedItem, "serializedItem");
 			
@@ -27,20 +24,17 @@ namespace Unicorn.Evaluators
 			return serializedItem.Versions.Any(version =>
 				{
 					bool passedComparisons = false; // this flag lets us differentiate between items that we could not determine equality for, and items that just matched every criteria and dont force
-					Item targetVersion = existingItem.Database.GetItem(existingItem.ID, Language.Parse(version.Language), Sitecore.Data.Version.Parse(version.VersionNumber));
-					var serializedModified = version.Fields[FieldIDs.Updated.ToString()];
+
 					
-					if (!string.IsNullOrEmpty(serializedModified))
+					var serializedModified = version.Updated;
+					if (serializedModified != null)
 					{
-						var itemModified = targetVersion[FieldIDs.Updated.ToString()];
-						var result = !serializedModified.Equals(itemModified, StringComparison.OrdinalIgnoreCase);
+						var itemModified = existingItem.GetLastModifiedDate(version.Language, version.VersionNumber);
+						var result = !serializedModified.Equals(itemModified);
 
 						if (result)
 						{
-							var dtSerialized = DateUtil.IsoDateToDateTime(serializedModified);
-							var dtItem = DateUtil.IsoDateToDateTime(itemModified);
-
-							progress.ReportStatus(string.Format("{0} ({1} #{2}): Disk modified {3}, Item modified {4}", serializedItem.ItemPath, version.Language, version.VersionNumber, dtSerialized.ToString("G"), dtItem.ToString("G")), MessageType.Debug);
+							progress.ReportStatus(string.Format("{0} ({1} #{2}): Disk modified {3}, Item modified {4}", serializedItem.ItemPath, version.Language, version.VersionNumber, serializedModified.Value.ToString("G"), itemModified.Value.ToString("G")), MessageType.Debug);
 
 							return true;
 						}
@@ -49,19 +43,18 @@ namespace Unicorn.Evaluators
 					}
 
 					// ocasionally a version will not have a modified date or a modified date will not get updated, only a revision change so we compare those as a backup
-					var serializedRevision = version.Fields[FieldIDs.Revision.ToString()];
+					var serializedRevision = version.Revision;
 					
 					if (!string.IsNullOrEmpty(serializedRevision))
 					{
-						var itemRevision = targetVersion.Statistics.Revision;
-						var result = serializedRevision.Equals(itemRevision, StringComparison.OrdinalIgnoreCase);
+						var itemRevision = existingItem.GetRevision(version.Language, version.VersionNumber);
+						var result = !serializedRevision.Equals(itemRevision);
 
 						if (result)
 						{
 							progress.ReportStatus(string.Format("{0} ({1} #{2}): Disk revision {3}, Item revision {4}", serializedItem.ItemPath, version.Language, version.VersionNumber, serializedRevision, itemRevision), MessageType.Debug);
 							return true;
 						}
-
 
 						passedComparisons = true;
 					}

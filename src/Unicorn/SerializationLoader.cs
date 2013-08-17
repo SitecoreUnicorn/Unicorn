@@ -9,6 +9,7 @@ using Sitecore.Eventing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Unicorn.Data;
 using Unicorn.Predicates;
 using Unicorn.Serialization;
 using Unicorn.Evaluators;
@@ -24,34 +25,37 @@ namespace Unicorn
 		private readonly ISerializationProvider _serializationProvider;
 		private readonly IPredicate _predicate;
 		private readonly IEvaluator _evaluator;
+		private readonly ISourceDataProvider _sourceDataProvider;
 
-		public SerializationLoader(ISerializationProvider serializationProvider, IPredicate predicate, IEvaluator evaluator)
+		public SerializationLoader(ISerializationProvider serializationProvider, ISourceDataProvider sourceDataProvider, IPredicate predicate, IEvaluator evaluator)
 		{
 			Assert.ArgumentNotNull(serializationProvider, "serializationProvider");
+			Assert.ArgumentNotNull(sourceDataProvider, "sourceDataProvider");
 			Assert.ArgumentNotNull(predicate, "predicate");
 			Assert.ArgumentNotNull(evaluator, "evaluator");
 
 			_evaluator = evaluator;
 			_predicate = predicate;
 			_serializationProvider = serializationProvider;
+			_sourceDataProvider = sourceDataProvider;
 		}
 
 		/// <summary>
 		/// Loads a preset from serialized items on disk.
 		/// </summary>
-		public void LoadTree(Database database, string sitecorePath, IProgressStatus progress)
+		public void LoadTree(string database, string sitecorePath, IProgressStatus progress)
 		{
 			_itemsProcessed = 0;
 
-			var rootSerializedItem = _serializationProvider.GetReference(sitecorePath, database.Name);
+			var rootSerializedItem = _serializationProvider.GetReference(sitecorePath, database);
 
 			if (rootSerializedItem == null)
 			{
-				progress.ReportStatus("{0} was unable to find a root serialized item for {1}:{2}", MessageType.Error, _serializationProvider.GetType().Name, database.Name, sitecorePath);
+				progress.ReportStatus("{0} was unable to find a root serialized item for {1}:{2}", MessageType.Error, _serializationProvider.GetType().Name, database, sitecorePath);
 				return;
 			}
 
-			progress.ReportStatus("Loading serialized items under {0}:{1}", MessageType.Debug, database.Name, sitecorePath);
+			progress.ReportStatus("Loading serialized items under {0}:{1}", MessageType.Debug, database, sitecorePath);
 			progress.ReportStatus("Provider root ID: " + rootSerializedItem.ProviderId, MessageType.Debug);
 
 			using (new EventDisabler())
@@ -59,7 +63,7 @@ namespace Unicorn
 				DoLoadTree(rootSerializedItem, progress);
 			}
 
-			DeserializationFinished(database.Name);
+			DeserializationFinished(database);
 		}
 
 		/// <summary>
@@ -80,10 +84,7 @@ namespace Unicorn
 				List<Failure> originalFailures;
 				do
 				{
-					foreach (Database current in Factory.GetDatabases())
-					{
-						current.Engines.TemplateEngine.Reset();
-					}
+					_sourceDataProvider.ResetTemplateEngine();
 
 					// note tricky variable handling here, 'failures' used for two things
 					originalFailures = failures;
@@ -138,10 +139,7 @@ namespace Unicorn
 			if (!included.IsIncluded)
 			{
 				// TODO: does this work?
-				progress.ReportStatus(
-					"[SKIPPED] {0}:{1} (and children) because it was excluded by {2}. However, it was present in {3}. {4}",
-					MessageType.Warning, root.DatabaseName, root.ItemPath, _predicate.GetType().Name,
-					_serializationProvider.GetType().Name, included.Justification ?? string.Empty);
+				progress.ReportStatus("[S] {0}:{1} (and children) because it was excluded by {2}. However, it was present in {3}. {4}",	MessageType.Warning, root.DatabaseName, root.ItemPath, _predicate.GetType().Name, _serializationProvider.GetType().Name, included.Justification ?? string.Empty);
 				return;
 			}
 
@@ -207,7 +205,7 @@ namespace Unicorn
 			Assert.ArgumentNotNull(progress, "progress");
 			Assert.ArgumentNotNull(retryList, "retryList");
 
-			var orphanCandidates = new Dictionary<ID, Item>();
+			var orphanCandidates = new Dictionary<ID, ISourceItem>();
 
 			// grab the root item's full metadata
 			var rootSerializedItem = _serializationProvider.GetItem(root);
@@ -219,27 +217,23 @@ namespace Unicorn
 			}
 
 			// get the corresponding item from Sitecore
-			Item rootItem = GetExistingItem(rootSerializedItem);
+			ISourceItem rootItem = GetExistingItem(rootSerializedItem);
 
 			// we add all of the root item's direct children to the "maybe orphan" list (we'll remove them as we find matching serialized children)
 			if (rootItem != null)
 			{
-				foreach (Item child in rootItem.Children)
+				foreach (ISourceItem child in rootItem.Children)
 				{
 					// if the preset includes the child add it to the orphan-candidate list (if we don't deserialize it below, it will be marked orphan)
 					var included = _predicate.Includes(child);
 					if (included.IsIncluded)
-						orphanCandidates[child.ID] = child;
+						orphanCandidates[child.Id] = child;
 					else
 					{
-						progress.ReportStatus(
-							string.Format("[S] {0}:{1} (and children) by {2}: {3}", child.Database.Name,
-										child.Paths.FullPath, _predicate.GetType().Name, included.Justification ?? string.Empty),
-							MessageType.Debug);
+						progress.ReportStatus(string.Format("[S] {0}:{1} (and children) by {2}: {3}", child.Database, child.Path, _predicate.GetType().Name, included.Justification ?? string.Empty), MessageType.Debug);
 					}
 				}
 			}
-
 
 			// check for direct children of the target path
 			var children = _serializationProvider.GetChildItems(rootSerializedItem);
@@ -258,7 +252,7 @@ namespace Unicorn
 						var loadedItem = DoLoadItem(child, progress);
 						if (loadedItem.Item != null)
 						{
-							orphanCandidates.Remove(loadedItem.Item.ID);
+							orphanCandidates.Remove(loadedItem.Item.Id);
 
 							// check if we have any child serialized items under this loaded child item (existing children) -
 							// if we do not, we can orphan any children of the loaded item as well
@@ -266,9 +260,9 @@ namespace Unicorn
 
 							if (loadedItemsChildren.Length == 0) // no children were serialized on disk
 							{
-								foreach (Item loadedChild in loadedItem.Item.Children)
+								foreach (ISourceItem loadedChild in loadedItem.Item.Children)
 								{
-									orphanCandidates.Add(loadedChild.ID, loadedChild);
+									orphanCandidates.Add(loadedChild.Id, loadedChild);
 								}
 							}
 						}
@@ -311,9 +305,7 @@ namespace Unicorn
 
 				if (!included.IsIncluded)
 				{
-					progress.ReportStatus("[S] {0}:{1} by {2}; but it was in {3}. {4}<br />This usually indicates an extraneous excluded serialized item is present in the {3}, which should be removed.", MessageType.Warning,
-										serializedItem.DatabaseName, serializedItem.ItemPath, _predicate.GetType().Name,
-										_serializationProvider.GetType().Name, included.Justification ?? string.Empty);
+					progress.ReportStatus("[S] {0}:{1} by {2}; but it was in {3}. {4}<br />This usually indicates an extraneous excluded serialized item is present in the {3}, which should be removed.", MessageType.Warning, serializedItem.DatabaseName, serializedItem.ItemPath, _predicate.GetType().Name, _serializationProvider.GetType().Name, included.Justification ?? string.Empty);
 
 					return new ItemLoadResult(ItemLoadStatus.Skipped);
 				}
@@ -326,7 +318,7 @@ namespace Unicorn
 
 					progress.ReportStatus("{0} {1}:{2}", MessageType.Info, flag, serializedItem.DatabaseName, serializedItem.ItemPath);
 
-					Item updatedItem = _serializationProvider.DeserializeItem(serializedItem, progress);
+					ISourceItem updatedItem = _serializationProvider.DeserializeItem(serializedItem, progress);
 
 					return new ItemLoadResult(ItemLoadStatus.Success, updatedItem);
 				}
@@ -375,15 +367,11 @@ namespace Unicorn
 			return false;
 		}
 
-		protected Item GetExistingItem(ISerializedItem serializedItem)
+		protected ISourceItem GetExistingItem(ISerializedItem serializedItem)
 		{
 			Assert.ArgumentNotNull(serializedItem, "serializedItem");
 
-			var db = Factory.GetDatabase(serializedItem.DatabaseName);
-
-			if (db == null) return null;
-
-			return db.GetItem(serializedItem.Id);
+			return _sourceDataProvider.GetItem(serializedItem.DatabaseName, serializedItem.Id);
 		}
 
 		private class StandardValuesException : Exception
@@ -426,13 +414,13 @@ namespace Unicorn
 				Status = status;
 			}
 
-			public ItemLoadResult(ItemLoadStatus status, Item item)
+			public ItemLoadResult(ItemLoadStatus status, ISourceItem item)
 			{
 				Item = item;
 				Status = status;
 			}
 
-			public Item Item { get; private set; }
+			public ISourceItem Item { get; private set; }
 			public ItemLoadStatus Status { get; private set; }
 		}
 

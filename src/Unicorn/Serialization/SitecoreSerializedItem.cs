@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Sitecore.Data.Serialization.ObjectModel;
 using Sitecore.Data;
 

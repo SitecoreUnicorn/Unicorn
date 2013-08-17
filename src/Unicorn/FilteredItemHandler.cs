@@ -6,10 +6,12 @@ using Sitecore.Diagnostics;
 using Sitecore.Events;
 using Sitecore.Data;
 using System.IO;
+using Unicorn.Data;
 using Unicorn.Predicates;
 
 namespace Unicorn
 {
+	// TODO: change this into a data provider!
 	/// <summary>
 	/// This class extends the default serialization item handler to allow it to process preset paths only
 	/// like you can configure for the serialization page. This is great if you only want to serialize part of your database.
@@ -31,7 +33,7 @@ namespace Unicorn
 
 			if (item == null) return;
 
-			if (!Preset.Includes(item).IsIncluded) return;
+			if (!Preset.Includes(new SitecoreSourceItem(item)).IsIncluded) return;
 
 			var changes = Event.ExtractParameter<ItemChanges>(e, 1);
 
@@ -72,8 +74,8 @@ namespace Unicorn
 			var oldParent = item.Database.GetItem(oldParentId);
 
 			if (oldParent == null) return;
-			
-			if (!Preset.Includes(item).IsIncluded) return;
+
+			if (!Preset.Includes(new SitecoreSourceItem(item)).IsIncluded) return;
 			var oldReference = new ItemReference(oldParent).ToString();
 
 			// fix the reference to the old parent to be a reference to the old item path
@@ -83,7 +85,7 @@ namespace Unicorn
 
 			FixupDescendants(oldSerializationPath, item);
 
-			if (!Preset.Includes(item).IsIncluded)
+			if (!Preset.Includes(new SitecoreSourceItem(item)).IsIncluded)
 			{
 				// If the preset does not include the destination path, we need to delete the old items from disk
 				// https://github.com/kamsar/Unicorn/issues/3
@@ -100,7 +102,7 @@ namespace Unicorn
 			// so instead we simply dump the new path and children
 			// NOTE: it's imperfect because hypothetically children of the new path could be excluded by the preset
 			// but whatever, that's a massive edge case.
-			if (!Preset.Includes(oldParent).IsIncluded)
+			if (!Preset.Includes(new SitecoreSourceItem(oldParent)).IsIncluded)
 			{
 				Manager.DumpTree(item);
 				return;
@@ -121,7 +123,7 @@ namespace Unicorn
 
 			if (item == null) return;
 
-			if (!Preset.Includes(item).IsIncluded) return;	
+			if (!Preset.Includes(new SitecoreSourceItem(item)).IsIncluded) return;	
 		
 			ShadowWriter.PutItem(Operation.Updated, item, item.Parent);
 
@@ -148,7 +150,7 @@ namespace Unicorn
 			// the name wasn't actually changed, you sneaky template builder you. Don't write.
 			if (oldName.Equals(item.Name, StringComparison.Ordinal)) return;
 
-			if (!Preset.Includes(item).IsIncluded) return;
+			if (!Preset.Includes(new SitecoreSourceItem(item)).IsIncluded) return;
 
 			// we push this to get updated. Because saving now ignores "inconsquential" changes like a rename that do not change data fields,
 			// this keeps renames occurring even if the field changes are inconsequential
@@ -169,7 +171,7 @@ namespace Unicorn
 
 			if (item == null) return;
 
-			if (!Preset.Includes(item).IsIncluded) return;
+			if (!Preset.Includes(new SitecoreSourceItem(item)).IsIncluded) return;
 
 			base.OnItemVersionRemoved(sender, e);
 		}
@@ -192,7 +194,7 @@ namespace Unicorn
 
 				var parentSerializationPath = PathUtils.GetDirectoryPath(new ItemReference(parentItem).ToString());
 
-				if(Directory.Exists(parentSerializationPath) && Preset.Includes(parentItem).IsIncluded)
+				if (Directory.Exists(parentSerializationPath) && Preset.Includes(new SitecoreSourceItem(parentItem)).IsIncluded)
 					Manager.CleanupPath(parentSerializationPath, false);
 			}
 		}
@@ -208,7 +210,7 @@ namespace Unicorn
 				var children = modifiedParentItem.Axes.GetDescendants();
 				foreach (var child in children)
 				{
-					if (Preset.Includes(child).IsIncluded)
+					if (Preset.Includes(new SitecoreSourceItem(child)).IsIncluded)
 						Manager.DumpItem(child);
 				}
 
