@@ -88,8 +88,7 @@ namespace Unicorn
 
 				var sb = new StringBuilder();
 				sb.Append("CRITICAL:\n");
-				sb.Append(
-					"Item state conflicted with existing serialized value. Chances are you need to sync your database with the filesystem. The following fields had problems:\n");
+				sb.Append("Item state conflicted with existing serialized value. Chances are you need to sync your database with the filesystem. The following fields had problems:\n");
 				foreach (var item in results)
 				{
 					sb.AppendFormat("\n{0}: {1}", item.Key.DisplayName, string.Join(", ", item.Value.Select(x => x.FieldName)));

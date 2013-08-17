@@ -11,14 +11,14 @@ namespace Unicorn.Evaluators
 {
 	public static class EvaluatorUtility
 	{
-		public static void DeleteItems(Item[] items, IProgressStatus progress, Action<IProgressStatus, Item> deleteMessage)
+		public static void RecycleItems(Item[] items, IProgressStatus progress, Action<IProgressStatus, Item> deleteMessage)
 		{
 			Assert.ArgumentNotNull(items, "items");
 			Assert.ArgumentNotNull(progress, "progress");
 
 			Database db = items.First().Database;
 
-			if(DoDeleteItems(items, progress, deleteMessage))
+			if(DoRecycleItems(items, progress, deleteMessage))
 				db.Engines.TemplateEngine.Reset();
 		}
 
@@ -26,15 +26,15 @@ namespace Unicorn.Evaluators
 		/// Deletes an item from Sitecore
 		/// </summary>
 		/// <returns>true if the item's database should have its template engine reloaded, false otherwise</returns>
-		private static bool DeleteItem(Item item, IProgressStatus progress, Action<IProgressStatus, Item> deleteMessage)
+		private static bool RecycleItem(Item item, IProgressStatus progress, Action<IProgressStatus, Item> deleteMessage)
 		{
-			bool resetFromChild = DoDeleteItems(item.Children, progress, deleteMessage);
+			bool resetFromChild = DoRecycleItems(item.Children, progress, deleteMessage);
 			Database db = item.Database;
 			ID id = item.ID;
 
 			deleteMessage(progress, item);
 			
-			item.Delete();
+			item.Recycle();
 
 			if (EventDisabler.IsActive)
 			{
@@ -53,12 +53,12 @@ namespace Unicorn.Evaluators
 		/// <returns>
 		/// Is set to <c>true</c> if template engine should reset afterwards.
 		/// </returns>
-		private static bool DoDeleteItems(IEnumerable<Item> items, IProgressStatus progress, Action<IProgressStatus, Item> deleteMessage)
+		private static bool DoRecycleItems(IEnumerable<Item> items, IProgressStatus progress, Action<IProgressStatus, Item> deleteMessage)
 		{
 			bool reset = false;
 			foreach (Item item in items)
 			{
-				if (DeleteItem(item, progress, deleteMessage))
+				if (RecycleItem(item, progress, deleteMessage))
 					reset = true;
 			}
 

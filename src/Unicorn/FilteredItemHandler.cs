@@ -73,7 +73,7 @@ namespace Unicorn
 
 			if (oldParent == null) return;
 			
-			if (!Presets.Includes(item)) return;
+			if (!Preset.Includes(item).IsIncluded) return;
 			var oldReference = new ItemReference(oldParent).ToString();
 
 			// fix the reference to the old parent to be a reference to the old item path
@@ -83,7 +83,7 @@ namespace Unicorn
 
 			FixupDescendants(oldSerializationPath, item);
 
-			if (!Presets.Includes(item))
+			if (!Preset.Includes(item).IsIncluded)
 			{
 				// If the preset does not include the destination path, we need to delete the old items from disk
 				// https://github.com/kamsar/Unicorn/issues/3
@@ -100,7 +100,7 @@ namespace Unicorn
 			// so instead we simply dump the new path and children
 			// NOTE: it's imperfect because hypothetically children of the new path could be excluded by the preset
 			// but whatever, that's a massive edge case.
-			if (!Presets.Includes(oldParent))
+			if (!Preset.Includes(oldParent).IsIncluded)
 			{
 				Manager.DumpTree(item);
 				return;
@@ -208,7 +208,7 @@ namespace Unicorn
 				var children = modifiedParentItem.Axes.GetDescendants();
 				foreach (var child in children)
 				{
-					if (Presets.Includes(child))
+					if (Preset.Includes(child).IsIncluded)
 						Manager.DumpItem(child);
 				}
 
