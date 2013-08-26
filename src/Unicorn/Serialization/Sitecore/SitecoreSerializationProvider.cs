@@ -4,13 +4,13 @@ using System.IO;
 using System.Linq;
 using Kamsar.WebConsole;
 using Sitecore.Configuration;
-using Sitecore.Data.Items;
 using Sitecore.Data.Serialization;
 using Sitecore.Data.Serialization.Exceptions;
 using Sitecore.Data.Serialization.ObjectModel;
 using Sitecore.Diagnostics;
 using Sitecore.StringExtensions;
 using Unicorn.Data;
+using Unicorn.Serialization.Sitecore;
 
 namespace Unicorn.Serialization
 {
@@ -25,6 +25,7 @@ namespace Unicorn.Serialization
 			Assert.IsNotNull(sitecoreItem, "Item to dump did not exist!");
 
 			Manager.DumpItem(sitecoreItem);
+			Manager.CleanupPath(PathUtils.GetDirectoryPath(new ItemReference(sitecoreItem.Parent).ToString()), false);
 		}
 
 		public ISerializedReference GetReference(string sitecorePath, string databaseName)
@@ -142,6 +143,22 @@ namespace Unicorn.Serialization
 			}
 
 			return results.ToArray();
+		}
+
+		public bool IsStandardValuesItem(ISerializedItem item)
+		{
+			Assert.ArgumentNotNull(item, "item");
+
+			string[] array = item.ItemPath.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+			if (array.Length > 0)
+			{
+				if (array.Any(s => s.Equals("templates", StringComparison.OrdinalIgnoreCase)))
+				{
+					return array.Last().Equals("__Standard Values", StringComparison.OrdinalIgnoreCase);
+				}
+			}
+
+			return false;
 		}
 
 		public ISourceItem DeserializeItem(ISerializedItem serializedItem, IProgressStatus progress)

@@ -11,19 +11,23 @@ namespace Unicorn.Evaluators
 	{
 		public void EvaluateOrphans(ISourceItem[] orphanItems, IProgressStatus progress)
 		{
+			Assert.ArgumentNotNull(orphanItems, "orphanItems");
+			Assert.ArgumentNotNull(progress, "progress");
+
 			EvaluatorUtility.RecycleItems(orphanItems, progress, (innerProgress, item) => innerProgress.ReportStatus("[D] {0} because it did not exist in the serialization provider.".FormatWith(item.DisplayIdentifier), MessageType.Warning));
 		}
 
 		public bool EvaluateUpdate(ISerializedItem serializedItem, ISourceItem existingItem, IProgressStatus progress)
 		{
 			Assert.ArgumentNotNull(serializedItem, "serializedItem");
+			Assert.ArgumentNotNull(progress, "progress");
 			
 			if(existingItem == null) return true;
 
 			// see if the modified date is different in any version (because disk is master, ANY changes we want to force overwrite)
 			return serializedItem.Versions.Any(version =>
 				{
-					bool passedComparisons = false; // this flag lets us differentiate between items that we could not determine equality for, and items that just matched every criteria and dont force
+					bool passedComparisons = false; // this flag lets us differentiate between items that we could not determine equality for, and items that just matched every criteria and don't need updating
 
 					
 					var serializedModified = version.Updated;

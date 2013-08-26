@@ -1,11 +1,8 @@
 using Kamsar.WebConsole;
-using Sitecore.Configuration;
 using Sitecore.Data;
 using Sitecore.Data.Events;
-using Sitecore.Data.Items;
 using Sitecore.Data.Serialization;
 using Sitecore.Diagnostics;
-using Sitecore.Eventing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +11,7 @@ using Unicorn.Predicates;
 using Unicorn.Serialization;
 using Unicorn.Evaluators;
 
-namespace Unicorn
+namespace Unicorn.Loader
 {
 	/// <summary>
 	/// Custom loader that processes serialization loading with progress and additional rules options
@@ -45,95 +42,45 @@ namespace Unicorn
 		/// </summary>
 		public void LoadTree(string database, string sitecorePath, IProgressStatus progress)
 		{
+			LoadTree(database, sitecorePath, new DeserializeFailureRetryer(), progress);
+		}
+
+		/// <summary>
+		/// Loads a preset from serialized items on disk.
+		/// </summary>
+		public void LoadTree(string database, string sitecorePath, IDeserializeFailureRetryer retryer, IProgressStatus progress)
+		{
+			Assert.ArgumentNotNullOrEmpty(database, "database");
+			Assert.ArgumentNotNullOrEmpty(sitecorePath, "sitecorePath");
+			Assert.ArgumentNotNull(retryer, "retryer");
+			Assert.ArgumentNotNull(progress, "progress");
+
 			_itemsProcessed = 0;
 
 			var rootSerializedItem = _serializationProvider.GetReference(sitecorePath, database);
 
 			if (rootSerializedItem == null)
-			{
-				progress.ReportStatus("{0} was unable to find a root serialized item for {1}:{2}", MessageType.Error, _serializationProvider.GetType().Name, database, sitecorePath);
-				return;
-			}
+				throw new InvalidOperationException(string.Format("{0} was unable to find a root serialized item for {1}:{2}", _serializationProvider.GetType().Name, database, sitecorePath));
 
 			progress.ReportStatus("Loading serialized items under {0}:{1}", MessageType.Debug, database, sitecorePath);
 			progress.ReportStatus("Provider root ID: " + rootSerializedItem.ProviderId, MessageType.Debug);
 
 			using (new EventDisabler())
 			{
-				DoLoadTree(rootSerializedItem, progress);
+				LoadTreeRecursive(rootSerializedItem, retryer, progress);
 			}
 
-			DeserializationFinished(database);
-		}
-
-		/// <summary>
-		/// Loads a specific path recursively, using any exclusions in the options' preset
-		/// </summary>
-		private void DoLoadTree(ISerializedReference root, IProgressStatus progress)
-		{
-			Assert.ArgumentNotNull(root, "root");
-			Assert.ArgumentNotNull(progress, "progress");
-
-			var failures = new List<Failure>();
-
-			// go load the tree and see what failed, if anything
-			LoadTreeRecursive(root, failures, progress);
-
-			if (failures.Count > 0)
-			{
-				List<Failure> originalFailures;
-				do
-				{
-					_sourceDataProvider.ResetTemplateEngine();
-
-					// note tricky variable handling here, 'failures' used for two things
-					originalFailures = failures;
-					failures = new List<Failure>();
-
-					foreach (var failure in originalFailures)
-					{
-						// retry loading a single item failure
-						var item = failure.Reference as ISerializedItem;
-						if (item != null)
-						{
-							try
-							{
-								DoLoadItem(item, progress);
-							}
-							catch (Exception reason)
-							{
-								failures.Add(new Failure(failure.Reference, reason));
-							}
-
-							continue;
-						}
-
-						// retry loading a reference failure (note the continues in the above ensure execution never arrives here for items)
-						LoadTreeRecursive(failure.Reference, failures, progress);
-					}
-				}
-				while (failures.Count > 0 && failures.Count < originalFailures.Count); // continue retrying until all possible failures have been fixed
-			}
-
-			if (failures.Count > 0)
-			{
-				foreach (var failure in failures)
-				{
-					progress.ReportStatus(string.Format("Failed to load {0} permanently because {1}", failure.Reference, failure.Reason), MessageType.Error);
-				}
-
-				throw new Exception("Some directories could not be loaded: " + failures[0].Reference, failures[0].Reason);
-			}
+			_sourceDataProvider.DeserializationComplete(database);
 		}
 
 		/// <summary>
 		/// Recursive method that loads a given tree and retries failures already present if any
 		/// </summary>
-		private void LoadTreeRecursive(ISerializedReference root, List<Failure> retryList, IProgressStatus progress)
+		private void LoadTreeRecursive(ISerializedReference root, IDeserializeFailureRetryer retryer, IProgressStatus progress)
 		{
 			Assert.ArgumentNotNull(root, "root");
+			Assert.ArgumentNotNull(retryer, "retryer");
 			Assert.ArgumentNotNull(progress, "progress");
-			Assert.ArgumentNotNull(retryList, "retryList");
 
 			var included = _predicate.Includes(root);
 			if (!included.IsIncluded)
@@ -146,7 +93,7 @@ namespace Unicorn
 			try
 			{
 				// load the current level
-				LoadOneLevel(root, retryList, progress);
+				LoadOneLevel(root, retryer, progress);
 
 				// check if we have child paths to recurse down
 				var children = _serializationProvider.GetChildReferences(root);
@@ -169,41 +116,27 @@ namespace Unicorn
 					// load each child path recursively
 					foreach (var child in children)
 					{
-						LoadTreeRecursive(child, retryList, progress);
+						LoadTreeRecursive(child, retryer, progress);
 					}
 
 					// pull out any standard values failures for immediate retrying
-					List<Failure> standardValuesFailures = retryList.Where(x => x.Reason is StandardValuesException).ToList();
-					retryList.RemoveAll(x => x.Reason is StandardValuesException);
-
-					foreach (Failure current in standardValuesFailures)
-					{
-						try
-						{
-							var item = _serializationProvider.GetItem(current.Reference);
-							DoLoadItem(item, progress);
-						}
-						catch (Exception reason)
-						{
-							retryList.Add(new Failure(current.Reference, reason));
-						}
-					}
+					retryer.RetryStandardValuesFailures(progress, (item, status) => DoLoadItem(item, status));
 				} // children.length > 0
 			}
 			catch (Exception ex)
 			{
-				retryList.Add(new Failure(root, ex));
+				retryer.AddRetry(root, ex);
 			}
 		}
 
 		/// <summary>
 		/// Loads a set of children from a serialized path
 		/// </summary>
-		private void LoadOneLevel(ISerializedReference root, List<Failure> retryList, IProgressStatus progress)
+		private void LoadOneLevel(ISerializedReference root, IDeserializeFailureRetryer retryer, IProgressStatus progress)
 		{
 			Assert.ArgumentNotNull(root, "root");
 			Assert.ArgumentNotNull(progress, "progress");
-			Assert.ArgumentNotNull(retryList, "retryList");
+			Assert.ArgumentNotNull(retryer, "retryer");
 
 			var orphanCandidates = new Dictionary<ID, ISourceItem>();
 
@@ -217,7 +150,7 @@ namespace Unicorn
 			}
 
 			// get the corresponding item from Sitecore
-			ISourceItem rootItem = GetExistingItem(rootSerializedItem);
+			ISourceItem rootItem = _sourceDataProvider.GetItem(rootSerializedItem.DatabaseName, rootSerializedItem.Id);
 
 			// we add all of the root item's direct children to the "maybe orphan" list (we'll remove them as we find matching serialized children)
 			if (rootItem != null)
@@ -241,10 +174,10 @@ namespace Unicorn
 			{
 				try
 				{
-					if (IsStandardValuesItem(child))
+					if (_serializationProvider.IsStandardValuesItem(child))
 					{
-						orphanCandidates.Remove(child.Id); // avoid deleting standard values items when forcing an update
-						retryList.Add(new Failure(child, new StandardValuesException(child.ItemPath)));
+						orphanCandidates.Remove(child.Id); // avoid marking standard values items orphans
+						retryer.AddRetry(child, new StandardValuesException(child.ItemPath));
 					}
 					else
 					{
@@ -273,11 +206,11 @@ namespace Unicorn
 				catch (Exception ex)
 				{
 					// if a problem occurs we attempt to retry later
-					retryList.Add(new Failure(child, ex));
+					retryer.AddRetry(child, ex);
 				}
 			}
 
-			// if we're forcing an update (ie deleting stuff not on disk) we send the items that we found that weren't on disk off to get evaluated by the evaluator
+			// if we're forcing an update (ie deleting stuff not on disk) we send the items that we found that weren't on disk off to get evaluated as orphans
 			if (orphanCandidates.Count > 0)
 			{
 				_evaluator.EvaluateOrphans(orphanCandidates.Values.ToArray(), progress);
@@ -311,12 +244,12 @@ namespace Unicorn
 				}
 
 				// detect if we should run an update for the item or if it's already up to date
-				var existingItem = GetExistingItem(serializedItem);
+				var existingItem = _sourceDataProvider.GetItem(serializedItem.DatabaseName, serializedItem.Id);
 				if (existingItem == null || _evaluator.EvaluateUpdate(serializedItem, existingItem, progress))
 				{
-					string flag = (existingItem == null) ? "[A]" : "[U]";
+					string addedOrUpdated = (existingItem == null) ? "[A]" : "[U]";
 
-					progress.ReportStatus("{0} {1}:{2}", MessageType.Info, flag, serializedItem.DatabaseName, serializedItem.ItemPath);
+					progress.ReportStatus("{0} {1}:{2}", MessageType.Info, addedOrUpdated, serializedItem.DatabaseName, serializedItem.ItemPath);
 
 					ISourceItem updatedItem = _serializationProvider.DeserializeItem(serializedItem, progress);
 
@@ -328,81 +261,6 @@ namespace Unicorn
 			finally
 			{
 				ItemHandler.DisabledLocally = disabledLocally;
-			}
-		}
-
-		/// <summary>
-		/// Raises the "serialization finished" event.
-		/// </summary>
-		private void DeserializationFinished(string databaseName)
-		{
-			EventManager.RaiseEvent(new SerializationFinishedEvent());
-			Database database = Factory.GetDatabase(databaseName, false);
-			if (database != null)
-			{
-				database.RemoteEvents.Queue.QueueEvent(new SerializationFinishedEvent());
-			}
-		}
-
-		/// <summary>
-		/// Determines whether a serialized item is a __Standard values item.
-		/// </summary>
-		/// <param name="item">The serialized item to test</param>
-		/// <returns>
-		///   <c>true</c> if [is standard values item] [the specified file name]; otherwise, <c>false</c>.
-		/// </returns>
-		private static bool IsStandardValuesItem(ISerializedItem item)
-		{
-			Assert.ArgumentNotNull(item, "item");
-
-			string[] array = item.ItemPath.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-			if (array.Length > 0)
-			{
-				if (array.Any(s => s.Equals("templates", StringComparison.OrdinalIgnoreCase)))
-				{
-					return array.Last().Equals("__Standard Values", StringComparison.OrdinalIgnoreCase);
-				}
-			}
-
-			return false;
-		}
-
-		protected ISourceItem GetExistingItem(ISerializedItem serializedItem)
-		{
-			Assert.ArgumentNotNull(serializedItem, "serializedItem");
-
-			return _sourceDataProvider.GetItem(serializedItem.DatabaseName, serializedItem.Id);
-		}
-
-		private class StandardValuesException : Exception
-		{
-			public StandardValuesException(string itemPath)
-				: base(itemPath)
-			{
-				Assert.ArgumentNotNull(itemPath, "itemPath");
-			}
-
-			public override string ToString()
-			{
-				return "Reverting of Standard values of template is delayed. " + Message;
-			}
-		}
-
-		/// <summary>
-		/// Represents a single failure in a recursive serialization load operation
-		/// </summary>
-		private class Failure
-		{
-			public ISerializedReference Reference { get; private set; }
-			public Exception Reason { get; private set; }
-
-			public Failure(ISerializedReference reference, Exception reason)
-			{
-				Assert.ArgumentNotNull(reference, "reference");
-				Assert.ArgumentNotNull(reason, "reason");
-
-				Reference = reference;
-				Reason = reason;
 			}
 		}
 

@@ -4,6 +4,7 @@ using NUnit.Framework;
 using Sitecore.Configuration;
 using Unicorn.Data;
 using Unicorn.Evaluators;
+using Unicorn.Loader;
 using Unicorn.Predicates;
 using Unicorn.Serialization;
 

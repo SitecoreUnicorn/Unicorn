@@ -1,8 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System.Globalization;
+using System.Linq;
+using System;
+using System.Collections.Generic;
 using Sitecore.Data.Serialization.ObjectModel;
 using Sitecore.Data;
 
-namespace Unicorn.Serialization
+namespace Unicorn.Serialization.Sitecore
 {
 	public class SitecoreSerializedItem : ISerializedItem
 	{
@@ -93,9 +96,28 @@ namespace Unicorn.Serialization
 		private ID LoadIdFromString(string stringId)
 		{
 			ID id;
-			if (!ID.TryParse(stringId, out id)) return (ID)null;
+			if (!ID.TryParse(stringId, out id)) return null;
 
 			return id;
+		}
+
+
+		public void RemoveVersion(string language, int versionNumber)
+		{
+			for (int i = InnerItem.Versions.Count; i > 0; i--)
+			{
+				if (InnerItem.Versions[i].Language.Equals(language, StringComparison.OrdinalIgnoreCase) && InnerItem.Versions[i].Version == versionNumber.ToString(CultureInfo.InvariantCulture))
+					InnerItem.Versions.RemoveAt(i);
+			}
+		}
+
+		public void RemoveVersions(string language)
+		{
+			for (int i = InnerItem.Versions.Count; i > 0; i--)
+			{
+				if (InnerItem.Versions[i].Language.Equals(language, StringComparison.OrdinalIgnoreCase))
+					InnerItem.Versions.RemoveAt(i);
+			}
 		}
 	}
 }

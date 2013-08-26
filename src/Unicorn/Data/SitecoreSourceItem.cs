@@ -75,7 +75,7 @@ namespace Unicorn.Data
 
 		public ISourceItem[] Children
 		{
-			get { return _item.Children.Select(x => new SitecoreSourceItem(x)).ToArray(); }
+			get { return _item.Children.Select(x => (ISourceItem)new SitecoreSourceItem(x)).ToArray(); }
 		}
 
 		public DateTime? GetLastModifiedDate(string languageCode, int versionNumber)

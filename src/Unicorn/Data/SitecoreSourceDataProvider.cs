@@ -1,7 +1,9 @@
 ﻿using System.Linq;
 using Sitecore.Configuration;
 using Sitecore.Data;
+using Sitecore.Data.Serialization;
 using Sitecore.Diagnostics;
+using Sitecore.Eventing;
 
 namespace Unicorn.Data
 {
@@ -25,6 +27,18 @@ namespace Unicorn.Data
 			Assert.IsNotNull(db, "Database " + database + " did not exist!");
 
 			return new SitecoreSourceItem(db.GetItem(id));
+		}
+
+		public void DeserializationComplete(string databaseName)
+		{
+			Assert.ArgumentNotNullOrEmpty(databaseName, "databaseName");
+
+			EventManager.RaiseEvent(new SerializationFinishedEvent());
+			Database database = Factory.GetDatabase(databaseName, false);
+			if (database != null)
+			{
+				database.RemoteEvents.Queue.QueueEvent(new SerializationFinishedEvent());
+			}
 		}
 	}
 }

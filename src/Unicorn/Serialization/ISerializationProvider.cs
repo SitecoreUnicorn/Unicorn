@@ -1,5 +1,7 @@
 ﻿using Kamsar.WebConsole;
+using Sitecore.Data;
 using Unicorn.Data;
+using Unicorn.Predicates;
 namespace Unicorn.Serialization
 {
 	public interface ISerializationProvider
@@ -8,6 +10,18 @@ namespace Unicorn.Serialization
 		/// Serialize a given item into the serialization provider's serialization store
 		/// </summary>
 		void SerializeItem(ISourceItem item);
+
+		void SerializeItem(ISerializedItem serializedItem);
+		
+		void RenameSerializedItem(ISourceItem renamedItem, string oldName);
+
+		void MoveSerializedItem(ISerializedItem serializedItem, ID oldParentId, IPredicate predicate);
+
+		void CopySerializedItem(ISerializedItem sourceItem, ISourceItem destination);
+
+		
+
+		void DeleteSerializedItem(ISerializedItem item, ID originalParentId);
 
 		/// <summary>
 		/// Deserialize a given item from the provider's serialization store to Sitecore database
@@ -35,5 +49,12 @@ namespace Unicorn.Serialization
 		/// Get all child serialized items for a given serialized reference parent
 		/// </summary>
 		ISerializedItem[] GetChildItems(ISerializedReference parent);
+
+		/// <summary>
+		/// Checks if a serialized item is part of a template standard values
+		/// </summary>
+		/// <param name="item">Item to test</param>
+		/// <returns>True if the item is a standard values item, or false if it's not</returns>
+		bool IsStandardValuesItem(ISerializedItem item);
 	}
 }

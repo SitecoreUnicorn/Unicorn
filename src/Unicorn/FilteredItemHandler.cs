@@ -8,6 +8,7 @@ using Sitecore.Data;
 using System.IO;
 using Unicorn.Data;
 using Unicorn.Predicates;
+using Unicorn.Serialization;
 
 namespace Unicorn
 {
@@ -20,11 +21,22 @@ namespace Unicorn
 	/// </summary>
 	public class FilteredItemHandler : ItemHandler
 	{
-		private static readonly IPredicate Preset; 
+		private static readonly IPredicate Preset;
+		private readonly ISerializationProvider _serializationProvider;
 
 		static FilteredItemHandler()
 		{
 			Preset = SerializationUtility.GetDefaultPreset();
+		}
+
+		public FilteredItemHandler() : this(new SitecoreSerializationProvider())
+		{
+		
+		}
+
+		public FilteredItemHandler(ISerializationProvider serializationProvider)
+		{
+			_serializationProvider = serializationProvider;
 		}
 
 		public new void OnItemSaved(object sender, EventArgs e)
@@ -33,13 +45,15 @@ namespace Unicorn
 
 			if (item == null) return;
 
-			if (!Preset.Includes(new SitecoreSourceItem(item)).IsIncluded) return;
+			var sourceItem = new SitecoreSourceItem(item);
+
+			if (!Preset.Includes(sourceItem).IsIncluded) return;
 
 			var changes = Event.ExtractParameter<ItemChanges>(e, 1);
 
 			if (!HasValidChanges(changes)) return;
 
-			base.OnItemSaved(sender, e);
+			_serializationProvider.SerializeItem(sourceItem);
 		}
 
 		private bool HasValidChanges(ItemChanges changes)

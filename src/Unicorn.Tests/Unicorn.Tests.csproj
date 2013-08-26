@@ -58,8 +58,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Evaluators\SerializedAsMasterEvaluatorTests.cs" />
     <Compile Include="LoaderTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SerializedVersionUtility.cs" />
     <Compile Include="SitecorePresetPredicateTests.cs" />
   </ItemGroup>
   <ItemGroup>

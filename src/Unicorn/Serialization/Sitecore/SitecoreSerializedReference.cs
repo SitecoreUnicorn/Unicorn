@@ -1,6 +1,7 @@
-﻿using Sitecore.Data.Serialization;
+﻿using System.Linq;
+using Sitecore.Data.Serialization;
 
-namespace Unicorn.Serialization
+namespace Unicorn.Serialization.Sitecore
 {
 	public class SitecoreSerializedReference : ISerializedReference
 	{

@@ -4,4 +4,5 @@
 3. Integrate the conflict processor into less one-off APIs
 4. Integrate the FilteredItemHandler into less one-off APIs
 5. Change the filtered item handler into a wrapped data provider
+	Note: don't forget to change the ItemHandler.DisabledLocally in DoLoadItem() in the loader to something to match the provider
 6. Tests. Lots of em.
