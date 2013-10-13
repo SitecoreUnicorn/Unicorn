@@ -82,7 +82,7 @@
     <Compile Include="Serialization\Sitecore\SitecoreSerializedReference.cs" />
     <Compile Include="StandardValuesException.cs" />
     <Compile Include="UnicornDataProvider.cs" />
-    <Compile Include="WrappedDataProvider.cs" />
+    <Compile Include="UnicornSqlServerDataProvider.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

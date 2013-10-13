@@ -10,13 +10,12 @@ using Unicorn.Serialization;
 
 namespace Unicorn
 {
-	public class UnicornDataProvider : WrappedDataProvider
+	public class UnicornDataProvider
 	{
 		private readonly ISerializationProvider _serializationProvider;
 		private readonly IPredicate _predicate;
 
-		public UnicornDataProvider(DataProvider realProvider, ISerializationProvider serializationProvider, IPredicate predicate)
-			: base(realProvider)
+		public UnicornDataProvider(ISerializationProvider serializationProvider, IPredicate predicate)
 		{
 			_predicate = predicate;
 			_serializationProvider = serializationProvider;
@@ -27,27 +26,26 @@ namespace Unicorn
 		/// </summary>
 		public static bool DisableSerialization { get; set; }
 
-		public override bool CreateItem(ID itemId, string itemName, ID templateId, ItemDefinition parent, CallContext context)
+		public DataProvider DataProvider { get; set; }
+		protected Database Database { get { return DataProvider.Database; } }
+
+		public void CreateItem(ID itemId, string itemName, ID templateId, ItemDefinition parent, CallContext context)
 		{
-			if (!base.CreateItem(itemId, itemName, templateId, parent, context)) return false;
-			if (DisableSerialization) return true;
+			if (DisableSerialization) return;
 
 			// TODO: do we need to handle this? (if so we need a way to create an ISerializedItem from scratch...)
-
-			return true;
 		}
 
-		public override bool SaveItem(ItemDefinition itemDefinition, ItemChanges changes, CallContext context)
+		public void SaveItem(ItemDefinition itemDefinition, ItemChanges changes, CallContext context)
 		{
-			if (!base.SaveItem(itemDefinition, changes, context)) return false;
-			if (DisableSerialization) return true;
+			if (DisableSerialization) return;
 
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
 			Assert.ArgumentNotNull(changes, "changes");
 
 			var sourceItem = new SitecoreSourceItem(changes.Item);
 
-			if (!_predicate.Includes(sourceItem).IsIncluded) return true;
+			if (!_predicate.Includes(sourceItem).IsIncluded) return;
 
 			if (changes.Renamed)
 			{
@@ -56,18 +54,15 @@ namespace Unicorn
 			}
 			else
 				_serializationProvider.SerializeItem(sourceItem);
-
-			return true;
 		}
 
-		public override bool MoveItem(ItemDefinition itemDefinition, ItemDefinition destination, CallContext context)
+		public void MoveItem(ItemDefinition itemDefinition, ItemDefinition destination, CallContext context)
 		{
-			if (!base.MoveItem(itemDefinition, destination, context)) return false;
-			if (DisableSerialization) return true;
+			if (DisableSerialization) return;
 
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
 
-			var sourceItem = GetSourceFromDefinition(destination);
+			var sourceItem = GetSourceFromDefinition(itemDefinition);
 			var destinationItem = GetSourceFromDefinition(destination);
 
 			if (!_predicate.Includes(destinationItem).IsIncluded) // if the destination we are moving to is NOT included for serialization, we delete the existing item
@@ -76,82 +71,63 @@ namespace Unicorn
 
 				if (existingItem != null) _serializationProvider.DeleteSerializedItem(existingItem);
 
-				return true;
+				return;
 			}
 
-			_serializationProvider.MoveSerializedItem(sourceItem, destination.ID);
-
-			return true;
+			_serializationProvider.MoveSerializedItem(sourceItem, destinationItem);
 		}
 
-		public override bool CopyItem(ItemDefinition source, ItemDefinition destination, string copyName, ID copyID, CallContext context)
+		public void CopyItem(ItemDefinition source, ItemDefinition destination, string copyName, ID copyID, CallContext context)
 		{
-			if (!base.CopyItem(source, destination, copyName, copyID, context)) return false;
-			if (DisableSerialization) return true;
+			if (DisableSerialization) return;
 
 			var destinationItem = GetSourceFromDefinition(destination);
 
-			if (!_predicate.Includes(destinationItem).IsIncluded) return true; // destination parent is not in a path that we are serializing, so skip out
+			if (!_predicate.Includes(destinationItem).IsIncluded) return; // destination parent is not in a path that we are serializing, so skip out
 
 			var sourceItem = GetSourceFromDefinition(source);
 
 			_serializationProvider.CopySerializedItem(sourceItem, destinationItem);
-
-			return true;
 		}
 
-		public override int AddVersion(ItemDefinition itemDefinition, VersionUri baseVersion, CallContext context)
+		public void AddVersion(ItemDefinition itemDefinition, VersionUri baseVersion, CallContext context)
 		{
-			var baseVersionResult = base.AddVersion(itemDefinition, baseVersion, context);
-
-			if (baseVersionResult < 1) return baseVersionResult; // no version created for some reason
-			if (DisableSerialization) return baseVersionResult;
+			if (DisableSerialization) return;
 
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
 
 			SerializeItemIfIncluded(itemDefinition);
-
-			return baseVersionResult;
 		}
 
-		public override bool DeleteItem(ItemDefinition itemDefinition, CallContext context)
+		public void DeleteItem(ItemDefinition itemDefinition, CallContext context)
 		{
-			if (!base.DeleteItem(itemDefinition, context)) return false;
-			if (DisableSerialization) return true;
+			if (DisableSerialization) return;
 
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
 
 			var existingItem = GetExistingSerializedItem(itemDefinition.ID);
 
-			if (existingItem == null) return true; // it was already gone or an item from a different data provider
+			if (existingItem == null) return; // it was already gone or an item from a different data provider
 
 			_serializationProvider.DeleteSerializedItem(existingItem);
-
-			return true;
 		}
 
-		public override bool RemoveVersion(ItemDefinition itemDefinition, VersionUri version, CallContext context)
+		public void RemoveVersion(ItemDefinition itemDefinition, VersionUri version, CallContext context)
 		{
-			if (!base.RemoveVersion(itemDefinition, version, context)) return false;
-			if (DisableSerialization) return true;
+			if (DisableSerialization) return;
 
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
 
 			SerializeItemIfIncluded(itemDefinition);
-
-			return true;
 		}
 
-		public override bool RemoveVersions(ItemDefinition itemDefinition, Language language, bool removeSharedData, CallContext context)
+		public void RemoveVersions(ItemDefinition itemDefinition, Language language, bool removeSharedData, CallContext context)
 		{
-			if (!base.RemoveVersions(itemDefinition, language, removeSharedData, context)) return false;
-			if (DisableSerialization) return true;
+			if (DisableSerialization) return;
 
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
 		
 			SerializeItemIfIncluded(itemDefinition);
-
-			return true;
 		}
 
 		protected virtual bool SerializeItemIfIncluded(ItemDefinition itemDefinition)
@@ -176,6 +152,8 @@ namespace Unicorn
 			if (item == null) return null;
 
 			var reference = _serializationProvider.GetReference(item.Paths.FullPath, Database.Name);
+
+			if (reference == null) return null;
 
 			return _serializationProvider.GetItem(reference);
 		}

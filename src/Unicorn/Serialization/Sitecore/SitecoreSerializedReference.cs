@@ -1,8 +1,10 @@
-﻿using System.Linq;
+﻿using System.Diagnostics;
+using System.Linq;
 using Sitecore.Data.Serialization;
 
 namespace Unicorn.Serialization.Sitecore
 {
+	[DebuggerDisplay("SerRef: {ItemPath}")]
 	public class SitecoreSerializedReference : ISerializedReference
 	{
 		public SitecoreSerializedReference(string physicalPath)

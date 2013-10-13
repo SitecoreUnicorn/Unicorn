@@ -9,19 +9,22 @@ namespace Unicorn.Serialization
 		/// <summary>
 		/// Serialize a given item into the serialization provider's serialization store
 		/// </summary>
-		void SerializeItem(ISourceItem item);
+		ISerializedItem SerializeItem(ISourceItem item);
 
 		void UpdateSerializedItem(ISerializedItem serializedItem);
 		
 		void RenameSerializedItem(ISourceItem renamedItem, string oldName);
 
-		void MoveSerializedItem(ISourceItem sourceItem, ID newParentId);
+		void MoveSerializedItem(ISourceItem sourceItem, ISourceItem newParentItem);
 
 		void CopySerializedItem(ISourceItem sourceItem, ISourceItem destination);
 
 		
-
-		void DeleteSerializedItem(ISerializedItem item);
+		/// <summary>
+		/// Deletes an item from the serialization provider.
+		/// </summary>
+		/// <param name="item">The item to delete. If it's an ISerializedReference, it must refer to an item path and not a directory path.</param>
+		void DeleteSerializedItem(ISerializedReference item);
 
 		/// <summary>
 		/// Deserialize a given item from the provider's serialization store to Sitecore database
@@ -43,7 +46,7 @@ namespace Unicorn.Serialization
 		/// <summary>
 		/// Get all child references for a given serialized reference parent
 		/// </summary>
-		ISerializedReference[] GetChildReferences(ISerializedReference parent);
+		ISerializedReference[] GetChildReferences(ISerializedReference parent, bool recursive);
 
 		/// <summary>
 		/// Get all child serialized items for a given serialized reference parent

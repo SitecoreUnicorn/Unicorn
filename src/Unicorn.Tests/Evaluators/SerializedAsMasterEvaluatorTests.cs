@@ -3,7 +3,6 @@ using System.Linq;
 using Kamsar.WebConsole;
 using Moq;
 using NUnit.Framework;
-using Sitecore;
 using Unicorn.Data;
 using Unicorn.Evaluators;
 using Unicorn.Serialization;

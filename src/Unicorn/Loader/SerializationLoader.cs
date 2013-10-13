@@ -96,7 +96,7 @@ namespace Unicorn.Loader
 				LoadOneLevel(root, retryer, progress);
 
 				// check if we have child paths to recurse down
-				var children = _serializationProvider.GetChildReferences(root);
+				var children = _serializationProvider.GetChildReferences(root, false);
 
 				if (children.Length > 0)
 				{
@@ -189,7 +189,7 @@ namespace Unicorn.Loader
 
 							// check if we have any child serialized items under this loaded child item (existing children) -
 							// if we do not, we can orphan any children of the loaded item as well
-							var loadedItemsChildren = _serializationProvider.GetChildReferences(child);
+							var loadedItemsChildren = _serializationProvider.GetChildReferences(child, false);
 
 							if (loadedItemsChildren.Length == 0) // no children were serialized on disk
 							{
@@ -225,10 +225,10 @@ namespace Unicorn.Loader
 			Assert.ArgumentNotNull(serializedItem, "serializedItem");
 			Assert.ArgumentNotNull(progress, "progress");
 
-			bool disabledLocally = ItemHandler.DisabledLocally;
+			bool disableNewSerialization = UnicornDataProvider.DisableSerialization;
 			try
 			{
-				ItemHandler.DisabledLocally = true;
+				UnicornDataProvider.DisableSerialization = true;
 
 				_itemsProcessed++;
 				if (_itemsProcessed % 500 == 0 && _itemsProcessed > 1)
@@ -260,7 +260,7 @@ namespace Unicorn.Loader
 			}
 			finally
 			{
-				ItemHandler.DisabledLocally = disabledLocally;
+				UnicornDataProvider.DisableSerialization = disableNewSerialization;
 			}
 		}
 

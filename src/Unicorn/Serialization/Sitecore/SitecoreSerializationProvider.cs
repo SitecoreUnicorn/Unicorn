@@ -15,9 +15,7 @@ namespace Unicorn.Serialization.Sitecore
 {
 	public class SitecoreSerializationProvider : ISerializationProvider
 	{
-		// TODO: should have some kind of global write lock (across serialize item and updateserializeditem)
-
-		public void SerializeItem(ISourceItem item)
+		public ISerializedItem SerializeItem(ISourceItem item)
 		{
 			Assert.ArgumentNotNull(item, "item");
 
@@ -25,10 +23,14 @@ namespace Unicorn.Serialization.Sitecore
 
 			var sitecoreItem = sitecoreSourceItem != null ? sitecoreSourceItem.InnerItem : Factory.GetDatabase(item.Database).GetItem(item.Id);
 
-			Assert.IsNotNull(sitecoreItem, "Item to dump did not exist!");
+			Assert.IsNotNull(sitecoreItem, "Item to serialize did not exist!");
 
-			Manager.DumpItem(sitecoreItem);
-			Manager.CleanupPath(PathUtils.GetDirectoryPath(new ItemReference(sitecoreItem.Parent).ToString()), false);
+			var serializedPath = PathUtils.GetFilePath(new ItemReference(sitecoreItem).ToString());
+			var serializedItem = new SitecoreSerializedItem(ItemSynchronization.BuildSyncItem(sitecoreItem), serializedPath);
+
+			UpdateSerializedItem(serializedItem);
+
+			return serializedItem;
 		}
 
 		public ISerializedReference GetReference(string sitecorePath, string databaseName)
@@ -44,14 +46,14 @@ namespace Unicorn.Serialization.Sitecore
 			{
 				physicalPath = PathUtils.GetFilePath(reference.ToString());
 
-				if(!File.Exists(physicalPath))
-					throw new FileNotFoundException("The reference path " + physicalPath + " did not exist!", physicalPath);
+				if (!File.Exists(physicalPath))
+					return null;
 			}
 
 			return new SitecoreSerializedReference(physicalPath);
 		}
 
-		public ISerializedReference[] GetChildReferences(ISerializedReference parent)
+		public ISerializedReference[] GetChildReferences(ISerializedReference parent, bool recursive)
 		{
 			Assert.ArgumentNotNull(parent, "parent");
 
@@ -104,7 +106,18 @@ namespace Unicorn.Serialization.Sitecore
 
 			var results = Enumerable.Concat(parseDirectory(longPath), parseDirectory(shortPath));
 
-			return results.Select(x => (ISerializedReference)new SitecoreSerializedReference(x)).ToArray();
+			List<ISerializedReference> referenceResults = results.Select(x => (ISerializedReference)new SitecoreSerializedReference(x)).ToList();
+
+			if (recursive)
+			{
+				var localReferenceResults = referenceResults.ToArray();
+				foreach (var child in localReferenceResults)
+				{
+					referenceResults.AddRange(GetChildReferences(child, true));
+				}
+			}
+
+			return referenceResults.ToArray();
 		}
 
 		public ISerializedItem GetItem(ISerializedReference reference)
@@ -228,23 +241,48 @@ namespace Unicorn.Serialization.Sitecore
 			// the name wasn't actually changed, you sneaky template builder you. Don't write.
 			if (oldName.Equals(renamedItem.Name, StringComparison.Ordinal)) return;
 
-			// we push this to get updated. Because saving now ignores "inconsquential" changes like a rename that do not change data fields,
-			// this keeps renames occurring even if the field changes are inconsequential
-			SerializeItem(renamedItem);
+			var updatedItem = SerializeItem(renamedItem);
 
 			var reference = new ItemReference(typed.InnerItem).ToString();
 			var oldReference = reference.Substring(0, reference.LastIndexOf('/') + 1) + oldName;
 
 			var oldSerializationPath = PathUtils.GetDirectoryPath(oldReference);
-			var newSerializationPath = PathUtils.GetDirectoryPath(reference);
 
 			if (Directory.Exists(oldSerializationPath))
-				MoveDescendants(oldSerializationPath, newSerializationPath, renamedItem.Database);
+				MoveDescendants(new SitecoreSerializedReference(oldSerializationPath), updatedItem);
 		}
 
-		public void MoveSerializedItem(ISourceItem sourceItem, global::Sitecore.Data.ID newParentId)
+		public void MoveSerializedItem(ISourceItem sourceItem, ISourceItem newParentItem)
 		{
-			throw new NotImplementedException();
+			Assert.ArgumentNotNull(sourceItem, "sourceItem");
+			Assert.ArgumentNotNull(newParentItem, "newParentItem");
+
+			var sitecoreSource = sourceItem as SitecoreSourceItem;
+			var sitecoreParent = newParentItem as SitecoreSourceItem;
+
+			if (sitecoreParent == null) throw new ArgumentException("newParentItem must be a SitecoreSourceItem", "newParentItem");
+			if (sitecoreSource == null) throw new ArgumentException("sourceItem must be a SitecoreSourceItem", "sourceItem");
+
+			var oldRootDirectory = new SitecoreSerializedReference(PathUtils.GetDirectoryPath(new ItemReference(sitecoreSource.InnerItem).ToString()));
+			var oldRootItemPath = new SitecoreSerializedReference(oldRootDirectory.ProviderId + PathUtils.Extension);
+			var newRootItemPath = PathUtils.GetDirectoryPath(new ItemReference(sitecoreParent.InnerItem).ToString()) + "/" + sitecoreSource.Name + PathUtils.Extension;
+
+			var syncItem = ItemSynchronization.BuildSyncItem(sitecoreSource.InnerItem);
+
+			// update the path and parent IDs to the new location
+			syncItem.ParentID = newParentItem.Id.ToString();
+			syncItem.ItemPath = string.Concat(newParentItem.Path, "/", syncItem.Name);
+
+			var serializedNewItem = new SitecoreSerializedItem(syncItem, newRootItemPath);
+
+			// write the moved sync item to its new destination
+			UpdateSerializedItem(serializedNewItem);
+
+			// move any children to the new destination (and fix their paths)
+			MoveDescendants(oldRootDirectory, serializedNewItem);
+
+			// remove the serialized item in the old location
+			DeleteSerializedItem(oldRootItemPath);
 		}
 
 		public void CopySerializedItem(ISourceItem sourceItem, ISourceItem destination)
@@ -252,49 +290,57 @@ namespace Unicorn.Serialization.Sitecore
 			throw new NotImplementedException();
 		}
 
-		public void DeleteSerializedItem(ISerializedItem item)
+		public void DeleteSerializedItem(ISerializedReference item)
 		{
-			throw new NotImplementedException();
+			// kill the serialized file
+			if (File.Exists(item.ProviderId)) File.Delete(item.ProviderId);
+			else return;
+
+			// remove any serialized children
+			var directory = PathUtils.StripPath(item.ProviderId);
+			
+			if(Directory.Exists(directory)) Directory.Delete(directory, true);
+
+			// clean up empty parent folder(s)
+			var parentDirectory = Directory.GetParent(directory);
+
+			do
+			{
+				if (parentDirectory.GetFileSystemInfos().Length > 0) break;
+
+				parentDirectory.Delete(true);
+				parentDirectory = parentDirectory.Parent;
+
+			} while (parentDirectory != null && parentDirectory.Exists);
 		}
 
-		private void MoveDescendants(string oldSitecorePath, string newSitecorePath, string databaseName)
+		private void MoveDescendants(ISerializedReference oldReference, ISerializedItem newItem)
 		{
+			// remove the extension from the new item's provider ID
+			string newItemReferencePath = PathUtils.StripPath(newItem.ProviderId);
+
 			// if the paths were the same, no moving occurs (this can happen when saving templates, which spuriously can report "renamed" when they are not actually any such thing)
-			if (oldSitecorePath.Equals(newSitecorePath, StringComparison.OrdinalIgnoreCase)) return;
+			if (oldReference.ProviderId.Equals(newItemReferencePath, StringComparison.OrdinalIgnoreCase)) return;
 
-			//var oldSerializationPath = GetPhysicalPath(new ItemReference(databaseName, oldSitecorePath));
+			var serializedDescendants = GetChildReferences(oldReference, true);
 
-			//// move descendant items by reserializing them and fixing their ItemPath
-			//if (descendantItems.Length > 0)
-			//{
-			//	foreach (var descendant in descendantItems)
-			//	{
-			//		string oldPath = GetPhysicalSyncItemPath(descendant);
+			// take all the descendant items that are serialized already, and re-serialize them at their new path location
+			foreach (var descendant in serializedDescendants)
+			{
+				var item = GetItem(descendant) as SitecoreSerializedItem;
 
-			//		// save to new location
-			//		descendant.ItemPath = descendant.ItemPath.Replace(oldSitecorePath, newSitecorePath);
-			//		SaveItem(descendant);
+				if (item == null) continue;
 
-			//		// remove old file location
-			//		if (File.Exists(oldPath))
-			//		{
-			//			using (new WatcherDisabler(_watcher))
-			//			{
-			//				File.Delete(oldPath);
-			//			}
-			//		}
-			//	}
-			//}
+				var syncItem = item.InnerItem;
 
-			//using (new WatcherDisabler(_watcher))
-			//{
-			//	// remove the old serialized item from disk
-			//	if (File.Exists(oldSerializationPath)) File.Delete(oldSerializationPath);
+				syncItem.ItemPath = syncItem.ItemPath.Replace(oldReference.ItemPath, newItem.ItemPath);
+				var newPhysicalPath = item.ProviderId.Replace(oldReference.ProviderId, newItemReferencePath);
 
-			//	// remove the old serialized children folder from disk
-			//	var directoryPath = PathUtils.StripPath(oldSerializationPath);
-			//	if (Directory.Exists(directoryPath)) Directory.Delete(directoryPath, true);
-			//}
+				UpdateSerializedItem(new SitecoreSerializedItem(syncItem, newPhysicalPath));
+			}
+
+			// remove the old children folder if it exists
+			if(Directory.Exists(oldReference.ProviderId)) Directory.Delete(oldReference.ProviderId, true);
 		}
 	}
 }

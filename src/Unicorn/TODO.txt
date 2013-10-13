@@ -13,3 +13,5 @@ TODO:
 - The serialization provider methods need to be implemented fully (move, rename, etc)
 - See above bug list
 - Write unit tests
+- Redo conflict processor to use serialization provider
+- 

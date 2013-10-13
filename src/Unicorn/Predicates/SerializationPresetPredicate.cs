@@ -16,6 +16,11 @@ namespace Unicorn.Predicates
 	{
 		private readonly IList<IncludeEntry> _preset;
 
+		public SerializationPresetPredicate() : this("default")
+		{
+			
+		}
+
 		public SerializationPresetPredicate(string presetName)
 		{
 			Assert.IsNotNullOrEmpty(presetName, "presetName");

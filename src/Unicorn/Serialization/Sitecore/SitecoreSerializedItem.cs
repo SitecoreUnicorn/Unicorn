@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using Sitecore.Data.Serialization.ObjectModel;
 using Sitecore.Data;
+using System.Diagnostics;
 
 namespace Unicorn.Serialization.Sitecore
 {
+	[DebuggerDisplay("SerItem: {ItemPath}")]
 	public class SitecoreSerializedItem : ISerializedItem
 	{
 		public SitecoreSerializedItem(SyncItem item, string physicalPath)
