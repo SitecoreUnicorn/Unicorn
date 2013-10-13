@@ -10,17 +10,20 @@ using Sitecore.Data.Serialization.ObjectModel;
 using Sitecore.Diagnostics;
 using Sitecore.StringExtensions;
 using Unicorn.Data;
-using Unicorn.Serialization.Sitecore;
 
-namespace Unicorn.Serialization
+namespace Unicorn.Serialization.Sitecore
 {
 	public class SitecoreSerializationProvider : ISerializationProvider
 	{
+		// TODO: should have some kind of global write lock (across serialize item and updateserializeditem)
+
 		public void SerializeItem(ISourceItem item)
 		{
 			Assert.ArgumentNotNull(item, "item");
 
-			var sitecoreItem = Factory.GetDatabase(item.Database).GetItem(item.Id);
+			var sitecoreSourceItem = item as SitecoreSourceItem;
+
+			var sitecoreItem = sitecoreSourceItem != null ? sitecoreSourceItem.InnerItem : Factory.GetDatabase(item.Database).GetItem(item.Id);
 
 			Assert.IsNotNull(sitecoreItem, "Item to dump did not exist!");
 
@@ -193,6 +196,105 @@ namespace Unicorn.Serialization
 
 				return null;
 			}
+		}
+
+		public void UpdateSerializedItem(ISerializedItem serializedItem)
+		{
+			var typed = serializedItem as SitecoreSerializedItem;
+
+			if (typed == null) throw new ArgumentException("Serialized item must be a SitecoreSerializedItem", "serializedItem");
+
+			var parentPath = Path.GetDirectoryName(serializedItem.ProviderId);
+			if (parentPath != null)
+				Directory.CreateDirectory(parentPath);
+
+			using (var fileStream = File.Open(serializedItem.ProviderId, FileMode.Create, FileAccess.Write, FileShare.Write))
+			{
+				using (var writer = new StreamWriter(fileStream))
+				{
+					typed.InnerItem.Serialize(writer);
+				}
+			}
+		}
+
+		public void RenameSerializedItem(ISourceItem renamedItem, string oldName)
+		{
+			if (renamedItem == null || oldName == null) return;
+
+			var typed = renamedItem as SitecoreSourceItem;
+
+			if (typed == null) throw new ArgumentException("Renamed item must be a SitecoreSourceItem", "renamedItem");
+
+			// the name wasn't actually changed, you sneaky template builder you. Don't write.
+			if (oldName.Equals(renamedItem.Name, StringComparison.Ordinal)) return;
+
+			// we push this to get updated. Because saving now ignores "inconsquential" changes like a rename that do not change data fields,
+			// this keeps renames occurring even if the field changes are inconsequential
+			SerializeItem(renamedItem);
+
+			var reference = new ItemReference(typed.InnerItem).ToString();
+			var oldReference = reference.Substring(0, reference.LastIndexOf('/') + 1) + oldName;
+
+			var oldSerializationPath = PathUtils.GetDirectoryPath(oldReference);
+			var newSerializationPath = PathUtils.GetDirectoryPath(reference);
+
+			if (Directory.Exists(oldSerializationPath))
+				MoveDescendants(oldSerializationPath, newSerializationPath, renamedItem.Database);
+		}
+
+		public void MoveSerializedItem(ISourceItem sourceItem, global::Sitecore.Data.ID newParentId)
+		{
+			throw new NotImplementedException();
+		}
+
+		public void CopySerializedItem(ISourceItem sourceItem, ISourceItem destination)
+		{
+			throw new NotImplementedException();
+		}
+
+		public void DeleteSerializedItem(ISerializedItem item)
+		{
+			throw new NotImplementedException();
+		}
+
+		private void MoveDescendants(string oldSitecorePath, string newSitecorePath, string databaseName)
+		{
+			// if the paths were the same, no moving occurs (this can happen when saving templates, which spuriously can report "renamed" when they are not actually any such thing)
+			if (oldSitecorePath.Equals(newSitecorePath, StringComparison.OrdinalIgnoreCase)) return;
+
+			//var oldSerializationPath = GetPhysicalPath(new ItemReference(databaseName, oldSitecorePath));
+
+			//// move descendant items by reserializing them and fixing their ItemPath
+			//if (descendantItems.Length > 0)
+			//{
+			//	foreach (var descendant in descendantItems)
+			//	{
+			//		string oldPath = GetPhysicalSyncItemPath(descendant);
+
+			//		// save to new location
+			//		descendant.ItemPath = descendant.ItemPath.Replace(oldSitecorePath, newSitecorePath);
+			//		SaveItem(descendant);
+
+			//		// remove old file location
+			//		if (File.Exists(oldPath))
+			//		{
+			//			using (new WatcherDisabler(_watcher))
+			//			{
+			//				File.Delete(oldPath);
+			//			}
+			//		}
+			//	}
+			//}
+
+			//using (new WatcherDisabler(_watcher))
+			//{
+			//	// remove the old serialized item from disk
+			//	if (File.Exists(oldSerializationPath)) File.Delete(oldSerializationPath);
+
+			//	// remove the old serialized children folder from disk
+			//	var directoryPath = PathUtils.StripPath(oldSerializationPath);
+			//	if (Directory.Exists(directoryPath)) Directory.Delete(directoryPath, true);
+			//}
 		}
 	}
 }

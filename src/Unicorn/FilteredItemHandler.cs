@@ -9,6 +9,7 @@ using System.IO;
 using Unicorn.Data;
 using Unicorn.Predicates;
 using Unicorn.Serialization;
+using Unicorn.Serialization.Sitecore;
 
 namespace Unicorn
 {

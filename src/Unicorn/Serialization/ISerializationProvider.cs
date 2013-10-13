@@ -1,7 +1,7 @@
 ﻿using Kamsar.WebConsole;
 using Sitecore.Data;
 using Unicorn.Data;
-using Unicorn.Predicates;
+
 namespace Unicorn.Serialization
 {
 	public interface ISerializationProvider
@@ -11,17 +11,17 @@ namespace Unicorn.Serialization
 		/// </summary>
 		void SerializeItem(ISourceItem item);
 
-		void SerializeItem(ISerializedItem serializedItem);
+		void UpdateSerializedItem(ISerializedItem serializedItem);
 		
 		void RenameSerializedItem(ISourceItem renamedItem, string oldName);
 
-		void MoveSerializedItem(ISerializedItem serializedItem, ID oldParentId, IPredicate predicate);
+		void MoveSerializedItem(ISourceItem sourceItem, ID newParentId);
 
-		void CopySerializedItem(ISerializedItem sourceItem, ISourceItem destination);
+		void CopySerializedItem(ISourceItem sourceItem, ISourceItem destination);
 
 		
 
-		void DeleteSerializedItem(ISerializedItem item, ID originalParentId);
+		void DeleteSerializedItem(ISerializedItem item);
 
 		/// <summary>
 		/// Deserialize a given item from the provider's serialization store to Sitecore database

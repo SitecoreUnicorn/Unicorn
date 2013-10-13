@@ -6,3 +6,10 @@
 5. Change the filtered item handler into a wrapped data provider
 	Note: don't forget to change the ItemHandler.DisabledLocally in DoLoadItem() in the loader to something to match the provider
 6. Tests. Lots of em.
+
+
+TODO:
+- The data provider is hypothetically ready to test, but
+- The serialization provider methods need to be implemented fully (move, rename, etc)
+- See above bug list
+- Write unit tests

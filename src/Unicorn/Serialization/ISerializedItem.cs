@@ -13,7 +13,5 @@ namespace Unicorn.Serialization
 
 		SerializedFieldDictionary SharedFields { get; }
 		SerializedVersion[] Versions { get; }
-		void RemoveVersion(string language, int versionNumber);
-		void RemoveVersions(string language);
 	}
 }

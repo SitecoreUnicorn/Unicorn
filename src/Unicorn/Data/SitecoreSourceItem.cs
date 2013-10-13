@@ -52,6 +52,8 @@ namespace Unicorn.Data
 			get { return _item.Database.Name + ":" + _item.Paths.FullPath; }
 		}
 
+		public Item InnerItem { get { return _item; } }
+
 		/// <summary>
 		/// Recycles the item, clears it from cache, and if it's part of a template resets the template engine
 		/// </summary>
@@ -86,7 +88,7 @@ namespace Unicorn.Data
 
 			return version.Statistics.Updated;
 		}
-		
+
 		public string GetRevision(string languageCode, int versionNumber)
 		{
 			var version = GetVersion(languageCode, versionNumber);
@@ -95,7 +97,7 @@ namespace Unicorn.Data
 
 			return version.Statistics.Revision;
 		}
-		
+
 		private Item GetVersion(string languageCode, int versionNumber)
 		{
 			Assert.ArgumentNotNullOrEmpty(languageCode, "languageCode");
@@ -110,6 +112,6 @@ namespace Unicorn.Data
 		}
 
 
-		
+
 	}
 }
