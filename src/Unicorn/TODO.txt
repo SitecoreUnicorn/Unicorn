@@ -6,15 +6,16 @@
 
 
 TODO:
-- Implement the inconsequential changes feature (in the data provider?)
+- Implement the inconsequential changes feature (in the data provider?) + remove the filtered item handler
 - Need to figure out a good solution for handling moving children of renames and moves in a sensible fashion that evaluates the inclusion of all children properly
-
+- How can we hook multiple data provider instances together (e.g. a different serialization control for content vs templates) cleanly?
 - See above bug list
 - Implement static logging interfaces (DOTNET-243)
 - Implement custom deserializer that can handle missing fields with a warning and report on individual updated field values
 - Write unit tests
 - Redo conflict processor to use serialization provider
 - Dupe-ID detection in the loader
+- Is there a way we can effectively parallelize the loader?
 - Test retrying failed deserializations
 - Test moving and copying and renaming in cross-inclusion territory
 - Automagical serialization of default preset items if the root serialization path is totally empty
