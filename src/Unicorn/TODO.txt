@@ -2,16 +2,20 @@
 1. Seems that its not detecting modified timestamp changes correctly. The Evaluator does not appear to be being invoked at all, which makes me wonder if the SL's abilities to load the corresponding item are busted.
 2. Presets' serializeall method is not implemented. We should modify to take a progress. Maybe this method should go somewhere else too - starting paths and presets/predicates don't really seem to be the same concern necessarily?
 3. Integrate the conflict processor into less one-off APIs
-4. Integrate the FilteredItemHandler into less one-off APIs
-5. Change the filtered item handler into a wrapped data provider
-	Note: don't forget to change the ItemHandler.DisabledLocally in DoLoadItem() in the loader to something to match the provider
 6. Tests. Lots of em.
 
 
 TODO:
-- The data provider is hypothetically ready to test, but
-- The serialization provider methods need to be implemented fully (move, rename, etc)
+- Implement the inconsequential changes feature (in the data provider?)
+- Need to figure out a good solution for handling moving children of renames and moves in a sensible fashion that evaluates the inclusion of all children properly
+
 - See above bug list
+- Implement static logging interfaces (DOTNET-243)
+- Implement custom deserializer that can handle missing fields with a warning and report on individual updated field values
 - Write unit tests
 - Redo conflict processor to use serialization provider
-- 
+- Dupe-ID detection in the loader
+- Test retrying failed deserializations
+- Test moving and copying and renaming in cross-inclusion territory
+- Automagical serialization of default preset items if the root serialization path is totally empty
+- Async serialization file writes with a read/write lock system? + perf testing

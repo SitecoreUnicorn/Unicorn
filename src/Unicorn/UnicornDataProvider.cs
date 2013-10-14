@@ -81,13 +81,12 @@ namespace Unicorn
 		{
 			if (DisableSerialization) return;
 
-			var destinationItem = GetSourceFromDefinition(destination);
+			// copying is easy - all we have to do is serialize the copyID. Copied children will all result in multiple calls to CopyItem so we don't even need to worry about them.
+			var copiedItem = new SitecoreSourceItem(Database.GetItem(copyID));
 
-			if (!_predicate.Includes(destinationItem).IsIncluded) return; // destination parent is not in a path that we are serializing, so skip out
+			if (!_predicate.Includes(copiedItem).IsIncluded) return; // destination parent is not in a path that we are serializing, so skip out
 
-			var sourceItem = GetSourceFromDefinition(source);
-
-			_serializationProvider.CopySerializedItem(sourceItem, destinationItem);
+			_serializationProvider.SerializeItem(copiedItem);
 		}
 
 		public void AddVersion(ItemDefinition itemDefinition, VersionUri baseVersion, CallContext context)

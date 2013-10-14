@@ -24,7 +24,11 @@ namespace Unicorn.Data
 
 		public string Path
 		{
-			get { return _item.Paths.FullPath; }
+			get
+			{
+				// note: using Path here instead of FullPath because when you get a _renamed_ item instance, the FullPath points to the _old_ path, whereas Path points to the correct, new path.
+				return _item.Paths.Path;
+			}
 		}
 
 		public string Database
@@ -110,8 +114,5 @@ namespace Unicorn.Data
 
 			return _item.Database.GetItem(_item.ID, language, version);
 		}
-
-
-
 	}
 }

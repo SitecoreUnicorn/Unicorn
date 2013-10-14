@@ -16,9 +16,6 @@ namespace Unicorn.Serialization
 		void RenameSerializedItem(ISourceItem renamedItem, string oldName);
 
 		void MoveSerializedItem(ISourceItem sourceItem, ISourceItem newParentItem);
-
-		void CopySerializedItem(ISourceItem sourceItem, ISourceItem destination);
-
 		
 		/// <summary>
 		/// Deletes an item from the serialization provider.

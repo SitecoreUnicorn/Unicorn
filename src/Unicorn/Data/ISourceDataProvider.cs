@@ -14,5 +14,4 @@ namespace Unicorn.Data
 		/// <param name="databaseName">The name of the database that was loaded to</param>
 		void DeserializationComplete(string databaseName);
 	}
-
 }
