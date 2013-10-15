@@ -40,29 +40,28 @@ namespace Unicorn.Loader
 		/// <summary>
 		/// Loads a preset from serialized items on disk.
 		/// </summary>
-		public void LoadTree(string database, string sitecorePath, IProgressStatus progress)
+		public void LoadTree(ISourceItem rootItem, IProgressStatus progress)
 		{
-			LoadTree(database, sitecorePath, new DeserializeFailureRetryer(), progress);
+			LoadTree(rootItem, new DeserializeFailureRetryer(), progress);
 		}
 
 		/// <summary>
 		/// Loads a preset from serialized items on disk.
 		/// </summary>
-		public void LoadTree(string database, string sitecorePath, IDeserializeFailureRetryer retryer, IProgressStatus progress)
+		public void LoadTree(ISourceItem rootItem, IDeserializeFailureRetryer retryer, IProgressStatus progress)
 		{
-			Assert.ArgumentNotNullOrEmpty(database, "database");
-			Assert.ArgumentNotNullOrEmpty(sitecorePath, "sitecorePath");
+			Assert.ArgumentNotNull(rootItem, "rootItem");
 			Assert.ArgumentNotNull(retryer, "retryer");
 			Assert.ArgumentNotNull(progress, "progress");
 
 			_itemsProcessed = 0;
 
-			var rootSerializedItem = _serializationProvider.GetReference(sitecorePath, database);
+			var rootSerializedItem = _serializationProvider.GetReference(rootItem);
 
 			if (rootSerializedItem == null)
-				throw new InvalidOperationException(string.Format("{0} was unable to find a root serialized item for {1}:{2}", _serializationProvider.GetType().Name, database, sitecorePath));
+				throw new InvalidOperationException(string.Format("{0} was unable to find a root serialized item for {1}:{2}", _serializationProvider.GetType().Name, rootItem.Database, rootItem.Path));
 
-			progress.ReportStatus("Loading serialized items under {0}:{1}", MessageType.Debug, database, sitecorePath);
+			progress.ReportStatus("Loading serialized items under {0}:{1}", MessageType.Debug, rootItem.Database, rootItem.Path);
 			progress.ReportStatus("Provider root ID: " + rootSerializedItem.ProviderId, MessageType.Debug);
 
 			using (new EventDisabler())
@@ -70,7 +69,7 @@ namespace Unicorn.Loader
 				LoadTreeRecursive(rootSerializedItem, retryer, progress);
 			}
 
-			_sourceDataProvider.DeserializationComplete(database);
+			_sourceDataProvider.DeserializationComplete(rootItem.Database);
 		}
 
 		/// <summary>

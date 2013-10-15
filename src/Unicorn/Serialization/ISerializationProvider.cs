@@ -33,7 +33,7 @@ namespace Unicorn.Serialization
 		/// Get a serialized reference for a given Sitecore path and database. A reference is a pointer to the path,
 		/// and while it indicates the store is capable of storing the path, it does not guarantee that path is serialized.
 		/// </summary>
-		ISerializedReference GetReference(string sitecorePath, string databaseName);
+		ISerializedReference GetReference(ISourceItem sourceItem);
 
 		/// <summary>
 		/// Get a serialized item from a serialized reference. This dereferences a reference into an actual serialized item.

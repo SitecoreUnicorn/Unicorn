@@ -4,6 +4,7 @@ using Sitecore;
 using Sitecore.Data;
 using Sitecore.Data.DataProviders;
 using Sitecore.Data.Items;
+using Sitecore.Data.Serialization;
 using Sitecore.Diagnostics;
 using Sitecore.Globalization;
 using Unicorn.Data;
@@ -17,6 +18,8 @@ namespace Unicorn
 		private readonly ISerializationProvider _serializationProvider;
 		private readonly IPredicate _predicate;
 		private readonly IUnicornDataProviderLogger _logger;
+		[ThreadStatic]
+		private static bool _disableSerialization;
 
 		public UnicornDataProvider(ISerializationProvider serializationProvider, IPredicate predicate, IUnicornDataProviderLogger logger)
 		{
@@ -28,7 +31,17 @@ namespace Unicorn
 		/// <summary>
 		/// Disables all serialization handling if true. Used during serialization load tasks.
 		/// </summary>
-		public static bool DisableSerialization { get; set; }
+		public static bool DisableSerialization
+		{
+			get
+			{
+				// we have to check standard serialization's disabled attribute as well,
+				// because if we do not serialization operations in the content editor will clash with ours
+				if (ItemHandler.DisabledLocally) return true; 
+				return _disableSerialization;
+			}
+			set { _disableSerialization = value; }
+		}
 
 		public DataProvider DataProvider { get; set; }
 		protected Database Database { get { return DataProvider.Database; } }
@@ -140,7 +153,7 @@ namespace Unicorn
 			if (DisableSerialization) return;
 
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
-		
+
 			SerializeItemIfIncluded(itemDefinition);
 		}
 
@@ -166,7 +179,7 @@ namespace Unicorn
 
 			if (item == null) return null;
 
-			var reference = _serializationProvider.GetReference(item.Paths.FullPath, Database.Name);
+			var reference = _serializationProvider.GetReference(new SitecoreSourceItem(item));
 
 			if (reference == null) return null;
 

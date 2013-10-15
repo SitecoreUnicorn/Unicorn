@@ -49,16 +49,15 @@ namespace Unicorn.Serialization.Sitecore
 			return serializedItem;
 		}
 
-		public virtual ISerializedReference GetReference(string sitecorePath, string databaseName)
+		public virtual ISerializedReference GetReference(ISourceItem sourceItem)
 		{
-			Assert.ArgumentNotNullOrEmpty(sitecorePath, "sitecorePath");
-			Assert.ArgumentNotNullOrEmpty(databaseName, "databaseName");
+			Assert.ArgumentNotNull(sourceItem, "sourceItem");
 
-			var physicalPath = SerializationPathUtility.GetSerializedReferencePath(_rootPath, sitecorePath, databaseName);
+			var physicalPath = SerializationPathUtility.GetSerializedReferencePath(_rootPath, sourceItem);
 
 			if (!Directory.Exists(physicalPath))
 			{
-				physicalPath = SerializationPathUtility.GetSerializedItemPath(_rootPath, sitecorePath, databaseName);
+				physicalPath = SerializationPathUtility.GetSerializedItemPath(_rootPath, sourceItem);
 
 				if (!File.Exists(physicalPath))
 					return null;

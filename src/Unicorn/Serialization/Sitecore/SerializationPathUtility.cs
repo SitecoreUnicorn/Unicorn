@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using Sitecore.Data.Serialization;
+using Sitecore.Diagnostics;
 using Unicorn.Data;
 
 namespace Unicorn.Serialization.Sitecore
@@ -15,31 +16,21 @@ namespace Unicorn.Serialization.Sitecore
 		/// </summary>
 		public static string GetSerializedItemPath(string rootDirectory, ISourceItem sourceItem)
 		{
-			return GetSerializedItemPath(rootDirectory, sourceItem.Path, sourceItem.Database);
-		}
-
-		/// <summary>
-		/// Gets the physical path to the .item file that defines the item path/database name. Returns the path regardless of if the item file exists.
-		/// </summary>
-		public static string GetSerializedItemPath(string rootDirectory, string itemPath, string databaseName)
-		{
-			return GetSerializedReferencePath(rootDirectory, itemPath, databaseName) + PathUtils.Extension;
-		}
-
-		/// <summary>
-		/// Gets the physical path to the directory that contains children of the source item
-		/// </summary>
-		public static string GetSerializedReferencePath(string rootDirectory, ISourceItem sourceItem)
-		{
-			return GetSerializedReferencePath(rootDirectory, sourceItem.Path, sourceItem.Database);
+			return GetSerializedReferencePath(rootDirectory, sourceItem) + PathUtils.Extension;
 		}
 
 		/// <summary>
 		/// Gets the physical path to the directory that contains children of the item path/database name
 		/// </summary>
-		public static string GetSerializedReferencePath(string rootDirectory, string itemPath, string databaseName)
+		public static string GetSerializedReferencePath(string rootDirectory, ISourceItem sourceItem)
 		{
-			return PathUtils.GetDirectoryPath(new ItemReference(databaseName, itemPath).ToString(), rootDirectory);
+			var sitecoreSourceItem = sourceItem as SitecoreSourceItem;
+			
+			Assert.IsNotNull(sitecoreSourceItem, "Source item must be a SitecoreSourceItem.");
+
+// ReSharper disable PossibleNullReferenceException
+			return PathUtils.GetDirectoryPath(new ItemReference(sitecoreSourceItem.InnerItem).ToString(), rootDirectory);
+// ReSharper restore PossibleNullReferenceException
 		}
 
 		/// <summary>

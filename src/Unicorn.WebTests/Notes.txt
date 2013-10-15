@@ -4,7 +4,7 @@
 * Test for orphaned paths (ie .item renamed, subitems folder not renamed)
 * Need to test item operations on items with children, and verify the integrity of said children afterwards (e.g. did that rename delete the children folder?)
 * Test for cases where an item is renamed, moved, or copied between an included and an excluded location (and vice versa)
-
+* Test for behaviour when two items with the same name are in the same path
 
 
 Here's some fun ASCII art for later in the webconsole!
