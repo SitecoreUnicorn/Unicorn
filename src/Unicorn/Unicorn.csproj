@@ -57,7 +57,7 @@
     <Compile Include="Evaluators\SerializedAsMasterEvaluator.cs" />
     <Compile Include="Evaluators\EvaluatorUtility.cs" />
     <Compile Include="Evaluators\IEvaluator.cs" />
-    <Compile Include="FilteredItemHandler.cs" />
+    <Compile Include="Serialization\FilteredItemHandler.cs" />
     <Compile Include="Data\ISourceItem.cs" />
     <Compile Include="Loader\DeserializeFailureRetryer.cs" />
     <Compile Include="Loader\IDeserializeFailureRetryer.cs" />

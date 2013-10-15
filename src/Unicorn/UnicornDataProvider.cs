@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+using Sitecore;
 using Sitecore.Data;
 using Sitecore.Data.DataProviders;
 using Sitecore.Data.Items;
@@ -47,12 +49,12 @@ namespace Unicorn
 
 			if (!_predicate.Includes(sourceItem).IsIncluded) return;
 
-			if (changes.Renamed)
+			string oldName = changes.Renamed? changes.Properties["name"].OriginalValue.ToString() : null;
+			if (changes.Renamed && !oldName.Equals(sourceItem.Name, StringComparison.Ordinal)) // it's a rename, in which the name actually changed (template builder will cause 'renames' for the same name!!!)
 			{
-				string oldName = changes.Properties["name"].OriginalValue.ToString();
 				_serializationProvider.RenameSerializedItem(sourceItem, oldName);
 			}
-			else
+			else if(HasConsequentialChanges(changes)) // it's a simple update - but we reject it if only inconsequential fields (last updated, revision) were changed - again, template builder FTW
 				_serializationProvider.SerializeItem(sourceItem);
 		}
 
@@ -160,6 +162,22 @@ namespace Unicorn
 		protected virtual ISourceItem GetSourceFromDefinition(ItemDefinition definition)
 		{
 			return new SitecoreSourceItem(Database.GetItem(definition.ID));
+		}
+
+		protected virtual bool HasConsequentialChanges(ItemChanges changes)
+		{
+			foreach (FieldChange change in changes.FieldChanges)
+			{
+				if (change.OriginalValue == change.Value) continue;
+				if (change.FieldID == FieldIDs.Revision) continue;
+				if (change.FieldID == FieldIDs.Updated) continue;
+
+				return true;
+			}
+
+			Log.Info("Item " + changes.Item.Paths.Path + " was saved, but contained no consequential changes so it was not serialized.", this);
+
+			return false;
 		}
 	}
 }

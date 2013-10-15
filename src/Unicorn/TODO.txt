@@ -6,7 +6,6 @@
 
 
 TODO:
-- Implement the inconsequential changes feature (in the data provider?) + remove the filtered item handler
 - Need to figure out a good solution for handling moving children of renames and moves in a sensible fashion that evaluates the inclusion of all children properly
 - How can we hook multiple data provider instances together (e.g. a different serialization control for content vs templates) cleanly?
 - See above bug list

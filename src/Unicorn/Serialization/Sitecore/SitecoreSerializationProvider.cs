@@ -41,6 +41,7 @@ namespace Unicorn.Serialization.Sitecore
 			Assert.IsNotNull(sitecoreItem, "Item to serialize did not exist!");
 
 			var serializedPath = SerializationPathUtility.GetSerializedItemPath(_rootPath, item);
+
 			var serializedItem = new SitecoreSerializedItem(ItemSynchronization.BuildSyncItem(sitecoreItem), serializedPath);
 
 			UpdateSerializedItem(serializedItem);
@@ -233,9 +234,6 @@ namespace Unicorn.Serialization.Sitecore
 			var typed = renamedItem as SitecoreSourceItem;
 
 			if (typed == null) throw new ArgumentException("Renamed item must be a SitecoreSourceItem", "renamedItem");
-
-			// the name wasn't actually changed, you sneaky template builder you. Don't write.
-			if (oldName.Equals(renamedItem.Name, StringComparison.Ordinal)) return;
 
 			// write the serialized item under its new name
 			var updatedItem = SerializeItem(renamedItem);
