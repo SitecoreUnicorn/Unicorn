@@ -209,8 +209,5 @@ namespace Unicorn.Predicates
 						? new PredicateResult("Item template ID exclusion rule")
 						: new PredicateResult(true);
 		}
-
-
-		
 	}
 }

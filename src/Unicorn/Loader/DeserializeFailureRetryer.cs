@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Kamsar.WebConsole;
 using Sitecore.Diagnostics;
 using Unicorn.Data;
 using Unicorn.Serialization;
@@ -20,9 +19,8 @@ namespace Unicorn.Loader
 			_failures.Add(new Failure(reference, exception));
 		}
 
-		public void RetryStandardValuesFailures(IProgressStatus progress, Action<ISerializedItem, IProgressStatus> retryAction)
+		public void RetryStandardValuesFailures(Action<ISerializedItem> retryAction)
 		{
-			Assert.ArgumentNotNull(progress, "progress");
 			Assert.ArgumentNotNull(retryAction, "retryAction");
 
 			// find all failures caused by a StandardValuesException
@@ -38,7 +36,7 @@ namespace Unicorn.Loader
 				{
 					try
 					{
-						retryAction(item, progress);
+						retryAction(item);
 					}
 					catch (Exception reason)
 					{
@@ -48,9 +46,8 @@ namespace Unicorn.Loader
 			}
 		}
 
-		public void RetryAll(IProgressStatus progress, ISourceDataProvider sourceDataProvider, Action<ISerializedItem, IProgressStatus> retrySingleItemAction, Action<ISerializedReference, IDeserializeFailureRetryer, IProgressStatus> retryTreeAction)
+		public void RetryAll(ISourceDataProvider sourceDataProvider, Action<ISerializedItem> retrySingleItemAction, Action<ISerializedReference, IDeserializeFailureRetryer> retryTreeAction)
 		{
-			Assert.ArgumentNotNull(progress, "progress");
 			Assert.ArgumentNotNull(sourceDataProvider, "sourceDataProvider");
 			Assert.ArgumentNotNull(retrySingleItemAction, "retrySingleItemAction");
 			Assert.ArgumentNotNull(retryTreeAction, "retryTreeAction");
@@ -76,7 +73,7 @@ namespace Unicorn.Loader
 						{
 							try
 							{
-								retrySingleItemAction(item, progress);
+								retrySingleItemAction(item);
 							}
 							catch (Exception reason)
 							{
@@ -87,7 +84,7 @@ namespace Unicorn.Loader
 						}
 
 						// retry loading a reference failure (note the continues in the above ensure execution never arrives here for items)
-						retryTreeAction(failure.Reference, this, progress);
+						retryTreeAction(failure.Reference, this);
 					}
 				}
 				while (_failures.Count > 0 && _failures.Count < originalFailures.Count); // continue retrying until all possible failures have been fixed
@@ -95,12 +92,14 @@ namespace Unicorn.Loader
 
 			if (_failures.Count > 0)
 			{
+				var exceptions = new List<DeserializationException>();
+
 				foreach (var failure in _failures)
 				{
-					progress.ReportStatus(string.Format("Failed to load {0} permanently because {1}", failure.Reference, failure.Reason), MessageType.Error);
+					exceptions.Add(new DeserializationException(string.Format("Failed to load {0} permanently because {1}", failure.Reference, failure.Reason), failure.Reason));
 				}
 
-				throw new Exception("Some directories could not be loaded: " + _failures[0].Reference, _failures[0].Reason);
+				throw new DeserializationAggregateException("Some directories could not be loaded.") { InnerExceptions = exceptions.ToArray() };
 			}
 		}
 

@@ -59,6 +59,10 @@ namespace Unicorn.Serialization.Sitecore
 
 		public string ProviderId { get; private set; }
 
+		public string DisplayIdentifier
+		{
+			get { return string.Format("{0}:{1} ({2})", DatabaseName, ItemPath, Id); }
+		}
 
 		public SerializedFieldDictionary SharedFields
 		{

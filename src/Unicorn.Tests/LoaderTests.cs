@@ -25,11 +25,12 @@ namespace Unicorn.Tests
 			var serializationProvider = new Mock<ISerializationProvider>();
 			serializationProvider.Setup(x => x.GetReference(rootItem.Object)).Returns((ISerializedReference)null);
 
-			var loader = new SerializationLoader(serializationProvider.Object, new Mock<ISourceDataProvider>().Object, new Mock<IPredicate>().Object, new Mock<IEvaluator>().Object);
-
 			var progress = new StringProgressStatus();
+			var logger = new ConsoleSerializationLoaderLogger(progress);
+			
+			var loader = new SerializationLoader(serializationProvider.Object, new Mock<ISourceDataProvider>().Object, new Mock<IPredicate>().Object, new Mock<IEvaluator>().Object, logger);
 
-			loader.LoadTree(rootItem.Object, progress);
+			loader.LoadTree(rootItem.Object);
 
 			Assert.IsTrue(progress.Output.Contains("was unable to find a root serialized item for"));
 		}

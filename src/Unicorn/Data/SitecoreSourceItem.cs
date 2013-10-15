@@ -53,7 +53,7 @@ namespace Unicorn.Data
 
 		public string DisplayIdentifier
 		{
-			get { return _item.Database.Name + ":" + _item.Paths.FullPath; }
+			get { return string.Format("{0}:{1} ({2})", _item.Database.Name, _item.Paths.FullPath, _item.ID); }
 		}
 
 		public Item InnerItem { get { return _item; } }

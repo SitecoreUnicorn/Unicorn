@@ -1,7 +1,5 @@
-using Kamsar.WebConsole;
 using Sitecore.Data;
 using Sitecore.Data.Events;
-using Sitecore.Data.Serialization;
 using Sitecore.Diagnostics;
 using System;
 using System.Collections.Generic;
@@ -10,6 +8,7 @@ using Unicorn.Data;
 using Unicorn.Predicates;
 using Unicorn.Serialization;
 using Unicorn.Evaluators;
+using System.Diagnostics;
 
 namespace Unicorn.Loader
 {
@@ -23,9 +22,11 @@ namespace Unicorn.Loader
 		private readonly IPredicate _predicate;
 		private readonly IEvaluator _evaluator;
 		private readonly ISourceDataProvider _sourceDataProvider;
+		private readonly ISerializationLoaderLogger _logger;
 
-		public SerializationLoader(ISerializationProvider serializationProvider, ISourceDataProvider sourceDataProvider, IPredicate predicate, IEvaluator evaluator)
+		public SerializationLoader(ISerializationProvider serializationProvider, ISourceDataProvider sourceDataProvider, IPredicate predicate, IEvaluator evaluator, ISerializationLoaderLogger logger)
 		{
+			_logger = logger;
 			Assert.ArgumentNotNull(serializationProvider, "serializationProvider");
 			Assert.ArgumentNotNull(sourceDataProvider, "sourceDataProvider");
 			Assert.ArgumentNotNull(predicate, "predicate");
@@ -40,59 +41,62 @@ namespace Unicorn.Loader
 		/// <summary>
 		/// Loads a preset from serialized items on disk.
 		/// </summary>
-		public void LoadTree(ISourceItem rootItem, IProgressStatus progress)
+		public void LoadTree(ISourceItem rootItem)
 		{
-			LoadTree(rootItem, new DeserializeFailureRetryer(), progress);
+			LoadTree(rootItem, new DeserializeFailureRetryer());
 		}
 
 		/// <summary>
 		/// Loads a preset from serialized items on disk.
 		/// </summary>
-		public void LoadTree(ISourceItem rootItem, IDeserializeFailureRetryer retryer, IProgressStatus progress)
+		public void LoadTree(ISourceItem rootItem, IDeserializeFailureRetryer retryer)
 		{
 			Assert.ArgumentNotNull(rootItem, "rootItem");
 			Assert.ArgumentNotNull(retryer, "retryer");
-			Assert.ArgumentNotNull(progress, "progress");
 
 			_itemsProcessed = 0;
+			var timer = new Stopwatch();
+			timer.Start();
 
 			var rootSerializedItem = _serializationProvider.GetReference(rootItem);
 
 			if (rootSerializedItem == null)
-				throw new InvalidOperationException(string.Format("{0} was unable to find a root serialized item for {1}:{2}", _serializationProvider.GetType().Name, rootItem.Database, rootItem.Path));
+				throw new InvalidOperationException(string.Format("{0} was unable to find a root serialized item for {1}", _serializationProvider.GetType().Name, rootItem.DisplayIdentifier));
 
-			progress.ReportStatus("Loading serialized items under {0}:{1}", MessageType.Debug, rootItem.Database, rootItem.Path);
-			progress.ReportStatus("Provider root ID: " + rootSerializedItem.ProviderId, MessageType.Debug);
+			_logger.BeginLoadingTree(rootSerializedItem);
 
 			using (new EventDisabler())
 			{
-				LoadTreeRecursive(rootSerializedItem, retryer, progress);
+				LoadTreeRecursive(rootSerializedItem, retryer);
 			}
 
+			timer.Stop();
+
 			_sourceDataProvider.DeserializationComplete(rootItem.Database);
+			_logger.EndLoadingTree(rootSerializedItem, _itemsProcessed, timer.ElapsedMilliseconds);
 		}
 
 		/// <summary>
 		/// Recursive method that loads a given tree and retries failures already present if any
 		/// </summary>
-		private void LoadTreeRecursive(ISerializedReference root, IDeserializeFailureRetryer retryer, IProgressStatus progress)
+		private void LoadTreeRecursive(ISerializedReference root, IDeserializeFailureRetryer retryer)
 		{
 			Assert.ArgumentNotNull(root, "root");
 			Assert.ArgumentNotNull(retryer, "retryer");
-			Assert.ArgumentNotNull(progress, "progress");
 
 			var included = _predicate.Includes(root);
 			if (!included.IsIncluded)
 			{
 				// TODO: does this work?
-				progress.ReportStatus("[S] {0}:{1} (and children) because it was excluded by {2}. However, it was present in {3}. {4}",	MessageType.Warning, root.DatabaseName, root.ItemPath, _predicate.GetType().Name, _serializationProvider.GetType().Name, included.Justification ?? string.Empty);
+				_logger.SkippedItemPresentInSerializationProvider(root, _predicate.GetType().Name, _serializationProvider.GetType().Name, included.Justification ?? string.Empty);
+			
 				return;
 			}
 
 			try
 			{
 				// load the current level
-				LoadOneLevel(root, retryer, progress);
+				LoadOneLevel(root, retryer);
 
 				// check if we have child paths to recurse down
 				var children = _serializationProvider.GetChildReferences(root, false);
@@ -115,11 +119,11 @@ namespace Unicorn.Loader
 					// load each child path recursively
 					foreach (var child in children)
 					{
-						LoadTreeRecursive(child, retryer, progress);
+						LoadTreeRecursive(child, retryer);
 					}
 
 					// pull out any standard values failures for immediate retrying
-					retryer.RetryStandardValuesFailures(progress, (item, status) => DoLoadItem(item, status));
+					retryer.RetryStandardValuesFailures(item => DoLoadItem(item));
 				} // children.length > 0
 			}
 			catch (Exception ex)
@@ -131,10 +135,9 @@ namespace Unicorn.Loader
 		/// <summary>
 		/// Loads a set of children from a serialized path
 		/// </summary>
-		private void LoadOneLevel(ISerializedReference root, IDeserializeFailureRetryer retryer, IProgressStatus progress)
+		private void LoadOneLevel(ISerializedReference root, IDeserializeFailureRetryer retryer)
 		{
 			Assert.ArgumentNotNull(root, "root");
-			Assert.ArgumentNotNull(progress, "progress");
 			Assert.ArgumentNotNull(retryer, "retryer");
 
 			var orphanCandidates = new Dictionary<ID, ISourceItem>();
@@ -144,7 +147,7 @@ namespace Unicorn.Loader
 
 			if (rootSerializedItem == null)
 			{
-				progress.ReportStatus("[S] {0}:{1}. Unable to get a serialized item for the path. <br />This usually indicates an orphaned serialized item tree in {2} which should be removed. <br />Less commonly, it could also indicate a sparsely serialized tree which is not supported.", MessageType.Warning, root.DatabaseName, root.ItemPath, _serializationProvider.GetType().Name);
+				_logger.SkippedItemMissingInSerializationProvider(root, _serializationProvider.GetType().Name);
 				return;
 			}
 
@@ -162,7 +165,7 @@ namespace Unicorn.Loader
 						orphanCandidates[child.Id] = child;
 					else
 					{
-						progress.ReportStatus(string.Format("[S] {0}:{1} (and children) by {2}: {3}", child.Database, child.Path, _predicate.GetType().Name, included.Justification ?? string.Empty), MessageType.Debug);
+						_logger.SkippedItem(child, _predicate.GetType().Name, included.Justification ?? string.Empty);
 					}
 				}
 			}
@@ -181,7 +184,7 @@ namespace Unicorn.Loader
 					else
 					{
 						// load a child item
-						var loadedItem = DoLoadItem(child, progress);
+						var loadedItem = DoLoadItem(child);
 						if (loadedItem.Item != null)
 						{
 							orphanCandidates.Remove(loadedItem.Item.Id);
@@ -212,17 +215,16 @@ namespace Unicorn.Loader
 			// if we're forcing an update (ie deleting stuff not on disk) we send the items that we found that weren't on disk off to get evaluated as orphans
 			if (orphanCandidates.Count > 0)
 			{
-				_evaluator.EvaluateOrphans(orphanCandidates.Values.ToArray(), progress);
+				_evaluator.EvaluateOrphans(orphanCandidates.Values.ToArray());
 			}
 		}
 
 		/// <summary>
 		/// Loads a specific item from disk
 		/// </summary>
-		private ItemLoadResult DoLoadItem(ISerializedItem serializedItem, IProgressStatus progress)
+		private ItemLoadResult DoLoadItem(ISerializedItem serializedItem)
 		{
 			Assert.ArgumentNotNull(serializedItem, "serializedItem");
-			Assert.ArgumentNotNull(progress, "progress");
 
 			bool disableNewSerialization = UnicornDataProvider.DisableSerialization;
 			try
@@ -230,29 +232,27 @@ namespace Unicorn.Loader
 				UnicornDataProvider.DisableSerialization = true;
 
 				_itemsProcessed++;
-				if (_itemsProcessed % 500 == 0 && _itemsProcessed > 1)
-					progress.ReportStatus(string.Format("Processed {0} items", _itemsProcessed), MessageType.Debug);
 
 				var included = _predicate.Includes(serializedItem);
 
 				if (!included.IsIncluded)
 				{
-					progress.ReportStatus("[S] {0}:{1} by {2}; but it was in {3}. {4}<br />This usually indicates an extraneous excluded serialized item is present in the {3}, which should be removed.", MessageType.Warning, serializedItem.DatabaseName, serializedItem.ItemPath, _predicate.GetType().Name, _serializationProvider.GetType().Name, included.Justification ?? string.Empty);
-
+					_logger.SkippedItemPresentInSerializationProvider(serializedItem, _predicate.GetType().Name, _serializationProvider.GetType().Name, included.Justification ?? string.Empty);
 					return new ItemLoadResult(ItemLoadStatus.Skipped);
 				}
 
 				// detect if we should run an update for the item or if it's already up to date
 				var existingItem = _sourceDataProvider.GetItem(serializedItem.DatabaseName, serializedItem.Id);
-				if (existingItem == null || _evaluator.EvaluateUpdate(serializedItem, existingItem, progress))
+				if (existingItem == null || _evaluator.EvaluateUpdate(serializedItem, existingItem))
 				{
-					string addedOrUpdated = (existingItem == null) ? "[A]" : "[U]";
-
-					progress.ReportStatus("{0} {1}:{2}", MessageType.Info, addedOrUpdated, serializedItem.DatabaseName, serializedItem.ItemPath);
-
 					ISourceItem updatedItem = _serializationProvider.DeserializeItem(serializedItem);
 
 					Assert.IsNotNull(updatedItem, "Do not return null from DeserializeItem() - throw an exception if an error occurs.");
+
+					if (existingItem == null)
+						_logger.SerializedNewItem(serializedItem);
+					else
+						_logger.SerializedUpdatedItem(serializedItem);	
 						
 					return new ItemLoadResult(ItemLoadStatus.Success, updatedItem);
 				}

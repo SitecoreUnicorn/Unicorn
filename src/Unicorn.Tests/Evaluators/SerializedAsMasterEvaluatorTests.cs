@@ -15,17 +15,9 @@ namespace Unicorn.Tests.Evaluators
 		[Test]
 		public void EvaluateOrphans_ThrowsArgumentNullException_WhenItemsAreNull()
 		{
-			var evaluator = new SerializedAsMasterEvaluator();
+			var evaluator = CreateTestEvaluator();
 
-			Assert.Throws<ArgumentNullException>(() => evaluator.EvaluateOrphans(null, new StringProgressStatus()));
-		}
-
-		[Test]
-		public void EvaluateOrphans_ThrowsArgumentNullException_WhenProgressIsNull()
-		{
-			var evaluator = new SerializedAsMasterEvaluator();
-
-			Assert.Throws<ArgumentNullException>(() => evaluator.EvaluateOrphans(new[] { new Mock<ISourceItem>().Object }, null));
+			Assert.Throws<ArgumentNullException>(() => evaluator.EvaluateOrphans(null));
 		}
 
 		[Test]
@@ -34,9 +26,9 @@ namespace Unicorn.Tests.Evaluators
 			var item = new Mock<ISourceItem>();
 			item.Setup(x => x.Recycle());
 
-			var evaluator = new SerializedAsMasterEvaluator();
+			var evaluator = CreateTestEvaluator();
 
-			evaluator.EvaluateOrphans(new[] { item.Object }, new StringProgressStatus());
+			evaluator.EvaluateOrphans(new[] { item.Object });
 
 			item.Verify(x => x.Recycle(), Times.Exactly(1));
 		}
@@ -52,9 +44,9 @@ namespace Unicorn.Tests.Evaluators
 					return item;
 				}).ToArray();
 
-			var evaluator = new SerializedAsMasterEvaluator();
+			var evaluator = CreateTestEvaluator();
 
-			evaluator.EvaluateOrphans(items.Select(x => x.Object).ToArray(), new StringProgressStatus());
+			evaluator.EvaluateOrphans(items.Select(x => x.Object).ToArray());
 
 			foreach (var item in items)
 				item.Verify(x => x.Recycle(), Times.Exactly(1));
@@ -63,25 +55,17 @@ namespace Unicorn.Tests.Evaluators
 		[Test]
 		public void EvaluateUpdate_ThrowsArgumentNullException_WhenSerializedItemIsNull()
 		{
-			var evaluator = new SerializedAsMasterEvaluator();
+			var evaluator = CreateTestEvaluator();
 
-			Assert.Throws<ArgumentNullException>(() => evaluator.EvaluateUpdate(null, new Mock<ISourceItem>().Object, new StringProgressStatus()));
-		}
-
-		[Test]
-		public void EvaluateUpdate_ThrowsArgumentNullException_WhenProgressIsNull()
-		{
-			var evaluator = new SerializedAsMasterEvaluator();
-
-			Assert.Throws<ArgumentNullException>(() => evaluator.EvaluateUpdate(new Mock<ISerializedItem>().Object, new Mock<ISourceItem>().Object, null));
+			Assert.Throws<ArgumentNullException>(() => evaluator.EvaluateUpdate(null, new Mock<ISourceItem>().Object));
 		}
 
 		[Test]
 		public void EvaluateUpdate_ReturnsTrue_WhenExistingItemIsNull()
 		{
-			var evaluator = new SerializedAsMasterEvaluator();
+			var evaluator = CreateTestEvaluator();
 
-			Assert.IsTrue(evaluator.EvaluateUpdate(new Mock<ISerializedItem>().Object, null, new StringProgressStatus()));
+			Assert.IsTrue(evaluator.EvaluateUpdate(new Mock<ISerializedItem>().Object, null));
 		}
 
 		[Test]
@@ -99,7 +83,7 @@ namespace Unicorn.Tests.Evaluators
 		[Test]
 		public void EvaluateUpdate_ReturnsTrue_WhenRevisionsAreUnequal()
 		{
-			var evaluator = new SerializedAsMasterEvaluator();
+			var evaluator = CreateTestEvaluator();
 
 			var item = new Mock<ISourceItem>();
 			item.Setup(x => x.GetLastModifiedDate("en", 1)).Returns(new DateTime(2013, 1, 1));
@@ -112,13 +96,13 @@ namespace Unicorn.Tests.Evaluators
 
 			serialized.Setup(x => x.Versions).Returns(new[] { version });
 
-			Assert.IsTrue(evaluator.EvaluateUpdate(serialized.Object, item.Object, new StringProgressStatus()));
+			Assert.IsTrue(evaluator.EvaluateUpdate(serialized.Object, item.Object));
 		}
 
 		[Test]
 		public void EvaluateUpdate_ReturnsTrue_WhenNamesAreUnequal()
 		{
-			var evaluator = new SerializedAsMasterEvaluator();
+			var evaluator = CreateTestEvaluator();
 
 			var item = new Mock<ISourceItem>();
 			item.Setup(x => x.GetLastModifiedDate("en", 1)).Returns(new DateTime(2013, 1, 1));
@@ -131,13 +115,13 @@ namespace Unicorn.Tests.Evaluators
 
 			serialized.Setup(x => x.Versions).Returns(new[] { version });
 
-			Assert.IsTrue(evaluator.EvaluateUpdate(serialized.Object, item.Object, new StringProgressStatus()));
+			Assert.IsTrue(evaluator.EvaluateUpdate(serialized.Object, item.Object));
 		}
 
 		[Test]
 		public void EvaluateUpdate_ReturnsFalse_WhenDateRevisionNameMatch()
 		{
-			var evaluator = new SerializedAsMasterEvaluator();
+			var evaluator = CreateTestEvaluator();
 
 			var item = new Mock<ISourceItem>();
 			item.Setup(x => x.GetLastModifiedDate("en", 1)).Returns(new DateTime(2013, 1, 1));
@@ -150,12 +134,12 @@ namespace Unicorn.Tests.Evaluators
 
 			serialized.Setup(x => x.Versions).Returns(new[] { version });
 
-			Assert.IsFalse(evaluator.EvaluateUpdate(serialized.Object, item.Object, new StringProgressStatus()));
+			Assert.IsFalse(evaluator.EvaluateUpdate(serialized.Object, item.Object));
 		}
 
 		private bool EvaluateUpdate_DateComparisonTest(DateTime sourceModified, DateTime serializedModified)
 		{
-			var evaluator = new SerializedAsMasterEvaluator();
+			var evaluator = CreateTestEvaluator();
 
 			var item = new Mock<ISourceItem>();
 			item.Setup(x => x.GetLastModifiedDate("en", 1)).Returns(sourceModified);
@@ -168,7 +152,14 @@ namespace Unicorn.Tests.Evaluators
 
 			serialized.Setup(x => x.Versions).Returns(new[] { version });
 
-			return evaluator.EvaluateUpdate(serialized.Object, item.Object, new StringProgressStatus());
+			return evaluator.EvaluateUpdate(serialized.Object, item.Object);
+		}
+
+		private SerializedAsMasterEvaluator CreateTestEvaluator()
+		{
+			var logger = new ConsoleSerializedAsMasterEvaluatorLogger(new StringProgressStatus());
+			
+			return new SerializedAsMasterEvaluator(logger);
 		}
 	}
 }

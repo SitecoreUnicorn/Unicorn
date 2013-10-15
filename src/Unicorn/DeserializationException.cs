@@ -19,9 +19,7 @@ namespace Unicorn
 		{
 		}
 
-		protected DeserializationException(
-			SerializationInfo info,
-			StreamingContext context) : base(info, context)
+		protected DeserializationException(SerializationInfo info, StreamingContext context) : base(info, context)
 		{
 		}
 	}

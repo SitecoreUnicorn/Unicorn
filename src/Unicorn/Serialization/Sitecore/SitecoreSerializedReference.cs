@@ -32,6 +32,11 @@ namespace Unicorn.Serialization.Sitecore
 			}
 		}
 
+		public string DisplayIdentifier
+		{
+			get { return DatabaseName + ":" + ItemPath; }
+		}
+
 		private void LoadItemPath()
 		{
 			var itemPath = PathUtils.MakeItemPath(ProviderId);

@@ -13,6 +13,11 @@
 		string DatabaseName { get; }
 
 		/// <summary>
+		/// The value to display in logs for this reference (e.g. might be an item ID/path, etc)
+		/// </summary>
+		string DisplayIdentifier { get; }
+
+		/// <summary>
 		/// An identifier unique to the serialization provider. Must exist.
 		/// For example on a disk based system this might be the full path to the item.
 		/// Should reflect something that would assist finding the serialized item in the storage.
