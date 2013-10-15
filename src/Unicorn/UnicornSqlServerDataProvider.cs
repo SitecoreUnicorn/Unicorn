@@ -11,23 +11,25 @@ namespace Unicorn
 {
 	public class UnicornSqlServerDataProvider : SqlServerDataProvider
 	{
-		private readonly UnicornDataProvider _unicornDataProvider;
+		private readonly UnicornDataProvider[] _unicornDataProviders;
 
 		public UnicornSqlServerDataProvider(string connectionString) : this(connectionString, new UnicornDataProvider(new SitecoreSerializationProvider(), new SerializationPresetPredicate(), new SitecoreLogUnicornDataProviderLogger()))
 		{
 		}
 		
-		public UnicornSqlServerDataProvider(string connectionString, UnicornDataProvider unicornDataProvider) : base(connectionString)
+		public UnicornSqlServerDataProvider(string connectionString, params UnicornDataProvider[] unicornDataProvider) : base(connectionString)
 		{
-			_unicornDataProvider = unicornDataProvider;
-			_unicornDataProvider.DataProvider = this;
+			_unicornDataProviders = unicornDataProvider;
+			foreach(var provider in _unicornDataProviders)
+				provider.DataProvider = this;
 		}
 
 		public override bool CreateItem(ID itemId, string itemName, ID templateId, ItemDefinition parent, CallContext context)
 		{
 			if (!base.CreateItem(itemId, itemName, templateId, parent, context)) return false;
 
-			_unicornDataProvider.CreateItem(itemId, itemName, templateId, parent, context);
+			foreach (var provider in _unicornDataProviders)
+				provider.CreateItem(itemId, itemName, templateId, parent, context);
 
 			return true;
 		}
@@ -36,7 +38,8 @@ namespace Unicorn
 		{
 			if (!base.SaveItem(itemDefinition, changes, context)) return false;
 
-			_unicornDataProvider.SaveItem(itemDefinition, changes, context);
+			foreach (var provider in _unicornDataProviders)
+				provider.SaveItem(itemDefinition, changes, context);
 
 			return true;
 		}
@@ -45,7 +48,8 @@ namespace Unicorn
 		{
 			if (!base.MoveItem(itemDefinition, destination, context)) return false;
 
-			_unicornDataProvider.MoveItem(itemDefinition, destination, context);
+			foreach (var provider in _unicornDataProviders)
+				provider.MoveItem(itemDefinition, destination, context);
 
 			return true;
 		}
@@ -54,7 +58,8 @@ namespace Unicorn
 		{
 			if (!base.CopyItem(source, destination, copyName, copyID, context)) return false;
 
-			_unicornDataProvider.CopyItem(source, destination, copyName, copyID, context);
+			foreach (var provider in _unicornDataProviders)
+				provider.CopyItem(source, destination, copyName, copyID, context);
 
 			return true;
 		}
@@ -65,7 +70,8 @@ namespace Unicorn
 
 			if (baseVersionResult < 1) return baseVersionResult; // no version created for some reason
 
-			_unicornDataProvider.AddVersion(itemDefinition, baseVersion, context);
+			foreach (var provider in _unicornDataProviders)
+				provider.AddVersion(itemDefinition, baseVersion, context);
 
 			return baseVersionResult;
 		}
@@ -74,7 +80,8 @@ namespace Unicorn
 		{
 			if (!base.DeleteItem(itemDefinition, context)) return false;
 
-			_unicornDataProvider.DeleteItem(itemDefinition, context);
+			foreach (var provider in _unicornDataProviders)
+				provider.DeleteItem(itemDefinition, context);
 
 			return true;
 		}
@@ -83,7 +90,8 @@ namespace Unicorn
 		{
 			if (!base.RemoveVersion(itemDefinition, version, context)) return false;
 
-			_unicornDataProvider.RemoveVersion(itemDefinition, version, context);
+			foreach(var provider in _unicornDataProviders)
+				provider.RemoveVersion(itemDefinition, version, context);
 
 			return true;
 		}
@@ -92,7 +100,8 @@ namespace Unicorn
 		{
 			if (!base.RemoveVersions(itemDefinition, language, removeSharedData, context)) return false;
 
-			_unicornDataProvider.RemoveVersions(itemDefinition, language, removeSharedData, context);
+			foreach (var provider in _unicornDataProviders)
+				provider.RemoveVersions(itemDefinition, language, removeSharedData, context);
 
 			return true;
 		}

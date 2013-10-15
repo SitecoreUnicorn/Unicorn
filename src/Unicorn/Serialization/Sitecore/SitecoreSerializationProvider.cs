@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Kamsar.WebConsole;
 using Sitecore.Configuration;
 using Sitecore.Data.Serialization;
 using Sitecore.Data.Serialization.Exceptions;
@@ -17,17 +16,25 @@ namespace Unicorn.Serialization.Sitecore
 	public class SitecoreSerializationProvider : ISerializationProvider
 	{
 		private readonly string _rootPath;
+		private readonly string _logName;
 		private readonly IPredicate _predicate;
 
-		public SitecoreSerializationProvider() : this(PathUtils.Root, new SerializationPresetPredicate())
+		public SitecoreSerializationProvider()
+			: this(PathUtils.Root, "UnicornItemSerialization", new SerializationPresetPredicate())
 		{
-			
+
 		}
 
-		public SitecoreSerializationProvider(string rootPath, IPredicate predicate)
+		public SitecoreSerializationProvider(string rootPath, string logName, IPredicate predicate)
 		{
 			_predicate = predicate;
 			_rootPath = rootPath;
+			_logName = logName;
+		}
+
+		public virtual string LogName
+		{
+			get { return _logName; }
 		}
 
 		public virtual ISerializedItem SerializeItem(ISourceItem item)
@@ -90,7 +97,7 @@ namespace Unicorn.Serialization.Sitecore
 						foreach (var directory in directories)
 						{
 							if (CommonUtils.IsDirectoryHidden(directory)) continue;
-							
+
 							if (!resultSet.Contains(directory + PathUtils.Extension))
 								resultSet.Add(directory);
 						}
@@ -175,10 +182,10 @@ namespace Unicorn.Serialization.Sitecore
 		public virtual ISourceItem DeserializeItem(ISerializedItem serializedItem)
 		{
 			Assert.ArgumentNotNull(serializedItem, "serializedItem");
-			
+
 			var typed = serializedItem as SitecoreSerializedItem;
 
-			if(typed == null) throw new ArgumentException("Serialized item must be a SitecoreSerializedItem", "serializedItem");
+			if (typed == null) throw new ArgumentException("Serialized item must be a SitecoreSerializedItem", "serializedItem");
 
 			try
 			{
@@ -284,8 +291,8 @@ namespace Unicorn.Serialization.Sitecore
 
 			// remove any serialized children
 			var directory = SerializationPathUtility.GetReferenceDirectoryPath(item);
-			
-			if(Directory.Exists(directory)) Directory.Delete(directory, true);
+
+			if (Directory.Exists(directory)) Directory.Delete(directory, true);
 
 			// clean up empty parent folder(s)
 			var parentDirectory = Directory.GetParent(directory);
@@ -342,7 +349,7 @@ namespace Unicorn.Serialization.Sitecore
 			}
 
 			// remove the old children folder if it exists
-			if(Directory.Exists(oldReference.ProviderId)) Directory.Delete(oldReference.ProviderId, true);
+			if (Directory.Exists(oldReference.ProviderId)) Directory.Delete(oldReference.ProviderId, true);
 		}
 	}
 }

@@ -1,7 +1,6 @@
 ﻿using Kamsar.WebConsole;
 using Moq;
 using NUnit.Framework;
-using Sitecore.Configuration;
 using Unicorn.Data;
 using Unicorn.Evaluators;
 using Unicorn.Loader;
@@ -19,14 +18,18 @@ namespace Unicorn.Tests
 			const string root = "/fake/path";
 			const string db = "master";
 
+			var rootItem = new Mock<ISourceItem>();
+			rootItem.SetupGet(x => x.Database).Returns(db);
+			rootItem.SetupGet(x => x.Path).Returns(root);
+
 			var serializationProvider = new Mock<ISerializationProvider>();
-			serializationProvider.Setup(x => x.GetReference(root, db)).Returns((ISerializedReference)null);
+			serializationProvider.Setup(x => x.GetReference(rootItem.Object)).Returns((ISerializedReference)null);
 
 			var loader = new SerializationLoader(serializationProvider.Object, new Mock<ISourceDataProvider>().Object, new Mock<IPredicate>().Object, new Mock<IEvaluator>().Object);
 
 			var progress = new StringProgressStatus();
 
-			loader.LoadTree(db, root, progress);
+			loader.LoadTree(rootItem.Object, progress);
 
 			Assert.IsTrue(progress.Output.Contains("was unable to find a root serialized item for"));
 		}

@@ -7,7 +7,6 @@
 
 TODO:
 - Need to figure out a good solution for handling moving children of renames and moves in a sensible fashion that evaluates the inclusion of all children properly
-- How can we hook multiple data provider instances together (e.g. a different serialization control for content vs templates) cleanly?
 - See above bug list
 - Implement static logging interfaces (DOTNET-243) - done for data provider, need to do for other things that use IProgressStatus
 - Implement custom deserializer that can handle missing fields with a warning and report on individual updated field values

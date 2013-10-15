@@ -9,38 +9,38 @@ namespace Unicorn
 {
 	public class SitecoreLogUnicornDataProviderLogger : IUnicornDataProviderLogger
 	{
-		public virtual void RenamedItem(ISourceItem sourceItem, string oldName)
+		public virtual void RenamedItem(string providerName, ISourceItem sourceItem, string oldName)
 		{
-			Log.Info("Unicorn: Renamed serialized item to " + sourceItem.Path + " from " + oldName, this);
+			Log.Info(string.Format("{0}: Renamed serialized item to {1} from {2}", providerName, sourceItem.Path, oldName), this);
 		}
 
-		public virtual void SavedItem(ISourceItem sourceItem)
+		public virtual void SavedItem(string providerName, ISourceItem sourceItem)
 		{
-			Log.Info("Unicorn: Serialized " + sourceItem.Path + " to disk.", this);
+			Log.Info(string.Format("{0}: Serialized {1} ({2}) to disk.", providerName, sourceItem.Path, sourceItem.Id), this);
 		}
 
-		public virtual void MovedItemToNonIncludedLocation(ISerializedItem existingItem)
+		public virtual void MovedItemToNonIncludedLocation(string providerName, ISerializedItem existingItem)
 		{
-			Log.Debug("Unicorn: Moved item " + existingItem.ItemPath + " was moved to a path that was not included in serialization, and the existing serialized item was deleted.", this);
+			Log.Debug(string.Format("{0}: Moved item {1} was moved to a path that was not included in serialization, and the existing serialized item was deleted.", providerName, existingItem.ItemPath), this);
 		}
 
-		public virtual void MovedItem(ISourceItem sourceItem, ISourceItem destinationItem)
+		public virtual void MovedItem(string providerName, ISourceItem sourceItem, ISourceItem destinationItem)
 		{
-			Log.Info("Unicorn: Moved serialized item " + sourceItem.Path + " to " + destinationItem.Path, this);
+			Log.Info(string.Format("{0}: Moved serialized item {1} ({2}) to {3}", providerName, sourceItem.Path, sourceItem.Id, destinationItem.Path), this);
 		}
 
-		public virtual void CopiedItem(Func<ISourceItem> sourceItem, ISourceItem copiedItem)
+		public virtual void CopiedItem(string providerName, Func<ISourceItem> sourceItem, ISourceItem copiedItem)
 		{
 		}
 
-		public virtual void DeletedItem(ISerializedItem existingItem)
+		public virtual void DeletedItem(string providerName, ISerializedItem existingItem)
 		{
-			Log.Info("Unicorn: Serialized item " + existingItem.ProviderId + " was deleted due to the source item being deleted.", this);
+			Log.Info(string.Format("{0}: Serialized item {1} was deleted due to the source item being deleted.", providerName, existingItem.ProviderId), this);
 		}
 
-		public virtual void SaveRejectedAsInconsequential(ItemChanges changes)
+		public virtual void SaveRejectedAsInconsequential(string providerName, ItemChanges changes)
 		{
-			Log.Debug("Unicorn: Ignored save of " + changes.Item.Paths.Path + " because it contained no consequential item changes.", this);
+			Log.Debug(string.Format("{0}: Ignored save of {1} because it contained no consequential item changes.", providerName, changes.Item.Paths.Path), this);
 		}
 	}
 }

@@ -8,17 +8,17 @@ namespace Unicorn
 {
 	public interface IUnicornDataProviderLogger
 	{
-		void RenamedItem(ISourceItem sourceItem, string oldName);
+		void RenamedItem(string providerName, ISourceItem sourceItem, string oldName);
 
-		void SavedItem(ISourceItem sourceItem);
+		void SavedItem(string providerName, ISourceItem sourceItem);
 
-		void MovedItemToNonIncludedLocation(ISerializedItem existingItem);
+		void MovedItemToNonIncludedLocation(string providerName, ISerializedItem existingItem);
 
-		void MovedItem(ISourceItem sourceItem, ISourceItem destinationItem);
-		void CopiedItem(Func<ISourceItem> sourceItem, ISourceItem copiedItem);
+		void MovedItem(string providerName, ISourceItem sourceItem, ISourceItem destinationItem);
+		void CopiedItem(string providerName, Func<ISourceItem> sourceItem, ISourceItem copiedItem);
 
-		void DeletedItem(ISerializedItem existingItem);
+		void DeletedItem(string providerName, ISerializedItem existingItem);
 
-		void SaveRejectedAsInconsequential(ItemChanges changes);
+		void SaveRejectedAsInconsequential(string providerName, ItemChanges changes);
 	}
 }

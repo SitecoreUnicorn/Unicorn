@@ -67,13 +67,13 @@ namespace Unicorn
 			string oldName = changes.Renamed ? changes.Properties["name"].OriginalValue.ToString() : string.Empty;
 			if (changes.Renamed && !oldName.Equals(sourceItem.Name, StringComparison.Ordinal)) // it's a rename, in which the name actually changed (template builder will cause 'renames' for the same name!!!)
 			{
-				_logger.RenamedItem(sourceItem, oldName);
+				_logger.RenamedItem(_serializationProvider.LogName, sourceItem, oldName);
 				_serializationProvider.RenameSerializedItem(sourceItem, oldName);
 			}
 			else if (HasConsequentialChanges(changes)) // it's a simple update - but we reject it if only inconsequential fields (last updated, revision) were changed - again, template builder FTW
 			{
 				_serializationProvider.SerializeItem(sourceItem);
-				_logger.SavedItem(sourceItem);
+				_logger.SavedItem(_serializationProvider.LogName, sourceItem);
 			}
 		}
 
@@ -93,14 +93,14 @@ namespace Unicorn
 				if (existingItem != null)
 				{
 					_serializationProvider.DeleteSerializedItem(existingItem);
-					_logger.MovedItemToNonIncludedLocation(existingItem);
+					_logger.MovedItemToNonIncludedLocation(_serializationProvider.LogName, existingItem);
 				}
 
 				return;
 			}
 
 			_serializationProvider.MoveSerializedItem(sourceItem, destinationItem);
-			_logger.MovedItem(sourceItem, destinationItem);
+			_logger.MovedItem(_serializationProvider.LogName, sourceItem, destinationItem);
 		}
 
 		public void CopyItem(ItemDefinition source, ItemDefinition destination, string copyName, ID copyID, CallContext context)
@@ -113,7 +113,7 @@ namespace Unicorn
 			if (!_predicate.Includes(copiedItem).IsIncluded) return; // destination parent is not in a path that we are serializing, so skip out
 
 			_serializationProvider.SerializeItem(copiedItem);
-			_logger.CopiedItem(() => GetSourceFromDefinition(source), copiedItem);
+			_logger.CopiedItem(_serializationProvider.LogName, () => GetSourceFromDefinition(source), copiedItem);
 		}
 
 		public void AddVersion(ItemDefinition itemDefinition, VersionUri baseVersion, CallContext context)
@@ -136,7 +136,7 @@ namespace Unicorn
 			if (existingItem == null) return; // it was already gone or an item from a different data provider
 
 			_serializationProvider.DeleteSerializedItem(existingItem);
-			_logger.DeletedItem(existingItem);
+			_logger.DeletedItem(_serializationProvider.LogName, existingItem);
 		}
 
 		public void RemoveVersion(ItemDefinition itemDefinition, VersionUri version, CallContext context)
@@ -166,7 +166,7 @@ namespace Unicorn
 			if (!_predicate.Includes(sourceItem).IsIncluded) return false; // item was not included so we get out
 
 			_serializationProvider.SerializeItem(sourceItem);
-			_logger.SavedItem(sourceItem);
+			_logger.SavedItem(_serializationProvider.LogName, sourceItem);
 
 			return true;
 		}
@@ -202,7 +202,7 @@ namespace Unicorn
 				return true;
 			}
 
-			_logger.SaveRejectedAsInconsequential(changes);
+			_logger.SaveRejectedAsInconsequential(_serializationProvider.LogName, changes);
 
 			return false;
 		}
