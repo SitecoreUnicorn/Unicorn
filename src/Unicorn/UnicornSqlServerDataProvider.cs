@@ -13,7 +13,7 @@ namespace Unicorn
 	{
 		private readonly UnicornDataProvider _unicornDataProvider;
 
-		public UnicornSqlServerDataProvider(string connectionString) : this(connectionString, new UnicornDataProvider(new SitecoreSerializationProvider(), new SerializationPresetPredicate()))
+		public UnicornSqlServerDataProvider(string connectionString) : this(connectionString, new UnicornDataProvider(new SitecoreSerializationProvider(), new SerializationPresetPredicate(), new SitecoreLogUnicornDataProviderLogger()))
 		{
 		}
 		

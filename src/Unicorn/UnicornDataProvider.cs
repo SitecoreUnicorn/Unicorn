@@ -16,9 +16,11 @@ namespace Unicorn
 	{
 		private readonly ISerializationProvider _serializationProvider;
 		private readonly IPredicate _predicate;
+		private readonly IUnicornDataProviderLogger _logger;
 
-		public UnicornDataProvider(ISerializationProvider serializationProvider, IPredicate predicate)
+		public UnicornDataProvider(ISerializationProvider serializationProvider, IPredicate predicate, IUnicornDataProviderLogger logger)
 		{
+			_logger = logger;
 			_predicate = predicate;
 			_serializationProvider = serializationProvider;
 		}
@@ -49,13 +51,17 @@ namespace Unicorn
 
 			if (!_predicate.Includes(sourceItem).IsIncluded) return;
 
-			string oldName = changes.Renamed? changes.Properties["name"].OriginalValue.ToString() : null;
+			string oldName = changes.Renamed ? changes.Properties["name"].OriginalValue.ToString() : string.Empty;
 			if (changes.Renamed && !oldName.Equals(sourceItem.Name, StringComparison.Ordinal)) // it's a rename, in which the name actually changed (template builder will cause 'renames' for the same name!!!)
 			{
+				_logger.RenamedItem(sourceItem, oldName);
 				_serializationProvider.RenameSerializedItem(sourceItem, oldName);
 			}
-			else if(HasConsequentialChanges(changes)) // it's a simple update - but we reject it if only inconsequential fields (last updated, revision) were changed - again, template builder FTW
+			else if (HasConsequentialChanges(changes)) // it's a simple update - but we reject it if only inconsequential fields (last updated, revision) were changed - again, template builder FTW
+			{
 				_serializationProvider.SerializeItem(sourceItem);
+				_logger.SavedItem(sourceItem);
+			}
 		}
 
 		public void MoveItem(ItemDefinition itemDefinition, ItemDefinition destination, CallContext context)
@@ -71,12 +77,17 @@ namespace Unicorn
 			{
 				var existingItem = GetExistingSerializedItem(sourceItem.Id);
 
-				if (existingItem != null) _serializationProvider.DeleteSerializedItem(existingItem);
+				if (existingItem != null)
+				{
+					_serializationProvider.DeleteSerializedItem(existingItem);
+					_logger.MovedItemToNonIncludedLocation(existingItem);
+				}
 
 				return;
 			}
 
 			_serializationProvider.MoveSerializedItem(sourceItem, destinationItem);
+			_logger.MovedItem(sourceItem, destinationItem);
 		}
 
 		public void CopyItem(ItemDefinition source, ItemDefinition destination, string copyName, ID copyID, CallContext context)
@@ -89,6 +100,7 @@ namespace Unicorn
 			if (!_predicate.Includes(copiedItem).IsIncluded) return; // destination parent is not in a path that we are serializing, so skip out
 
 			_serializationProvider.SerializeItem(copiedItem);
+			_logger.CopiedItem(() => GetSourceFromDefinition(source), copiedItem);
 		}
 
 		public void AddVersion(ItemDefinition itemDefinition, VersionUri baseVersion, CallContext context)
@@ -111,6 +123,7 @@ namespace Unicorn
 			if (existingItem == null) return; // it was already gone or an item from a different data provider
 
 			_serializationProvider.DeleteSerializedItem(existingItem);
+			_logger.DeletedItem(existingItem);
 		}
 
 		public void RemoveVersion(ItemDefinition itemDefinition, VersionUri version, CallContext context)
@@ -140,6 +153,7 @@ namespace Unicorn
 			if (!_predicate.Includes(sourceItem).IsIncluded) return false; // item was not included so we get out
 
 			_serializationProvider.SerializeItem(sourceItem);
+			_logger.SavedItem(sourceItem);
 
 			return true;
 		}
@@ -175,7 +189,7 @@ namespace Unicorn
 				return true;
 			}
 
-			Log.Info("Item " + changes.Item.Paths.Path + " was saved, but contained no consequential changes so it was not serialized.", this);
+			_logger.SaveRejectedAsInconsequential(changes);
 
 			return false;
 		}

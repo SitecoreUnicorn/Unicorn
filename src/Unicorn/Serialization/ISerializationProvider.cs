@@ -1,6 +1,4 @@
-﻿using Kamsar.WebConsole;
-using Sitecore.Data;
-using Unicorn.Data;
+﻿using Unicorn.Data;
 
 namespace Unicorn.Serialization
 {
@@ -26,7 +24,10 @@ namespace Unicorn.Serialization
 		/// <summary>
 		/// Deserialize a given item from the provider's serialization store to Sitecore database
 		/// </summary>
-		ISourceItem DeserializeItem(ISerializedItem serializedItem, IProgressStatus progress);
+		/// <remarks>
+		/// Should throw an exception if deserialization fails, probably a DeserializationException
+		/// </remarks>
+		ISourceItem DeserializeItem(ISerializedItem serializedItem);
 
 		/// <summary>
 		/// Get a serialized reference for a given Sitecore path and database. A reference is a pointer to the path,

@@ -54,10 +54,12 @@
   <ItemGroup>
     <Compile Include="Data\ISourceDataProvider.cs" />
     <Compile Include="Data\SitecoreSourceDataProvider.cs" />
+    <Compile Include="DeserializationException.cs" />
     <Compile Include="Evaluators\SerializedAsMasterEvaluator.cs" />
     <Compile Include="Evaluators\EvaluatorUtility.cs" />
     <Compile Include="Evaluators\IEvaluator.cs" />
     <Compile Include="Data\ISourceItem.cs" />
+    <Compile Include="IUnicornDataProviderLogger.cs" />
     <Compile Include="Loader\DeserializeFailureRetryer.cs" />
     <Compile Include="Loader\IDeserializeFailureRetryer.cs" />
     <Compile Include="Predicates\PredicateResult.cs" />
@@ -79,6 +81,7 @@
     <Compile Include="Serialization\Sitecore\SitecoreSerializationProvider.cs" />
     <Compile Include="Serialization\Sitecore\SitecoreSerializedItem.cs" />
     <Compile Include="Serialization\Sitecore\SitecoreSerializedReference.cs" />
+    <Compile Include="SitecoreLogUnicornDataProviderLogger.cs" />
     <Compile Include="StandardValuesException.cs" />
     <Compile Include="UnicornDataProvider.cs" />
     <Compile Include="UnicornSqlServerDataProvider.cs" />

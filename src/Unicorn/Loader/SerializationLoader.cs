@@ -251,8 +251,10 @@ namespace Unicorn.Loader
 
 					progress.ReportStatus("{0} {1}:{2}", MessageType.Info, addedOrUpdated, serializedItem.DatabaseName, serializedItem.ItemPath);
 
-					ISourceItem updatedItem = _serializationProvider.DeserializeItem(serializedItem, progress);
+					ISourceItem updatedItem = _serializationProvider.DeserializeItem(serializedItem);
 
+					Assert.IsNotNull(updatedItem, "Do not return null from DeserializeItem() - throw an exception if an error occurs.");
+						
 					return new ItemLoadResult(ItemLoadStatus.Success, updatedItem);
 				}
 

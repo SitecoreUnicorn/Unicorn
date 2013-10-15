@@ -173,11 +173,9 @@ namespace Unicorn.Serialization.Sitecore
 			return false;
 		}
 
-		public virtual ISourceItem DeserializeItem(ISerializedItem serializedItem, IProgressStatus progress)
+		public virtual ISourceItem DeserializeItem(ISerializedItem serializedItem)
 		{
 			Assert.ArgumentNotNull(serializedItem, "serializedItem");
-			Assert.ArgumentNotNull(progress, "progress");
-
 			
 			var typed = serializedItem as SitecoreSerializedItem;
 
@@ -193,17 +191,13 @@ namespace Unicorn.Serialization.Sitecore
 			{
 				string error = "Cannot load item from path '{0}'. Probable reason: parent item with ID '{1}' not found.".FormatWith(serializedItem.ProviderId, ex.ParentID);
 
-				progress.ReportStatus(error, MessageType.Error);
-
-				return null;
+				throw new DeserializationException(error, ex);
 			}
 			catch (ParentForMovedItemNotFoundException ex2)
 			{
 				string error = "Item from path '{0}' cannot be moved to appropriate location. Possible reason: parent item with ID '{1}' not found.".FormatWith(serializedItem.ProviderId, ex2.ParentID);
 
-				progress.ReportStatus(error, MessageType.Error);
-
-				return null;
+				throw new DeserializationException(error, ex2);
 			}
 		}
 

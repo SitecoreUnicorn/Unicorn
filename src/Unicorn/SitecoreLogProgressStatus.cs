@@ -39,7 +39,7 @@ namespace Unicorn
 					Log.Error(message, this);
 					return;
 				case MessageType.Debug: 
-					Log.Info(message, this);
+					Log.Debug(message, this);
 					return;
 			}
 		}
