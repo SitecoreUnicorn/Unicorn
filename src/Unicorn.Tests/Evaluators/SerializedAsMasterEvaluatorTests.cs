@@ -13,6 +13,12 @@ namespace Unicorn.Tests.Evaluators
 	public class SerializedAsMasterEvaluatorTests
 	{
 		[Test]
+		public void ctor_ThrowsArgumentNullException_WhenLoggerIsNull()
+		{
+			Assert.Throws<ArgumentNullException>(() => new SerializedAsMasterEvaluator(null));
+		}
+
+		[Test]
 		public void EvaluateOrphans_ThrowsArgumentNullException_WhenItemsAreNull()
 		{
 			var evaluator = CreateTestEvaluator();

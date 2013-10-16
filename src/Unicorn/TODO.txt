@@ -8,7 +8,6 @@
 TODO:
 - Need to figure out a good solution for handling moving children of renames and moves in a sensible fashion that evaluates the inclusion of all children properly
 - See above bug list
-- Implement static logging interfaces (DOTNET-243) - done for data provider, need to do for other things that use IProgressStatus
 - Implement custom deserializer that can handle missing fields with a warning and report on individual updated field values
 - Write unit tests
 - Redo conflict processor to use serialization provider

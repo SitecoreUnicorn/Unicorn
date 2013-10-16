@@ -31,6 +31,7 @@ namespace Unicorn.Loader
 			Assert.ArgumentNotNull(sourceDataProvider, "sourceDataProvider");
 			Assert.ArgumentNotNull(predicate, "predicate");
 			Assert.ArgumentNotNull(evaluator, "evaluator");
+			Assert.ArgumentNotNull(logger, "logger");
 
 			_evaluator = evaluator;
 			_predicate = predicate;
@@ -89,7 +90,6 @@ namespace Unicorn.Loader
 			{
 				// TODO: does this work?
 				_logger.SkippedItemPresentInSerializationProvider(root, _predicate.GetType().Name, _serializationProvider.GetType().Name, included.Justification ?? string.Empty);
-			
 				return;
 			}
 
@@ -169,6 +169,8 @@ namespace Unicorn.Loader
 					}
 				}
 			}
+
+			// TODO: where does the actual current item get serialized?
 
 			// check for direct children of the target path
 			var children = _serializationProvider.GetChildItems(rootSerializedItem);
