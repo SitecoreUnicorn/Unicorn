@@ -3,11 +3,12 @@ using System.Linq;
 using Kamsar.WebConsole;
 using Moq;
 using NUnit.Framework;
+using Sitecore;
 using Unicorn.Data;
 using Unicorn.Evaluators;
 using Unicorn.Serialization;
 
-namespace Unicorn.Tests.Evaluators
+namespace Unicorn.Tests.Evaluator
 {
 	[TestFixture]
 	public class SerializedAsMasterEvaluatorTests
@@ -98,7 +99,7 @@ namespace Unicorn.Tests.Evaluators
 
 			var serialized = new Mock<ISerializedItem>();
 			serialized.Setup(x => x.Name).Returns("NAME");
-			var version = SerializedVersionUtility.CreateTestVersion("en", 1, new DateTime(2013, 1, 1), "SERIALIZED");
+			var version = CreateTestVersion("en", 1, new DateTime(2013, 1, 1), "SERIALIZED");
 
 			serialized.Setup(x => x.Versions).Returns(new[] { version });
 
@@ -117,7 +118,7 @@ namespace Unicorn.Tests.Evaluators
 
 			var serialized = new Mock<ISerializedItem>();
 			serialized.Setup(x => x.Name).Returns("SERIALIZED");
-			var version = SerializedVersionUtility.CreateTestVersion("en", 1, new DateTime(2013, 1, 1), "REVISION");
+			var version = CreateTestVersion("en", 1, new DateTime(2013, 1, 1), "REVISION");
 
 			serialized.Setup(x => x.Versions).Returns(new[] { version });
 
@@ -136,7 +137,7 @@ namespace Unicorn.Tests.Evaluators
 
 			var serialized = new Mock<ISerializedItem>();
 			serialized.Setup(x => x.Name).Returns("NAME");
-			var version = SerializedVersionUtility.CreateTestVersion("en", 1, new DateTime(2013, 1, 1), "REVISION");
+			var version = CreateTestVersion("en", 1, new DateTime(2013, 1, 1), "REVISION");
 
 			serialized.Setup(x => x.Versions).Returns(new[] { version });
 
@@ -154,7 +155,7 @@ namespace Unicorn.Tests.Evaluators
 
 			var serialized = new Mock<ISerializedItem>();
 			serialized.Setup(x => x.Name).Returns("NAME");
-			var version = SerializedVersionUtility.CreateTestVersion("en", 1, serializedModified, "REVISION");
+			var version = CreateTestVersion("en", 1, serializedModified, "REVISION");
 
 			serialized.Setup(x => x.Versions).Returns(new[] { version });
 
@@ -166,6 +167,18 @@ namespace Unicorn.Tests.Evaluators
 			var logger = new ConsoleSerializedAsMasterEvaluatorLogger(new StringProgressStatus());
 			
 			return new SerializedAsMasterEvaluator(logger);
+		}
+
+		internal static SerializedVersion CreateTestVersion(string language, int version, DateTime modified, string revision)
+		{
+			var serializedVersion = new SerializedVersion(language, version);
+			if (modified != default(DateTime))
+				serializedVersion.Fields[FieldIDs.Updated.ToString()] = DateUtil.ToIsoDate(modified);
+
+			if (!string.IsNullOrEmpty(revision))
+				serializedVersion.Fields[FieldIDs.Revision.ToString()] = revision;
+
+			return serializedVersion;
 		}
 	}
 }
