@@ -73,7 +73,7 @@ namespace Unicorn.Loader
 
 			timer.Stop();
 
-			_sourceDataProvider.DeserializationComplete(rootItem.Database);
+			_sourceDataProvider.DeserializationComplete(rootItem.DatabaseName);
 			_logger.EndLoadingTree(rootSerializedItem, _itemsProcessed, timer.ElapsedMilliseconds);
 		}
 

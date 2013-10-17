@@ -22,7 +22,7 @@ namespace Unicorn.Data
 			get { return _item.Name; }
 		}
 
-		public string Path
+		public string ItemPath
 		{
 			get
 			{
@@ -31,7 +31,7 @@ namespace Unicorn.Data
 			}
 		}
 
-		public string Database
+		public string DatabaseName
 		{
 			get { return _item.Database.Name; }
 		}

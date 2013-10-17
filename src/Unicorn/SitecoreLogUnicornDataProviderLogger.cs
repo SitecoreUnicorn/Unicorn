@@ -11,12 +11,12 @@ namespace Unicorn
 	{
 		public virtual void RenamedItem(string providerName, ISourceItem sourceItem, string oldName)
 		{
-			Log.Info(string.Format("{0}: Renamed serialized item to {1} from {2}", providerName, sourceItem.Path, oldName), this);
+			Log.Info(string.Format("{0}: Renamed serialized item to {1} from {2}", providerName, sourceItem.ItemPath, oldName), this);
 		}
 
 		public virtual void SavedItem(string providerName, ISourceItem sourceItem)
 		{
-			Log.Info(string.Format("{0}: Serialized {1} ({2}) to disk.", providerName, sourceItem.Path, sourceItem.Id), this);
+			Log.Info(string.Format("{0}: Serialized {1} ({2}) to disk.", providerName, sourceItem.ItemPath, sourceItem.Id), this);
 		}
 
 		public virtual void MovedItemToNonIncludedLocation(string providerName, ISerializedItem existingItem)
@@ -26,7 +26,7 @@ namespace Unicorn
 
 		public virtual void MovedItem(string providerName, ISourceItem sourceItem, ISourceItem destinationItem)
 		{
-			Log.Info(string.Format("{0}: Moved serialized item {1} ({2}) to {3}", providerName, sourceItem.Path, sourceItem.Id, destinationItem.Path), this);
+			Log.Info(string.Format("{0}: Moved serialized item {1} ({2}) to {3}", providerName, sourceItem.ItemPath, sourceItem.Id, destinationItem.ItemPath), this);
 		}
 
 		public virtual void CopiedItem(string providerName, Func<ISourceItem> sourceItem, ISourceItem copiedItem)

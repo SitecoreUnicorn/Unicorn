@@ -1,5 +1,4 @@
-﻿using Sitecore.Data.Items;
-using Unicorn.Data;
+﻿using Unicorn.Data;
 using Unicorn.Serialization;
 
 namespace Unicorn.Predicates
@@ -11,6 +10,5 @@ namespace Unicorn.Predicates
 		PredicateResult Includes(ISerializedReference item);
 
 		void SerializeAll(ISerializationProvider provider);
-		Item[] GetRootItems();
 	}
 }

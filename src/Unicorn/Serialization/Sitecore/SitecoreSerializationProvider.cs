@@ -43,7 +43,7 @@ namespace Unicorn.Serialization.Sitecore
 
 			var sitecoreSourceItem = item as SitecoreSourceItem;
 
-			var sitecoreItem = sitecoreSourceItem != null ? sitecoreSourceItem.InnerItem : Factory.GetDatabase(item.Database).GetItem(item.Id);
+			var sitecoreItem = sitecoreSourceItem != null ? sitecoreSourceItem.InnerItem : Factory.GetDatabase(item.DatabaseName).GetItem(item.Id);
 
 			Assert.IsNotNull(sitecoreItem, "Item to serialize did not exist!");
 
@@ -269,7 +269,7 @@ namespace Unicorn.Serialization.Sitecore
 
 			// update the path and parent IDs to the new location
 			syncItem.ParentID = newParentItem.Id.ToString();
-			syncItem.ItemPath = string.Concat(newParentItem.Path, "/", syncItem.Name);
+			syncItem.ItemPath = string.Concat(newParentItem.ItemPath, "/", syncItem.Name);
 
 			var serializedNewItem = new SitecoreSerializedItem(syncItem, newRootItemPath);
 

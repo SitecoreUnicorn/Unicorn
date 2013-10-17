@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml;
 using Sitecore.Configuration;
 using Sitecore.Data;
 using Sitecore.Data.Items;
@@ -23,14 +24,19 @@ namespace Unicorn.Predicates
 
 		public SerializationPresetPredicate(string presetName)
 		{
-			Assert.IsNotNullOrEmpty(presetName, "presetName");
+			Assert.ArgumentNotNullOrEmpty(presetName, "presetName");
 
 			var config = Factory.GetConfigNode("serialization/" + presetName);
 			
 			if (config == null)
 				throw new InvalidOperationException("Preset " + presetName + " is undefined in configuration.");
+		}
 
-			_preset = PresetFactory.Create(config);
+		public SerializationPresetPredicate(XmlNode configNode)
+		{
+			Assert.ArgumentNotNull(configNode, "configNode");
+
+			_preset = PresetFactory.Create(configNode);
 		}
 
 		public string Name { get { return "Serialization Preset"; } }
@@ -73,7 +79,8 @@ namespace Unicorn.Predicates
 			// TODO
 		}
 
-		public Item[] GetRootItems()
+		// TODO: this may be used as part of SerializeAll but otherwise is vestigal
+		private Item[] GetRootItems()
 		{
 			var items = new List<Item>();
 
@@ -94,10 +101,10 @@ namespace Unicorn.Predicates
 		protected PredicateResult Includes(IncludeEntry entry, ISourceItem item)
 		{
 			// check for db match
-			if (item.Database != entry.Database) return new PredicateResult(false);
+			if (item.DatabaseName != entry.Database) return new PredicateResult(false);
 
 			// check for path match
-			if (!item.Path.StartsWith(entry.Path, StringComparison.OrdinalIgnoreCase)) return new PredicateResult(false);
+			if (!item.ItemPath.StartsWith(entry.Path, StringComparison.OrdinalIgnoreCase)) return new PredicateResult(false);
 
 			// check excludes
 			return ExcludeMatches(entry, item);
@@ -128,7 +135,7 @@ namespace Unicorn.Predicates
 
 			if (!result.IsIncluded) return result;
 
-			result = ExcludeMatchesPath(entry.Exclude, item.Path);
+			result = ExcludeMatchesPath(entry.Exclude, item.ItemPath);
 
 			if (!result.IsIncluded) return result;
 

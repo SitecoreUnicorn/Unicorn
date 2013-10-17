@@ -14,12 +14,12 @@ namespace Unicorn.Data
 		/// <summary>
 		/// The full path in the hierarchy of the item
 		/// </summary>
-		string Path { get; }
+		string ItemPath { get; }
 
 		/// <summary>
 		/// The name of the content database the item resides in
 		/// </summary>
-		string Database { get; }
+		string DatabaseName { get; }
 
 		/// <summary>
 		/// The unique ID of the item
