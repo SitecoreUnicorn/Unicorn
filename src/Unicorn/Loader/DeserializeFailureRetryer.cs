@@ -46,7 +46,7 @@ namespace Unicorn.Loader
 			}
 		}
 
-		public void RetryAll(ISourceDataProvider sourceDataProvider, Action<ISerializedItem> retrySingleItemAction, Action<ISerializedReference, IDeserializeFailureRetryer> retryTreeAction)
+		public void RetryAll(ISourceDataProvider sourceDataProvider, Action<ISerializedItem> retrySingleItemAction, Action<ISerializedReference> retryTreeAction)
 		{
 			Assert.ArgumentNotNull(sourceDataProvider, "sourceDataProvider");
 			Assert.ArgumentNotNull(retrySingleItemAction, "retrySingleItemAction");
@@ -84,7 +84,7 @@ namespace Unicorn.Loader
 						}
 
 						// retry loading a reference failure (note the continues in the above ensure execution never arrives here for items)
-						retryTreeAction(failure.Reference, this);
+						retryTreeAction(failure.Reference);
 					}
 				}
 				while (_failures.Count > 0 && _failures.Count < originalFailures.Count); // continue retrying until all possible failures have been fixed

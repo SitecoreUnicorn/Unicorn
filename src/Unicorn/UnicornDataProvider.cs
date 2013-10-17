@@ -18,7 +18,6 @@ namespace Unicorn
 		private readonly ISerializationProvider _serializationProvider;
 		private readonly IPredicate _predicate;
 		private readonly IUnicornDataProviderLogger _logger;
-		[ThreadStatic]
 		private static bool _disableSerialization;
 
 		public UnicornDataProvider(ISerializationProvider serializationProvider, IPredicate predicate, IUnicornDataProviderLogger logger)

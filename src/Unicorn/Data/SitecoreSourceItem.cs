@@ -14,6 +14,8 @@ namespace Unicorn.Data
 
 		public SitecoreSourceItem(Item item)
 		{
+			Assert.IsNotNull(item, "item");
+
 			_item = item;
 		}
 

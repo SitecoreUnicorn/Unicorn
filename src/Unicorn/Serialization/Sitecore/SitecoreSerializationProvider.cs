@@ -20,7 +20,7 @@ namespace Unicorn.Serialization.Sitecore
 		private readonly IPredicate _predicate;
 
 		public SitecoreSerializationProvider()
-			: this(PathUtils.Root, "UnicornItemSerialization", new SerializationPresetPredicate())
+			: this(PathUtils.Root, "UnicornItemSerialization", new SerializationPresetPredicate(new SitecoreSourceDataProvider()))
 		{
 
 		}

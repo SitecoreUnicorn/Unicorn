@@ -9,6 +9,6 @@ namespace Unicorn.Loader
 	{
 		void AddRetry(ISerializedReference reference, Exception exception);
 		void RetryStandardValuesFailures(Action<ISerializedItem> retryAction);
-		void RetryAll(ISourceDataProvider sourceDataProvider, Action<ISerializedItem> retrySingleItemAction, Action<ISerializedReference, IDeserializeFailureRetryer> retryTreeAction);
+		void RetryAll(ISourceDataProvider sourceDataProvider, Action<ISerializedItem> retrySingleItemAction, Action<ISerializedReference> retryTreeAction);
 	}
 }

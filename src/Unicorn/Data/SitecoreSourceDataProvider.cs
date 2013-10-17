@@ -17,7 +17,7 @@ namespace Unicorn.Data
 			}
 		}
 
-		public ISourceItem GetItem(string database, ID id)
+		public ISourceItem GetItemById(string database, ID id)
 		{
 			Assert.ArgumentNotNullOrEmpty(database, "database");
 			Assert.ArgumentNotNullOrEmpty(id, "id");
@@ -26,7 +26,27 @@ namespace Unicorn.Data
 
 			Assert.IsNotNull(db, "Database " + database + " did not exist!");
 
-			return new SitecoreSourceItem(db.GetItem(id));
+			var dbItem = db.GetItem(id);
+
+			if (dbItem == null) return null;
+
+			return new SitecoreSourceItem(dbItem);
+		}
+		
+		public ISourceItem GetItemByPath(string database, string path)
+		{
+			Assert.ArgumentNotNullOrEmpty(database, "database");
+			Assert.ArgumentNotNullOrEmpty(path, "path");
+
+			Database db = Factory.GetDatabase(database);
+
+			Assert.IsNotNull(db, "Database " + database + " did not exist!");
+
+			var dbItem = db.GetItem(path);
+
+			if (dbItem == null) return null;
+
+			return new SitecoreSourceItem(dbItem);
 		}
 
 		public void DeserializationComplete(string databaseName)

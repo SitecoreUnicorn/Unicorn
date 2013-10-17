@@ -4,7 +4,6 @@ using System.Linq;
 using System.Xml;
 using Sitecore.Configuration;
 using Sitecore.Data;
-using Sitecore.Data.Items;
 using Sitecore.Data.Serialization.Presets;
 using Sitecore.Diagnostics;
 using Sitecore.StringExtensions;
@@ -16,25 +15,34 @@ namespace Unicorn.Predicates
 	public class SerializationPresetPredicate : IPredicate
 	{
 		private readonly IList<IncludeEntry> _preset;
+		private readonly ISourceDataProvider _sourceDataProvider;
 
-		public SerializationPresetPredicate() : this("default")
+		public SerializationPresetPredicate(ISourceDataProvider sourceDataProvider) : this(sourceDataProvider, "default")
 		{
 			
 		}
 
-		public SerializationPresetPredicate(string presetName)
+		public SerializationPresetPredicate(ISourceDataProvider sourceDataProvider, string presetName)
 		{
+			Assert.ArgumentNotNull(sourceDataProvider, "sourceDataProvider");
 			Assert.ArgumentNotNullOrEmpty(presetName, "presetName");
+
+			_sourceDataProvider = sourceDataProvider;
 
 			var config = Factory.GetConfigNode("serialization/" + presetName);
 			
 			if (config == null)
 				throw new InvalidOperationException("Preset " + presetName + " is undefined in configuration.");
+
+			_preset = PresetFactory.Create(config);
 		}
 
-		public SerializationPresetPredicate(XmlNode configNode)
+		public SerializationPresetPredicate(ISourceDataProvider sourceDataProvider, XmlNode configNode)
 		{
+			Assert.ArgumentNotNull(sourceDataProvider, "sourceDataProvider");
 			Assert.ArgumentNotNull(configNode, "configNode");
+
+			_sourceDataProvider = sourceDataProvider;
 
 			_preset = PresetFactory.Create(configNode);
 		}
@@ -74,19 +82,13 @@ namespace Unicorn.Predicates
 			return priorityResult ?? result; // return the last failure
 		}
 
-		public void SerializeAll(ISerializationProvider provider)
+		public ISourceItem[] GetRootItems()
 		{
-			// TODO
-		}
-
-		// TODO: this may be used as part of SerializeAll but otherwise is vestigal
-		private Item[] GetRootItems()
-		{
-			var items = new List<Item>();
+			var items = new List<ISourceItem>();
 
 			foreach (var include in _preset)
 			{
-				var item = Factory.GetDatabase(include.Database).GetItem(include.Path);
+				var item = _sourceDataProvider.GetItemByPath(include.Database, include.Path);
 
 				if (item != null) items.Add(item);
 				else Log.Warn("Unable to resolve root item for serialization preset {0}:{1}".FormatWith(include.Database, include.Path), this);

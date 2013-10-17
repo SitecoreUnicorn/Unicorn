@@ -152,7 +152,7 @@ namespace Unicorn.Tests.Loader
 			serializationProvider.Setup(x => x.GetItem(serializedRootItem)).Returns(serializedRootItem);
 
 			var sourceDataProvider = new Mock<ISourceDataProvider>();
-			sourceDataProvider.Setup(x => x.GetItem(It.IsAny<string>(), It.IsAny<ID>())).Returns(root);
+			sourceDataProvider.Setup(x => x.GetItemById(It.IsAny<string>(), It.IsAny<ID>())).Returns(root);
 
 			var logger = new Mock<ISerializationLoaderLogger>();
 
@@ -182,8 +182,8 @@ namespace Unicorn.Tests.Loader
 			serializationProvider.Setup(x => x.DeserializeItem(serializedChildItem)).Returns(root.Children[0]);
 
 			var sourceDataProvider = new Mock<ISourceDataProvider>();
-			sourceDataProvider.Setup(x => x.GetItem("root", It.IsAny<ID>())).Returns(root);
-			sourceDataProvider.Setup(x => x.GetItem("child", It.IsAny<ID>())).Returns(root.Children[0]);
+			sourceDataProvider.Setup(x => x.GetItemById("root", It.IsAny<ID>())).Returns(root);
+			sourceDataProvider.Setup(x => x.GetItemById("child", It.IsAny<ID>())).Returns(root.Children[0]);
 
 			var logger = new Mock<ISerializationLoaderLogger>();
 
@@ -218,7 +218,7 @@ namespace Unicorn.Tests.Loader
 			serializationProvider.Setup(x => x.GetItem(serializedRootItem)).Returns(serializedRootItem);
 
 			var sourceDataProvider = new Mock<ISourceDataProvider>();
-			sourceDataProvider.Setup(x => x.GetItem("flag", It.IsAny<ID>())).Returns(root);
+			sourceDataProvider.Setup(x => x.GetItemById("flag", It.IsAny<ID>())).Returns(root);
 
 			var evaluator = new Mock<IEvaluator>();
 
@@ -245,8 +245,8 @@ namespace Unicorn.Tests.Loader
 			serializationProvider.Setup(x => x.GetChildItems(serializedRootItem)).Returns(new[] {serializedChildItem});
 
 			var sourceDataProvider = new Mock<ISourceDataProvider>();
-			sourceDataProvider.Setup(x => x.GetItem("flag", It.IsAny<ID>())).Returns(root);
-			sourceDataProvider.Setup(x => x.GetItem("childflag", It.IsAny<ID>())).Returns(root.Children[0]);
+			sourceDataProvider.Setup(x => x.GetItemById("flag", It.IsAny<ID>())).Returns(root);
+			sourceDataProvider.Setup(x => x.GetItemById("childflag", It.IsAny<ID>())).Returns(root.Children[0]);
 
 			var evaluator = new Mock<IEvaluator>();
 
@@ -271,7 +271,7 @@ namespace Unicorn.Tests.Loader
 			serializationProvider.Setup(x => x.GetItem(serializedRootItem)).Returns(serializedRootItem);
 
 			var sourceDataProvider = new Mock<ISourceDataProvider>();
-			sourceDataProvider.Setup(x => x.GetItem(It.IsAny<string>(), It.IsAny<ID>())).Returns(root);
+			sourceDataProvider.Setup(x => x.GetItemById(It.IsAny<string>(), It.IsAny<ID>())).Returns(root);
 
 			var evaluator = new Mock<IEvaluator>();
 
@@ -297,7 +297,7 @@ namespace Unicorn.Tests.Loader
 			serializationProvider.Setup(x => x.DeserializeItem(serializedRootItem)).Returns(root);
 
 			var sourceDataProvider = new Mock<ISourceDataProvider>();
-			sourceDataProvider.Setup(x => x.GetItem(It.IsAny<string>(), It.IsAny<ID>())).Returns(root);
+			sourceDataProvider.Setup(x => x.GetItemById(It.IsAny<string>(), It.IsAny<ID>())).Returns(root);
 
 			var evaluator = new Mock<IEvaluator>();
 			evaluator.Setup(x => x.EvaluateUpdate(It.IsAny<ISerializedItem>(), It.IsAny<ISourceItem>())).Returns(true);
@@ -324,7 +324,7 @@ namespace Unicorn.Tests.Loader
 			serializationProvider.Setup(x => x.GetItem(serializedRootItem)).Returns(serializedRootItem);
 
 			var sourceDataProvider = new Mock<ISourceDataProvider>();
-			sourceDataProvider.Setup(x => x.GetItem(It.IsAny<string>(), It.IsAny<ID>())).Returns(root);
+			sourceDataProvider.Setup(x => x.GetItemById(It.IsAny<string>(), It.IsAny<ID>())).Returns(root);
 
 			var evaluator = new Mock<IEvaluator>();
 			evaluator.Setup(x => x.EvaluateUpdate(It.IsAny<ISerializedItem>(), It.IsAny<ISourceItem>())).Returns(false);
@@ -353,7 +353,7 @@ namespace Unicorn.Tests.Loader
 			serializationProvider.Setup(x => x.GetChildItems(serializedRootItem)).Returns(new[] { serializedChildItem });
 
 			var sourceDataProvider = new Mock<ISourceDataProvider>();
-			sourceDataProvider.Setup(x => x.GetItem("flag", It.IsAny<ID>())).Returns(root);
+			sourceDataProvider.Setup(x => x.GetItemById("flag", It.IsAny<ID>())).Returns(root);
 
 			var loader = CreateTestLoader(serializationProvider.Object, sourceDataProvider.Object, predicate, null, null);
 

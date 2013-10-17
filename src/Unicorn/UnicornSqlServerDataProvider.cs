@@ -4,6 +4,7 @@ using Sitecore.Data.DataProviders;
 using Sitecore.Data.Items;
 using Sitecore.Data.SqlServer;
 using Sitecore.Globalization;
+using Unicorn.Data;
 using Unicorn.Predicates;
 using Unicorn.Serialization.Sitecore;
 
@@ -13,7 +14,7 @@ namespace Unicorn
 	{
 		private readonly UnicornDataProvider[] _unicornDataProviders;
 
-		public UnicornSqlServerDataProvider(string connectionString) : this(connectionString, new UnicornDataProvider(new SitecoreSerializationProvider(), new SerializationPresetPredicate(), new SitecoreLogUnicornDataProviderLogger()))
+		public UnicornSqlServerDataProvider(string connectionString) : this(connectionString, new UnicornDataProvider(new SitecoreSerializationProvider(), new SerializationPresetPredicate(new SitecoreSourceDataProvider()), new SitecoreLogUnicornDataProviderLogger()))
 		{
 		}
 		

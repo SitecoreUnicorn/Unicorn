@@ -19,7 +19,9 @@ namespace Unicorn.Serialization
 		{
 			get
 			{
-				var fieldValue = Fields[FieldIDs.Updated.ToString()];
+				string fieldValue;
+
+				if (!Fields.TryGetValue(FieldIDs.Updated.ToString(), out fieldValue)) return null;
 				if (fieldValue == null) return null;
 
 				if (DateUtil.IsIsoDate(fieldValue))
@@ -33,7 +35,9 @@ namespace Unicorn.Serialization
 		{
 			get
 			{
-				var fieldValue = Fields[FieldIDs.Revision.ToString()];
+				string fieldValue;
+
+				if (!Fields.TryGetValue(FieldIDs.Revision.ToString(), out fieldValue)) return null;
 				if (fieldValue == null) return null;
 
 				return fieldValue;

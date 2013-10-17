@@ -13,7 +13,7 @@ TODO:
 - Redo conflict processor to use serialization provider
 - Dupe-ID detection in the loader
 - Is there a way we can effectively parallelize the loader?
-- Test retrying failed deserializations
+- Test retrying failed deserializations - esp inline loading of new template fields along with the template item
 - Test moving and copying and renaming in cross-inclusion territory
 - Automagical serialization of default preset items if the root serialization path is totally empty
 - Async serialization file writes with a read/write lock system? + perf testing

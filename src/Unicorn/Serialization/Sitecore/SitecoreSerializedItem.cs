@@ -91,6 +91,8 @@ namespace Unicorn.Serialization.Sitecore
 					{
 						sVersion.Fields.Add(field.FieldID, field.FieldValue);
 					}
+
+					result.Add(sVersion);
 				}
 
 				return result.ToArray();

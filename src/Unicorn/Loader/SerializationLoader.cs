@@ -9,6 +9,8 @@ using Unicorn.Predicates;
 using Unicorn.Serialization;
 using Unicorn.Evaluators;
 using System.Diagnostics;
+using Unicorn.Serialization.Sitecore;
+using Kamsar.WebConsole;
 
 namespace Unicorn.Loader
 {
@@ -24,6 +26,11 @@ namespace Unicorn.Loader
 		private readonly ISourceDataProvider _sourceDataProvider;
 		private readonly ISerializationLoaderLogger _logger;
 
+		public SerializationLoader(IProgressStatus progress) : this(new SitecoreSerializationProvider(), new SitecoreSourceDataProvider(), new SerializationPresetPredicate(new SitecoreSourceDataProvider()), new SerializedAsMasterEvaluator(new ConsoleSerializedAsMasterEvaluatorLogger(progress)), new ConsoleSerializationLoaderLogger(progress))
+		{
+			Assert.ArgumentNotNull(progress, "progress");
+		}
+
 		public SerializationLoader(ISerializationProvider serializationProvider, ISourceDataProvider sourceDataProvider, IPredicate predicate, IEvaluator evaluator, ISerializationLoaderLogger logger)
 		{
 			_logger = logger;
@@ -37,6 +44,28 @@ namespace Unicorn.Loader
 			_predicate = predicate;
 			_serializationProvider = serializationProvider;
 			_sourceDataProvider = sourceDataProvider;
+		}
+
+		/// <summary>
+		/// Loads all items in the configured predicate
+		/// </summary>
+		public void LoadAll()
+		{
+			LoadAll(new DeserializeFailureRetryer());
+		}
+
+		/// <summary>
+		/// Loads all items in the configured predicate
+		/// </summary>
+		public void LoadAll(IDeserializeFailureRetryer retryer)
+		{
+			Assert.ArgumentNotNull(retryer, "retryer");
+
+			var roots = _predicate.GetRootItems();
+			foreach (var root in roots)
+			{
+				LoadTree(root, retryer);
+			}
 		}
 
 		/// <summary>
@@ -73,6 +102,8 @@ namespace Unicorn.Loader
 
 				// load children of the root
 				LoadTreeRecursive(rootSerializedItem, retryer);
+
+				retryer.RetryAll(_sourceDataProvider, item => DoLoadItem(item), item => LoadTreeRecursive(item, retryer));
 			}
 
 			timer.Stop();
@@ -155,7 +186,7 @@ namespace Unicorn.Loader
 			}
 
 			// get the corresponding item from Sitecore
-			ISourceItem rootItem = _sourceDataProvider.GetItem(rootSerializedItem.DatabaseName, rootSerializedItem.Id);
+			ISourceItem rootItem = _sourceDataProvider.GetItemById(rootSerializedItem.DatabaseName, rootSerializedItem.Id);
 
 			// we add all of the root item's direct children to the "maybe orphan" list (we'll remove them as we find matching serialized children)
 			if (rootItem != null)
@@ -212,6 +243,9 @@ namespace Unicorn.Loader
 				{
 					// if a problem occurs we attempt to retry later
 					retryer.AddRetry(child, ex);
+
+					// don't treat errors as cause to delete an item
+					orphanCandidates.Remove(child.Id);
 				}
 			}
 
@@ -245,7 +279,7 @@ namespace Unicorn.Loader
 				}
 
 				// detect if we should run an update for the item or if it's already up to date
-				var existingItem = _sourceDataProvider.GetItem(serializedItem.DatabaseName, serializedItem.Id);
+				var existingItem = _sourceDataProvider.GetItemById(serializedItem.DatabaseName, serializedItem.Id);
 				if (existingItem == null || _evaluator.EvaluateUpdate(serializedItem, existingItem))
 				{
 					ISourceItem updatedItem = _serializationProvider.DeserializeItem(serializedItem);

@@ -5,7 +5,19 @@ namespace Unicorn.Data
 {
 	public interface ISourceDataProvider
 	{
-		ISourceItem GetItem(string database, ID id);
+		/// <summary>
+		/// Gets an item from the source data by ID
+		/// </summary>
+		ISourceItem GetItemById(string database, ID id);
+
+		/// <summary>
+		/// Gets an item from the source data by hierarchy path
+		/// </summary>
+		ISourceItem GetItemByPath(string database, string path);
+
+		/// <summary>
+		/// Signals the provider to clear its template engine after a template item has been modified.
+		/// </summary>
 		void ResetTemplateEngine();
 
 		/// <summary>

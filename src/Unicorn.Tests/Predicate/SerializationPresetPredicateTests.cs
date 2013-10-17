@@ -27,15 +27,23 @@ namespace Unicorn.Tests.Predicate
 		private static readonly ID ExcludedItemId = new ID("{E1DC505A-F86F-4C05-B409-AE2246AD3441}");
 
 		[Test]
+		public void ctor_ThrowsArgumentNullException_WhenSourceProviderIsNull()
+		{
+			Assert.Throws<ArgumentNullException>(() => new SerializationPresetPredicate(null));
+			Assert.Throws<ArgumentNullException>(() => new SerializationPresetPredicate(null, "default"));
+			Assert.Throws<ArgumentNullException>(() => new SerializationPresetPredicate(null, new XmlDocument()));
+		}
+
+		[Test]
 		public void ctor_ThrowsArgumentNullException_WhenPresetIsNull()
 		{
-			Assert.Throws<ArgumentNullException>(() => new SerializationPresetPredicate((string)null));
+			Assert.Throws<ArgumentNullException>(() => new SerializationPresetPredicate(new Mock<ISourceDataProvider>().Object, (string)null));
 		}
 
 		[Test]
 		public void ctor_ThrowsArgumentNullException_WhenNodeIsNull()
 		{
-			Assert.Throws<ArgumentNullException>(() => new SerializationPresetPredicate((XmlNode)null));
+			Assert.Throws<ArgumentNullException>(() => new SerializationPresetPredicate(new Mock<ISourceDataProvider>().Object, (XmlNode)null));
 		}
 
 		//
@@ -328,6 +336,25 @@ namespace Unicorn.Tests.Predicate
 			Assert.IsTrue(includes.IsIncluded, "Include source item by item ID failed.");
 		}
 
+		[Test]
+		public void GetRootItems_ReturnsExpectedRootValues()
+		{
+			var sourceItem1 = new Mock<ISourceItem>();
+			var sourceItem2 = new Mock<ISourceItem>();
+
+			var sourceDataProvider = new Mock<ISourceDataProvider>();
+			sourceDataProvider.Setup(x => x.GetItemByPath("master", "/sitecore/layout/Simulators")).Returns(sourceItem1.Object);
+			sourceDataProvider.Setup(x => x.GetItemByPath("core", "/sitecore/content")).Returns(sourceItem2.Object);
+
+			var predicate = new SerializationPresetPredicate(sourceDataProvider.Object, CreateTestConfiguration());
+
+			var roots = predicate.GetRootItems();
+
+			Assert.IsTrue(roots.Length == 2, "Expected two root paths from test config");
+			Assert.AreEqual(roots[0], sourceItem1.Object, "Expected first root to be source item 1");
+			Assert.AreEqual(roots[1], sourceItem2.Object, "Expected first root to be source item 2");
+		}
+
 		private ISourceItem CreateTestSourceItem(string path, ID templateId = null, string template = "Test", ID id = null, string database = "master")
 		{
 			var item = new Mock<ISourceItem>();
@@ -363,7 +390,7 @@ namespace Unicorn.Tests.Predicate
 
 		private SerializationPresetPredicate CreateTestPredicate(XmlNode configNode)
 		{
-			return new SerializationPresetPredicate(configNode);
+			return new SerializationPresetPredicate(new Mock<ISourceDataProvider>().Object, configNode);
 		}
 
 		private XmlNode CreateTestConfiguration()

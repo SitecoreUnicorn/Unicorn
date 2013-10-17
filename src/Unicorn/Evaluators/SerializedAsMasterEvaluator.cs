@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using Sitecore.Data;
 using Sitecore.Diagnostics;
 using Unicorn.Data;
 using Unicorn.Serialization;
@@ -8,6 +9,7 @@ namespace Unicorn.Evaluators
 	public class SerializedAsMasterEvaluator : IEvaluator
 	{
 		private readonly ISerializedAsMasterEvaluatorLogger _logger;
+		private static readonly ID RootId = new ID("{11111111-1111-1111-1111-111111111111}");
 
 		public SerializedAsMasterEvaluator(ISerializedAsMasterEvaluatorLogger logger)
 		{
@@ -28,6 +30,8 @@ namespace Unicorn.Evaluators
 			Assert.ArgumentNotNull(serializedItem, "serializedItem");
 
 			if (existingItem == null) return true;
+
+			if (existingItem.Id == RootId) return false; // we never want to update the Sitecore root item
 
 			// see if the modified date is different in any version (because disk is master, ANY changes we want to force overwrite)
 			return serializedItem.Versions.Any(version =>
