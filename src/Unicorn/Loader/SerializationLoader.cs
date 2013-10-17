@@ -59,7 +59,7 @@ namespace Unicorn.Loader
 			var timer = new Stopwatch();
 			timer.Start();
 
-			var rootSerializedItem = _serializationProvider.GetReference(rootItem);
+			ISerializedItem rootSerializedItem = _serializationProvider.GetItem(_serializationProvider.GetReference(rootItem));
 
 			if (rootSerializedItem == null)
 				throw new InvalidOperationException(string.Format("{0} was unable to find a root serialized item for {1}", _serializationProvider.GetType().Name, rootItem.DisplayIdentifier));
@@ -68,6 +68,10 @@ namespace Unicorn.Loader
 
 			using (new EventDisabler())
 			{
+				// load the root item (LoadTreeRecursive only evaluates children)
+				DoLoadItem(rootSerializedItem);
+
+				// load children of the root
 				LoadTreeRecursive(rootSerializedItem, retryer);
 			}
 
@@ -88,7 +92,6 @@ namespace Unicorn.Loader
 			var included = _predicate.Includes(root);
 			if (!included.IsIncluded)
 			{
-				// TODO: does this work?
 				_logger.SkippedItemPresentInSerializationProvider(root, _predicate.GetType().Name, _serializationProvider.GetType().Name, included.Justification ?? string.Empty);
 				return;
 			}
@@ -169,8 +172,6 @@ namespace Unicorn.Loader
 					}
 				}
 			}
-
-			// TODO: where does the actual current item get serialized?
 
 			// check for direct children of the target path
 			var children = _serializationProvider.GetChildItems(rootSerializedItem);

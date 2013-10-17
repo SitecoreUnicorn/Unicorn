@@ -99,10 +99,11 @@ namespace Unicorn.Tests.Loader
 
 			var serializedRootItem = CreateSerializedItem("Test", null);
 
-			var predicate = CreateExclusiveTestPredicate(new ISerializedReference[0], new ISourceItem[0]);
+			var predicate = CreateExclusiveTestPredicate();
 
 			var serializationProvider = new Mock<ISerializationProvider>();
 			serializationProvider.Setup(x => x.GetReference(It.IsAny<ISourceItem>())).Returns(serializedRootItem);
+			serializationProvider.Setup(x => x.GetItem(serializedRootItem)).Returns(serializedRootItem);
 
 			var logger = new Mock<ISerializationLoaderLogger>();
 
@@ -111,6 +112,30 @@ namespace Unicorn.Tests.Loader
 			loader.LoadTree(root);
 
 			logger.Verify(x => x.SkippedItemPresentInSerializationProvider(serializedRootItem, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()));
+		}
+
+		[Test]
+		public void LoadTree_LoadsRootWhenIncluded()
+		{
+			var root = CreateTestTree(1);
+
+			var serializedRootItem = CreateSerializedItem("Test", null);
+
+			var predicate = CreateInclusiveTestPredicate();
+
+			var serializationProvider = new Mock<ISerializationProvider>();
+			serializationProvider.Setup(x => x.GetReference(It.IsAny<ISourceItem>())).Returns(serializedRootItem);
+			serializationProvider.Setup(x => x.GetItem(serializedRootItem)).Returns(serializedRootItem);
+			serializationProvider.Setup(x => x.DeserializeItem(serializedRootItem)).Returns(root);
+
+			var logger = new Mock<ISerializationLoaderLogger>();
+
+			var loader = CreateTestLoader(serializationProvider.Object, null, predicate, null, logger.Object);
+
+			loader.LoadTree(root);
+
+			serializationProvider.Verify(x => x.DeserializeItem(serializedRootItem));
+			logger.Verify(x => x.SerializedNewItem(serializedRootItem));
 		}
 
 		[Test]
@@ -136,6 +161,41 @@ namespace Unicorn.Tests.Loader
 			loader.LoadTree(root);
 
 			logger.Verify(x => x.SkippedItem(root.Children[0], It.IsAny<string>(), It.IsAny<string>()));
+		}
+
+		[Test]
+		public void LoadTree_LoadsChildOfRootWhenIncluded()
+		{
+			var root = CreateTestTree(2);
+
+			var serializedRootItem = CreateSerializedItem("Root", x => x.SetupGet(y => y.DatabaseName).Returns("root"));
+			var serializedChildItem = CreateSerializedItem("Child", x => x.SetupGet(y => y.DatabaseName).Returns("child"));
+
+			var predicate = CreateInclusiveTestPredicate();
+
+			var serializationProvider = new Mock<ISerializationProvider>();
+			serializationProvider.Setup(x => x.GetReference(root)).Returns(serializedRootItem);
+			serializationProvider.Setup(x => x.GetItem(serializedRootItem)).Returns(serializedRootItem);
+			serializationProvider.Setup(x => x.GetReference(root.Children[0])).Returns(serializedChildItem);
+			serializationProvider.Setup(x => x.GetItem(serializedChildItem)).Returns(serializedChildItem);
+			serializationProvider.Setup(x => x.GetChildItems(serializedRootItem)).Returns(new[] {serializedChildItem});
+			serializationProvider.Setup(x => x.DeserializeItem(serializedChildItem)).Returns(root.Children[0]);
+
+			var sourceDataProvider = new Mock<ISourceDataProvider>();
+			sourceDataProvider.Setup(x => x.GetItem("root", It.IsAny<ID>())).Returns(root);
+			sourceDataProvider.Setup(x => x.GetItem("child", It.IsAny<ID>())).Returns(root.Children[0]);
+
+			var logger = new Mock<ISerializationLoaderLogger>();
+
+			var evaluator = new Mock<IEvaluator>();
+			evaluator.Setup(x => x.EvaluateUpdate(serializedChildItem, root.Children[0])).Returns(true);
+
+			var loader = CreateTestLoader(serializationProvider.Object, sourceDataProvider.Object, predicate, evaluator.Object, logger.Object);
+
+			loader.LoadTree(root);
+
+			serializationProvider.Verify(x => x.DeserializeItem(serializedChildItem));
+			logger.Verify(x => x.SerializedUpdatedItem(serializedChildItem));
 		}
 
 		[Test]
@@ -234,6 +294,7 @@ namespace Unicorn.Tests.Loader
 			var serializationProvider = new Mock<ISerializationProvider>();
 			serializationProvider.Setup(x => x.GetReference(root)).Returns(serializedRootItem);
 			serializationProvider.Setup(x => x.GetItem(serializedRootItem)).Returns(serializedRootItem);
+			serializationProvider.Setup(x => x.DeserializeItem(serializedRootItem)).Returns(root);
 
 			var sourceDataProvider = new Mock<ISourceDataProvider>();
 			sourceDataProvider.Setup(x => x.GetItem(It.IsAny<string>(), It.IsAny<ID>())).Returns(root);
