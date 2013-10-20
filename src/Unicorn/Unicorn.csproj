@@ -63,9 +63,14 @@
     <Compile Include="Data\ISourceItem.cs" />
     <Compile Include="Evaluators\ISerializedAsMasterEvaluatorLogger.cs" />
     <Compile Include="IUnicornDataProviderLogger.cs" />
+    <Compile Include="Loader\ConsistencyException.cs" />
+    <Compile Include="Loader\ConsoleDuplicateIdConsistencyCheckerLogger.cs" />
     <Compile Include="Loader\ConsoleSerializationLoaderLogger.cs" />
     <Compile Include="Loader\DeserializeFailureRetryer.cs" />
+    <Compile Include="Loader\DuplicateIdConsistencyChecker.cs" />
+    <Compile Include="Loader\IConsistencyChecker.cs" />
     <Compile Include="Loader\IDeserializeFailureRetryer.cs" />
+    <Compile Include="Loader\IDuplicateIdConsistencyCheckerLogger.cs" />
     <Compile Include="Loader\ISerializationLoaderLogger.cs" />
     <Compile Include="Predicates\PredicateResult.cs" />
     <Compile Include="Predicates\IPredicate.cs" />

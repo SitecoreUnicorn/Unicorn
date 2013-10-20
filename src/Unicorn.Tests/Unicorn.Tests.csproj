@@ -59,6 +59,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Evaluator\SerializedAsMasterEvaluatorTests.cs" />
+    <Compile Include="Loader\DuplicateIdConsistencyCheckerTests.cs" />
     <Compile Include="Loader\LoaderTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Predicate\SerializationPresetPredicateTests.cs" />
