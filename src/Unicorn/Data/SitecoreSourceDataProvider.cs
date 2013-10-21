@@ -22,7 +22,7 @@ namespace Unicorn.Data
 			Assert.ArgumentNotNullOrEmpty(database, "database");
 			Assert.ArgumentNotNullOrEmpty(id, "id");
 
-			Database db = Factory.GetDatabase(database);
+			Database db = GetDatabase(database);
 
 			Assert.IsNotNull(db, "Database " + database + " did not exist!");
 
@@ -38,7 +38,7 @@ namespace Unicorn.Data
 			Assert.ArgumentNotNullOrEmpty(database, "database");
 			Assert.ArgumentNotNullOrEmpty(path, "path");
 
-			Database db = Factory.GetDatabase(database);
+			Database db = GetDatabase(database);
 
 			Assert.IsNotNull(db, "Database " + database + " did not exist!");
 
@@ -59,6 +59,11 @@ namespace Unicorn.Data
 			{
 				database.RemoteEvents.Queue.QueueEvent(new SerializationFinishedEvent());
 			}
+		}
+
+		private Database GetDatabase(string databaseName)
+		{
+			return Factory.GetDatabase(databaseName);
 		}
 	}
 }
