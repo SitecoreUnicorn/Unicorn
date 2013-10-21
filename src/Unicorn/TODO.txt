@@ -1,4 +1,5 @@
 ﻿TODO:
+- SQL provider tests
 - Need to figure out a good solution for handling moving children of renames and moves in a sensible fashion that evaluates the inclusion of all children properly
 - Implement custom deserializer that can handle missing fields with a warning and report on individual updated field values
 - Write integration tests for Sitecore-based providers

@@ -54,6 +54,7 @@
   <ItemGroup>
     <Compile Include="Data\ISourceDataProvider.cs" />
     <Compile Include="Data\SitecoreSourceDataProvider.cs" />
+    <Compile Include="Data\SqlServerSourceDataProvider.cs" />
     <Compile Include="DeserializationAggregateException.cs" />
     <Compile Include="DeserializationException.cs" />
     <Compile Include="Evaluators\ConsoleSerializedAsMasterEvaluatorLogger.cs" />

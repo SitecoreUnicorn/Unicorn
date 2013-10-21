@@ -27,7 +27,7 @@ namespace Unicorn.Loader
 		protected readonly ISourceDataProvider SourceDataProvider;
 		protected readonly ISerializationLoaderLogger Logger;
 
-		public SerializationLoader(IProgressStatus progress) : this(new SitecoreSerializationProvider(), new SitecoreSourceDataProvider(), new SerializationPresetPredicate(new SitecoreSourceDataProvider()), new SerializedAsMasterEvaluator(new ConsoleSerializedAsMasterEvaluatorLogger(progress)), new ConsoleSerializationLoaderLogger(progress))
+		public SerializationLoader(IProgressStatus progress) : this(new SitecoreSerializationProvider(), new SqlServerSourceDataProvider(), new SerializationPresetPredicate(new SitecoreSourceDataProvider()), new SerializedAsMasterEvaluator(new ConsoleSerializedAsMasterEvaluatorLogger(progress)), new ConsoleSerializationLoaderLogger(progress))
 		{
 			Assert.ArgumentNotNull(progress, "progress");
 			
@@ -205,7 +205,8 @@ namespace Unicorn.Loader
 			// we add all of the root item's direct children to the "maybe orphan" list (we'll remove them as we find matching serialized children)
 			if (rootItem != null)
 			{
-				foreach (ISourceItem child in rootItem.Children)
+				var rootChildren = rootItem.Children;
+				foreach (ISourceItem child in rootChildren)
 				{
 					// if the preset includes the child add it to the orphan-candidate list (if we don't deserialize it below, it will be marked orphan)
 					var included = Predicate.Includes(child);
@@ -243,7 +244,8 @@ namespace Unicorn.Loader
 
 							if (loadedItemsChildren.Length == 0) // no children were serialized on disk
 							{
-								foreach (ISourceItem loadedChild in loadedItem.Item.Children)
+								var loadedChildren = loadedItem.Item.Children;
+								foreach (ISourceItem loadedChild in loadedChildren)
 								{
 									orphanCandidates.Add(loadedChild.Id, loadedChild);
 								}
