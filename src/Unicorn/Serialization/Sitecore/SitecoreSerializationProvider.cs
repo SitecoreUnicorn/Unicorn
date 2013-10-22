@@ -17,6 +17,7 @@ namespace Unicorn.Serialization.Sitecore
 	{
 		private readonly string _rootPath;
 		private readonly string _logName;
+		private readonly Prefetcher _prefetcher;
 		private readonly IPredicate _predicate;
 
 		public SitecoreSerializationProvider()
@@ -30,6 +31,7 @@ namespace Unicorn.Serialization.Sitecore
 			_predicate = predicate;
 			_rootPath = rootPath;
 			_logName = logName;
+			_prefetcher = new Prefetcher(ReadItemFromDisk);
 		}
 
 		public virtual string LogName
@@ -59,6 +61,9 @@ namespace Unicorn.Serialization.Sitecore
 		public virtual ISerializedReference GetReference(ISourceItem sourceItem)
 		{
 			Assert.ArgumentNotNull(sourceItem, "sourceItem");
+
+			var prefetched = _prefetcher.GetItem(sourceItem.Id);
+			if (prefetched != null) return prefetched;
 
 			var physicalPath = SerializationPathUtility.GetSerializedReferencePath(_rootPath, sourceItem);
 
@@ -143,6 +148,9 @@ namespace Unicorn.Serialization.Sitecore
 		public virtual ISerializedItem GetItem(ISerializedReference reference)
 		{
 			Assert.ArgumentNotNull(reference, "reference");
+
+			var prefetched = _prefetcher.GetItem(sourceItem.Id);
+			if (prefetched != null) return prefetched;
 
 			var path = SerializationPathUtility.GetReferenceItemPath(reference);
 
@@ -309,11 +317,16 @@ namespace Unicorn.Serialization.Sitecore
 
 		protected virtual ISerializedItem ReadItemFromDisk(string fullPath)
 		{
-			using (var reader = new StreamReader(fullPath))
+			using (var fileStream = File.Open(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read))
 			{
-				var syncItem = SyncItem.ReadItem(new Tokenizer(reader), true);
+				using (var reader = new StreamReader(fileStream))
+				{
+					var item = SyncItem.ReadItem(new Tokenizer(reader), true);
 
-				return new SitecoreSerializedItem(syncItem, fullPath);
+					Assert.IsNotNullOrEmpty(item.TemplateID, "{0}: TemplateID was not valid!", fullPath);
+
+					return new SitecoreSerializedItem(item, fullPath);
+				}
 			}
 		}
 
