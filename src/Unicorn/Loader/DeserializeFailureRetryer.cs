@@ -96,7 +96,7 @@ namespace Unicorn.Loader
 
 				foreach (var failure in _failures)
 				{
-					exceptions.Add(new DeserializationException(string.Format("Failed to load {0} permanently because {1}", failure.Reference, failure.Reason), failure.Reason));
+					exceptions.Add(new DeserializationException(string.Format("Failed to load {0} permanently because {1}", failure.Reference.DisplayIdentifier, failure.Reason), failure.Reason));
 				}
 
 				throw new DeserializationAggregateException("Some directories could not be loaded.") { InnerExceptions = exceptions.ToArray() };
