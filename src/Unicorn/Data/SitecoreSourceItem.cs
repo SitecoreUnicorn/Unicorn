@@ -106,8 +106,6 @@ namespace Unicorn.Data
 
 		private Item GetVersion(string languageCode, int versionNumber)
 		{
-			Assert.ArgumentNotNullOrEmpty(languageCode, "languageCode");
-
 			Language language;
 
 			if (!Language.TryParse(languageCode, out language)) throw new ArgumentOutOfRangeException("languageCode", "Language code was not valid!");

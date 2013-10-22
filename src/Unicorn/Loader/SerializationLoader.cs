@@ -27,7 +27,7 @@ namespace Unicorn.Loader
 		protected readonly ISourceDataProvider SourceDataProvider;
 		protected readonly ISerializationLoaderLogger Logger;
 
-		public SerializationLoader(IProgressStatus progress) : this(new SitecoreSerializationProvider(), new SqlServerSourceDataProvider(), new SerializationPresetPredicate(new SitecoreSourceDataProvider()), new SerializedAsMasterEvaluator(new ConsoleSerializedAsMasterEvaluatorLogger(progress)), new ConsoleSerializationLoaderLogger(progress))
+		public SerializationLoader(IProgressStatus progress) : this(new SitecoreSerializationProvider(), new SitecoreSourceDataProvider(), new SerializationPresetPredicate(new SitecoreSourceDataProvider()), new SerializedAsMasterEvaluator(new ConsoleSerializedAsMasterEvaluatorLogger(progress)), new ConsoleSerializationLoaderLogger(progress))
 		{
 			Assert.ArgumentNotNull(progress, "progress");
 			
@@ -111,7 +111,7 @@ namespace Unicorn.Loader
 				// load children of the root
 				LoadTreeRecursive(rootSerializedItem, retryer, consistencyChecker);
 
-				retryer.RetryAll(SourceDataProvider, item => DoLoadItem(item, consistencyChecker), item => LoadTreeRecursive(item, retryer, consistencyChecker));
+				retryer.RetryAll(SourceDataProvider, item => DoLoadItem(item, null), item => LoadTreeRecursive(item, retryer, null));
 			}
 
 			timer.Stop();
@@ -127,7 +127,6 @@ namespace Unicorn.Loader
 		{
 			Assert.ArgumentNotNull(root, "root");
 			Assert.ArgumentNotNull(retryer, "retryer");
-			Assert.ArgumentNotNull(consistencyChecker, "consistencyChecker");
 
 			var included = Predicate.Includes(root);
 			if (!included.IsIncluded)
@@ -166,7 +165,7 @@ namespace Unicorn.Loader
 					}
 
 					// pull out any standard values failures for immediate retrying
-					retryer.RetryStandardValuesFailures(item => DoLoadItem(item, consistencyChecker));
+					retryer.RetryStandardValuesFailures(item => DoLoadItem(item, null));
 				} // children.length > 0
 			}
 			catch (ConsistencyException)
@@ -186,7 +185,6 @@ namespace Unicorn.Loader
 		{
 			Assert.ArgumentNotNull(root, "root");
 			Assert.ArgumentNotNull(retryer, "retryer");
-			Assert.ArgumentNotNull(consistencyChecker, "consistencyChecker");
 
 			var orphanCandidates = new Dictionary<ID, ISourceItem>();
 
@@ -282,10 +280,12 @@ namespace Unicorn.Loader
 		protected virtual ItemLoadResult DoLoadItem(ISerializedItem serializedItem, IConsistencyChecker consistencyChecker)
 		{
 			Assert.ArgumentNotNull(serializedItem, "serializedItem");
-			Assert.ArgumentNotNull(consistencyChecker, "consistencyChecker");
 
-			if(!consistencyChecker.IsConsistent(serializedItem)) throw new ConsistencyException("Consistency check failed - aborting loading.");
-			consistencyChecker.AddProcessedItem(serializedItem);
+			if (consistencyChecker != null)
+			{
+				if (!consistencyChecker.IsConsistent(serializedItem)) throw new ConsistencyException("Consistency check failed - aborting loading.");
+				consistencyChecker.AddProcessedItem(serializedItem);
+			}
 
 			bool disableNewSerialization = UnicornDataProvider.DisableSerialization;
 			try
