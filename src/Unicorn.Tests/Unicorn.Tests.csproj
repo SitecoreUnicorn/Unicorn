@@ -36,13 +36,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Kamsar.WebConsole">
-      <HintPath>..\..\packages\Kamsar.WebConsole.1.2.0.0\lib\net40\Kamsar.WebConsole.dll</HintPath>
+      <HintPath>..\..\packages\Kamsar.WebConsole.1.2.2.0\lib\net40\Kamsar.WebConsole.dll</HintPath>
     </Reference>
     <Reference Include="Moq">
-      <HintPath>..\..\packages\Moq.4.0.10827\lib\NET40\Moq.dll</HintPath>
+      <HintPath>..\..\packages\Moq.4.1.1309.1617\lib\net40\Moq.dll</HintPath>
     </Reference>
     <Reference Include="nunit.framework">
-      <HintPath>..\Dependencies\Libraries\NUnit.2.6.2\lib\nunit.framework.dll</HintPath>
+      <HintPath>..\..\packages\NUnit.2.6.3\lib\nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="Sitecore.Kernel, Version=6.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
