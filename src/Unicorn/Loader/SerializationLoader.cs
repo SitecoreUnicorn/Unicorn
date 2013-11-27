@@ -78,7 +78,7 @@ namespace Unicorn.Loader
 		/// </summary>
 		public virtual void LoadTree(ISourceItem rootItem)
 		{
-			Assert.IsNotNull(Progress, "To use the single parameter LoadTreel(), you must construct the loader with an IProgressStatus. Use the other overload of LoadTree() instead, or construct with an IProgressStatus.");
+			Assert.IsNotNull(Progress, "To use the single parameter LoadTree(), you must construct the loader with an IProgressStatus. Use the other overload of LoadTree() instead, or construct with an IProgressStatus.");
 
 			LoadTree(rootItem, new DeserializeFailureRetryer(), new DuplicateIdConsistencyChecker(new ConsoleDuplicateIdConsistencyCheckerLogger(Progress)));
 		}
