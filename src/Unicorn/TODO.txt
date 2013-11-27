@@ -1,12 +1,7 @@
 ﻿TODO:
-- SQL provider tests
 - Need to figure out a good solution for handling moving children of renames and moves in a sensible fashion that evaluates the inclusion of all children properly
 - Implement custom deserializer that can handle missing fields with a warning and report on individual updated field values
 - Write integration tests for Sitecore-based providers
-- Redo conflict processor to use serialization provider
-- Is there a way we can effectively parallelize the loader?
-- Test retrying failed deserializations - esp inline loading of new template fields along with the template item
 - Test moving and copying and renaming in cross-inclusion territory
 - Automagical serialization of default preset items if the root serialization path is totally empty
 - Async serialization file writes with a read/write lock system? + perf testing
-- Some sort of short-span dupe detection in the data provider? Sitecore is pretty save-happy and that can result in 2-3 serializations per 'save'
