@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Sitecore.Configuration;
+using Sitecore.Data.Items;
 using Sitecore.Data.Serialization;
 using Sitecore.Data.Serialization.Exceptions;
 using Sitecore.Data.Serialization.ObjectModel;
@@ -244,7 +245,7 @@ namespace Unicorn.Serialization.Sitecore
 			var oldSerializedChildrenReference = new SitecoreSerializedReference(renamedParentSerializationDirectory.FullName + Path.DirectorySeparatorChar + oldName);
 
 			if (Directory.Exists(oldSerializedChildrenReference.ProviderId))
-				MoveDescendants(oldSerializedChildrenReference, updatedItem);
+				MoveDescendants(oldSerializedChildrenReference, updatedItem, renamedItem);
 
 			// delete the original serialized item from pre-rename
 			DeleteSerializedItem(new SitecoreSerializedReference(SerializationPathUtility.GetReferenceItemPath(oldSerializedChildrenReference)));
@@ -277,7 +278,7 @@ namespace Unicorn.Serialization.Sitecore
 			UpdateSerializedItem(serializedNewItem);
 
 			// move any children to the new destination (and fix their paths)
-			MoveDescendants(oldRootDirectory, serializedNewItem);
+			MoveDescendants(oldRootDirectory, serializedNewItem, sourceItem);
 
 			// remove the serialized item in the old location
 			DeleteSerializedItem(oldRootItemPath);
@@ -317,33 +318,46 @@ namespace Unicorn.Serialization.Sitecore
 			}
 		}
 
-		protected virtual void MoveDescendants(ISerializedReference oldReference, ISerializedItem newItem)
+		/// <summary>
+		/// Moves the descendant items of a serialized parent after it has been moved or renamed.
+		/// </summary>
+		/// <param name="oldReference">Reference to the original path pre-move/rename</param>
+		/// <param name="newItem">The newly renamed or moved parent item</param>
+		/// <param name="sourceItem">The source item representing the renamed/moved item. NOTE that the path of this item is incorrect a lot of the time so we ignore it.</param>
+		/// <remarks>
+		/// This method basically gets all descendants of the source item that was moved/renamed, generates an appropriate new serialized item for it, and _if the new child item is in the predicate_ we
+		/// serialize it to its new location. Finally, we delete the old children directory if it existed.
+		/// 
+		/// Doing it this way allows handling crazy cases like moving trees of items between included and excluded locations - or even moves or renames causing SOME of the children to be ignored. Wild.
+		/// </remarks>
+		protected virtual void MoveDescendants(ISerializedReference oldReference, ISerializedItem newItem, ISourceItem sourceItem)
 		{
-			// TODO: it would make more sense to, instead of copying existing serialized children around,
-			// TODO: to instead get all descendants in Sitecore that are included by the predicate and serialize any that are included.
-			// TODO: this is complicated because MoveItem receives an item *with the old path* - so it becomes weird to calculate inclusion when the move is still incomplete
-			// TODO: however, it's a better experience so it should be implemented at some point. RenameItem recieves an already renamed item, so its path ahead is obvious.
-
 			// remove the extension from the new item's provider ID
 			string newItemReferencePath = SerializationPathUtility.GetReferenceDirectoryPath(newItem);
 
 			// if the paths were the same, no moving occurs (this can happen when saving templates, which spuriously can report "renamed" when they are not actually any such thing)
 			if (oldReference.ProviderId.Equals(newItemReferencePath, StringComparison.OrdinalIgnoreCase)) return;
 
-			var serializedDescendants = GetChildReferences(oldReference, true);
+			var descendantItems = GetDescendants(sourceItem).Cast<SitecoreSourceItem>();
 
-			// take all the descendant items that are serialized already, and re-serialize them at their new path location
-			foreach (var descendant in serializedDescendants)
+			// Go through descendant source items and serialize all that are included by the predicate
+			foreach (var descendant in descendantItems)
 			{
-				var item = GetItem(descendant) as SitecoreSerializedItem;
-
-				if (item == null) continue;
-
-				var syncItem = item.InnerItem;
+				var syncItem = ItemSynchronization.BuildSyncItem(descendant.InnerItem);
 
 				syncItem.ItemPath = syncItem.ItemPath.Replace(oldReference.ItemPath, newItem.ItemPath);
 
-				var newPhysicalPath = item.ProviderId.Replace(oldReference.ProviderId, newItemReferencePath);
+				// the newPhysicalPath will point to the OLD physical path pre-move/rename.
+				// We re-root the path to point to the new parent item's base path to fix that before we write to disk
+				// Note that an obscene edge case here would be that moving/renaming to a path that is too long for the FS
+				// would break here - because we're re-rooting without consideing short paths
+				var newPhysicalPath = SerializationPathUtility.GetSerializedItemPath(_rootPath, descendant);
+
+				newPhysicalPath = newPhysicalPath.Replace(oldReference.ProviderId, newItemReferencePath);
+
+				var newSerializedItem = new SitecoreSerializedItem(syncItem, newPhysicalPath);
+
+				if (!_predicate.Includes(newSerializedItem).IsIncluded) continue; // if the moved child location is outside the predicate, do not re-serialize
 
 				UpdateSerializedItem(new SitecoreSerializedItem(syncItem, newPhysicalPath));
 			}
@@ -351,5 +365,17 @@ namespace Unicorn.Serialization.Sitecore
 			// remove the old children folder if it exists
 			if (Directory.Exists(oldReference.ProviderId)) Directory.Delete(oldReference.ProviderId, true);
 		}
+
+		protected IList<ISourceItem> GetDescendants(ISourceItem sourceItem)
+		{
+			var descendants = sourceItem.Children.ToList();
+
+			foreach (var child in descendants.ToArray())
+			{
+				descendants.AddRange(GetDescendants(child));
+			}
+
+			return descendants;
+		} 
 	}
 }

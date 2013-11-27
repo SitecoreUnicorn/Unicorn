@@ -1,7 +1,5 @@
 ﻿TODO:
-- Need to figure out a good solution for handling moving children of renames and moves in a sensible fashion that evaluates the inclusion of all children properly
 - Implement custom deserializer that can handle missing fields with a warning and report on individual updated field values
 - Write integration tests for Sitecore-based providers
-- Test moving and copying and renaming in cross-inclusion territory
-- Automagical serialization of default preset items if the root serialization path is totally empty
-- Async serialization file writes with a read/write lock system? + perf testing
+- Out of box experience to do initial serialization and guide the user. Probably a httprequestbegin pipeline processor. Fire only when debug=true, provide built-in serialize all, show config/providers in use? - maybe graphical sitecore tree with red/green?, and sync capabilities
+- Verify operation with non standard serialization root
