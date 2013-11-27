@@ -25,16 +25,6 @@ namespace Unicorn
 				provider.DataProvider = this;
 		}
 
-		public override bool CreateItem(ID itemId, string itemName, ID templateId, ItemDefinition parent, CallContext context)
-		{
-			if (!base.CreateItem(itemId, itemName, templateId, parent, context)) return false;
-
-			foreach (var provider in _unicornDataProviders)
-				provider.CreateItem(itemId, itemName, templateId, parent, context);
-
-			return true;
-		}
-
 		public override bool SaveItem(ItemDefinition itemDefinition, ItemChanges changes, CallContext context)
 		{
 			if (!base.SaveItem(itemDefinition, changes, context)) return false;

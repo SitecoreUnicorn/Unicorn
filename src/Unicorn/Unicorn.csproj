@@ -83,7 +83,6 @@
     <Compile Include="Data\SitecoreSourceItem.cs" />
     <Compile Include="Serialization\Sitecore\SerializationPathUtility.cs" />
     <Compile Include="Serialization\Sitecore\SyncItemExtensions.cs" />
-    <Compile Include="SitecoreLogProgressStatus.cs" />
     <Compile Include="Serialization\ISerializationProvider.cs" />
     <Compile Include="Serialization\ISerializedItem.cs" />
     <Compile Include="Serialization\ISerializedReference.cs" />

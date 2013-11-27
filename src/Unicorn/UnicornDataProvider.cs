@@ -45,13 +45,6 @@ namespace Unicorn
 		public DataProvider DataProvider { get; set; }
 		protected Database Database { get { return DataProvider.Database; } }
 
-		public void CreateItem(ID itemId, string itemName, ID templateId, ItemDefinition parent, CallContext context)
-		{
-			if (DisableSerialization) return;
-
-			// TODO: do we need to handle this? (if so we need a way to create an ISerializedItem from scratch...)
-		}
-
 		public void SaveItem(ItemDefinition itemDefinition, ItemChanges changes, CallContext context)
 		{
 			if (DisableSerialization) return;
