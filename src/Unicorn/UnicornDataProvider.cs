@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using Sitecore;
 using Sitecore.Data;
 using Sitecore.Data.DataProviders;
@@ -10,6 +9,7 @@ using Sitecore.Globalization;
 using Unicorn.Data;
 using Unicorn.Predicates;
 using Unicorn.Serialization;
+using Unicorn.Dependencies;
 
 namespace Unicorn
 {
@@ -19,6 +19,11 @@ namespace Unicorn
 		private readonly IPredicate _predicate;
 		private readonly IUnicornDataProviderLogger _logger;
 		private static bool _disableSerialization;
+
+		public UnicornDataProvider() : this(Registry.Current.Resolve<ISerializationProvider>(), Registry.Current.Resolve<IPredicate>(), Registry.Current.Resolve<IUnicornDataProviderLogger>())
+		{
+			
+		}
 
 		public UnicornDataProvider(ISerializationProvider serializationProvider, IPredicate predicate, IUnicornDataProviderLogger logger)
 		{

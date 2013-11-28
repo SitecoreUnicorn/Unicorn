@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Sitecore.Configuration;
-using Sitecore.Data.Items;
 using Sitecore.Data.Serialization;
 using Sitecore.Data.Serialization.Exceptions;
 using Sitecore.Data.Serialization.ObjectModel;
 using Sitecore.Diagnostics;
 using Sitecore.StringExtensions;
 using Unicorn.Data;
+using Unicorn.Dependencies;
 using Unicorn.Predicates;
 
 namespace Unicorn.Serialization.Sitecore
@@ -20,8 +20,7 @@ namespace Unicorn.Serialization.Sitecore
 		private readonly string _logName;
 		private readonly IPredicate _predicate;
 
-		public SitecoreSerializationProvider()
-			: this(PathUtils.Root, "UnicornItemSerialization", new SerializationPresetPredicate(new SitecoreSourceDataProvider()))
+		public SitecoreSerializationProvider() : this(PathUtils.Root, "UnicornItemSerialization", Registry.Current.Resolve<IPredicate>())
 		{
 
 		}

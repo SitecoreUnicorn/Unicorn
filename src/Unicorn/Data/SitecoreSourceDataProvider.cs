@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using Sitecore.Configuration;
+﻿using Sitecore.Configuration;
 using Sitecore.Data;
 using Sitecore.Data.Serialization;
 using Sitecore.Diagnostics;

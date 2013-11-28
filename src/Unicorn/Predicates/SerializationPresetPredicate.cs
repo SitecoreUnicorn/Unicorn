@@ -8,6 +8,7 @@ using Sitecore.Data.Serialization.Presets;
 using Sitecore.Diagnostics;
 using Sitecore.StringExtensions;
 using Unicorn.Data;
+using Unicorn.Dependencies;
 using Unicorn.Serialization;
 
 namespace Unicorn.Predicates
@@ -16,6 +17,11 @@ namespace Unicorn.Predicates
 	{
 		private readonly IList<IncludeEntry> _preset;
 		private readonly ISourceDataProvider _sourceDataProvider;
+
+		public SerializationPresetPredicate() : this(Registry.Current.Resolve<ISourceDataProvider>())
+		{
+			
+		}
 
 		public SerializationPresetPredicate(ISourceDataProvider sourceDataProvider) : this(sourceDataProvider, "default")
 		{

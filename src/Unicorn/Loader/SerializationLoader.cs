@@ -5,12 +5,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Unicorn.Data;
+using Unicorn.Dependencies;
 using Unicorn.Predicates;
 using Unicorn.Serialization;
 using Unicorn.Evaluators;
 using System.Diagnostics;
-using Unicorn.Serialization.Sitecore;
-using Kamsar.WebConsole;
 
 namespace Unicorn.Loader
 {
@@ -19,7 +18,6 @@ namespace Unicorn.Loader
 	/// </summary>
 	public class SerializationLoader
 	{
-		protected readonly IProgressStatus Progress;
 		private int _itemsProcessed;
 		protected readonly ISerializationProvider SerializationProvider;
 		protected readonly IPredicate Predicate;
@@ -27,11 +25,13 @@ namespace Unicorn.Loader
 		protected readonly ISourceDataProvider SourceDataProvider;
 		protected readonly ISerializationLoaderLogger Logger;
 
-		public SerializationLoader(IProgressStatus progress) : this(new SitecoreSerializationProvider(), new SitecoreSourceDataProvider(), new SerializationPresetPredicate(new SitecoreSourceDataProvider()), new SerializedAsMasterEvaluator(new ConsoleSerializedAsMasterEvaluatorLogger(progress)), new ConsoleSerializationLoaderLogger(progress))
+		public SerializationLoader() : this(
+			Registry.Current.Resolve<ISerializationProvider>(), 
+			Registry.Current.Resolve<ISourceDataProvider>(), 
+			Registry.Current.Resolve<IPredicate>(), 
+			Registry.Current.Resolve<IEvaluator>(), 
+			Registry.Current.Resolve<ISerializationLoaderLogger>())
 		{
-			Assert.ArgumentNotNull(progress, "progress");
-			
-			Progress = progress;
 		}
 
 		public SerializationLoader(ISerializationProvider serializationProvider, ISourceDataProvider sourceDataProvider, IPredicate predicate, IEvaluator evaluator, ISerializationLoaderLogger logger)
@@ -54,9 +54,7 @@ namespace Unicorn.Loader
 		/// </summary>
 		public virtual void LoadAll()
 		{
-			Assert.IsNotNull(Progress, "To use the parameterless LoadAll(), you must construct the loader with an IProgressStatus. Use the other overload of LoadAll() instead, or construct with an IProgressStatus.");
-
-			LoadAll(new DeserializeFailureRetryer(), new DuplicateIdConsistencyChecker(new ConsoleDuplicateIdConsistencyCheckerLogger(Progress)));
+			LoadAll(Registry.Current.Resolve<IDeserializeFailureRetryer>(), Registry.Current.Resolve<IConsistencyChecker>());
 		}
 
 		/// <summary>
@@ -78,9 +76,7 @@ namespace Unicorn.Loader
 		/// </summary>
 		public virtual void LoadTree(ISourceItem rootItem)
 		{
-			Assert.IsNotNull(Progress, "To use the single parameter LoadTree(), you must construct the loader with an IProgressStatus. Use the other overload of LoadTree() instead, or construct with an IProgressStatus.");
-
-			LoadTree(rootItem, new DeserializeFailureRetryer(), new DuplicateIdConsistencyChecker(new ConsoleDuplicateIdConsistencyCheckerLogger(Progress)));
+			LoadTree(rootItem, Registry.Current.Resolve<IDeserializeFailureRetryer>(), Registry.Current.Resolve<IConsistencyChecker>());
 		}
 
 		/// <summary>

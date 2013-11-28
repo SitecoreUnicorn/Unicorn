@@ -389,7 +389,7 @@ namespace Unicorn.Tests.Loader
 
 			var loader = CreateTestLoader(serializationProvider.Object, null, predicate, null, logger.Object);
 
-			Assert.Throws<InvalidOperationException>((() => loader.LoadTree(root, new Mock<IDeserializeFailureRetryer>().Object, consistencyChecker.Object)));
+			Assert.Throws<ConsistencyException>((() => loader.LoadTree(root, new Mock<IDeserializeFailureRetryer>().Object, consistencyChecker.Object)));
 		}
 
 		private SerializationLoader CreateTestLoader(ISerializationProvider serializationProvider, ISourceDataProvider sourceDataProvider, IPredicate predicate, IEvaluator evaluator, ISerializationLoaderLogger logger)

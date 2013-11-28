@@ -54,6 +54,11 @@
   <ItemGroup>
     <Compile Include="Data\ISourceDataProvider.cs" />
     <Compile Include="Data\SitecoreSourceDataProvider.cs" />
+    <Compile Include="Dependencies\DefaultDependencyRegistry.cs" />
+    <Compile Include="Dependencies\IDependencyRegistry.cs" />
+    <Compile Include="Dependencies\Registry.cs" />
+    <Compile Include="Dependencies\TinyIoC\TinyIoC.cs" />
+    <Compile Include="Dependencies\TinyIoC\TinyIoCAspNetExtensions.cs" />
     <Compile Include="DeserializationAggregateException.cs" />
     <Compile Include="DeserializationException.cs" />
     <Compile Include="Evaluators\ConsoleSerializedAsMasterEvaluatorLogger.cs" />
@@ -102,6 +107,7 @@
   <ItemGroup>
     <Content Include="TODO.txt" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
