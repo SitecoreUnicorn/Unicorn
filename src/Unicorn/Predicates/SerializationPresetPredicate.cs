@@ -18,18 +18,10 @@ namespace Unicorn.Predicates
 		private readonly IList<IncludeEntry> _preset;
 		private readonly ISourceDataProvider _sourceDataProvider;
 
-		public SerializationPresetPredicate() : this(Registry.Current.Resolve<ISourceDataProvider>())
+		public SerializationPresetPredicate(ISourceDataProvider sourceDataProvider = null, string presetName = "default")
 		{
-			
-		}
+			sourceDataProvider = sourceDataProvider ?? Registry.Current.Resolve<ISourceDataProvider>();
 
-		public SerializationPresetPredicate(ISourceDataProvider sourceDataProvider) : this(sourceDataProvider, "default")
-		{
-			
-		}
-
-		public SerializationPresetPredicate(ISourceDataProvider sourceDataProvider, string presetName)
-		{
 			Assert.ArgumentNotNull(sourceDataProvider, "sourceDataProvider");
 			Assert.ArgumentNotNullOrEmpty(presetName, "presetName");
 

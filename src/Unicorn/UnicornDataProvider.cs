@@ -20,13 +20,18 @@ namespace Unicorn
 		private readonly IUnicornDataProviderLogger _logger;
 		private static bool _disableSerialization;
 
-		public UnicornDataProvider() : this(Registry.Current.Resolve<ISerializationProvider>(), Registry.Current.Resolve<IPredicate>(), Registry.Current.Resolve<IUnicornDataProviderLogger>())
+		public UnicornDataProvider(ISerializationProvider serializationProvider = null, 
+			IPredicate predicate = null, 
+			IUnicornDataProviderLogger logger = null)
 		{
-			
-		}
+			serializationProvider = serializationProvider ?? Registry.Current.Resolve<ISerializationProvider>();
+			predicate = predicate ?? Registry.Current.Resolve<IPredicate>();
+			logger = logger ?? Registry.Current.Resolve<IUnicornDataProviderLogger>();
 
-		public UnicornDataProvider(ISerializationProvider serializationProvider, IPredicate predicate, IUnicornDataProviderLogger logger)
-		{
+			Assert.ArgumentNotNull(serializationProvider, "serializationProvider");
+			Assert.ArgumentNotNull(predicate, "predicate");
+			Assert.ArgumentNotNull(logger, "logger");
+
 			_logger = logger;
 			_predicate = predicate;
 			_serializationProvider = serializationProvider;

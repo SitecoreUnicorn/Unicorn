@@ -25,17 +25,18 @@ namespace Unicorn.Loader
 		protected readonly ISourceDataProvider SourceDataProvider;
 		protected readonly ISerializationLoaderLogger Logger;
 
-		public SerializationLoader() : this(
-			Registry.Current.Resolve<ISerializationProvider>(), 
-			Registry.Current.Resolve<ISourceDataProvider>(), 
-			Registry.Current.Resolve<IPredicate>(), 
-			Registry.Current.Resolve<IEvaluator>(), 
-			Registry.Current.Resolve<ISerializationLoaderLogger>())
+		public SerializationLoader(ISerializationProvider serializationProvider = null, 
+			ISourceDataProvider sourceDataProvider = null, 
+			IPredicate predicate = null, 
+			IEvaluator evaluator = null, 
+			ISerializationLoaderLogger logger = null)
 		{
-		}
+			serializationProvider = serializationProvider ?? Registry.Current.Resolve<ISerializationProvider>();
+			sourceDataProvider = sourceDataProvider ?? Registry.Current.Resolve<ISourceDataProvider>();
+			predicate = predicate ?? Registry.Current.Resolve<IPredicate>();
+			evaluator = evaluator ?? Registry.Current.Resolve<IEvaluator>();
+			logger = logger ?? Registry.Current.Resolve<ISerializationLoaderLogger>();
 
-		public SerializationLoader(ISerializationProvider serializationProvider, ISourceDataProvider sourceDataProvider, IPredicate predicate, IEvaluator evaluator, ISerializationLoaderLogger logger)
-		{
 			Assert.ArgumentNotNull(serializationProvider, "serializationProvider");
 			Assert.ArgumentNotNull(sourceDataProvider, "sourceDataProvider");
 			Assert.ArgumentNotNull(predicate, "predicate");

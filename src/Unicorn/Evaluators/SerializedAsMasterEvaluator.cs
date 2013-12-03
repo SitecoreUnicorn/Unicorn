@@ -2,6 +2,7 @@
 using Sitecore.Data;
 using Sitecore.Diagnostics;
 using Unicorn.Data;
+using Unicorn.Dependencies;
 using Unicorn.Serialization;
 
 namespace Unicorn.Evaluators
@@ -11,8 +12,10 @@ namespace Unicorn.Evaluators
 		private readonly ISerializedAsMasterEvaluatorLogger _logger;
 		private static readonly ID RootId = new ID("{11111111-1111-1111-1111-111111111111}");
 
-		public SerializedAsMasterEvaluator(ISerializedAsMasterEvaluatorLogger logger)
+		public SerializedAsMasterEvaluator(ISerializedAsMasterEvaluatorLogger logger = null)
 		{
+			logger = logger ?? Registry.Current.Resolve<ISerializedAsMasterEvaluatorLogger>();
+
 			Assert.ArgumentNotNull(logger, "logger");
 
 			_logger = logger;

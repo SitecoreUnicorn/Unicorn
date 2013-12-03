@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using Sitecore.Data;
+﻿using Sitecore.Data;
 
 namespace Unicorn.Data
 {

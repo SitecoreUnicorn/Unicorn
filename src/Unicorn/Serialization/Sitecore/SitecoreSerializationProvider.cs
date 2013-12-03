@@ -20,13 +20,21 @@ namespace Unicorn.Serialization.Sitecore
 		private readonly string _logName;
 		private readonly IPredicate _predicate;
 
-		public SitecoreSerializationProvider() : this(PathUtils.Root, "UnicornItemSerialization", Registry.Current.Resolve<IPredicate>())
+		/// <summary>
+		/// Default constructor
+		/// </summary>
+		/// <param name="rootPath">The root serialization path to write files to. Defaults to PathUtils.RootPath if the default value (null) is passed.</param>
+		/// <param name="logName">The prefix to write log entries with. Useful if you have multiple serialization providers.</param>
+		/// <param name="predicate">The predicate to use. If null, uses Registry to look up the registered DI instance.</param>
+		public SitecoreSerializationProvider(string rootPath = null, string logName = "UnicornItemSerialization", IPredicate predicate = null)
 		{
+			predicate = predicate ?? Registry.Current.Resolve<IPredicate>();
+			rootPath = rootPath ?? PathUtils.Root;
 
-		}
+			Assert.ArgumentNotNullOrEmpty(rootPath, "rootPath");
+			Assert.ArgumentNotNullOrEmpty(logName, "logName");
+			Assert.ArgumentNotNull(predicate, "predicate");
 
-		public SitecoreSerializationProvider(string rootPath, string logName, IPredicate predicate)
-		{
 			_predicate = predicate;
 			_rootPath = rootPath;
 			_logName = logName;

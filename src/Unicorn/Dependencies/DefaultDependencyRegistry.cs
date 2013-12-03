@@ -1,4 +1,5 @@
-﻿using Unicorn.Data;
+﻿using System;
+using Unicorn.Data;
 using Unicorn.Dependencies.TinyIoC;
 using Unicorn.Evaluators;
 using Unicorn.Loader;
@@ -24,9 +25,9 @@ namespace Unicorn.Dependencies
 			RegisterPerRequestSingleton<IDeserializeFailureRetryer, DeserializeFailureRetryer>();
 			RegisterPerRequestSingleton<ISerializationLoaderLogger, ConsoleSerializationLoaderLogger>();
 
-			RegisterPerRequestSingleton<IPredicate, SerializationPresetPredicate>();
+			RegisterInstanceFactory<IPredicate>(() => new SerializationPresetPredicate(Resolve<ISourceDataProvider>()));
 
-			RegisterSingleton<ISerializationProvider, SitecoreSerializationProvider>();
+			RegisterInstanceFactory<ISerializationProvider>(() => new SitecoreSerializationProvider(predicate: Resolve<IPredicate>()));
 
 			RegisterSingleton<IUnicornDataProviderLogger, SitecoreLogUnicornDataProviderLogger>();
 		}
@@ -42,6 +43,12 @@ namespace Unicorn.Dependencies
 			where TInstance : class, TType
 		{
 			_container.Register<TType, TInstance>().AsSingleton();
+		}
+
+		public void RegisterInstanceFactory<TType>(Func<TType> instanceFactory) where TType : class
+		{
+// ReSharper disable once RedundantTypeArgumentsOfMethod
+			_container.Register<TType>((container, overloads) => instanceFactory());
 		}
 
 		public void RegisterPerRequestSingleton<TType, TInstance>()
