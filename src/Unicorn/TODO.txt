@@ -1,5 +1,9 @@
 ﻿TODO:
-- Implement custom deserializer that can handle missing fields with a warning and report on individual updated field values
+- Orphaned versions in Sitecore are not detected as an update (will require an update to ISourceItem, I think)
+- Fiat is detecting updated shared field values when there are none (e.g. collapsed by default on test item)
+- Fiat is not detecting added versions correctly (for logging - they are being created)
+- Hook up Fiat missing field retryer business
+- Logging order is wacky, especially for newly added items - changes and update detection come before the actual add/update
 - Write integration tests for Sitecore-based providers
 - Out of box experience to do initial serialization and guide the user. Probably a httprequestbegin pipeline processor. Fire only when debug=true, provide built-in serialize all, show config/providers in use? - maybe graphical sitecore tree with red/green?, and sync capabilities
 - Verify operation with non standard serialization root

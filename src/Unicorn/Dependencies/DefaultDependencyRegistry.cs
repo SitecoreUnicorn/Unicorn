@@ -1,11 +1,12 @@
 ﻿using System;
+using Kamsar.WebConsole;
 using Unicorn.Data;
 using Unicorn.Dependencies.TinyIoC;
 using Unicorn.Evaluators;
 using Unicorn.Loader;
 using Unicorn.Predicates;
 using Unicorn.Serialization;
-using Unicorn.Serialization.Sitecore;
+using Unicorn.Serialization.Sitecore.Fiat;
 
 namespace Unicorn.Dependencies
 {
@@ -27,7 +28,17 @@ namespace Unicorn.Dependencies
 
 			RegisterInstanceFactory<IPredicate>(() => new SerializationPresetPredicate(Resolve<ISourceDataProvider>()));
 
-			RegisterInstanceFactory<ISerializationProvider>(() => new SitecoreSerializationProvider(predicate: Resolve<IPredicate>()));
+			RegisterInstanceFactory<IFiatDeserializerLogger>(() =>
+			{
+				// this allows resolving Fiat's logger regardless of whether it's writing to a console or not
+				if (_container.CanResolve<IProgressStatus>())
+					return new ConsoleFiatDeserializerLogger(Resolve<IProgressStatus>());
+
+				return new NullFiatDeserializerLogger();
+			});
+			RegisterInstanceFactory<ISerializationProvider>(() => new FiatSitecoreSerializationProvider(
+				predicate: Resolve<IPredicate>(),
+				logger: Resolve<IFiatDeserializerLogger>()));
 
 			RegisterSingleton<IUnicornDataProviderLogger, SitecoreLogUnicornDataProviderLogger>();
 		}
