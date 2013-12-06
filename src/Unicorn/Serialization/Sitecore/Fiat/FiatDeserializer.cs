@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.IO;
+using System.Linq;
 using Sitecore;
 using Sitecore.Configuration;
 using Sitecore.Data;
@@ -99,7 +100,8 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 
 					foreach (Field field in targetItem.Fields)
 					{
-						if (field.Shared)
+						// TODO: log the reset of a shared field that was not defined in the serialized item?
+						if (field.Shared && syncItem.SharedFields.All(x => x.FieldID != field.ID.ToString()))
 							field.Reset();
 					}
 
@@ -257,7 +259,8 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 
 				foreach (Field field in languageVersionItem.Fields)
 				{
-					if (!field.Shared)
+					// TODO: log the reset of a field value undefined in the serialized item?
+					if (!field.Shared && syncVersion.Fields.All(x => x.FieldID != field.ID.ToString()))
 						field.Reset();
 				}
 

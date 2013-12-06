@@ -70,7 +70,7 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 			if(item.Fields[field.FieldID].Shared)
 				_progress.ReportStatus(" - [U] {0}", MessageType.Debug, field.FieldName);
 			else
-				_progress.ReportStatus("- [U] {0}#{1} {2} OV {3} NV {4} NV2 {5}", MessageType.Debug, item.Language.Name, item.Version.Number, field.FieldName, oldValue, field.FieldValue, item[field.FieldID]);
+				_progress.ReportStatus("- [U] {0}#{1} {2}", MessageType.Debug, item.Language.Name, item.Version.Number, field.FieldName);
 		}
 	}
 }
