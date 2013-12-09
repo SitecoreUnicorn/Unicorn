@@ -24,5 +24,7 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 		void WroteBlobStream(Item item, SyncField field);
 
 		void UpdatedChangedFieldValue(Item item, SyncField field, string oldValue);
+
+		void ResetFieldThatDidNotExistInSerialized(global::Sitecore.Data.Fields.Field field);
 	}
 }

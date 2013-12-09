@@ -1,4 +1,5 @@
-﻿using Sitecore.Data.Items;
+﻿using Sitecore.Data.Fields;
+using Sitecore.Data.Items;
 using Sitecore.Data.Serialization.ObjectModel;
 
 namespace Unicorn.Serialization.Sitecore.Fiat
@@ -51,6 +52,12 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 		}
 
 		public void UpdatedChangedFieldValue(Item item, SyncField field, string oldValue)
+		{
+			
+		}
+
+
+		public void ResetFieldThatDidNotExistInSerialized(Field field)
 		{
 			
 		}

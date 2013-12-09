@@ -1,4 +1,5 @@
 ﻿using Kamsar.WebConsole;
+using Sitecore.Data.Fields;
 using Sitecore.Data.Items;
 using Sitecore.Data.Serialization.ObjectModel;
 
@@ -60,17 +61,16 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 
 		public virtual void UpdatedChangedFieldValue(Item item, SyncField field, string oldValue)
 		{
-			if (field.FieldName == "__Updated" || 
-				field.FieldName == "__Updated by" ||
-				field.FieldName == "__Created" || 
-				field.FieldName == "__Created by" ||
-				field.FieldName == "__Revision")
-				return;
-
 			if(item.Fields[field.FieldID].Shared)
 				_progress.ReportStatus(" - [U] {0}", MessageType.Debug, field.FieldName);
 			else
-				_progress.ReportStatus("- [U] {0}#{1} {2}", MessageType.Debug, item.Language.Name, item.Version.Number, field.FieldName);
+				_progress.ReportStatus("- [U] {0}#{1}: {2}", MessageType.Debug, item.Language.Name, item.Version.Number, field.FieldName);
+		}
+
+
+		public void ResetFieldThatDidNotExistInSerialized(Field field)
+		{
+			
 		}
 	}
 }

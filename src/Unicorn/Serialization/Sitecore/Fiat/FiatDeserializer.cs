@@ -100,9 +100,11 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 
 					foreach (Field field in targetItem.Fields)
 					{
-						// TODO: log the reset of a shared field that was not defined in the serialized item?
 						if (field.Shared && syncItem.SharedFields.All(x => x.FieldID != field.ID.ToString()))
+						{
+							_logger.ResetFieldThatDidNotExistInSerialized(field);
 							field.Reset();
+						}
 					}
 
 					foreach (SyncField field in syncItem.SharedFields)
@@ -250,6 +252,12 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 				_logger.AddedNewVersion(languageVersionItem);
 			}
 
+// ReSharper disable once SimplifyLinqExpression
+			if (!languageVersionItem.Versions.GetVersionNumbers().Any(x => x.Number == languageVersionItem.Version.Number))
+			{
+				_logger.AddedNewVersion(languageVersionItem);
+			}
+
 			using (new EditContext(languageVersionItem))
 			{
 				languageVersionItem.RuntimeSettings.ReadOnlyStatistics = true;
@@ -259,9 +267,11 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 
 				foreach (Field field in languageVersionItem.Fields)
 				{
-					// TODO: log the reset of a field value undefined in the serialized item?
 					if (!field.Shared && syncVersion.Fields.All(x => x.FieldID != field.ID.ToString()))
+					{
+						_logger.ResetFieldThatDidNotExistInSerialized(field);
 						field.Reset();
+					}
 				}
 
 				bool wasOwnerFieldParsed = false;
@@ -315,7 +325,7 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 
 				_logger.WroteBlobStream(item, field);
 			}
-			else if (!field.FieldValue.Equals(itemField.Value)) // TODO: this check is not working as expected
+			else if (!field.FieldValue.Equals(itemField.Value))
 			{
 				var oldValue = itemField.Value;
 				itemField.SetValue(field.FieldValue, true);

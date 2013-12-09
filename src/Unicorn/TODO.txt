@@ -1,6 +1,5 @@
 ﻿TODO:
 - Orphaned versions in Sitecore are not detected as an update (will require an update to ISourceItem, I think)
-- Fiat is not detecting added versions correctly (for logging - they are being created)
 - Hook up Fiat missing field retryer business
 - Logging order is wacky, especially for newly added items - changes and update detection come before the actual add/update
 - Write integration tests for Sitecore-based providers

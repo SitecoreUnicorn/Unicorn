@@ -303,14 +303,14 @@ namespace Unicorn.Loader
 				var existingItem = SourceDataProvider.GetItemById(serializedItem.DatabaseName, serializedItem.Id);
 				if (existingItem == null || Evaluator.EvaluateUpdate(serializedItem, existingItem))
 				{
-					ISourceItem updatedItem = SerializationProvider.DeserializeItem(serializedItem);
-
-					Assert.IsNotNull(updatedItem, "Do not return null from DeserializeItem() - throw an exception if an error occurs.");
-
 					if (existingItem == null)
 						Logger.SerializedNewItem(serializedItem);
 					else
-						Logger.SerializedUpdatedItem(serializedItem);	
+						Logger.SerializedUpdatedItem(serializedItem);
+
+					ISourceItem updatedItem = SerializationProvider.DeserializeItem(serializedItem);
+
+					Assert.IsNotNull(updatedItem, "Do not return null from DeserializeItem() - throw an exception if an error occurs.");	
 						
 					return new ItemLoadResult(ItemLoadStatus.Success, updatedItem);
 				}
