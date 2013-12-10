@@ -103,12 +103,12 @@ namespace Unicorn.Loader
 			using (new EventDisabler())
 			{
 				// load the root item (LoadTreeRecursive only evaluates children)
-				DoLoadItem(rootSerializedItem, consistencyChecker);
+				DoLoadItem(rootSerializedItem, consistencyChecker, false);
 
 				// load children of the root
-				LoadTreeRecursive(rootSerializedItem, retryer, consistencyChecker);
+				LoadTreeRecursive(rootSerializedItem, retryer, consistencyChecker, false);
 
-				retryer.RetryAll(SourceDataProvider, item => DoLoadItem(item, null), item => LoadTreeRecursive(item, retryer, null));
+				retryer.RetryAll(SourceDataProvider, item => DoLoadItem(item, null, true), item => LoadTreeRecursive(item, retryer, null, true));
 			}
 
 			timer.Stop();
@@ -120,7 +120,7 @@ namespace Unicorn.Loader
 		/// <summary>
 		/// Recursive method that loads a given tree and retries failures already present if any
 		/// </summary>
-		protected virtual void LoadTreeRecursive(ISerializedReference root, IDeserializeFailureRetryer retryer, IConsistencyChecker consistencyChecker)
+		protected virtual void LoadTreeRecursive(ISerializedReference root, IDeserializeFailureRetryer retryer, IConsistencyChecker consistencyChecker, bool isRetry)
 		{
 			Assert.ArgumentNotNull(root, "root");
 			Assert.ArgumentNotNull(retryer, "retryer");
@@ -135,7 +135,7 @@ namespace Unicorn.Loader
 			try
 			{
 				// load the current level
-				LoadOneLevel(root, retryer, consistencyChecker);
+				LoadOneLevel(root, retryer, consistencyChecker, isRetry);
 
 				// check if we have child paths to recurse down
 				var children = SerializationProvider.GetChildReferences(root, false);
@@ -158,11 +158,11 @@ namespace Unicorn.Loader
 					// load each child path recursively
 					foreach (var child in children)
 					{
-						LoadTreeRecursive(child, retryer, consistencyChecker);
+						LoadTreeRecursive(child, retryer, consistencyChecker, isRetry);
 					}
 
 					// pull out any standard values failures for immediate retrying
-					retryer.RetryStandardValuesFailures(item => DoLoadItem(item, null));
+					retryer.RetryStandardValuesFailures(item => DoLoadItem(item, null, true));
 				} // children.length > 0
 			}
 			catch (ConsistencyException)
@@ -178,7 +178,7 @@ namespace Unicorn.Loader
 		/// <summary>
 		/// Loads a set of children from a serialized path
 		/// </summary>
-		protected virtual void LoadOneLevel(ISerializedReference root, IDeserializeFailureRetryer retryer, IConsistencyChecker consistencyChecker)
+		protected virtual void LoadOneLevel(ISerializedReference root, IDeserializeFailureRetryer retryer, IConsistencyChecker consistencyChecker, bool isRetry)
 		{
 			Assert.ArgumentNotNull(root, "root");
 			Assert.ArgumentNotNull(retryer, "retryer");
@@ -228,7 +228,7 @@ namespace Unicorn.Loader
 					else
 					{
 						// load a child item
-						var loadedItem = DoLoadItem(child, consistencyChecker);
+						var loadedItem = DoLoadItem(child, consistencyChecker, isRetry);
 						if (loadedItem.Item != null)
 						{
 							orphanCandidates.Remove(loadedItem.Item.Id);
@@ -274,7 +274,7 @@ namespace Unicorn.Loader
 		/// <summary>
 		/// Loads a specific item from disk
 		/// </summary>
-		protected virtual ItemLoadResult DoLoadItem(ISerializedItem serializedItem, IConsistencyChecker consistencyChecker)
+		protected virtual ItemLoadResult DoLoadItem(ISerializedItem serializedItem, IConsistencyChecker consistencyChecker, bool isRetry)
 		{
 			Assert.ArgumentNotNull(serializedItem, "serializedItem");
 
@@ -308,7 +308,7 @@ namespace Unicorn.Loader
 					else
 						Logger.SerializedUpdatedItem(serializedItem);
 
-					ISourceItem updatedItem = SerializationProvider.DeserializeItem(serializedItem);
+					ISourceItem updatedItem = SerializationProvider.DeserializeItem(serializedItem, isRetry);
 
 					Assert.IsNotNull(updatedItem, "Do not return null from DeserializeItem() - throw an exception if an error occurs.");	
 						

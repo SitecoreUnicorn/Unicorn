@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Sitecore.Data.Serialization;
 using Sitecore.Data.Serialization.Exceptions;
 using Sitecore.Diagnostics;
 using Sitecore.StringExtensions;
@@ -23,7 +18,7 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 			_deserializer = new FiatDeserializer(logger);
 		}
 
-		public override ISourceItem DeserializeItem(ISerializedItem serializedItem)
+		public override ISourceItem DeserializeItem(ISerializedItem serializedItem, bool ignoreMissingTemplateFields)
 		{
 			Assert.ArgumentNotNull(serializedItem, "serializedItem");
 
@@ -33,8 +28,7 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 
 			try
 			{
-				// TODO: support for ignoring missing fields param
-				return new SitecoreSourceItem(_deserializer.PasteSyncItem(typed.InnerItem, false));
+				return new SitecoreSourceItem(_deserializer.PasteSyncItem(typed.InnerItem, ignoreMissingTemplateFields));
 			}
 			catch (ParentItemNotFoundException ex)
 			{

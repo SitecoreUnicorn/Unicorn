@@ -43,7 +43,7 @@ namespace Unicorn.Serialization
 		/// <remarks>
 		/// Should throw an exception if deserialization fails, probably a DeserializationException
 		/// </remarks>
-		ISourceItem DeserializeItem(ISerializedItem serializedItem);
+		ISourceItem DeserializeItem(ISerializedItem serializedItem, bool ignoreMissingTemplateFields);
 
 		/// <summary>
 		/// Get a serialized reference for a given Sitecore path and database. A reference is a pointer to the path,

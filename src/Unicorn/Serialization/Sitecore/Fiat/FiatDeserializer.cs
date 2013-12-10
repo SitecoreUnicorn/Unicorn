@@ -315,6 +315,7 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 					throw new FieldIsMissingFromTemplateException("Field '" + field.FieldName + "' does not exist in template '" + template.Name + "'", FileUtil.MakePath(item.Template.InnerItem.Database.Name, item.Template.InnerItem.Paths.FullPath), FileUtil.MakePath(item.Database.Name, item.Paths.FullPath), item.ID);
 
 				_logger.SkippedMissingTemplateField(item, field);
+				return;
 			}
 
 			Field itemField = item.Fields[ID.Parse(field.FieldID)];

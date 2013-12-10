@@ -187,7 +187,7 @@ namespace Unicorn.Serialization.Sitecore
 			return false;
 		}
 
-		public virtual ISourceItem DeserializeItem(ISerializedItem serializedItem)
+		public virtual ISourceItem DeserializeItem(ISerializedItem serializedItem, bool ignoreMissingTemplateFields)
 		{
 			Assert.ArgumentNotNull(serializedItem, "serializedItem");
 
