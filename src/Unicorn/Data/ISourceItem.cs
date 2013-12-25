@@ -1,5 +1,4 @@
-﻿using System;
-using Sitecore.Data;
+﻿using Sitecore.Data;
 
 namespace Unicorn.Data
 {
@@ -38,21 +37,8 @@ namespace Unicorn.Data
 		/// </summary>
 		void Recycle();
 
-		/// <summary>
-		/// Gets the last modified date for a version of the item
-		/// </summary>
-		/// <param name="languageCode">The short language code (e.g. "en" or "en-US") of the version</param>
-		/// <param name="versionNumber">The number of the version</param>
-		/// <returns>The modified date, or null if the version does not exist or has no modified date</returns>
-		DateTime? GetLastModifiedDate(string languageCode, int versionNumber);
-
-		/// <summary>
-		/// Gets the unique revision ID for a version of the item
-		/// </summary>
-		/// <param name="languageCode">The short language code (e.g. "en" or "en-US") of the version</param>
-		/// <param name="versionNumber">The number of the version</param>
-		/// <returns>The revision key, or null if the version does not exist or has no revision value</returns>
-		string GetRevision(string languageCode, int versionNumber);
+		FieldDictionary SharedFields { get; }
+		ItemVersion[] Versions { get; }
 
 		/// <summary>
 		/// Gets the item's child items

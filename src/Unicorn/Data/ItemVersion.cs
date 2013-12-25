@@ -1,15 +1,15 @@
 ﻿using System;
 using Sitecore;
 
-namespace Unicorn.Serialization
+namespace Unicorn.Data
 {
-	public class SerializedVersion
+	public class ItemVersion
 	{
-		public SerializedVersion(string language, int versionNumber)
+		public ItemVersion(string language, int versionNumber)
 		{
 			Language = language;
 			VersionNumber = versionNumber;
-			Fields = new SerializedFieldDictionary();
+			Fields = new FieldDictionary();
 		}
 
 		public int VersionNumber { get; private set; }
@@ -44,6 +44,6 @@ namespace Unicorn.Serialization
 			}
 		}
 
-		public SerializedFieldDictionary Fields { get; private set; }
+		public FieldDictionary Fields { get; private set; }
 	}
 }

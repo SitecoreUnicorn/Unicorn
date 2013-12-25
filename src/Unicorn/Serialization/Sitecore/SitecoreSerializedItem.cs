@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Sitecore.Data.Serialization.ObjectModel;
 using Sitecore.Data;
 using System.Diagnostics;
+using Unicorn.Data;
 
 namespace Unicorn.Serialization.Sitecore
 {
@@ -64,11 +65,11 @@ namespace Unicorn.Serialization.Sitecore
 			get { return string.Format("{0}:{1} ({2})", DatabaseName, ItemPath, Id); }
 		}
 
-		public SerializedFieldDictionary SharedFields
+		public FieldDictionary SharedFields
 		{
 			get
 			{
-				var result = new SerializedFieldDictionary();
+				var result = new FieldDictionary();
 
 				foreach (var field in InnerItem.SharedFields)
 				{
@@ -79,14 +80,14 @@ namespace Unicorn.Serialization.Sitecore
 			}
 		}
 
-		public SerializedVersion[] Versions
+		public ItemVersion[] Versions
 		{
 			get
 			{
-				var result = new List<SerializedVersion>();
+				var result = new List<ItemVersion>();
 				foreach (var version in InnerItem.Versions)
 				{
-					var sVersion = new SerializedVersion(version.Language, int.Parse(version.Version));
+					var sVersion = new ItemVersion(version.Language, int.Parse(version.Version));
 					foreach (var field in version.Fields)
 					{
 						sVersion.Fields.Add(field.FieldID, field.FieldValue);

@@ -1,4 +1,5 @@
 ﻿using Sitecore.Data;
+using Unicorn.Data;
 
 namespace Unicorn.Serialization
 {
@@ -11,7 +12,7 @@ namespace Unicorn.Serialization
 		ID TemplateId { get; }
 		string TemplateName { get; }
 
-		SerializedFieldDictionary SharedFields { get; }
-		SerializedVersion[] Versions { get; }
+		FieldDictionary SharedFields { get; }
+		ItemVersion[] Versions { get; }
 	}
 }

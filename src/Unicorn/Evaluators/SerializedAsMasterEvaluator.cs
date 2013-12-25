@@ -36,12 +36,24 @@ namespace Unicorn.Evaluators
 
 			if (existingItem.Id == RootId) return false; // we never want to update the Sitecore root item
 
+			bool newVersions = existingItem.Versions.Any(sourceItemVersion => serializedItem.GetVersion(sourceItemVersion.Language, sourceItemVersion.VersionNumber) == null);
+			if (newVersions) return true; // source contained versions not present in the serialized version, which is a difference
+
 			// see if the modified date is different in any version (because disk is master, ANY changes we want to force overwrite)
-			return serializedItem.Versions.Any(version =>
+			return serializedItem.Versions.Any(serializedItemVersion =>
 				{
 					bool passedComparisons = false; // this flag lets us differentiate between items that we could not determine equality for, and items that just matched every criteria and don't need updating
 
-					var modifiedMatch = IsModifiedMatch(existingItem, serializedItem, version);
+					var sourceItemVersion = existingItem.GetVersion(serializedItemVersion.Language, serializedItemVersion.VersionNumber);
+
+					// version exists in serialized item but does not in source version
+					if (sourceItemVersion == null)
+					{
+						_logger.NewSerializedVersionMatch(serializedItemVersion, serializedItem, existingItem);
+						return true;
+					}
+
+					var modifiedMatch = IsModifiedMatch(sourceItemVersion, serializedItemVersion, existingItem, serializedItem);
 					if (modifiedMatch != null)
 					{
 						if (modifiedMatch.Value) return true;
@@ -50,7 +62,7 @@ namespace Unicorn.Evaluators
 					}
 
 					// ocasionally a version will not have a modified date or a modified date will not get updated, only a revision change so we compare those as a backup
-					var revisionMatch = IsRevisionMatch(existingItem, serializedItem, version);
+					var revisionMatch = IsRevisionMatch(sourceItemVersion, serializedItemVersion, existingItem, serializedItem);
 
 					if (revisionMatch != null)
 					{
@@ -61,49 +73,48 @@ namespace Unicorn.Evaluators
 
 					// as a last check, see if the names do not match. Renames, for example, only change the name and not the revision or modified date (wtf?)
 					// unlike other checks, this one does not count as 'passing a comparison' if it fails to match a force. Having names be equal is not a strong enough measure of equality.
-					if (IsNameMatch(existingItem, serializedItem, version)) return true;
+					if (IsNameMatch(existingItem, serializedItem, serializedItemVersion)) return true;
 
 					// if we get here and no comparisons were passed, we have no valid updated or revision to compare. Let's ignore the item as if it was a real item it'd have one of these.
 					if (!passedComparisons && !serializedItem.ItemPath.StartsWith("/sitecore/templates/System") && !serializedItem.ItemPath.StartsWith("/sitecore/templates/Sitecore Client")) // this occurs a lot in stock system templates - we ignore warnings for those as it's expected.
-						_logger.CannotEvaluateUpdate(serializedItem, version);
+						_logger.CannotEvaluateUpdate(serializedItem, serializedItemVersion);
 
 					return false;
 				});
 		}
 
-		protected virtual bool? IsModifiedMatch(ISourceItem existingItem, ISerializedItem serializedItem, SerializedVersion version)
+		protected virtual bool? IsModifiedMatch(ItemVersion sourceItemVersion, ItemVersion serializedItemVersion, ISourceItem existingItem, ISerializedItem serializedItem)
 		{
-			var serializedModified = version.Updated;
+			var serializedModified = serializedItemVersion.Updated;
 			if (serializedModified == null) return null;
 
-			var itemModified = existingItem.GetLastModifiedDate(version.Language, version.VersionNumber);
+			var itemModified = sourceItemVersion.Updated;
 
 			if (itemModified == null) return null;
 
 			var result = !serializedModified.Value.Equals(itemModified.Value);
 
 			if (result)
-				_logger.IsModifiedMatch(serializedItem, version, serializedModified.Value, itemModified.Value);
+				_logger.IsModifiedMatch(serializedItem, serializedItemVersion, serializedModified.Value, itemModified.Value);
 
 			return result;
 		}
 
-		protected virtual bool? IsRevisionMatch(ISourceItem existingItem, ISerializedItem serializedItem, SerializedVersion version)
+		protected virtual bool? IsRevisionMatch(ItemVersion sourceItemVersion, ItemVersion serializedItemVersion, ISourceItem existingItem, ISerializedItem serializedItem)
 		{
-			var serializedRevision = version.Revision;
+			var serializedRevision = serializedItemVersion.Revision;
 
 			if (string.IsNullOrEmpty(serializedRevision)) return null;
 
-			var itemRevision = existingItem.GetRevision(version.Language, version.VersionNumber);
-			var result = !serializedRevision.Equals(itemRevision);
+			var result = !serializedRevision.Equals(sourceItemVersion.Revision);
 
 			if (result)
-				_logger.IsRevisionMatch(serializedItem, version, serializedRevision, itemRevision);
+				_logger.IsRevisionMatch(serializedItem, serializedItemVersion, serializedRevision, sourceItemVersion.Revision);
 
 			return result;
 		}
 
-		protected virtual bool IsNameMatch(ISourceItem existingItem, ISerializedItem serializedItem, SerializedVersion version)
+		protected virtual bool IsNameMatch(ISourceItem existingItem, ISerializedItem serializedItem, ItemVersion version)
 		{
 			if (!serializedItem.Name.Equals(existingItem.Name))
 			{

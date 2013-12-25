@@ -2,12 +2,13 @@
 using System.Linq;
 using Sitecore.Data.Managers;
 using Sitecore.Globalization;
+using Unicorn.Data;
 
 namespace Unicorn.Serialization
 {
 	public static class SerializedItemExtensions
 	{
-		public static SerializedVersion GetVersion(this ISerializedItem serializedItem, string language, int versionNumber)
+		public static ItemVersion GetVersion(this ISerializedItem serializedItem, string language, int versionNumber)
 		{
 			if (language.Equals(Language.Invariant.Name)) language = LanguageManager.DefaultLanguage.Name;
 

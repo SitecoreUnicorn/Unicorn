@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using Unicorn.Data;
 using Unicorn.Serialization;
 
@@ -15,12 +14,26 @@ namespace Unicorn.Evaluators
 		/// <summary>
 		/// Called when an item cannot be evaluated for an update (e.g. it had no valid criteria to compare)
 		/// </summary>
-		void CannotEvaluateUpdate(ISerializedItem serializedItem, SerializedVersion version);
+		void CannotEvaluateUpdate(ISerializedItem serializedItem, ItemVersion version);
 
-		void IsModifiedMatch(ISerializedItem serializedItem, SerializedVersion version, DateTime serializedModified, DateTime itemModified);
+		/// <summary>
+		/// Fired when the Modified timestamp is different between serialized and source
+		/// </summary>
+		void IsModifiedMatch(ISerializedItem serializedItem, ItemVersion version, DateTime serializedModified, DateTime itemModified);
 
-		void IsRevisionMatch(ISerializedItem serializedItem, SerializedVersion version, string serializedRevision, string itemRevision);
+		/// <summary>
+		/// Fired when a version's Revision GUID is different between serialized and source
+		/// </summary>
+		void IsRevisionMatch(ISerializedItem serializedItem, ItemVersion version, string serializedRevision, string itemRevision);
 
-		void IsNameMatch(ISerializedItem serializedItem, ISourceItem existingItem, SerializedVersion version);
+		/// <summary>
+		/// Fired when an item's name is different between serialized and source
+		/// </summary>
+		void IsNameMatch(ISerializedItem serializedItem, ISourceItem existingItem, ItemVersion version);
+
+		/// <summary>
+		/// Fired when a later version is found in the serialized version of an item
+		/// </summary>
+		void NewSerializedVersionMatch(ItemVersion newSerializedVersion, ISerializedItem serializedItem, ISourceItem existingItem);
 	}
 }

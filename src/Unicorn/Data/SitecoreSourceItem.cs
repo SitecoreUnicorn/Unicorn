@@ -2,6 +2,7 @@
 using System.Linq;
 using Sitecore.Data;
 using Sitecore.Data.Events;
+using Sitecore.Data.Fields;
 using Sitecore.Data.Items;
 using Sitecore.Diagnostics;
 using Sitecore.Globalization;
@@ -86,33 +87,40 @@ namespace Unicorn.Data
 			get { return _item.Children.Select(x => (ISourceItem)new SitecoreSourceItem(x)).ToArray(); }
 		}
 
-		public DateTime? GetLastModifiedDate(string languageCode, int versionNumber)
+		public FieldDictionary SharedFields
 		{
-			var version = GetVersion(languageCode, versionNumber);
+			get
+			{
+				_item.Fields.ReadAll();
+				var fields = new FieldDictionary();
+				foreach (Field field in _item.Fields)
+				{
+					if(field.Shared)
+						fields.Add(field.ID.ToString(), field.Value);
+				}
 
-			if (version == null) return null;
-
-			return version.Statistics.Updated;
+				return fields;
+			}
 		}
 
-		public string GetRevision(string languageCode, int versionNumber)
+		public ItemVersion[] Versions
 		{
-			var version = GetVersion(languageCode, versionNumber);
+			get
+			{
+				var versions = _item.Versions.GetVersions(true);
+				return versions.Select(itemVersion =>
+				{
+					var version = new ItemVersion(itemVersion.Language.Name, itemVersion.Version.Number);
+					itemVersion.Fields.ReadAll();
+					foreach (Field field in itemVersion.Fields)
+					{
+						if(!field.Shared)
+							version.Fields.Add(field.ID.ToString(), field.Value);
+					}
 
-			if (version == null) return null;
-
-			return version.Statistics.Revision;
-		}
-
-		private Item GetVersion(string languageCode, int versionNumber)
-		{
-			Language language;
-
-			if (!Language.TryParse(languageCode, out language)) throw new ArgumentOutOfRangeException("languageCode", "Language code was not valid!");
-
-			var version = new Sitecore.Data.Version(versionNumber);
-
-			return _item.Database.GetItem(_item.ID, language, version);
+					return version;
+				}).ToArray();
+			}
 		}
 	}
 }

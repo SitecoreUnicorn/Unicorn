@@ -52,6 +52,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Data\ISourceItemExtensions.cs" />
     <Compile Include="Data\ISourceDataProvider.cs" />
     <Compile Include="Data\SitecoreSourceDataProvider.cs" />
     <Compile Include="Dependencies\DefaultDependencyRegistry.cs" />
@@ -84,7 +85,7 @@
     <Compile Include="SerializationConflictProcessor.cs" />
     <Compile Include="Loader\SerializationLoader.cs" />
     <Compile Include="Serialization\ISerializedItemExtensions.cs" />
-    <Compile Include="Serialization\SerializedFieldDictionary.cs" />
+    <Compile Include="Data\FieldDictionary.cs" />
     <Compile Include="Data\SitecoreSourceItem.cs" />
     <Compile Include="Serialization\Sitecore\Fiat\ConsoleFiatDeserializerLogger.cs" />
     <Compile Include="Serialization\Sitecore\Fiat\FiatDeserializer.cs" />
@@ -96,7 +97,7 @@
     <Compile Include="Serialization\ISerializationProvider.cs" />
     <Compile Include="Serialization\ISerializedItem.cs" />
     <Compile Include="Serialization\ISerializedReference.cs" />
-    <Compile Include="Serialization\SerializedVersion.cs" />
+    <Compile Include="Data\ItemVersion.cs" />
     <Compile Include="Serialization\Sitecore\SitecoreSerializationProvider.cs" />
     <Compile Include="Serialization\Sitecore\SitecoreSerializedItem.cs" />
     <Compile Include="Serialization\Sitecore\SitecoreSerializedReference.cs" />

@@ -27,14 +27,6 @@ namespace Unicorn.Tests.Predicate
 		private static readonly ID ExcludedItemId = new ID("{E1DC505A-F86F-4C05-B409-AE2246AD3441}");
 
 		[Test]
-		public void ctor_ThrowsArgumentNullException_WhenSourceProviderIsNull()
-		{
-			Assert.Throws<ArgumentNullException>(() => new SerializationPresetPredicate(null));
-			Assert.Throws<ArgumentNullException>(() => new SerializationPresetPredicate(null, "default"));
-			Assert.Throws<ArgumentNullException>(() => new SerializationPresetPredicate(null, new XmlDocument()));
-		}
-
-		[Test]
 		public void ctor_ThrowsArgumentNullException_WhenPresetIsNull()
 		{
 			Assert.Throws<ArgumentNullException>(() => new SerializationPresetPredicate(new Mock<ISourceDataProvider>().Object, (string)null));
