@@ -195,10 +195,14 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 			if (targetItem.TemplateID.ToString() != syncItem.TemplateID)
 			{
 				var oldTemplate = targetItem.Template;
+				var newTemplate = targetItem.Database.Templates[ID.Parse(syncItem.TemplateID)];
+
+				Assert.IsNotNull(newTemplate, "Cannot change template of {0} because its new template {1} does not exist!", targetItem.ID, syncItem.TemplateID);
+
 				using (new EditContext(targetItem))
 				{
 					targetItem.RuntimeSettings.ReadOnlyStatistics = true;
-					targetItem.ChangeTemplate(targetItem.Database.Templates[ID.Parse(syncItem.TemplateID)]);
+					targetItem.ChangeTemplate(newTemplate);
 				}
 
 				_logger.ChangedTemplate(targetItem, oldTemplate);
