@@ -258,9 +258,9 @@ namespace Unicorn
 				string[] files = Directory.GetFiles(path, "*" + PathUtils.Extension);
 				foreach (string fileName in files)
 				{
+					ID itemId = null;
 					try
 					{
-						ID itemId;
 						if (IsStandardValuesItem(fileName, out itemId))
 						{
 							deleteCandidates.Remove(itemId); // avoid deleting standard values items when forcing an update
@@ -293,6 +293,10 @@ namespace Unicorn
 					{
 						// if a problem occurs we attempt to retry later
 						retryList.Add(new Failure(path, ex));
+
+						// prevent a load failure from deleting the existing item if one exists
+						if(itemId != (ID)null)
+							deleteCandidates.Remove(itemId);
 					}
 				}
 			}
