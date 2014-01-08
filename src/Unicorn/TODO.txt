@@ -1,5 +1,8 @@
 ﻿TODO:
 - Evaluator does not really control all aspects of evaluation. Really, since it already controls deletion, it should also control update/delete at the provider level as opposed to the loader doing it based on evaluator results.
+	- Add serialization provider reference to sitecoreserializeditem and add a Deserialize() method to the interface that returns isourceitem
+	- Move interaction with the deserialization, and the logging thereof, into the evaluator and evaluator logger 303-317 in loader currently
+	- Should other provider actions be adapted onto the provided objects eg sourceitem and serializeditem? Could reduce dependencies.
 - Write integration tests for Sitecore-based providers
 - Out of box experience to do initial serialization and guide the user. Probably a httprequestbegin pipeline processor. Fire only when debug=true, provide built-in serialize all, show config/providers in use? - maybe graphical sitecore tree with red/green?, and sync capabilities
 - Verify operation with non standard serialization root
