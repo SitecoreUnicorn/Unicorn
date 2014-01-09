@@ -15,11 +15,6 @@ namespace Unicorn.Serialization
 		ISerializedItem SerializeItem(ISourceItem item);
 
 		/// <summary>
-		/// Writes an updated serialized item to the serialization provider's store
-		/// </summary>
-		void UpdateSerializedItem(ISerializedItem serializedItem);
-		
-		/// <summary>
 		/// Rename a serialized item in the provider. Note that the source item may NOT exist already in the provider.
 		/// </summary>
 		void RenameSerializedItem(ISourceItem renamedItem, string oldName);

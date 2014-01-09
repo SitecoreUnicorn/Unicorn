@@ -215,26 +215,6 @@ namespace Unicorn.Serialization.Sitecore
 			}
 		}
 
-		public virtual void UpdateSerializedItem(ISerializedItem serializedItem)
-		{
-			var typed = serializedItem as SitecoreSerializedItem;
-
-			if (typed == null) throw new ArgumentException("Serialized item must be a SitecoreSerializedItem", "serializedItem");
-
-			// create any requisite parent folder(s) for the serialized item
-			var parentPath = Directory.GetParent(SerializationPathUtility.GetReferenceDirectoryPath(serializedItem));
-			if (parentPath != null && !parentPath.Exists)
-				Directory.CreateDirectory(parentPath.FullName);
-
-			using (var fileStream = File.Open(serializedItem.ProviderId, FileMode.Create, FileAccess.Write, FileShare.Write))
-			{
-				using (var writer = new StreamWriter(fileStream))
-				{
-					typed.InnerItem.Serialize(writer);
-				}
-			}
-		}
-
 		public virtual void RenameSerializedItem(ISourceItem renamedItem, string oldName)
 		{
 			if (renamedItem == null || oldName == null) return;
@@ -383,6 +363,26 @@ namespace Unicorn.Serialization.Sitecore
 			}
 
 			return descendants;
-		} 
+		}
+
+		protected virtual void UpdateSerializedItem(ISerializedItem serializedItem)
+		{
+			var typed = serializedItem as SitecoreSerializedItem;
+
+			if (typed == null) throw new ArgumentException("Serialized item must be a SitecoreSerializedItem", "serializedItem");
+
+			// create any requisite parent folder(s) for the serialized item
+			var parentPath = Directory.GetParent(SerializationPathUtility.GetReferenceDirectoryPath(serializedItem));
+			if (parentPath != null && !parentPath.Exists)
+				Directory.CreateDirectory(parentPath.FullName);
+
+			using (var fileStream = File.Open(serializedItem.ProviderId, FileMode.Create, FileAccess.Write, FileShare.Write))
+			{
+				using (var writer = new StreamWriter(fileStream))
+				{
+					typed.InnerItem.Serialize(writer);
+				}
+			}
+		}
 	}
 }
