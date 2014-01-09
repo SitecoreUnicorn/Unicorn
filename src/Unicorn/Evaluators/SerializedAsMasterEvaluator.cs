@@ -1,16 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using Sitecore.Data;
 using Sitecore.Diagnostics;
-using Sitecore.Web.UI.HtmlControls;
+using Unicorn.ControlPanel;
 using Unicorn.Data;
 using Unicorn.Serialization;
 using Registry = Unicorn.Dependencies.Registry;
+using System.Collections.Generic;
 
 namespace Unicorn.Evaluators
 {
-	public class SerializedAsMasterEvaluator : IEvaluator
+	public class SerializedAsMasterEvaluator : IEvaluator, IDocumentable
 	{
 		protected readonly ISerializedAsMasterEvaluatorLogger Logger;
 		protected static readonly ID RootId = new ID("{11111111-1111-1111-1111-111111111111}");
@@ -171,6 +170,21 @@ namespace Unicorn.Evaluators
 			Assert.IsNotNull(updatedItem, "Do not return null from DeserializeItem() - throw an exception if an error occurs.");
 
 			return updatedItem;
+		}
+
+		public string FriendlyName
+		{
+			get { return "Serialized as Master Evaluator"; }
+		}
+
+		public string Description
+		{
+			get { return "Treats the items that are serialized as the master copy, and any changes whether newer or older are synced into the source data. This allows for all merging to occur in source control, and is the default way Unicorn behaves."; }
+		}
+
+		public KeyValuePair<string, string>[] GetConfigurationDetails()
+		{
+			return null;
 		}
 	}
 }

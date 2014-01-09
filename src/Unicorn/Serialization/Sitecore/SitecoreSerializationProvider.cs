@@ -8,13 +8,14 @@ using Sitecore.Data.Serialization.Exceptions;
 using Sitecore.Data.Serialization.ObjectModel;
 using Sitecore.Diagnostics;
 using Sitecore.StringExtensions;
+using Unicorn.ControlPanel;
 using Unicorn.Data;
 using Unicorn.Dependencies;
 using Unicorn.Predicates;
 
 namespace Unicorn.Serialization.Sitecore
 {
-	public class SitecoreSerializationProvider : ISerializationProvider
+	public class SitecoreSerializationProvider : ISerializationProvider, IDocumentable
 	{
 		private readonly string _rootPath;
 		private readonly string _logName;
@@ -383,6 +384,21 @@ namespace Unicorn.Serialization.Sitecore
 					typed.InnerItem.Serialize(writer);
 				}
 			}
+		}
+
+		public virtual string FriendlyName
+		{
+			get { return "Sitecore Serialization Provider"; }
+		}
+
+		public virtual string Description
+		{
+			get { return "Stores serialized items using Sitecore's built-in serialization engine."; }
+		}
+
+		public virtual KeyValuePair<string, string>[] GetConfigurationDetails()
+		{
+			return new[] { new KeyValuePair<string, string>("Root path", _rootPath) };
 		}
 	}
 }

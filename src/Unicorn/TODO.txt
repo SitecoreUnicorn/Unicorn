@@ -1,6 +1,7 @@
 ﻿TODO:
 - Write integration tests for Sitecore-based providers
 - Out of box experience to do initial serialization and guide the user. Probably a httprequestbegin pipeline processor. Fire only when debug=true, provide built-in serialize all, show config/providers in use? - maybe graphical sitecore tree with red/green?, and sync capabilities
+	- Need to clean up framework and complete config for this/integrate with sync tool if that's going to happen
 - Verify operation with non standard serialization root
 - Preview mode?
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Xml;
 using Sitecore.Configuration;
@@ -7,13 +8,14 @@ using Sitecore.Data;
 using Sitecore.Data.Serialization.Presets;
 using Sitecore.Diagnostics;
 using Sitecore.StringExtensions;
+using Unicorn.ControlPanel;
 using Unicorn.Data;
 using Unicorn.Dependencies;
 using Unicorn.Serialization;
 
 namespace Unicorn.Predicates
 {
-	public class SerializationPresetPredicate : IPredicate
+	public class SerializationPresetPredicate : IPredicate, IDocumentable
 	{
 		private readonly IList<IncludeEntry> _preset;
 		private readonly ISourceDataProvider _sourceDataProvider;
@@ -215,6 +217,37 @@ namespace Unicorn.Predicates
 			return match
 						? new PredicateResult("Item template ID exclusion rule")
 						: new PredicateResult(true);
+		}
+
+		public string FriendlyName
+		{
+			get { return "Serialization Preset Predicate"; }
+		}
+
+		public string Description
+		{
+			get { return "Defines what to include in Unicorn based on Sitecore's built in serialization preset system (documented in the Serialization Guide). This is the default predicate."; }
+		}
+
+		public KeyValuePair<string, string>[] GetConfigurationDetails()
+		{
+			var configs = new Collection<KeyValuePair<string, string>>();
+			foreach (var entry in _preset)
+			{
+				string basePath = entry.Database + ":" + entry.Path;
+				string excludes = GetExcludeDescription(entry);
+
+				configs.Add(new KeyValuePair<string, string>("Included path", basePath + excludes));
+			}
+
+			return configs.ToArray();
+		}
+
+		private string GetExcludeDescription(IncludeEntry entry)
+		{
+			if (entry.Exclude.Count == 0) return string.Empty;
+
+			return string.Format(" (except {0})", string.Join(", ", entry.Exclude.Select(x => x.Type + ":" + x.Value)));
 		}
 	}
 }

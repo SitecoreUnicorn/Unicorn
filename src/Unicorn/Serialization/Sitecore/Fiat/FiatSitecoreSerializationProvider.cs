@@ -43,5 +43,15 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 				throw new DeserializationException(error, ex2);
 			}
 		}
+
+		public override string FriendlyName
+		{
+			get { return "Fiat Sitecore Serialization Provider"; }
+		}
+
+		public override string Description
+		{
+			get { return "Stores serialized items using Sitecore's built-in serialization engine. Uses a custom deserializer that allows much more information to be gleaned compared to the default APIs. Also, it's faster."; }
+		}
 	}
 }
