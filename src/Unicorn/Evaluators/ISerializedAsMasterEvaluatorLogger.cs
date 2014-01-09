@@ -35,5 +35,15 @@ namespace Unicorn.Evaluators
 		/// Fired when a later version is found in the serialized version of an item
 		/// </summary>
 		void NewSerializedVersionMatch(ItemVersion newSerializedVersion, ISerializedItem serializedItem, ISourceItem existingItem);
+
+		/// <summary>
+		/// Called when you serialize an item that does not yet exist in the provider
+		/// </summary>
+		void SerializedNewItem(ISerializedItem serializedItem);
+
+		/// <summary>
+		/// Called when you serialize an updated item that already existed in the provider
+		/// </summary>
+		void SerializedUpdatedItem(ISerializedItem serializedItem);
 	}
 }

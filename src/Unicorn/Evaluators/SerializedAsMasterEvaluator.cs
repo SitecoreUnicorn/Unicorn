@@ -9,8 +9,8 @@ namespace Unicorn.Evaluators
 {
 	public class SerializedAsMasterEvaluator : IEvaluator
 	{
-		private readonly ISerializedAsMasterEvaluatorLogger _logger;
-		private static readonly ID RootId = new ID("{11111111-1111-1111-1111-111111111111}");
+		protected readonly ISerializedAsMasterEvaluatorLogger Logger;
+		protected static readonly ID RootId = new ID("{11111111-1111-1111-1111-111111111111}");
 
 		public SerializedAsMasterEvaluator(ISerializedAsMasterEvaluatorLogger logger = null)
 		{
@@ -18,21 +18,48 @@ namespace Unicorn.Evaluators
 
 			Assert.ArgumentNotNull(logger, "logger");
 
-			_logger = logger;
+			Logger = logger;
 		}
 
 		public void EvaluateOrphans(ISourceItem[] orphanItems)
 		{
 			Assert.ArgumentNotNull(orphanItems, "orphanItems");
 
-			EvaluatorUtility.RecycleItems(orphanItems, item => _logger.DeletedItem(item));
+			EvaluatorUtility.RecycleItems(orphanItems, item => Logger.DeletedItem(item));
 		}
 
-		public bool EvaluateUpdate(ISerializedItem serializedItem, ISourceItem existingItem)
+		public ISourceItem EvaluateNewSerializedItem(ISerializedItem newItem)
+		{
+			Assert.ArgumentNotNull(newItem, "newItem");
+
+			var updatedItem = DoDeserialization(newItem);
+
+			Logger.SerializedNewItem(newItem);
+
+			return updatedItem;
+		}
+
+		public ISourceItem EvaluateUpdate(ISerializedItem serializedItem, ISourceItem existingItem)
 		{
 			Assert.ArgumentNotNull(serializedItem, "serializedItem");
+			Assert.ArgumentNotNull(existingItem, "existingItem");
 
-			if (existingItem == null) return true;
+			if (ShouldUpdateExisting(serializedItem, existingItem))
+			{
+				var updatedItem = DoDeserialization(serializedItem);
+
+				Logger.SerializedUpdatedItem(serializedItem);
+
+				return updatedItem;
+			}
+
+			return null;
+		}
+
+		protected virtual bool ShouldUpdateExisting(ISerializedItem serializedItem, ISourceItem existingItem)
+		{
+			Assert.ArgumentNotNull(serializedItem, "serializedItem");
+			Assert.ArgumentNotNull(existingItem, "existingItem");
 
 			if (existingItem.Id == RootId) return false; // we never want to update the Sitecore root item
 
@@ -49,7 +76,7 @@ namespace Unicorn.Evaluators
 					// version exists in serialized item but does not in source version
 					if (sourceItemVersion == null)
 					{
-						_logger.NewSerializedVersionMatch(serializedItemVersion, serializedItem, existingItem);
+						Logger.NewSerializedVersionMatch(serializedItemVersion, serializedItem, existingItem);
 						return true;
 					}
 
@@ -77,7 +104,7 @@ namespace Unicorn.Evaluators
 
 					// if we get here and no comparisons were passed, we have no valid updated or revision to compare. Let's ignore the item as if it was a real item it'd have one of these.
 					if (!passedComparisons && !serializedItem.ItemPath.StartsWith("/sitecore/templates/System") && !serializedItem.ItemPath.StartsWith("/sitecore/templates/Sitecore Client")) // this occurs a lot in stock system templates - we ignore warnings for those as it's expected.
-						_logger.CannotEvaluateUpdate(serializedItem, serializedItemVersion);
+						Logger.CannotEvaluateUpdate(serializedItem, serializedItemVersion);
 
 					return false;
 				});
@@ -95,7 +122,7 @@ namespace Unicorn.Evaluators
 			var result = !serializedModified.Value.Equals(itemModified.Value);
 
 			if (result)
-				_logger.IsModifiedMatch(serializedItem, serializedItemVersion, serializedModified.Value, itemModified.Value);
+				Logger.IsModifiedMatch(serializedItem, serializedItemVersion, serializedModified.Value, itemModified.Value);
 
 			return result;
 		}
@@ -109,7 +136,7 @@ namespace Unicorn.Evaluators
 			var result = !serializedRevision.Equals(sourceItemVersion.Revision);
 
 			if (result)
-				_logger.IsRevisionMatch(serializedItem, serializedItemVersion, serializedRevision, sourceItemVersion.Revision);
+				Logger.IsRevisionMatch(serializedItem, serializedItemVersion, serializedRevision, sourceItemVersion.Revision);
 
 			return result;
 		}
@@ -118,12 +145,21 @@ namespace Unicorn.Evaluators
 		{
 			if (!serializedItem.Name.Equals(existingItem.Name))
 			{
-				_logger.IsNameMatch(serializedItem, existingItem, version);
+				Logger.IsNameMatch(serializedItem, existingItem, version);
 				
 				return true;
 			}
 
 			return false;
+		}
+
+		protected virtual ISourceItem DoDeserialization(ISerializedItem serializedItem)
+		{
+			ISourceItem updatedItem = serializedItem.Deserialize(false);
+
+			Assert.IsNotNull(updatedItem, "Do not return null from DeserializeItem() - throw an exception if an error occurs.");
+
+			return updatedItem;
 		}
 	}
 }

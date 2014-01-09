@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using Kamsar.WebConsole;
 using Moq;
 using NUnit.Framework;
 using Sitecore;
@@ -62,27 +61,27 @@ namespace Unicorn.Tests.Evaluator
 		}
 
 		[Test]
-		public void EvaluateUpdate_ReturnsTrue_WhenExistingItemIsNull()
+		public void EvaluateUpdate_ThrowsArgumentNullException_WhenExistingItemIsNull()
 		{
 			var evaluator = CreateTestEvaluator();
 
-			Assert.IsTrue(evaluator.EvaluateUpdate(new Mock<ISerializedItem>().Object, null));
+			Assert.Throws<ArgumentNullException>(() => evaluator.EvaluateUpdate(new Mock<ISerializedItem>().Object, null));
 		}
 
 		[Test]
-		public void EvaluateUpdate_ReturnsTrue_WhenItemUpdatedDateIsNewer()
+		public void EvaluateUpdate_Deserializes_WhenItemUpdatedDateIsNewer()
 		{
 			Assert.IsTrue(EvaluateUpdate_DateComparisonTest(new DateTime(2013, 1, 1), new DateTime(2012, 1, 1)));
 		}
 
 		[Test]
-		public void EvaluateUpdate_ReturnsTrue_WhenItemUpdatedDateIsOlder()
+		public void EvaluateUpdate_Deserializes_WhenItemUpdatedDateIsOlder()
 		{
 			Assert.IsTrue(EvaluateUpdate_DateComparisonTest(new DateTime(2012, 1, 1), new DateTime(2013, 1, 1)));
 		}
 
 		[Test]
-		public void EvaluateUpdate_ReturnsTrue_WhenRevisionsAreUnequal()
+		public void EvaluateUpdate_Deserializes_WhenRevisionsAreUnequal()
 		{
 			var evaluator = CreateTestEvaluator();
 
@@ -94,15 +93,18 @@ namespace Unicorn.Tests.Evaluator
 
 			var serialized = new Mock<ISerializedItem>();
 			serialized.Setup(x => x.Name).Returns("NAME");
+			serialized.Setup(x => x.Deserialize(It.IsAny<bool>())).Returns(new Mock<ISourceItem>().Object);
 
 			var serializedVersion = CreateTestVersion("en", 1, new DateTime(2013, 1, 1), "SERIALIZED");
 			serialized.Setup(x => x.Versions).Returns(new[] { serializedVersion });
 
-			Assert.IsTrue(evaluator.EvaluateUpdate(serialized.Object, item.Object));
+			evaluator.EvaluateUpdate(serialized.Object, item.Object);
+
+			serialized.Verify(x => x.Deserialize(false));
 		}
 
 		[Test]
-		public void EvaluateUpdate_ReturnsTrue_WhenNewSerializedVersionExists()
+		public void EvaluateUpdate_Deserializes_WhenNewSerializedVersionExists()
 		{
 			var evaluator = CreateTestEvaluator();
 
@@ -114,16 +116,19 @@ namespace Unicorn.Tests.Evaluator
 
 			var serialized = new Mock<ISerializedItem>();
 			serialized.Setup(x => x.Name).Returns("NAME");
+			serialized.Setup(x => x.Deserialize(It.IsAny<bool>())).Returns(new Mock<ISourceItem>().Object);
 
 			var serializedVersion = CreateTestVersion("en", 1, new DateTime(2013, 1, 1), "REVISION");
 			var serializedVersion2 = CreateTestVersion("en", 2, new DateTime(2013, 1, 1), "REVISION");
 			serialized.Setup(x => x.Versions).Returns(new[] { serializedVersion, serializedVersion2 });
 
-			Assert.IsTrue(evaluator.EvaluateUpdate(serialized.Object, item.Object));
+			evaluator.EvaluateUpdate(serialized.Object, item.Object);
+
+			serialized.Verify(x => x.Deserialize(false));
 		}
 
 		[Test]
-		public void EvaluateUpdate_ReturnsTrue_WhenNewSourceVersionExists()
+		public void EvaluateUpdate_Deserializes_WhenNewSourceVersionExists()
 		{
 			var evaluator = CreateTestEvaluator();
 
@@ -136,15 +141,18 @@ namespace Unicorn.Tests.Evaluator
 
 			var serialized = new Mock<ISerializedItem>();
 			serialized.Setup(x => x.Name).Returns("NAME");
+			serialized.Setup(x => x.Deserialize(It.IsAny<bool>())).Returns(new Mock<ISourceItem>().Object);
 
 			var serializedVersion = CreateTestVersion("en", 1, new DateTime(2013, 1, 1), "REVISION");
 			serialized.Setup(x => x.Versions).Returns(new[] { serializedVersion });
 
-			Assert.IsTrue(evaluator.EvaluateUpdate(serialized.Object, item.Object));
+			evaluator.EvaluateUpdate(serialized.Object, item.Object);
+
+			serialized.Verify(x => x.Deserialize(false));
 		}
 
 		[Test]
-		public void EvaluateUpdate_ReturnsTrue_WhenNamesAreUnequal()
+		public void EvaluateUpdate_Deserializes_WhenNamesAreUnequal()
 		{
 			var evaluator = CreateTestEvaluator();
 
@@ -155,15 +163,18 @@ namespace Unicorn.Tests.Evaluator
 
 			var serialized = new Mock<ISerializedItem>();
 			serialized.Setup(x => x.Name).Returns("SERIALIZED");
+			serialized.Setup(x => x.Deserialize(It.IsAny<bool>())).Returns(new Mock<ISourceItem>().Object);
 			var version = CreateTestVersion("en", 1, new DateTime(2013, 1, 1), "REVISION");
 
 			serialized.Setup(x => x.Versions).Returns(new[] { version });
 
-			Assert.IsTrue(evaluator.EvaluateUpdate(serialized.Object, item.Object));
+			evaluator.EvaluateUpdate(serialized.Object, item.Object);
+
+			serialized.Verify(x => x.Deserialize(false));
 		}
 
 		[Test]
-		public void EvaluateUpdate_ReturnsFalse_WhenDateRevisionNameMatch()
+		public void EvaluateUpdate_DoesNotDeserialize_WhenDateRevisionNameMatch()
 		{
 			var evaluator = CreateTestEvaluator();
 
@@ -174,16 +185,22 @@ namespace Unicorn.Tests.Evaluator
 
 			var serialized = new Mock<ISerializedItem>();
 			serialized.Setup(x => x.Name).Returns("NAME");
+			serialized.Setup(x => x.Deserialize(It.IsAny<bool>())).Returns(new Mock<ISourceItem>().Object);
 			var version = CreateTestVersion("en", 1, new DateTime(2013, 1, 1), "REVISION");
 
 			serialized.Setup(x => x.Versions).Returns(new[] { version });
 
-			Assert.IsFalse(evaluator.EvaluateUpdate(serialized.Object, item.Object));
+			var result = evaluator.EvaluateUpdate(serialized.Object, item.Object);
+
+			Assert.IsNull(result);
+			serialized.Verify(x => x.Deserialize(It.IsAny<bool>()), Times.Never);
 		}
 
 		private bool EvaluateUpdate_DateComparisonTest(DateTime sourceModified, DateTime serializedModified)
 		{
-			var evaluator = CreateTestEvaluator();
+			var logger = new Mock<ISerializedAsMasterEvaluatorLogger>();
+
+			var evaluator = new SerializedAsMasterEvaluator(logger.Object);
 
 			var item = new Mock<ISourceItem>();
 			var sourceVersion = CreateTestVersion("en", 1, sourceModified, "REVISION");
@@ -192,18 +209,30 @@ namespace Unicorn.Tests.Evaluator
 
 			var serialized = new Mock<ISerializedItem>();
 			serialized.Setup(x => x.Name).Returns("NAME");
+			serialized.Setup(x => x.Deserialize(It.IsAny<bool>())).Returns(new Mock<ISourceItem>().Object);
+
 			var version = CreateTestVersion("en", 1, serializedModified, "REVISION");
 
 			serialized.Setup(x => x.Versions).Returns(new[] { version });
 
-			return evaluator.EvaluateUpdate(serialized.Object, item.Object);
+			evaluator.EvaluateUpdate(serialized.Object, item.Object);
+
+			try
+			{
+				serialized.Verify(x => x.Deserialize(false));
+				return true;
+			}
+			catch
+			{
+				return false;
+			}
 		}
 
 		private SerializedAsMasterEvaluator CreateTestEvaluator()
 		{
-			var logger = new ConsoleSerializedAsMasterEvaluatorLogger(new StringProgressStatus());
+			var logger = new Mock<ISerializedAsMasterEvaluatorLogger>();
 
-			return new SerializedAsMasterEvaluator(logger);
+			return new SerializedAsMasterEvaluator(logger.Object);
 		}
 
 		internal static ItemVersion CreateTestVersion(string language, int version, DateTime modified, string revision)

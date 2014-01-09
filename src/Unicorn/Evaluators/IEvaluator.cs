@@ -13,12 +13,20 @@ namespace Unicorn.Evaluators
 		void EvaluateOrphans(ISourceItem[] orphanItems);
 
 		/// <summary>
-		/// If a serialized item is found that has a corresponding item in source data, this method is invoked to decide if it needs an update from serialized or not.
-		/// Updating is pretty slow so it's much faster to skip unnecessary updates.
+		/// If a serialized item is found that does not have a corresponding item in source data, this method is invoked to decide what to do about it.
+		/// Normally, this would probably trigger the deserialization of the serialized item into source data.
+		/// </summary>
+		/// <param name="newItem">The new serialized item not present in source data</param>
+		/// <returns>If a new source item is created, return it. If not, return null.</returns>
+		ISourceItem EvaluateNewSerializedItem(ISerializedItem newItem);
+
+		/// <summary>
+		/// If a serialized item is found that has a corresponding item in source data, this method is invoked to perform any updates that are needed to the source data.
+		/// Updating is pretty slow so it's much faster to skip unnecessary updates. Normally this would probably compare timestamps etc and if changed, trigger a deserialization.
 		/// </summary>
 		/// <param name="serializedItem">The serialized item to evaluate</param>
 		/// <param name="existingItem">The existing item in Sitecore</param>
-		/// <returns>True to cause the serialized item to overwrite the existing item, false to leave the existing database item alone.</returns>
-		bool EvaluateUpdate(ISerializedItem serializedItem, ISourceItem existingItem);
+		/// <returns>If an update is performed, return the updated source item. If no update occurs, return null.</returns>
+		ISourceItem EvaluateUpdate(ISerializedItem serializedItem, ISourceItem existingItem);
 	}
 }

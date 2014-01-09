@@ -48,5 +48,15 @@ namespace Unicorn.Evaluators
 		{
 			_progress.ReportStatus("{0} ({1} #{2}): New serialized version", MessageType.Debug, serializedItem.ItemPath, newSerializedVersion.Language, newSerializedVersion.VersionNumber);
 		}
+
+		public void SerializedNewItem(ISerializedItem serializedItem)
+		{
+			_progress.ReportStatus("[A] {0}", MessageType.Info, serializedItem.DisplayIdentifier);
+		}
+
+		public void SerializedUpdatedItem(ISerializedItem serializedItem)
+		{
+			_progress.ReportStatus("[U] {0}", MessageType.Info, serializedItem.DisplayIdentifier);
+		}
 	}
 }

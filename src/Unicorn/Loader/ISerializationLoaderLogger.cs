@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using Unicorn.Data;
+﻿using Unicorn.Data;
 using Unicorn.Serialization;
 
 namespace Unicorn.Loader
@@ -35,15 +34,5 @@ namespace Unicorn.Loader
 		/// c:\master\templates\foo.item (does not exist)
 		/// </summary>
 		void SkippedItemMissingInSerializationProvider(ISerializedReference item, string serializationProviderName);
-
-		/// <summary>
-		/// Called when you serialize an item that does not yet exist in the provider
-		/// </summary>
-		void SerializedNewItem(ISerializedItem serializedItem);
-
-		/// <summary>
-		/// Called when you serialize an updated item that already existed in the provider
-		/// </summary>
-		void SerializedUpdatedItem(ISerializedItem serializedItem);
 	}
 }

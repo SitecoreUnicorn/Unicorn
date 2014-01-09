@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using Kamsar.WebConsole;
+﻿using Kamsar.WebConsole;
 using Unicorn.Data;
 using Unicorn.Serialization;
 
@@ -39,16 +38,6 @@ namespace Unicorn.Loader
 		public void SkippedItem(ISourceItem skippedItem, string predicateName, string justification)
 		{
 			_progress.ReportStatus("[S] {0} (and children) by {1}: {2}", MessageType.Debug, skippedItem.DisplayIdentifier, predicateName, justification);
-		}
-
-		public void SerializedNewItem(ISerializedItem serializedItem)
-		{
-			_progress.ReportStatus("[A] {0}", MessageType.Info, serializedItem.DisplayIdentifier);
-		}
-
-		public void SerializedUpdatedItem(ISerializedItem serializedItem)
-		{
-			_progress.ReportStatus("[U] {0}", MessageType.Info, serializedItem.DisplayIdentifier);
 		}
 	}
 }

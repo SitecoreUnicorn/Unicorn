@@ -103,14 +103,13 @@ namespace Unicorn.Tests.Loader
 
 			serializedRootItem.Setup(x => x.Deserialize(false)).Returns(root);
 
-			var logger = new Mock<ISerializationLoaderLogger>();
+			var evaluator = new Mock<IEvaluator>();
 
-			var loader = CreateTestLoader(serializationProvider.Object, null, predicate, null, logger.Object);
+			var loader = CreateTestLoader(serializationProvider.Object, null, predicate, evaluator.Object, null);
 
 			TestLoadTree(loader, root);
 
-			serializedRootItem.Verify(x => x.Deserialize(false));
-			logger.Verify(x => x.SerializedNewItem(serializedRootItem.Object));
+			evaluator.Verify(x => x.EvaluateNewSerializedItem(serializedRootItem.Object));
 		}
 
 		[Test]
@@ -165,14 +164,13 @@ namespace Unicorn.Tests.Loader
 			var logger = new Mock<ISerializationLoaderLogger>();
 
 			var evaluator = new Mock<IEvaluator>();
-			evaluator.Setup(x => x.EvaluateUpdate(serializedChildItem.Object, root.Children[0])).Returns(true);
+			evaluator.Setup(x => x.EvaluateUpdate(serializedChildItem.Object, root.Children[0])).Returns(root.Children[0]);
 
 			var loader = CreateTestLoader(serializationProvider.Object, sourceDataProvider.Object, predicate, evaluator.Object, logger.Object);
 
 			TestLoadTree(loader, root);
 
-			serializedChildItem.Verify(x => x.Deserialize(false));
-			logger.Verify(x => x.SerializedUpdatedItem(serializedChildItem.Object));
+			evaluator.Verify(x => x.EvaluateUpdate(serializedChildItem.Object, root.Children[0]));
 		}
 
 		[Test]
@@ -262,59 +260,6 @@ namespace Unicorn.Tests.Loader
 		}
 
 		[Test]
-		public void LoadTree_UpdatesItemWhenEvaluatorAllows()
-		{
-			var root = CreateTestTree(1);
-
-			var serializedRootItem = CreateSerializedItem("Root");
-			serializedRootItem.Setup(x => x.Deserialize(false)).Returns(root);
-
-			var predicate = CreateInclusiveTestPredicate();
-
-			var serializationProvider = new Mock<ISerializationProvider>();
-			serializationProvider.Setup(x => x.GetReference(root)).Returns(serializedRootItem.Object);
-
-			var sourceDataProvider = new Mock<ISourceDataProvider>();
-			sourceDataProvider.Setup(x => x.GetItemById(It.IsAny<string>(), It.IsAny<ID>())).Returns(root);
-
-			var evaluator = new Mock<IEvaluator>();
-			evaluator.Setup(x => x.EvaluateUpdate(It.IsAny<ISerializedItem>(), It.IsAny<ISourceItem>())).Returns(true);
-
-			var loader = CreateTestLoader(serializationProvider.Object, sourceDataProvider.Object, predicate, evaluator.Object, null);
-
-			TestLoadTree(loader, root);
-
-			evaluator.Verify(x => x.EvaluateUpdate(serializedRootItem.Object, root));
-			serializedRootItem.Verify(x => x.Deserialize(false));
-		}
-
-		[Test]
-		public void LoadTree_DoesNotUpdateItemWhenEvaluatorDenies()
-		{
-			var root = CreateTestTree(1);
-
-			var serializedRootItem = CreateSerializedItem("Root");
-
-			var predicate = CreateInclusiveTestPredicate();
-
-			var serializationProvider = new Mock<ISerializationProvider>();
-			serializationProvider.Setup(x => x.GetReference(root)).Returns(serializedRootItem.Object);
-
-			var sourceDataProvider = new Mock<ISourceDataProvider>();
-			sourceDataProvider.Setup(x => x.GetItemById(It.IsAny<string>(), It.IsAny<ID>())).Returns(root);
-
-			var evaluator = new Mock<IEvaluator>();
-			evaluator.Setup(x => x.EvaluateUpdate(It.IsAny<ISerializedItem>(), It.IsAny<ISourceItem>())).Returns(false);
-
-			var loader = CreateTestLoader(serializationProvider.Object, sourceDataProvider.Object, predicate, evaluator.Object, null);
-
-			TestLoadTree(loader, root);
-
-			evaluator.Verify(x => x.EvaluateUpdate(serializedRootItem.Object, root));
-			serializedRootItem.Verify(x => x.Deserialize(false), Times.Never());
-		}
-
-		[Test]
 		public void LoadTree_UpdatesWhenItemDoesNotExistInSource()
 		{
 			var root = CreateTestTree(1);
@@ -334,11 +279,13 @@ namespace Unicorn.Tests.Loader
 			var sourceDataProvider = new Mock<ISourceDataProvider>();
 			sourceDataProvider.Setup(x => x.GetItemById("flag", It.IsAny<ID>())).Returns(root);
 
-			var loader = CreateTestLoader(serializationProvider.Object, sourceDataProvider.Object, predicate, null, null);
+			var evaluator = new Mock<IEvaluator>();
+
+			var loader = CreateTestLoader(serializationProvider.Object, sourceDataProvider.Object, predicate, evaluator.Object, null);
 
 			TestLoadTree(loader, root);
 
-			serializedChildItem.Verify(x => x.Deserialize(false));
+			evaluator.Verify(x => x.EvaluateNewSerializedItem(serializedChildItem.Object));
 		}
 
 		[Test]
