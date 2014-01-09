@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Linq;
 using Sitecore.Data.Serialization;
 
 namespace Unicorn.Serialization.Sitecore
@@ -7,8 +6,11 @@ namespace Unicorn.Serialization.Sitecore
 	[DebuggerDisplay("SerRef: {ItemPath}")]
 	public class SitecoreSerializedReference : ISerializedReference
 	{
-		public SitecoreSerializedReference(string physicalPath)
+		private readonly SitecoreSerializationProvider _sourceProvider;
+
+		public SitecoreSerializedReference(string physicalPath, SitecoreSerializationProvider sourceProvider)
 		{
+			_sourceProvider = sourceProvider;
 			ProviderId = physicalPath;
 		}
 
@@ -35,6 +37,21 @@ namespace Unicorn.Serialization.Sitecore
 		public string DisplayIdentifier
 		{
 			get { return DatabaseName + ":" + ItemPath; }
+		}
+
+		public ISerializedItem GetItem()
+		{
+			return _sourceProvider.GetItem(this);
+		}
+
+		public ISerializedReference[] GetChildReferences(bool recursive)
+		{
+			return _sourceProvider.GetChildReferences(this, recursive);
+		}
+
+		public ISerializedItem[] GetChildItems()
+		{
+			return _sourceProvider.GetChildItems(this);
 		}
 
 		private void LoadItemPath()

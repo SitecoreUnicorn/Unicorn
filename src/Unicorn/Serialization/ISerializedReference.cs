@@ -23,5 +23,24 @@
 		/// Should reflect something that would assist finding the serialized item in the storage.
 		/// </summary>
 		string ProviderId { get; }
+
+		/// <summary>
+		/// Get a serialized item from a serialized reference. This dereferences a reference into an actual serialized item.
+		/// Unlike a reference, this should return null if the reference path is not actually serialized.
+		/// </summary>
+		/// <remarks>
+		/// In normal sitecore serialization terminology a "reference" is a serialization folder, and an "item" is a .item file
+		/// </remarks>
+		ISerializedItem GetItem();
+
+		/// <summary>
+		/// Get all child references for a given serialized reference parent
+		/// </summary>
+		ISerializedReference[] GetChildReferences(bool recursive);
+
+		/// <summary>
+		/// Get all child serialized items for a given serialized reference parent
+		/// </summary>
+		ISerializedItem[] GetChildItems();
 	}
 }

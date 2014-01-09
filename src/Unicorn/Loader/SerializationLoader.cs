@@ -93,7 +93,12 @@ namespace Unicorn.Loader
 			var timer = new Stopwatch();
 			timer.Start();
 
-			ISerializedItem rootSerializedItem = SerializationProvider.GetItem(SerializationProvider.GetReference(rootItem));
+			ISerializedReference rootSerializedReference = SerializationProvider.GetReference(rootItem);
+
+			if (rootSerializedReference == null)
+				throw new InvalidOperationException(string.Format("{0} was unable to find a root serialized reference for {1}", SerializationProvider.GetType().Name, rootItem.DisplayIdentifier));
+
+			ISerializedItem rootSerializedItem = rootSerializedReference.GetItem();
 
 			if (rootSerializedItem == null)
 				throw new InvalidOperationException(string.Format("{0} was unable to find a root serialized item for {1}", SerializationProvider.GetType().Name, rootItem.DisplayIdentifier));
@@ -138,7 +143,7 @@ namespace Unicorn.Loader
 				LoadOneLevel(root, retryer, consistencyChecker, isRetry);
 
 				// check if we have child paths to recurse down
-				var children = SerializationProvider.GetChildReferences(root, false);
+				var children = root.GetChildReferences(false);
 
 				if (children.Length > 0)
 				{
@@ -186,7 +191,7 @@ namespace Unicorn.Loader
 			var orphanCandidates = new Dictionary<ID, ISourceItem>();
 
 			// grab the root item's full metadata
-			var rootSerializedItem = SerializationProvider.GetItem(root);
+			var rootSerializedItem = root.GetItem();
 
 			if (rootSerializedItem == null)
 			{
@@ -215,12 +220,12 @@ namespace Unicorn.Loader
 			}
 
 			// check for direct children of the target path
-			var children = SerializationProvider.GetChildItems(rootSerializedItem);
+			var children =rootSerializedItem.GetChildItems();
 			foreach (var child in children)
 			{
 				try
 				{
-					if (SerializationProvider.IsStandardValuesItem(child))
+					if (child.IsStandardValuesItem)
 					{
 						orphanCandidates.Remove(child.Id); // avoid marking standard values items orphans
 						retryer.AddRetry(child, new StandardValuesException(child.ItemPath));
@@ -235,7 +240,7 @@ namespace Unicorn.Loader
 
 							// check if we have any child serialized items under this loaded child item (existing children) -
 							// if we do not, we can orphan any children of the loaded item as well
-							var loadedItemsChildren = SerializationProvider.GetChildReferences(child, false);
+							var loadedItemsChildren = child.GetChildReferences(false);
 
 							if (loadedItemsChildren.Length == 0) // no children were serialized on disk
 							{
@@ -308,7 +313,7 @@ namespace Unicorn.Loader
 					else
 						Logger.SerializedUpdatedItem(serializedItem);
 
-					ISourceItem updatedItem = SerializationProvider.DeserializeItem(serializedItem, isRetry);
+					ISourceItem updatedItem = serializedItem.Deserialize(isRetry);
 
 					Assert.IsNotNull(updatedItem, "Do not return null from DeserializeItem() - throw an exception if an error occurs.");	
 						

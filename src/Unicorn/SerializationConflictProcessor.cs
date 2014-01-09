@@ -94,7 +94,7 @@ namespace Unicorn
 					if(serializedReference == null) continue;
 
 					// not having an existing serialized version means no possibility of conflict here
-					ISerializedItem serializedItem = _serializationProvider.GetItem(serializedReference);
+					ISerializedItem serializedItem = serializedReference.GetItem();
 
 					if (serializedItem == null) continue;
 

@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Sitecore.Data.Serialization.ObjectModel;
 using Sitecore.Data;
 using System.Diagnostics;
@@ -10,8 +9,11 @@ namespace Unicorn.Serialization.Sitecore
 	[DebuggerDisplay("SerItem: {ItemPath}")]
 	public class SitecoreSerializedItem : ISerializedItem
 	{
-		public SitecoreSerializedItem(SyncItem item, string physicalPath)
+		private readonly SitecoreSerializationProvider _sourceProvider;
+
+		public SitecoreSerializedItem(SyncItem item, string physicalPath, SitecoreSerializationProvider sourceProvider)
 		{
+			_sourceProvider = sourceProvider;
 			InnerItem = item;
 			ProviderId = physicalPath;
 		}
@@ -98,6 +100,36 @@ namespace Unicorn.Serialization.Sitecore
 
 				return result.ToArray();
 			}
+		}
+
+		public ISourceItem Deserialize(bool ignoreMissingTemplateFields)
+		{
+			return _sourceProvider.DeserializeItem(this, ignoreMissingTemplateFields);
+		}
+
+		public void Delete()
+		{
+			_sourceProvider.DeleteSerializedItem(this);
+		}
+		
+		public bool IsStandardValuesItem
+		{
+			get { return _sourceProvider.IsStandardValuesItem(this); }
+		}
+
+		public ISerializedItem GetItem()
+		{
+			return this;
+		}
+
+		public ISerializedReference[] GetChildReferences(bool recursive)
+		{
+			return _sourceProvider.GetChildReferences(this, recursive);
+		}
+
+		public ISerializedItem[] GetChildItems()
+		{
+			return _sourceProvider.GetChildItems(this);
 		}
 
 		private ID LoadIdFromString(string stringId)

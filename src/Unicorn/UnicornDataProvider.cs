@@ -94,7 +94,7 @@ namespace Unicorn
 
 				if (existingItem != null)
 				{
-					_serializationProvider.DeleteSerializedItem(existingItem);
+					existingItem.Delete();
 					_logger.MovedItemToNonIncludedLocation(_serializationProvider.LogName, existingItem);
 				}
 
@@ -137,7 +137,7 @@ namespace Unicorn
 
 			if (existingItem == null) return; // it was already gone or an item from a different data provider
 
-			_serializationProvider.DeleteSerializedItem(existingItem);
+			existingItem.Delete();
 			_logger.DeletedItem(_serializationProvider.LogName, existingItem);
 		}
 
@@ -185,7 +185,7 @@ namespace Unicorn
 
 			if (reference == null) return null;
 
-			return _serializationProvider.GetItem(reference);
+			return reference.GetItem();
 		}
 
 		protected virtual ISourceItem GetSourceFromDefinition(ItemDefinition definition)
