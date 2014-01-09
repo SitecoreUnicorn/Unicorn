@@ -55,6 +55,7 @@
     <Compile Include="Data\ISourceItemExtensions.cs" />
     <Compile Include="Data\ISourceDataProvider.cs" />
     <Compile Include="Data\SitecoreSourceDataProvider.cs" />
+    <Compile Include="DeferredLogWriter.cs" />
     <Compile Include="Dependencies\DefaultDependencyRegistry.cs" />
     <Compile Include="Dependencies\IDependencyRegistry.cs" />
     <Compile Include="Dependencies\Registry.cs" />

@@ -11,7 +11,6 @@ using Unicorn.Data;
 using Unicorn.Dependencies;
 using Unicorn.Predicates;
 using Unicorn.Serialization;
-using Unicorn.Serialization.Sitecore;
 
 namespace Unicorn
 {

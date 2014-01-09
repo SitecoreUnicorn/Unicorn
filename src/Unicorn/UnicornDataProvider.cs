@@ -105,12 +105,12 @@ namespace Unicorn
 			_logger.MovedItem(_serializationProvider.LogName, sourceItem, destinationItem);
 		}
 
-		public void CopyItem(ItemDefinition source, ItemDefinition destination, string copyName, ID copyID, CallContext context)
+		public void CopyItem(ItemDefinition source, ItemDefinition destination, string copyName, ID copyId, CallContext context)
 		{
 			if (DisableSerialization) return;
 
 			// copying is easy - all we have to do is serialize the copyID. Copied children will all result in multiple calls to CopyItem so we don't even need to worry about them.
-			var copiedItem = new SitecoreSourceItem(Database.GetItem(copyID));
+			var copiedItem = new SitecoreSourceItem(Database.GetItem(copyId));
 
 			if (!_predicate.Includes(copiedItem).IsIncluded) return; // destination parent is not in a path that we are serializing, so skip out
 

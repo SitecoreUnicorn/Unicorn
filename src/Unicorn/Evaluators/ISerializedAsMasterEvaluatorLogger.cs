@@ -45,5 +45,10 @@ namespace Unicorn.Evaluators
 		/// Called when you serialize an updated item that already existed in the provider
 		/// </summary>
 		void SerializedUpdatedItem(ISerializedItem serializedItem);
+
+		/// <summary>
+		/// Called when extra versions exist in a source item compared to the serialized version
+		/// </summary>
+		void OrphanSourceVersion(ISourceItem existingItem, ISerializedItem serializedItem, ItemVersion[] orphanSourceVersions);
 	}
 }

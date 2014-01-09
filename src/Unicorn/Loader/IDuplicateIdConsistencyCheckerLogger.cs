@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using Unicorn.Serialization;
+﻿using Unicorn.Serialization;
 
 namespace Unicorn.Loader
 {

@@ -41,6 +41,7 @@ namespace Unicorn
 			return true;
 		}
 
+// ReSharper disable once InconsistentNaming
 		public override bool CopyItem(ItemDefinition source, ItemDefinition destination, string copyName, ID copyID, CallContext context)
 		{
 			if (!base.CopyItem(source, destination, copyName, copyID, context)) return false;

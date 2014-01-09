@@ -1,4 +1,5 @@
-﻿using Kamsar.WebConsole;
+﻿using System.Linq;
+using Kamsar.WebConsole;
 using Sitecore.StringExtensions;
 using Unicorn.Data;
 using Unicorn.Serialization;
@@ -28,25 +29,30 @@ namespace Unicorn.Evaluators
 
 		public void IsModifiedMatch(ISerializedItem serializedItem, ItemVersion version, System.DateTime serializedModified, System.DateTime itemModified)
 		{
-			_progress.ReportStatus("{0} ({1} #{2}): Disk modified {3}, Item modified {4}", MessageType.Debug, serializedItem.ItemPath, version.Language, version.VersionNumber, serializedModified.ToString("G"), itemModified.ToString("G"));
+			_progress.ReportStatus("> Modified - {0}#{1}: Serialized {2}, Source {3}", MessageType.Debug, version.Language, version.VersionNumber, serializedModified.ToString("G"), itemModified.ToString("G"));
 		}
 
 
 		public void IsRevisionMatch(ISerializedItem serializedItem, ItemVersion version, string serializedRevision, string itemRevision)
 		{
-			_progress.ReportStatus(string.Format("{0} ({1} #{2}): Disk revision {3}, Item revision {4}", serializedItem.ItemPath, version.Language, version.VersionNumber, serializedRevision, itemRevision), MessageType.Debug);
+			_progress.ReportStatus("> Revision - {0}#{1}: Serialized {2}, Source {3}", MessageType.Debug, version.Language, version.VersionNumber, serializedRevision, itemRevision);
 		}
 
 
 		public void IsNameMatch(ISerializedItem serializedItem, ISourceItem existingItem, ItemVersion version)
 		{
-			_progress.ReportStatus(string.Format("{0} ({1} #{2}): Disk name {3}, Item name {4}", serializedItem.ItemPath, version.Language, version.VersionNumber, serializedItem.Name, existingItem.Name), MessageType.Debug);
+			_progress.ReportStatus("> Name - {0}#{1}: Serialized \"{2}\", Source \"{3}\"", MessageType.Debug, version.Language, version.VersionNumber, serializedItem.Name, existingItem.Name);
 		}
 
 
 		public void NewSerializedVersionMatch(ItemVersion newSerializedVersion, ISerializedItem serializedItem, ISourceItem existingItem)
 		{
-			_progress.ReportStatus("{0} ({1} #{2}): New serialized version", MessageType.Debug, serializedItem.ItemPath, newSerializedVersion.Language, newSerializedVersion.VersionNumber);
+			_progress.ReportStatus("> New version {0}#{1} (serialized)", MessageType.Debug, newSerializedVersion.Language, newSerializedVersion.VersionNumber);
+		}
+
+		public void OrphanSourceVersion(ISourceItem existingItem, ISerializedItem serializedItem, ItemVersion[] orphanSourceVersions)
+		{
+			_progress.ReportStatus("> Orphaned version{0} {1} (source)", MessageType.Debug, orphanSourceVersions.Length > 1 ? "s" : string.Empty, string.Join(", ", orphanSourceVersions.Select(x => x.Language + "#" + x.VersionNumber)));
 		}
 
 		public void SerializedNewItem(ISerializedItem serializedItem)

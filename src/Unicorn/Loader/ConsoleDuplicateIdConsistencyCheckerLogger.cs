@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using Kamsar.WebConsole;
+﻿using Kamsar.WebConsole;
 using Unicorn.Serialization;
 
 namespace Unicorn.Loader

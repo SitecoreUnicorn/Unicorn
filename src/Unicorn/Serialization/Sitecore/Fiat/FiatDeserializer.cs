@@ -343,11 +343,11 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 		/// cache functionality that depends on database events (which are disabled when loading).
 		/// </summary>
 		/// <param name="database">Database to clear caches for.</param>
-		/// <param name="itemID">Item ID to remove</param>
-		protected virtual void ClearCaches(Database database, ID itemID)
+		/// <param name="itemId">Item ID to remove</param>
+		protected virtual void ClearCaches(Database database, ID itemId)
 		{
-			database.Caches.ItemCache.RemoveItem(itemID);
-			database.Caches.DataCache.RemoveItemInformation(itemID);
+			database.Caches.ItemCache.RemoveItem(itemId);
+			database.Caches.DataCache.RemoveItemInformation(itemId);
 		}
 
 		protected virtual void ResetTemplateEngineIfItemIsTemplate(Item target)
