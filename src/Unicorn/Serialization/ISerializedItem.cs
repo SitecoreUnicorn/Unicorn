@@ -24,11 +24,6 @@ namespace Unicorn.Serialization
 		ISourceItem Deserialize(bool ignoreMissingTemplateFields);
 
 		/// <summary>
-		/// Deletes an item from the serialization provider.
-		/// </summary>
-		void Delete();
-
-		/// <summary>
 		/// Checks if a serialized item is part of a template standard values
 		/// </summary>
 		/// <returns>True if the item is a standard values item, or false if it's not</returns>

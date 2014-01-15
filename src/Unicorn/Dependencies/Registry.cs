@@ -9,5 +9,11 @@ namespace Unicorn.Dependencies
 		{
 			Current = (IDependencyRegistry) Factory.CreateObject("/sitecore/unicorn/dependencyRegistry", true);
 		}
+
+		public static T Resolve<T>()
+			where T : class
+		{
+			return Current.Resolve<T>();
+		}
 	}
 }

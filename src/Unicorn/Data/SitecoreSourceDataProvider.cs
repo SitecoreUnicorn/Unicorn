@@ -3,10 +3,12 @@ using Sitecore.Data;
 using Sitecore.Data.Serialization;
 using Sitecore.Diagnostics;
 using Sitecore.Eventing;
+using System.Collections.Generic;
+using Unicorn.ControlPanel;
 
 namespace Unicorn.Data
 {
-	public class SitecoreSourceDataProvider : ISourceDataProvider
+	public class SitecoreSourceDataProvider : ISourceDataProvider, IDocumentable
 	{
 		public void ResetTemplateEngine()
 		{
@@ -63,6 +65,21 @@ namespace Unicorn.Data
 		private Database GetDatabase(string databaseName)
 		{
 			return Factory.GetDatabase(databaseName);
+		}
+
+		public string FriendlyName
+		{
+			get { return "Sitecore Source Data Provider"; }
+		}
+
+		public string Description
+		{
+			get { return "Retrieves source items from Sitecore databases."; }
+		}
+
+		public KeyValuePair<string, string>[] GetConfigurationDetails()
+		{
+			return null;
 		}
 	}
 }

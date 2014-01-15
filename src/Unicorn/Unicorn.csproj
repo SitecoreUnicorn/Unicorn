@@ -52,10 +52,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ControlPanel\AccessDenied.cs" />
     <Compile Include="ControlPanel\Configuration.cs" />
+    <Compile Include="ControlPanel\ControlOptions.cs" />
+    <Compile Include="ControlPanel\ControlPanelHandler.cs" />
+    <Compile Include="ControlPanel\ControlPanelUtility.cs" />
     <Compile Include="ControlPanel\Heading.cs" />
+    <Compile Include="ControlPanel\Html5Footer.cs" />
+    <Compile Include="ControlPanel\Html5HeadAndStyles.cs" />
     <Compile Include="ControlPanel\IControlPanelControl.cs" />
     <Compile Include="ControlPanel\IDocumentable.cs" />
+    <Compile Include="ControlPanel\InitialSetup.cs" />
+    <Compile Include="ControlPanel\ReserializeConsole.cs" />
+    <Compile Include="ControlPanel\SitecoreLogProgressStatus.cs" />
+    <Compile Include="ControlPanel\ControlPanelConsole.cs" />
+    <Compile Include="ControlPanel\SyncConsole.cs" />
     <Compile Include="Data\ISourceItemExtensions.cs" />
     <Compile Include="Data\ISourceDataProvider.cs" />
     <Compile Include="Data\SitecoreSourceDataProvider.cs" />

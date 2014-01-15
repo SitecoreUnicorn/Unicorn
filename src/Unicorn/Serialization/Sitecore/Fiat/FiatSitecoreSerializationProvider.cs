@@ -13,7 +13,7 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 		private readonly FiatDeserializer _deserializer;
 		public FiatSitecoreSerializationProvider(string rootPath = null, string logName = "UnicornItemSerialization", IPredicate predicate = null, IFiatDeserializerLogger logger = null) : base(rootPath, logName, predicate)
 		{
-			logger = logger ?? Registry.Current.Resolve<IFiatDeserializerLogger>();
+			logger = logger ?? Registry.Resolve<IFiatDeserializerLogger>();
 
 			_deserializer = new FiatDeserializer(logger);
 		}

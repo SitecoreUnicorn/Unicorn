@@ -22,7 +22,7 @@ namespace Unicorn.Predicates
 
 		public SerializationPresetPredicate(ISourceDataProvider sourceDataProvider = null, string presetName = "default")
 		{
-			sourceDataProvider = sourceDataProvider ?? Registry.Current.Resolve<ISourceDataProvider>();
+			sourceDataProvider = sourceDataProvider ?? Registry.Resolve<ISourceDataProvider>();
 
 			Assert.ArgumentNotNull(sourceDataProvider, "sourceDataProvider");
 			Assert.ArgumentNotNullOrEmpty(presetName, "presetName");

@@ -16,7 +16,7 @@ namespace Unicorn.Evaluators
 
 		public SerializedAsMasterEvaluator(ISerializedAsMasterEvaluatorLogger logger = null)
 		{
-			logger = logger ?? Registry.Current.Resolve<ISerializedAsMasterEvaluatorLogger>();
+			logger = logger ?? Registry.Resolve<ISerializedAsMasterEvaluatorLogger>();
 
 			Assert.ArgumentNotNull(logger, "logger");
 

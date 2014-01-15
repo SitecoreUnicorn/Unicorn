@@ -31,11 +31,11 @@ namespace Unicorn.Loader
 			IEvaluator evaluator = null, 
 			ISerializationLoaderLogger logger = null)
 		{
-			serializationProvider = serializationProvider ?? Registry.Current.Resolve<ISerializationProvider>();
-			sourceDataProvider = sourceDataProvider ?? Registry.Current.Resolve<ISourceDataProvider>();
-			predicate = predicate ?? Registry.Current.Resolve<IPredicate>();
-			evaluator = evaluator ?? Registry.Current.Resolve<IEvaluator>();
-			logger = logger ?? Registry.Current.Resolve<ISerializationLoaderLogger>();
+			serializationProvider = serializationProvider ?? Registry.Resolve<ISerializationProvider>();
+			sourceDataProvider = sourceDataProvider ?? Registry.Resolve<ISourceDataProvider>();
+			predicate = predicate ?? Registry.Resolve<IPredicate>();
+			evaluator = evaluator ?? Registry.Resolve<IEvaluator>();
+			logger = logger ?? Registry.Resolve<ISerializationLoaderLogger>();
 
 			Assert.ArgumentNotNull(serializationProvider, "serializationProvider");
 			Assert.ArgumentNotNull(sourceDataProvider, "sourceDataProvider");
@@ -55,7 +55,7 @@ namespace Unicorn.Loader
 		/// </summary>
 		public virtual void LoadAll()
 		{
-			LoadAll(Registry.Current.Resolve<IDeserializeFailureRetryer>(), Registry.Current.Resolve<IConsistencyChecker>());
+			LoadAll(Registry.Resolve<IDeserializeFailureRetryer>(), Registry.Resolve<IConsistencyChecker>());
 		}
 
 		/// <summary>
@@ -77,7 +77,7 @@ namespace Unicorn.Loader
 		/// </summary>
 		public virtual void LoadTree(ISourceItem rootItem)
 		{
-			LoadTree(rootItem, Registry.Current.Resolve<IDeserializeFailureRetryer>(), Registry.Current.Resolve<IConsistencyChecker>());
+			LoadTree(rootItem, Registry.Resolve<IDeserializeFailureRetryer>(), Registry.Resolve<IConsistencyChecker>());
 		}
 
 		/// <summary>

@@ -1,2 +1,2 @@
-..\.nuget\nuget.exe pack ..\Source\Unicorn\Unicorn.csproj -Build -Symbols -Properties Configuration=Release
+..\.nuget\nuget.exe pack ..\src\Unicorn\Unicorn.csproj -Build -Symbols -Properties Configuration=Release
 PAUSE

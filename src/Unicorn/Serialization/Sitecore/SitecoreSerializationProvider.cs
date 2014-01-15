@@ -29,7 +29,7 @@ namespace Unicorn.Serialization.Sitecore
 		/// <param name="predicate">The predicate to use. If null, uses Registry to look up the registered DI instance.</param>
 		public SitecoreSerializationProvider(string rootPath = null, string logName = "UnicornItemSerialization", IPredicate predicate = null)
 		{
-			predicate = predicate ?? Registry.Current.Resolve<IPredicate>();
+			predicate = predicate ?? Registry.Resolve<IPredicate>();
 			rootPath = rootPath ?? PathUtils.Root;
 
 			Assert.ArgumentNotNullOrEmpty(rootPath, "rootPath");
@@ -276,7 +276,6 @@ namespace Unicorn.Serialization.Sitecore
 		{
 			// kill the serialized file
 			if (File.Exists(item.ProviderId)) File.Delete(item.ProviderId);
-			else return;
 
 			// remove any serialized children
 			var directory = SerializationPathUtility.GetReferenceDirectoryPath(item);

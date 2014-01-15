@@ -24,9 +24,9 @@ namespace Unicorn
 			IPredicate predicate = null, 
 			IUnicornDataProviderLogger logger = null)
 		{
-			serializationProvider = serializationProvider ?? Registry.Current.Resolve<ISerializationProvider>();
-			predicate = predicate ?? Registry.Current.Resolve<IPredicate>();
-			logger = logger ?? Registry.Current.Resolve<IUnicornDataProviderLogger>();
+			serializationProvider = serializationProvider ?? Registry.Resolve<ISerializationProvider>();
+			predicate = predicate ?? Registry.Resolve<IPredicate>();
+			logger = logger ?? Registry.Resolve<IUnicornDataProviderLogger>();
 
 			Assert.ArgumentNotNull(serializationProvider, "serializationProvider");
 			Assert.ArgumentNotNull(predicate, "predicate");

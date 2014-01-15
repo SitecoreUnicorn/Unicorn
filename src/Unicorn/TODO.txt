@@ -1,25 +1,7 @@
 ﻿TODO:
+- tests for new item evaluation (new evaluator method)
 - Write integration tests for Sitecore-based providers
-- Out of box experience to do initial serialization and guide the user. Probably a httprequestbegin pipeline processor. Fire only when debug=true, provide built-in serialize all, show config/providers in use? - maybe graphical sitecore tree with red/green?, and sync capabilities
-	- Need to clean up framework and complete config for this/integrate with sync tool if that's going to happen
+- Simplify DI setup/registration
 - Verify operation with non standard serialization root
 - Preview mode?
-
-AHEM:
-			// this bad-ass ASCII art is from http://www.ascii-art.de/ascii/uvw/unicorn.txt - original credit to 'sk'
-			const string unicorn = @"<pre>
-                        /
-                      .7
-           \       , //
-           |\.--._/|//
-          /\ ) ) ).'/
-         /(  \  // /       _   _ _   _ ___ ____ ___  ____  _   _ 
-        /(   J`((_/ \     | | | | \ | |_ _/ ___/ _ \|  _ \| \ | |
-       / ) | _\     /     | | | |  \| || | |  | | | | |_) |  \| |
-      /|)  \  eJ    L     | |_| | |\  || | |__| |_| |  _ <| |\  |
-     |  \ L \   L   L      \___/|_| \_|___\____\___/|_| \_\_| \_|
-    /  \  J  `. J   L
-    |  )   L   \/   \
-   /  \    J   (\   /
-  |  \      \   \```
-</pre>";
+- Cleanup, docs, release.

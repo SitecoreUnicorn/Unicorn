@@ -54,6 +54,11 @@ namespace Unicorn.Serialization.Sitecore
 			return _sourceProvider.GetChildItems(this);
 		}
 
+		public void Delete()
+		{
+			_sourceProvider.DeleteSerializedItem(this);
+		}
+
 		private void LoadItemPath()
 		{
 			var itemPath = PathUtils.MakeItemPath(ProviderId);

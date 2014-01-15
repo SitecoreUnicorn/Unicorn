@@ -25,7 +25,7 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 
 		public FiatDeserializer(IFiatDeserializerLogger logger = null)
 		{
-			logger = logger ?? Registry.Current.Resolve<IFiatDeserializerLogger>();
+			logger = logger ?? Registry.Resolve<IFiatDeserializerLogger>();
 
 			Assert.ArgumentNotNull(logger, "logger");
 

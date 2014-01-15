@@ -42,5 +42,10 @@
 		/// Get all child serialized items for a given serialized reference parent
 		/// </summary>
 		ISerializedItem[] GetChildItems();
+
+		/// <summary>
+		/// Deletes the reference, any related serialized item if present, and any children of the serialized item from the serialization store.
+		/// </summary>
+		void Delete();
 	}
 }

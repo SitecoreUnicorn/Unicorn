@@ -36,7 +36,7 @@ namespace Unicorn
 		private readonly ISerializationProvider _serializationProvider;
 		private readonly IPredicate _predicate;
 
-		public SerializationConflictProcessor() : this(Registry.Current.Resolve<ISerializationProvider>(), Registry.Current.Resolve<IPredicate>())
+		public SerializationConflictProcessor() : this(Registry.Resolve<ISerializationProvider>(), Registry.Resolve<IPredicate>())
 		{
 			
 		}
