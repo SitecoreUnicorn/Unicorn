@@ -8,6 +8,11 @@ namespace Unicorn.ControlPanel
 {
 	public class ReserializeConsole : ControlPanelConsole
 	{
+		public ReserializeConsole(bool isAutomatedTool) : base(isAutomatedTool)
+		{
+			
+		}
+		
 		protected override string Title
 		{
 			get { return "Reserialize Unicorn"; }

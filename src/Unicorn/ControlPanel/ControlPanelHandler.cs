@@ -21,6 +21,8 @@ namespace Unicorn.ControlPanel
 
 		public void ProcessRequest(HttpContext context)
 		{
+			context.Server.ScriptTimeout = 86400;
+
 			IEnumerable<IControlPanelControl> controls;
 
 			if (!Authorization.IsAllowed)
@@ -34,10 +36,10 @@ namespace Unicorn.ControlPanel
 				switch (verb)
 				{
 					case "Sync":
-						controls = GetSyncControls();
+						controls = GetSyncControls(Authorization.IsAutomatedTool);
 						break;
 					case "Reserialize":
-						controls = GetReserializeControls();
+						controls = GetReserializeControls(Authorization.IsAutomatedTool);
 						break;
 					default:
 						controls = GetDefaultControls();
@@ -74,7 +76,7 @@ namespace Unicorn.ControlPanel
 					yield return Registry.Resolve<ControlOptions>();
 				}
 
-				yield return Registry.Resolve<Unicorn.ControlPanel.Configuration>();
+				yield return Registry.Resolve<Configuration>();
 
 				if (!hasSerializedItems)
 				{
@@ -89,14 +91,14 @@ namespace Unicorn.ControlPanel
 			yield return Registry.Resolve<Html5Footer>();
 		}
 
-		protected virtual IEnumerable<IControlPanelControl> GetReserializeControls()
+		protected virtual IEnumerable<IControlPanelControl> GetReserializeControls(bool isAutomatedTool)
 		{
-			yield return new ReserializeConsole();
+			yield return new ReserializeConsole(isAutomatedTool);
 		}
 
-		protected virtual IEnumerable<IControlPanelControl> GetSyncControls()
+		protected virtual IEnumerable<IControlPanelControl> GetSyncControls(bool isAutomatedTool)
 		{
-			yield return new SyncConsole();
+			yield return new SyncConsole(isAutomatedTool);
 		}
 
 		protected virtual SecurityState Authorization

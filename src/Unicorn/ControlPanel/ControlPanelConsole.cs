@@ -14,14 +14,40 @@ namespace Unicorn.ControlPanel
 	/// </summary>
 	public abstract class ControlPanelConsole : IControlPanelControl
 	{
+		private readonly bool _isAutomatedTool;
+
+		protected ControlPanelConsole(bool isAutomatedTool)
+		{
+			_isAutomatedTool = isAutomatedTool;
+		}
+
 		protected abstract string Title { get; }
 
 		public void Render(HtmlTextWriter writer)
 		{
-			var console = new CustomStyledHtml5WebConsole(HttpContext.Current.Response);
-			console.Title = Title;
+			if (_isAutomatedTool)
+			{
+				var console = new StringProgressStatus();
+				ProcessInternal(console);
 
-			console.Render(ProcessInternal);
+				HttpContext.Current.Response.ContentType = "text/plain";
+				HttpContext.Current.Response.Write(Title + "\n\n");
+				HttpContext.Current.Response.Write(console.Output);
+
+				if (console.HasErrors)
+				{
+					HttpContext.Current.Response.StatusCode = 500;
+					HttpContext.Current.Response.TrySkipIisCustomErrors = true;
+				}
+
+				HttpContext.Current.Response.End();
+			}
+			else
+			{
+				var console = new CustomStyledHtml5WebConsole(HttpContext.Current.Response);
+				console.Title = Title;
+				console.Render(ProcessInternal);
+			}
 		}
 
 		protected virtual void ProcessInternal(IProgressStatus progress)
