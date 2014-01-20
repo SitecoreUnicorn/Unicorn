@@ -3,6 +3,7 @@ using Sitecore.Data.DataProviders;
 using Sitecore.Data.Items;
 using Sitecore.Data.SqlServer;
 using Sitecore.Globalization;
+using Unicorn.Dependencies;
 
 namespace Unicorn
 {
@@ -10,7 +11,7 @@ namespace Unicorn
 	{
 		private readonly UnicornDataProvider[] _unicornDataProviders;
 
-		public UnicornSqlServerDataProvider(string connectionString) : this(connectionString, new UnicornDataProvider())
+		public UnicornSqlServerDataProvider(string connectionString) : this(connectionString, Registry.Default.Resolve<UnicornDataProvider>())
 		{
 		}
 		

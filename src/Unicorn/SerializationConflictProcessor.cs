@@ -8,7 +8,6 @@ using Sitecore.Pipelines.Save;
 using Sitecore.Data.Items;
 using Sitecore.Data.Fields;
 using Unicorn.Data;
-using Unicorn.Dependencies;
 using Unicorn.Predicates;
 using Unicorn.Serialization;
 
@@ -35,11 +34,6 @@ namespace Unicorn
 	{
 		private readonly ISerializationProvider _serializationProvider;
 		private readonly IPredicate _predicate;
-
-		public SerializationConflictProcessor() : this(Registry.Resolve<ISerializationProvider>(), Registry.Resolve<IPredicate>())
-		{
-			
-		}
 
 		public SerializationConflictProcessor(ISerializationProvider serializationProvider, IPredicate predicate)
 		{

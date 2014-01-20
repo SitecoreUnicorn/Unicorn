@@ -10,7 +10,6 @@ using Sitecore.Diagnostics;
 using Sitecore.StringExtensions;
 using Unicorn.ControlPanel;
 using Unicorn.Data;
-using Unicorn.Dependencies;
 using Unicorn.Serialization;
 
 namespace Unicorn.Predicates
@@ -20,10 +19,8 @@ namespace Unicorn.Predicates
 		private readonly IList<IncludeEntry> _preset;
 		private readonly ISourceDataProvider _sourceDataProvider;
 
-		public SerializationPresetPredicate(ISourceDataProvider sourceDataProvider = null, string presetName = "default")
+		public SerializationPresetPredicate(ISourceDataProvider sourceDataProvider, string presetName)
 		{
-			sourceDataProvider = sourceDataProvider ?? Registry.Resolve<ISourceDataProvider>();
-
 			Assert.ArgumentNotNull(sourceDataProvider, "sourceDataProvider");
 			Assert.ArgumentNotNullOrEmpty(presetName, "presetName");
 

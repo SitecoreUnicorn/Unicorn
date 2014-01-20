@@ -15,7 +15,6 @@ using Sitecore.Data.Templates;
 using Sitecore.Diagnostics;
 using Sitecore.Globalization;
 using Sitecore.IO;
-using Unicorn.Dependencies;
 
 namespace Unicorn.Serialization.Sitecore.Fiat
 {
@@ -23,10 +22,8 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 	{
 		private readonly IFiatDeserializerLogger _logger;
 
-		public FiatDeserializer(IFiatDeserializerLogger logger = null)
+		public FiatDeserializer(IFiatDeserializerLogger logger)
 		{
-			logger = logger ?? Registry.Resolve<IFiatDeserializerLogger>();
-
 			Assert.ArgumentNotNull(logger, "logger");
 
 			_logger = logger;

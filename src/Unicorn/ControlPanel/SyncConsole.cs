@@ -9,9 +9,11 @@ namespace Unicorn.ControlPanel
 	/// </summary>
 	public class SyncConsole : ControlPanelConsole
 	{
-		public SyncConsole(bool isAutomatedTool) : base(isAutomatedTool)
+		private readonly IDependencyRegistry _dependencyRegistry;
+
+		public SyncConsole(bool isAutomatedTool, IDependencyRegistry dependencyRegistry) : base(isAutomatedTool)
 		{
-			
+			_dependencyRegistry = dependencyRegistry;
 		}
 
 		protected override string Title
@@ -22,11 +24,11 @@ namespace Unicorn.ControlPanel
 		protected override void Process(IProgressStatus progress)
 		{
 			// tell the Unicorn DI container to wire to the console for its progress logging
-			Registry.Current.RegisterInstanceFactory(() => progress);
+			_dependencyRegistry.Register(() => progress);
 
-			var loader = new SerializationLoader();
+			var loader = _dependencyRegistry.Resolve<SerializationLoader>();
 
-			loader.LoadAll();
+			loader.LoadAll(_dependencyRegistry);
 		}
 	}
 }

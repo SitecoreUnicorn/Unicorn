@@ -3,7 +3,6 @@ using Sitecore.Data.Serialization.Exceptions;
 using Sitecore.Diagnostics;
 using Sitecore.StringExtensions;
 using Unicorn.Data;
-using Unicorn.Dependencies;
 using Unicorn.Predicates;
 
 namespace Unicorn.Serialization.Sitecore.Fiat
@@ -11,9 +10,10 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 	public class FiatSitecoreSerializationProvider : SitecoreSerializationProvider
 	{
 		private readonly FiatDeserializer _deserializer;
-		public FiatSitecoreSerializationProvider(string rootPath = null, string logName = "UnicornItemSerialization", IPredicate predicate = null, IFiatDeserializerLogger logger = null) : base(rootPath, logName, predicate)
+		public FiatSitecoreSerializationProvider(IPredicate predicate, IFiatDeserializerLogger logger, string rootPath = null, string logName = "UnicornItemSerialization")
+			: base(predicate, rootPath, logName)
 		{
-			logger = logger ?? Registry.Resolve<IFiatDeserializerLogger>();
+			Assert.ArgumentNotNull(logger, "logger");
 
 			_deserializer = new FiatDeserializer(logger);
 		}

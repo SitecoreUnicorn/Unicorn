@@ -19,6 +19,13 @@ namespace Unicorn.ControlPanel
 			get { return false; }
 		}
 
+		private IDependencyRegistry _dependencyRegistry = Registry.CreateCopyOfDefault();
+		protected IDependencyRegistry DependencyRegistry 
+		{
+			get { return _dependencyRegistry; }
+			set { _dependencyRegistry = value; } 
+		}
+
 		public void ProcessRequest(HttpContext context)
 		{
 			context.Server.ScriptTimeout = 86400;
@@ -57,14 +64,14 @@ namespace Unicorn.ControlPanel
 		protected virtual IEnumerable<IControlPanelControl> GetDefaultControls()
 		{
 			// bit of a hack - default config depends on the reg of one of these
-			Registry.Current.RegisterInstanceFactory<IProgressStatus>(() => new StringProgressStatus());
+			DependencyRegistry.Register<IProgressStatus>(() => new StringProgressStatus());
 
-			var hasSerializedItems = ControlPanelUtility.HasAnySerializedItems(Registry.Resolve<IPredicate>(), Registry.Resolve<ISerializationProvider>());
+			var hasSerializedItems = ControlPanelUtility.HasAnySerializedItems(DependencyRegistry.Resolve<IPredicate>(), DependencyRegistry.Resolve<ISerializationProvider>());
 			var isAuthorized = Authorization.IsAllowed;
 
-			yield return Registry.Resolve<Html5HeadAndStyles>();
+			yield return DependencyRegistry.Resolve<Html5HeadAndStyles>();
 
-			var heading = Registry.Resolve<Heading>();
+			var heading = DependencyRegistry.Resolve<Heading>();
 			heading.HasSerializedItems = hasSerializedItems;
 			heading.IsAuthenticated = isAuthorized;
 			yield return heading;
@@ -73,32 +80,32 @@ namespace Unicorn.ControlPanel
 			{
 				if (hasSerializedItems)
 				{
-					yield return Registry.Resolve<ControlOptions>();
+					yield return DependencyRegistry.Resolve<ControlOptions>();
 				}
 
-				yield return Registry.Resolve<Configuration>();
+				yield return DependencyRegistry.Resolve<Configuration>();
 
 				if (!hasSerializedItems)
 				{
-					yield return Registry.Resolve<InitialSetup>();
+					yield return DependencyRegistry.Resolve<InitialSetup>();
 				}
 			}
 			else
 			{
-				yield return Registry.Resolve<AccessDenied>();
+				yield return DependencyRegistry.Resolve<AccessDenied>();
 			}
 
-			yield return Registry.Resolve<Html5Footer>();
+			yield return DependencyRegistry.Resolve<Html5Footer>();
 		}
 
 		protected virtual IEnumerable<IControlPanelControl> GetReserializeControls(bool isAutomatedTool)
 		{
-			yield return new ReserializeConsole(isAutomatedTool);
+			yield return new ReserializeConsole(isAutomatedTool, DependencyRegistry);
 		}
 
 		protected virtual IEnumerable<IControlPanelControl> GetSyncControls(bool isAutomatedTool)
 		{
-			yield return new SyncConsole(isAutomatedTool);
+			yield return new SyncConsole(isAutomatedTool, DependencyRegistry);
 		}
 
 		protected virtual SecurityState Authorization

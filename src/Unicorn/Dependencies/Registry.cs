@@ -4,16 +4,15 @@ namespace Unicorn.Dependencies
 {
 	public static class Registry
 	{
-		public static readonly IDependencyRegistry Current;
+		public static readonly IDependencyRegistry Default;
 		static Registry()
 		{
-			Current = (IDependencyRegistry) Factory.CreateObject("/sitecore/unicorn/dependencyRegistry", true);
+			Default = new StaticDependencyRegistryWrapper((IDependencyRegistry) Factory.CreateObject("/sitecore/unicorn/dependencyRegistry", true));
 		}
 
-		public static T Resolve<T>()
-			where T : class
+		public static IDependencyRegistry CreateCopyOfDefault()
 		{
-			return Current.Resolve<T>();
+			return (IDependencyRegistry)Factory.CreateObject("/sitecore/unicorn/dependencyRegistry", true);
 		}
 	}
 }

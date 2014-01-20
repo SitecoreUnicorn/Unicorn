@@ -10,7 +10,6 @@ using Sitecore.Diagnostics;
 using Sitecore.StringExtensions;
 using Unicorn.ControlPanel;
 using Unicorn.Data;
-using Unicorn.Dependencies;
 using Unicorn.Predicates;
 
 namespace Unicorn.Serialization.Sitecore
@@ -27,9 +26,8 @@ namespace Unicorn.Serialization.Sitecore
 		/// <param name="rootPath">The root serialization path to write files to. Defaults to PathUtils.RootPath if the default value (null) is passed.</param>
 		/// <param name="logName">The prefix to write log entries with. Useful if you have multiple serialization providers.</param>
 		/// <param name="predicate">The predicate to use. If null, uses Registry to look up the registered DI instance.</param>
-		public SitecoreSerializationProvider(string rootPath = null, string logName = "UnicornItemSerialization", IPredicate predicate = null)
+		public SitecoreSerializationProvider(IPredicate predicate, string rootPath = null, string logName = "UnicornItemSerialization")
 		{
-			predicate = predicate ?? Registry.Resolve<IPredicate>();
 			rootPath = rootPath ?? PathUtils.Root;
 
 			Assert.ArgumentNotNullOrEmpty(rootPath, "rootPath");

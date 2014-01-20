@@ -25,18 +25,8 @@ namespace Unicorn.Loader
 		protected readonly ISourceDataProvider SourceDataProvider;
 		protected readonly ISerializationLoaderLogger Logger;
 
-		public SerializationLoader(ISerializationProvider serializationProvider = null, 
-			ISourceDataProvider sourceDataProvider = null, 
-			IPredicate predicate = null, 
-			IEvaluator evaluator = null, 
-			ISerializationLoaderLogger logger = null)
+		public SerializationLoader(ISerializationProvider serializationProvider, ISourceDataProvider sourceDataProvider, IPredicate predicate, IEvaluator evaluator, ISerializationLoaderLogger logger)
 		{
-			serializationProvider = serializationProvider ?? Registry.Resolve<ISerializationProvider>();
-			sourceDataProvider = sourceDataProvider ?? Registry.Resolve<ISourceDataProvider>();
-			predicate = predicate ?? Registry.Resolve<IPredicate>();
-			evaluator = evaluator ?? Registry.Resolve<IEvaluator>();
-			logger = logger ?? Registry.Resolve<ISerializationLoaderLogger>();
-
 			Assert.ArgumentNotNull(serializationProvider, "serializationProvider");
 			Assert.ArgumentNotNull(sourceDataProvider, "sourceDataProvider");
 			Assert.ArgumentNotNull(predicate, "predicate");
@@ -53,9 +43,9 @@ namespace Unicorn.Loader
 		/// <summary>
 		/// Loads all items in the configured predicate
 		/// </summary>
-		public virtual void LoadAll()
+		public virtual void LoadAll(IDependencyRegistry dependencyConfiguration)
 		{
-			LoadAll(Registry.Resolve<IDeserializeFailureRetryer>(), Registry.Resolve<IConsistencyChecker>());
+			LoadAll(dependencyConfiguration.Resolve<IDeserializeFailureRetryer>(), dependencyConfiguration.Resolve<IConsistencyChecker>());
 		}
 
 		/// <summary>
@@ -75,9 +65,9 @@ namespace Unicorn.Loader
 		/// <summary>
 		/// Loads a preset from serialized items on disk.
 		/// </summary>
-		public virtual void LoadTree(ISourceItem rootItem)
+		public virtual void LoadTree(ISourceItem rootItem, IDependencyRegistry dependencyConfiguration)
 		{
-			LoadTree(rootItem, Registry.Resolve<IDeserializeFailureRetryer>(), Registry.Resolve<IConsistencyChecker>());
+			LoadTree(rootItem, dependencyConfiguration.Resolve<IDeserializeFailureRetryer>(), dependencyConfiguration.Resolve<IConsistencyChecker>());
 		}
 
 		/// <summary>

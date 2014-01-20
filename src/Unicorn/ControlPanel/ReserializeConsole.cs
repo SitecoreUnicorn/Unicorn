@@ -8,11 +8,13 @@ namespace Unicorn.ControlPanel
 {
 	public class ReserializeConsole : ControlPanelConsole
 	{
-		public ReserializeConsole(bool isAutomatedTool) : base(isAutomatedTool)
+		private readonly IDependencyRegistry _dependencyRegistry;
+
+		public ReserializeConsole(bool isAutomatedTool, IDependencyRegistry dependencyRegistry) : base(isAutomatedTool)
 		{
-			
+			_dependencyRegistry = dependencyRegistry;
 		}
-		
+
 		protected override string Title
 		{
 			get { return "Reserialize Unicorn"; }
@@ -21,10 +23,10 @@ namespace Unicorn.ControlPanel
 		protected override void Process(IProgressStatus progress)
 		{
 			// tell the Unicorn DI container to wire to the console for its progress logging
-			Registry.Current.RegisterInstanceFactory(() => progress);
+			_dependencyRegistry.Register(() => progress);
 
-			var predicate = Registry.Resolve<IPredicate>();
-			var serializationProvider = Registry.Resolve<ISerializationProvider>();
+			var predicate = _dependencyRegistry.Resolve<IPredicate>();
+			var serializationProvider = _dependencyRegistry.Resolve<ISerializationProvider>();
 
 			var roots = predicate.GetRootItems();
 
