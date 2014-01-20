@@ -66,7 +66,6 @@
     <Compile Include="Predicate\SerializationPresetPredicateTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="NOTES.txt" />
     <EmbeddedResource Include="Predicate\TestConfiguration.xml" />
   </ItemGroup>
   <ItemGroup>
