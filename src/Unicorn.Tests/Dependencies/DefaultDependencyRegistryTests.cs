@@ -1,14 +1,10 @@
-﻿using System;
-using Kamsar.WebConsole;
+﻿using Kamsar.WebConsole;
 using NUnit.Framework;
 using Unicorn.Data;
 using Unicorn.Dependencies;
 using Unicorn.Dependencies.TinyIoC;
 using Unicorn.Evaluators;
 using Unicorn.Loader;
-using Unicorn.Predicates;
-using Unicorn.Serialization;
-using Unicorn.Serialization.Sitecore;
 
 namespace Unicorn.Tests.Dependencies
 {
@@ -35,7 +31,7 @@ namespace Unicorn.Tests.Dependencies
 		public void Resolve_ResolvesStandardEvaluatorWithWebConsole()
 		{
 			var registry = new DefaultDependencyRegistry();
-			registry.RegisterSingleton<IProgressStatus, StringProgressStatus>();
+			registry.Register<IProgressStatus>(() => new StringProgressStatus());
 
 			Assert.IsInstanceOf<SerializedAsMasterEvaluator>(registry.Resolve<IEvaluator>());
 		}
@@ -44,7 +40,7 @@ namespace Unicorn.Tests.Dependencies
 		public void Resolve_ResolvesStandardConsistencyChecker()
 		{
 			var registry = new DefaultDependencyRegistry();
-			registry.RegisterSingleton<IProgressStatus, StringProgressStatus>();
+			registry.Register<IProgressStatus>(() => new StringProgressStatus());
 
 			Assert.IsInstanceOf<DuplicateIdConsistencyChecker>(registry.Resolve<IConsistencyChecker>());
 		}

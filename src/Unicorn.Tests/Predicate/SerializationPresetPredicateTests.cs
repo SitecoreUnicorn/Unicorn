@@ -47,6 +47,17 @@ namespace Unicorn.Tests.Predicate
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
 
+			var item = CreateTestSerializedItem(ExcludedPath.ToUpperInvariant());
+			var includes = predicate.Includes(item);
+
+			Assert.IsFalse(includes.IsIncluded, "Exclude serialized item by path failed.");
+		}
+
+		[Test]
+		public void Includes_ExcludesSerializedItemByPath_WhenCaseDoesNotMatch()
+		{
+			var predicate = CreateTestPredicate(CreateTestConfiguration());
+
 			var item = CreateTestSerializedItem(ExcludedPath);
 			var includes = predicate.Includes(item);
 
@@ -76,11 +87,33 @@ namespace Unicorn.Tests.Predicate
 		}
 
 		[Test]
+		public void Includes_ExcludesSourceItemByPath_WhenCaseDoesNotMatch()
+		{
+			var predicate = CreateTestPredicate(CreateTestConfiguration());
+
+			var item = CreateTestSourceItem(ExcludedPath.ToUpperInvariant());
+			var includes = predicate.Includes(item);
+
+			Assert.IsFalse(includes.IsIncluded, "Exclude source item by path failed.");
+		}
+
+		[Test]
 		public void Includes_IncludesSerializedItemByPath()
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
 
 			var item = CreateTestSerializedItem(IncludedPath);
+			var includes = predicate.Includes(item);
+
+			Assert.IsTrue(includes.IsIncluded, "Include serialized item by path failed.");
+		}
+
+		[Test]
+		public void Includes_IncludesSerializedItemByPath_WhenCaseDoesNotMatch()
+		{
+			var predicate = CreateTestPredicate(CreateTestConfiguration());
+
+			var item = CreateTestSerializedItem(IncludedPath.ToUpperInvariant());
 			var includes = predicate.Includes(item);
 
 			Assert.IsTrue(includes.IsIncluded, "Include serialized item by path failed.");
@@ -103,6 +136,17 @@ namespace Unicorn.Tests.Predicate
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
 
 			var item = CreateTestSourceItem(IncludedPath);
+			var includes = predicate.Includes(item);
+
+			Assert.IsTrue(includes.IsIncluded, "Include source item by path failed.");
+		}
+
+		[Test]
+		public void Includes_IncludesSourceItemByPath_WhenCaseDoesNotMatch()
+		{
+			var predicate = CreateTestPredicate(CreateTestConfiguration());
+
+			var item = CreateTestSourceItem(IncludedPath.ToUpperInvariant());
 			var includes = predicate.Includes(item);
 
 			Assert.IsTrue(includes.IsIncluded, "Include source item by path failed.");

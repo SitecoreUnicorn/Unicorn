@@ -12,6 +12,10 @@ using Unicorn.Serialization;
 
 namespace Unicorn
 {
+	/// <summary>
+	/// This class provides event-handling services to Unicorn - reflecting actions onto the serialization provider via the predicate when
+	/// changes occur to the source data.
+	/// </summary>
 	public class UnicornDataProvider
 	{
 		private readonly ISerializationProvider _serializationProvider;

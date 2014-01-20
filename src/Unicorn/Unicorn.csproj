@@ -74,6 +74,7 @@
     <Compile Include="Dependencies\DefaultDependencyRegistry.cs" />
     <Compile Include="Dependencies\IDependencyRegistry.cs" />
     <Compile Include="Dependencies\Registry.cs" />
+    <Compile Include="Dependencies\StaticDependencyRegistryWrapper.cs" />
     <Compile Include="Dependencies\TinyIoC\TinyIoC.cs" />
     <Compile Include="Dependencies\TinyIoC\TinyIoCAspNetExtensions.cs" />
     <Compile Include="DeserializationAggregateException.cs" />
