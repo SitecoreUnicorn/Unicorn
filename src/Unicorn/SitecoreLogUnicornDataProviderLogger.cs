@@ -6,6 +6,9 @@ using Unicorn.Serialization;
 
 namespace Unicorn
 {
+	/// <summary>
+	/// A logger implementation for the UnicornDataProvider that writes log entries to the Sitecore log files
+	/// </summary>
 	public class SitecoreLogUnicornDataProviderLogger : IUnicornDataProviderLogger
 	{
 		public virtual void RenamedItem(string providerName, ISourceItem sourceItem, string oldName)

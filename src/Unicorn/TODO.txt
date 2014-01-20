@@ -1,7 +1,6 @@
 ﻿TODO:
 - tests for new item evaluation (new evaluator method)
 - Write integration tests for Sitecore-based providers
-- Simplify DI setup/registration
 - Verify operation with non standard serialization root
 - Preview mode?
 - Cleanup, docs, release.

@@ -5,6 +5,9 @@ using Unicorn.Serialization;
 
 namespace Unicorn
 {
+	/// <summary>
+	/// Provides log messages that can be responded to from the UnicornDataProvider.
+	/// </summary>
 	public interface IUnicornDataProviderLogger
 	{
 		void RenamedItem(string providerName, ISourceItem sourceItem, string oldName);

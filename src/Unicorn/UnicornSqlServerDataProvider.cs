@@ -1,25 +1,50 @@
-﻿using Sitecore.Data;
+﻿using System.Collections.Generic;
+using Sitecore.Data;
 using Sitecore.Data.DataProviders;
 using Sitecore.Data.Items;
 using Sitecore.Data.SqlServer;
 using Sitecore.Globalization;
+using System.Collections.ObjectModel;
 using Unicorn.Dependencies;
 
 namespace Unicorn
 {
+	/// <summary>
+	/// This is a Sitecore data provider that effectively provides reliable eventing services to one or more UnicornDataProviders,
+	/// which map to an individual configuration of Unicorn. This provider is a facade around the standard SqlServerDataProvider, so you
+	/// REPLACE the existing data provider for databases that use Unicorn.
+	/// 
+	/// To apply your own set of Unicorn data providers, inherit from this class and have your constructor call base(connectionString, null)
+	/// Then in your constructor call AddUnicornDataProvider() to add your provider(s) as needed.
+	/// 
+	/// If you're not using SQL server, you can implement an analogous provider to this one but inherit from your data provider type.
+	/// </summary>
 	public class UnicornSqlServerDataProvider : SqlServerDataProvider
 	{
-		private readonly UnicornDataProvider[] _unicornDataProviders;
+		private readonly List<UnicornDataProvider> _unicornDataProviders = new List<UnicornDataProvider>(); 
+		protected ReadOnlyCollection<UnicornDataProvider> UnicornDataProviders
+		{
+			get { return _unicornDataProviders.AsReadOnly();  }
+		}
 
 		public UnicornSqlServerDataProvider(string connectionString) : this(connectionString, Registry.Default.Resolve<UnicornDataProvider>())
 		{
 		}
 		
-		public UnicornSqlServerDataProvider(string connectionString, params UnicornDataProvider[] unicornDataProvider) : base(connectionString)
+		protected UnicornSqlServerDataProvider(string connectionString, params UnicornDataProvider[] unicornDataProviders) : base(connectionString)
 		{
-			_unicornDataProviders = unicornDataProvider;
-			foreach(var provider in _unicornDataProviders)
-				provider.DataProvider = this;
+			if (unicornDataProviders == null) return; // you can pass null for this from derived classes
+			// for times when you want to use AddUnicornDataProvider() to construct your providers from a method
+			// instead of inlined in the :base() call.
+
+			foreach (var provider in unicornDataProviders)
+				AddUnicornDataProvider(provider);
+		}
+
+		protected void AddUnicornDataProvider(UnicornDataProvider dataProvider)
+		{
+			dataProvider.DataProvider = this;
+			_unicornDataProviders.Add(dataProvider);
 		}
 
 		public override bool SaveItem(ItemDefinition itemDefinition, ItemChanges changes, CallContext context)
@@ -79,7 +104,7 @@ namespace Unicorn
 		{
 			if (!base.RemoveVersion(itemDefinition, version, context)) return false;
 
-			foreach(var provider in _unicornDataProviders)
+			foreach (var provider in _unicornDataProviders)
 				provider.RemoveVersion(itemDefinition, version, context);
 
 			return true;
@@ -89,7 +114,7 @@ namespace Unicorn
 		{
 			if (!base.RemoveVersions(itemDefinition, language, removeSharedData, context)) return false;
 
-			foreach (var provider in _unicornDataProviders)
+			foreach (var provider in UnicornDataProviders)
 				provider.RemoveVersions(itemDefinition, language, removeSharedData, context);
 
 			return true;
