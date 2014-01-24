@@ -3,12 +3,12 @@
 Unicorn is a utility for Sitecore that solves the issue of moving templates, renderings, and other database items between Sitecore instances. This becomes problematic when developers have their own local instances - packages are error-prone and tend to be forgotten on the way to production. Unicorn solves this issue by using the Serialization APIs to keep copies of Sitecore items on disk along with the code - this way, a copy of the necessary database items for a given codebase accompanies it in source control.
 
 For basic usage, Unicorn 2 has two moving parts:
-* Data provider - The default Sitecore data provided is extended to automatically serialize item changes as they are made to Sitecore. This means that at any given time, what's serialized is the "master copy."
+* Data provider - The default Sitecore data provider is extended to automatically serialize item changes as they are made to Sitecore. This means that at any given time, what's serialized is the "master copy."
 * Control panel - this tool (/unicorn.axd) is a page that can sync the state of Sitecore to the state stored on disk (respecting presets and exclusions). You do this after you pull down someone else's serialized changes from source control.
 
 Unicorn avoids the need to manually select changes to merge unlike some other serialization-based solutions because the disk is always kept up to date by the data provider. This means that if you pull changes in from someone else's Sitecore instance you will have to immediately merge and/or conflict resolve the serialized files in your source control system - leaving the disk still the master copy of everything. Then if you execute the sync page, the merged changes are synced into your Sitecore database.
 
-Before using Unicorn you should review the Sitecore Serialization Guide available on SDN (http://sdn.sitecore.net/upload/sitecore7/70/serialization_guide_sc70-a4.pdf) and familiarize yourself with how item serialization works. Make sure to read the 'Pitfalls' section below as well :)
+Before using Unicorn you should review the [Sitecore Serialization Guide](http://sdn.sitecore.net/upload/sitecore7/70/serialization_guide_sc70-a4.pdf) available on SDN and familiarize yourself with how item serialization works. Make sure to read the 'Pitfalls' section below as well :)
 
 ## Initial Setup
 * Install Unicorn. This is as simple as adding the Unicorn NuGet package to your project.
@@ -19,7 +19,7 @@ Before using Unicorn you should review the Sitecore Serialization Guide availabl
 ## Using Unicorn
 When using Unicorn it's important to follow the expected workflow.
 
-* When you update/pull from your source control system, you should execute the Sync operation on /unicorn.axd if any changes to .item files were present
+* When you update/pull from your source control system, you should execute the Sync operation on `/unicorn.axd` if any changes to .item files were present
 * When you commit to source control, include your changed items along with your code changes
 * Conflicts in items are resolved at the source control level - at any given time, the disk is considered the master copy of the Sitecore items (due to local changes being automatically serialized as they're made)
 
@@ -27,7 +27,7 @@ When using Unicorn it's important to follow the expected workflow.
 
 There are a few special features that Unicorn has that are worth mentioning.
 
-* Unicorn rejects "inconsequential" changes to items. Specifically the Sitecore Template Editor likes to make a lot of item saves that change nothing but the last modified date and revision. These are ignored to reduce churn in your source control.
+* Unicorn rejects "inconsequential" changes to items. The Sitecore Template Editor likes to make a lot of item saves that change nothing but the last modified date and revision. These are ignored to reduce churn in your source control.
 * During a sync operation, Unicorn can detect improperly merged renamed items (e.g. two serialized items with the same ID in different files) and will report that fact as an error.
 * Automatic retries are performed in the event of a load failure during a sync, which means that syncing items with a missing template along with the template itself in the same sync session will work correctly.
 * A custom deserialize routine allows Unicorn to report on exactly what was changed about a deserialized item (changed fields, added/removed versions, etc)
@@ -41,7 +41,7 @@ The Unicorn control panel looks for a pre-shared "Authenticate" HTTP header that
 
     <add key="DeploymentToolAuthToken" value="generate-a-long-random-string-for-this" />
 	
-Then when your build script calls the Unicorn control panel simply pass this key value along as an Authenticate HTTP header. For example using PowerShell 3.0 or later you would use this:
+Then when your build script calls the Unicorn control panel simply pass this key value along as an Authenticate HTTP header. For example using PowerShell 3.0 or later (such as with [Beaver](https://github.com/kamsar/Beaver)) you would use this:
 
 	$url = 'http://your-site-authoring-url/unicorn.axd?verb=Sync'
 	$deploymentToolAuthToken = 'generate-a-long-random-string-for-this'
@@ -51,13 +51,13 @@ Then when your build script calls the Unicorn control panel simply pass this key
 	
 Calls to the control panel from an automated script behave a little differently from interactive calls do. Specifically:
 
-* Automated calls are not streaming (e.g. nothing is written to the response until everything is complete)
+* Automated calls are not streaming (nothing is written to the response until everything is complete)
 * Automated calls return HTTP 500 if an error occurs (interactive calls that fail return HTTP 200, because the HTTP headers have been sent long before the error occurs). In the example PS script above, this will throw a PowerShell exception.
 * The output is text formatted, instead of HTML formatted, so it is much easier to read in logs.
 
 NOTE: When deploying to a Content Delivery server, the Unicorn Control Panel HTTP Handler and the Serialization.config file should be removed for security and performance reasons. When deploying to a Content Authoring server, you can remove the data provider configuration unless you need to track content changes made there for some reason.
 
-[Andrew Lansdowne](https://twitter.com/Rangler2) has also written a post _for version 1, so some of it is outdated_ about [setting up Unicorn with TeamCity and WebDeploy](http://andrew.lansdowne.me/2013/06/07/auto-deploy-sitecore-items-using-unicorn-and-teamcity/) that may be useful when setting up automated deployments.
+[Andrew Lansdowne](https://twitter.com/Rangler2) has also written a post _(for version 1, so some of it is outdated but the concepts still apply)_ about [setting up Unicorn with TeamCity and WebDeploy](http://andrew.lansdowne.me/2013/06/07/auto-deploy-sitecore-items-using-unicorn-and-teamcity/) that may be useful when setting up automated deployments.
 
 ## Unicorn's Sync Rules
 
@@ -78,9 +78,12 @@ _Note: these rules concern the default Evaluator only. This is probably what mak
 * Clone the repository
 * Place a copy of your Sitecore.Kernel.dll assembly (Sitecore 7+) in /lib/sitecore
 * Build the project using Visual Studio 2012 or later
-* Copy Unicorn.dll and Kamsar.WebConsole.dll to your main project in whatever fashion you wish (project reference, as binaries, etc)
+* Copy Unicorn.dll and Kamsar.WebConsole.dll to your main project in whatever fashion you wish (project reference, as binary references, etc)
 * Copy Serialization.config to your App_Config\Include folder
-* Register the Unicorn Control Panel under `system.webServer/handlers` in your Web.config: `<add name="Unicorn" path="unicorn.axd" verb="GET" type="Unicorn.ControlPanel.ControlPanelHandler, Unicorn" />`
+* Register the Unicorn Control Panel under `system.webServer/handlers` in your Web.config: 
+
+	<add name="Unicorn" path="unicorn.axd" verb="GET" type="Unicorn.ControlPanel.ControlPanelHandler, Unicorn" />
+	
 * Configure Serialization.config to your liking
 * Hit $yoursite/unicorn.axd to perform an initial serialization of your configured predicate
 
@@ -144,7 +147,10 @@ The database specific implementation is a subclass of the original Sitecore data
 
 If you want to wire multiple Unicorn data providers to your database, you create a class that derives from `UnicornSqlServerDataProvider`. In this class you can select to:
 
-* Create a constructor that injects your provider(s) using the base constructor: `public MyDataProvider(string connectionString) : base(connectionString, new UnicornDataProvider(), new UnicornDataProvider(), ...)`
+* Create a constructor that injects your provider(s) using the base constructor: 
+
+	public MyDataProvider(string connectionString) : base(connectionString, new UnicornDataProvider(), new UnicornDataProvider(), ...)
+	
 * Create a constructor that injects your provider(s) using code (this is better if you have to construct dependencies, etc that don't fit well in a base call):
 
      public MyDataProvider(string connectionString) : base(connectionString, null)
