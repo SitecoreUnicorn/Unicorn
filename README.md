@@ -82,8 +82,7 @@ _Note: these rules concern the default Evaluator only. This is probably what mak
 * Copy Serialization.config to your App_Config\Include folder
 * Register the Unicorn Control Panel under `system.webServer/handlers` in your Web.config: 
 
-
-	<add name="Unicorn" path="unicorn.axd" verb="GET" type="Unicorn.ControlPanel.ControlPanelHandler, Unicorn" />
+		<add name="Unicorn" path="unicorn.axd" verb="GET" type="Unicorn.ControlPanel.ControlPanelHandler, Unicorn" />
 	
 * Configure Serialization.config to your liking
 * Hit $yoursite/unicorn.axd to perform an initial serialization of your configured predicate
@@ -150,17 +149,16 @@ If you want to wire multiple Unicorn data providers to your database, you create
 
 * Create a constructor that injects your provider(s) using the base constructor: 
 
-
-	public MyDataProvider(string connectionString) : base(connectionString, new UnicornDataProvider(), new UnicornDataProvider(), ...)
+        public MyDataProvider(string connectionString) : base(connectionString, new UnicornDataProvider(), new UnicornDataProvider(), ...)
 	
 * Create a constructor that injects your provider(s) using code (this is better if you have to construct dependencies, etc that don't fit well in a base call):
 
 
-     public MyDataProvider(string connectionString) : base(connectionString, null)
-	 {
-		AddUnicornDataProvider(new UnicornDataProvider());
-		// ...
-	 }
+		 public MyDataProvider(string connectionString) : base(connectionString, null)
+		 {
+			AddUnicornDataProvider(new UnicornDataProvider());
+			// ...
+		 }
 
 ## TL;DR
 
