@@ -131,7 +131,7 @@ namespace Unicorn.Loader
 			{
 				// load the current level
 				LoadOneLevel(root, retryer, consistencyChecker);
-
+			
 				// check if we have child paths to recurse down
 				var children = root.GetChildReferences(false);
 
@@ -166,7 +166,7 @@ namespace Unicorn.Loader
 			}
 			catch (Exception ex)
 			{
-				retryer.AddRetry(root, ex);
+				retryer.AddTreeRetry(root, ex);
 			}
 		}
 
@@ -210,7 +210,7 @@ namespace Unicorn.Loader
 			}
 
 			// check for direct children of the target path
-			var children =rootSerializedItem.GetChildItems();
+			var children = rootSerializedItem.GetChildItems();
 			foreach (var child in children)
 			{
 				try
@@ -218,7 +218,7 @@ namespace Unicorn.Loader
 					if (child.IsStandardValuesItem)
 					{
 						orphanCandidates.Remove(child.Id); // avoid marking standard values items orphans
-						retryer.AddRetry(child, new StandardValuesException(child.ItemPath));
+						retryer.AddItemRetry(child, new StandardValuesException(child.ItemPath));
 					}
 					else
 					{
@@ -252,7 +252,7 @@ namespace Unicorn.Loader
 				catch (Exception ex)
 				{
 					// if a problem occurs we attempt to retry later
-					retryer.AddRetry(child, ex);
+					retryer.AddItemRetry(child, ex);
 
 					// don't treat errors as cause to delete an item
 					orphanCandidates.Remove(child.Id);
@@ -304,7 +304,7 @@ namespace Unicorn.Loader
 					updatedItem = Evaluator.EvaluateNewSerializedItem(serializedItem);
 				else
 					updatedItem = Evaluator.EvaluateUpdate(serializedItem, existingItem);
-				
+
 				return new ItemLoadResult(ItemLoadStatus.Success, updatedItem ?? existingItem);
 			}
 			finally
