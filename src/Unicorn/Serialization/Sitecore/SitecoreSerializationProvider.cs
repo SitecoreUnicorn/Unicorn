@@ -104,7 +104,7 @@ namespace Unicorn.Serialization.Sitecore
 						foreach (var file in files)
 							resultSet.Add(file);
 
-						string[] directories = PathUtils.GetDirectories(path);
+						string[] directories = SerializationPathUtility.GetDirectories(path, _rootPath);
 
 						// add directories that aren't already ref'd indirectly by a file
 						foreach (var directory in directories)

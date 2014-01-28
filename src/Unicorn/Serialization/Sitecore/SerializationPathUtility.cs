@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using Sitecore;
 using Sitecore.Data.Serialization;
 using Sitecore.Diagnostics;
+using Sitecore.IO;
 using Unicorn.Data;
 
 namespace Unicorn.Serialization.Sitecore
@@ -43,7 +47,7 @@ namespace Unicorn.Serialization.Sitecore
 			if (!path.StartsWith(rootDirectory, StringComparison.InvariantCultureIgnoreCase))
 				throw new ArgumentException("Reference path is not under the serialization root!");
 
-			return Path.Combine(rootDirectory, GetShortPathHash(path.Substring(PathUtils.Root.Length)));
+			return Path.Combine(rootDirectory, GetShortPathHash(path.Substring(rootDirectory.Length)));
 		}
 
 		/// <summary>
@@ -60,6 +64,64 @@ namespace Unicorn.Serialization.Sitecore
 		public static string GetReferenceItemPath(ISerializedReference reference)
 		{
 			return reference.ProviderId.EndsWith(PathUtils.Extension, StringComparison.OrdinalIgnoreCase) ? reference.ProviderId : reference.ProviderId + PathUtils.Extension;
+		}
+
+		public static string[] GetDirectories(string physicalPath, string serializationRootPath)
+		{
+			if (!Directory.Exists(physicalPath))
+				return new string[0];
+
+			var allDirectories = new List<string>(Directory.GetDirectories(physicalPath));
+
+			string relativePath = StringUtil.Mid(physicalPath, serializationRootPath.Length);
+			string shortPathRelativePath;
+			if (string.IsNullOrEmpty(relativePath))
+				shortPathRelativePath = string.Empty;
+			else
+				shortPathRelativePath = relativePath.Split(new []{Path.DirectorySeparatorChar})[0];
+
+			string[] shortLinkFiles = Directory.GetFiles(serializationRootPath + shortPathRelativePath, "link");
+			bool hasShortLinkFile = shortLinkFiles.Length == 1;
+
+			string shortLinkFileContent = string.Empty;
+			if (hasShortLinkFile)
+			{
+				shortLinkFileContent = File.ReadAllText(shortLinkFiles.First());
+			}
+
+			// this loop finds any short-links (serialization filenames too long for OS) and virtually adds them to the child list
+			foreach (string file in Directory.GetFiles(physicalPath))
+			{
+				string shortPath = string.Empty;
+				if (hasShortLinkFile)
+				{
+					try
+					{
+						string shortLinkTargetHashName = FileUtil.MakePath(StringUtil.Mid(relativePath, GetShortPathHash(relativePath).Length), Path.GetFileNameWithoutExtension(file));
+						string shortLinkTargetPath = FileUtil.MakePath(shortLinkFileContent, shortLinkTargetHashName);
+						if (!string.IsNullOrEmpty(shortLinkTargetPath))
+						{
+							var reference = new SitecoreSerializedReference(serializationRootPath + shortLinkTargetPath.Replace('/', '\\'), null);
+							shortPath = GetShortSerializedReferencePath(serializationRootPath, reference);
+						}
+					}
+// ReSharper disable once EmptyGeneralCatchClause
+					catch
+					{
+					}
+				}
+
+				if (string.IsNullOrEmpty(shortPath))
+				{
+					var reference = new SitecoreSerializedReference(PathUtils.StripPath(file), null);
+					shortPath = GetShortSerializedReferencePath(serializationRootPath, reference);
+				}
+
+				if (Directory.Exists(shortPath))
+					allDirectories.Add(shortPath);
+			}
+
+			return allDirectories.ToArray();
 		}
 
 		private static readonly MD5 ShortPathHashAlgorithm = MD5.Create();
