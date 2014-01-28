@@ -3,9 +3,11 @@ using System.Linq;
 using Moq;
 using NUnit.Framework;
 using Sitecore;
+using Sitecore.Diagnostics;
 using Unicorn.Data;
 using Unicorn.Evaluators;
 using Unicorn.Serialization;
+using Assert = NUnit.Framework.Assert;
 
 namespace Unicorn.Tests.Evaluator
 {
@@ -50,6 +52,41 @@ namespace Unicorn.Tests.Evaluator
 
 			foreach (var item in items)
 				item.Verify(x => x.Recycle(), Times.Exactly(1));
+		}
+
+		[Test]
+		public void EvaluateNewSerializedItem_ThrowsArgumentNullException_WhenNewItemIsNull()
+		{
+			var evaluator = CreateTestEvaluator();
+
+			Assert.Throws<ArgumentNullException>(() => evaluator.EvaluateNewSerializedItem(null));
+		}
+
+		[Test]
+		public void EvaluateNewSerializedItem_LogsCreatedItem()
+		{
+			var logger = new Mock<ISerializedAsMasterEvaluatorLogger>();
+			var evaluator = new SerializedAsMasterEvaluator(logger.Object);
+
+			var newItem = new Mock<ISerializedItem>();
+			newItem.Setup(x => x.Deserialize(It.IsAny<bool>())).Returns(new Mock<ISourceItem>().Object);
+
+			evaluator.EvaluateNewSerializedItem(newItem.Object);
+
+			logger.Verify(x => x.DeserializedNewItem(newItem.Object));
+		}
+
+		[Test]
+		public void EvaluateNewSerializedItem_DeserializesItem()
+		{
+			var evaluator = CreateTestEvaluator();
+
+			var newItem = new Mock<ISerializedItem>();
+			newItem.Setup(x => x.Deserialize(It.IsAny<bool>())).Returns(new Mock<ISourceItem>().Object);
+
+			evaluator.EvaluateNewSerializedItem(newItem.Object);
+
+			newItem.Verify(x => x.Deserialize(false));
 		}
 
 		[Test]
