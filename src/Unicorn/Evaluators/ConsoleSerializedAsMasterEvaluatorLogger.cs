@@ -55,7 +55,7 @@ namespace Unicorn.Evaluators
 			_progress.ReportStatus("> Orphaned version{0} {1} (source)", MessageType.Debug, orphanSourceVersions.Length > 1 ? "s" : string.Empty, string.Join(", ", orphanSourceVersions.Select(x => x.Language + "#" + x.VersionNumber)));
 		}
 
-		public void SerializedNewItem(ISerializedItem serializedItem)
+		public void DeserializedNewItem(ISerializedItem serializedItem)
 		{
 			_progress.ReportStatus("[A] {0}", MessageType.Info, serializedItem.DisplayIdentifier);
 		}

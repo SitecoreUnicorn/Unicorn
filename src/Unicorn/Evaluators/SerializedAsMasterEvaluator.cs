@@ -31,7 +31,7 @@ namespace Unicorn.Evaluators
 		{
 			Assert.ArgumentNotNull(newItem, "newItem");
 
-			Logger.SerializedNewItem(newItem);
+			Logger.DeserializedNewItem(newItem);
 
 			var updatedItem = DoDeserialization(newItem);
 

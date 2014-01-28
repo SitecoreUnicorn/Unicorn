@@ -39,7 +39,7 @@ namespace Unicorn.Evaluators
 		/// <summary>
 		/// Called when you serialize an item that does not yet exist in the provider
 		/// </summary>
-		void SerializedNewItem(ISerializedItem serializedItem);
+		void DeserializedNewItem(ISerializedItem serializedItem);
 
 		/// <summary>
 		/// Called when you serialize an updated item that already existed in the provider
