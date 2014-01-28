@@ -61,7 +61,7 @@ namespace Unicorn.Serialization.Sitecore
 
 		private void LoadItemPath()
 		{
-			var itemPath = PathUtils.MakeItemPath(ProviderId);
+			var itemPath = PathUtils.MakeItemPath(ProviderId, _sourceProvider.SerializationRoot);
 
 			// this will result in a path that includes the db as its first node, e.g.
 			// /master/sitecore/content/Home

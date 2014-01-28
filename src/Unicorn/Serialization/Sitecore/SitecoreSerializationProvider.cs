@@ -35,6 +35,12 @@ namespace Unicorn.Serialization.Sitecore
 			Assert.ArgumentNotNull(predicate, "predicate");
 
 			_predicate = predicate;
+
+			// an unspoken expectation of the Sitecore path utils is that the serialization root is always post-fixed with the directory separator char
+			// if this is not the case, custom path resolution can result in weird sitecore path mappings
+			if (rootPath[rootPath.Length - 1] != Path.DirectorySeparatorChar)
+				rootPath += Path.DirectorySeparatorChar;
+
 			_rootPath = rootPath;
 			_logName = logName;
 		}
@@ -382,6 +388,11 @@ namespace Unicorn.Serialization.Sitecore
 				}
 			}
 		}
+
+		/// <summary>
+		/// The root path on disk this provider writes its files to
+		/// </summary>
+		public string SerializationRoot { get { return _rootPath; } }
 
 		public virtual string FriendlyName
 		{
