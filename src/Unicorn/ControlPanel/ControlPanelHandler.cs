@@ -6,6 +6,7 @@ using System.Web.SessionState;
 using System.Web.UI;
 using Kamsar.WebConsole;
 using Sitecore.Security.Authentication;
+using Sitecore.SecurityModel;
 using Unicorn.Dependencies;
 using Unicorn.Predicates;
 using Unicorn.Serialization;
@@ -38,26 +39,34 @@ namespace Unicorn.ControlPanel
 			}
 			else
 			{
-				var verb = context.Request.QueryString["verb"];
-
-				switch (verb)
+				// this securitydisabler allows the control panel to execute unfettered when debug compilation is enabled but you are not signed into Sitecore
+				using (new SecurityDisabler())
 				{
-					case "Sync":
-						controls = GetSyncControls(Authorization.IsAutomatedTool);
-						break;
-					case "Reserialize":
-						controls = GetReserializeControls(Authorization.IsAutomatedTool);
-						break;
-					default:
-						controls = GetDefaultControls();
-						break;
+					var verb = context.Request.QueryString["verb"];
+
+					switch (verb)
+					{
+						case "Sync":
+							controls = GetSyncControls(Authorization.IsAutomatedTool);
+							break;
+						case "Reserialize":
+							controls = GetReserializeControls(Authorization.IsAutomatedTool);
+							break;
+						default:
+							controls = GetDefaultControls();
+							break;
+					}
 				}
 			}
 
 			using (var writer = new HtmlTextWriter(context.Response.Output))
 			{
-				foreach (var control in controls)
-					control.Render(writer);
+				// this securitydisabler allows the control panel to execute unfettered when debug compilation is enabled but you are not signed into Sitecore
+				using (new SecurityDisabler())
+				{
+					foreach (var control in controls)
+						control.Render(writer);
+				}
 			}
 		}
 
