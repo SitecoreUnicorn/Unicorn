@@ -58,7 +58,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Dependencies\DefaultDependencyRegistryTests.cs" />
     <Compile Include="Evaluator\SerializedAsMasterEvaluatorTests.cs" />
     <Compile Include="Loader\DuplicateIdConsistencyCheckerTests.cs" />
     <Compile Include="Loader\LoaderTests.cs" />

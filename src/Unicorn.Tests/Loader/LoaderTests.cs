@@ -8,6 +8,7 @@ using Sitecore.Data;
 using Unicorn.Data;
 using Unicorn.Evaluators;
 using Unicorn.Loader;
+using Unicorn.Logging;
 using Unicorn.Predicates;
 using Unicorn.Serialization;
 
@@ -43,7 +44,7 @@ namespace Unicorn.Tests.Loader
 			serializationProvider.Setup(x => x.GetReference(rootItem)).Returns((ISerializedReference)null);
 
 			var progress = new StringProgressStatus();
-			var logger = new ConsoleSerializationLoaderLogger(progress);
+			var logger = new DefaultSerializationLoaderLogger(new Mock<ILogger>().Object);
 
 			var loader = new SerializationLoader(serializationProvider.Object, new Mock<ISourceDataProvider>().Object, new Mock<IPredicate>().Object, new Mock<IEvaluator>().Object, logger);
 

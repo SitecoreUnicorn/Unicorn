@@ -40,6 +40,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\packages\Kamsar.WebConsole.1.2.2.0\lib\net40\Kamsar.WebConsole.dll</HintPath>
     </Reference>
+    <Reference Include="Ninject">
+      <HintPath>..\..\packages\Ninject.3.0.1.10\lib\net45-full\Ninject.dll</HintPath>
+    </Reference>
     <Reference Include="Sitecore.Kernel, Version=6.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\lib\Sitecore\Sitecore.Kernel.dll</HintPath>
@@ -70,16 +73,19 @@
     <Compile Include="Data\ISourceItemExtensions.cs" />
     <Compile Include="Data\ISourceDataProvider.cs" />
     <Compile Include="Data\SitecoreSourceDataProvider.cs" />
-    <Compile Include="DeferredLogWriter.cs" />
-    <Compile Include="Dependencies\DefaultDependencyRegistry.cs" />
-    <Compile Include="Dependencies\IDependencyRegistry.cs" />
-    <Compile Include="Dependencies\Registry.cs" />
-    <Compile Include="Dependencies\StaticDependencyRegistryWrapper.cs" />
-    <Compile Include="Dependencies\TinyIoC\TinyIoC.cs" />
-    <Compile Include="Dependencies\TinyIoC\TinyIoCAspNetExtensions.cs" />
+    <Compile Include="Dependencies\XmlConfigurationProvider.cs" />
+    <Compile Include="Dependencies\IConfigurationProvider.cs" />
+    <Compile Include="Logging\LoggingContext.cs" />
+    <Compile Include="Logging\WebConsoleLogger.cs" />
+    <Compile Include="Logging\PubSubLogger.cs" />
+    <Compile Include="Logging\DeferredLogWriter.cs" />
+    <Compile Include="Dependencies\NinjectConfiguration.cs" />
+    <Compile Include="Dependencies\IConfiguration.cs" />
+    <Compile Include="Dependencies\UnicornConfigurationManager.cs" />
+    <Compile Include="Dependencies\ReadOnlyDependencyRegistry.cs" />
     <Compile Include="DeserializationAggregateException.cs" />
     <Compile Include="DeserializationException.cs" />
-    <Compile Include="Evaluators\ConsoleSerializedAsMasterEvaluatorLogger.cs" />
+    <Compile Include="Evaluators\DefaultSerializedAsMasterEvaluatorLogger.cs" />
     <Compile Include="Evaluators\SerializedAsMasterEvaluator.cs" />
     <Compile Include="Evaluators\EvaluatorUtility.cs" />
     <Compile Include="Evaluators\IEvaluator.cs" />
@@ -87,14 +93,16 @@
     <Compile Include="Evaluators\ISerializedAsMasterEvaluatorLogger.cs" />
     <Compile Include="IUnicornDataProviderLogger.cs" />
     <Compile Include="Loader\ConsistencyException.cs" />
-    <Compile Include="Loader\ConsoleDuplicateIdConsistencyCheckerLogger.cs" />
-    <Compile Include="Loader\ConsoleSerializationLoaderLogger.cs" />
+    <Compile Include="Loader\DefaultDuplicateIdConsistencyCheckerLogger.cs" />
+    <Compile Include="Loader\DefaultSerializationLoaderLogger.cs" />
     <Compile Include="Loader\DeserializeFailureRetryer.cs" />
     <Compile Include="Loader\DuplicateIdConsistencyChecker.cs" />
     <Compile Include="Loader\IConsistencyChecker.cs" />
     <Compile Include="Loader\IDeserializeFailureRetryer.cs" />
     <Compile Include="Loader\IDuplicateIdConsistencyCheckerLogger.cs" />
     <Compile Include="Loader\ISerializationLoaderLogger.cs" />
+    <Compile Include="Logging\ILogger.cs" />
+    <Compile Include="Logging\SitecoreLogger.cs" />
     <Compile Include="Predicates\PredicateResult.cs" />
     <Compile Include="Predicates\IPredicate.cs" />
     <Compile Include="Predicates\SerializationPresetPredicate.cs" />
@@ -104,11 +112,10 @@
     <Compile Include="Serialization\ISerializedItemExtensions.cs" />
     <Compile Include="Data\FieldDictionary.cs" />
     <Compile Include="Data\SitecoreSourceItem.cs" />
-    <Compile Include="Serialization\Sitecore\Fiat\ConsoleFiatDeserializerLogger.cs" />
+    <Compile Include="Serialization\Sitecore\Fiat\DefaultFiatDeserializerLogger.cs" />
     <Compile Include="Serialization\Sitecore\Fiat\FiatDeserializer.cs" />
     <Compile Include="Serialization\Sitecore\Fiat\FiatSitecoreSerializationProvider.cs" />
     <Compile Include="Serialization\Sitecore\Fiat\IFiatDeserializerLogger.cs" />
-    <Compile Include="Serialization\Sitecore\Fiat\NullFiatDeserializerLogger.cs" />
     <Compile Include="Serialization\Sitecore\SerializationPathUtility.cs" />
     <Compile Include="Serialization\Sitecore\SyncItemExtensions.cs" />
     <Compile Include="Serialization\ISerializationProvider.cs" />
@@ -118,7 +125,7 @@
     <Compile Include="Serialization\Sitecore\SitecoreSerializationProvider.cs" />
     <Compile Include="Serialization\Sitecore\SitecoreSerializedItem.cs" />
     <Compile Include="Serialization\Sitecore\SitecoreSerializedReference.cs" />
-    <Compile Include="SitecoreLogUnicornDataProviderLogger.cs" />
+    <Compile Include="DefaultUnicornDataProviderLogger.cs" />
     <Compile Include="StandardValuesException.cs" />
     <Compile Include="UnicornDataProvider.cs" />
     <Compile Include="UnicornSqlServerDataProvider.cs" />
@@ -127,12 +134,7 @@
     <None Include="packages.config" />
     <None Include="Serialization.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Content Include="TODO.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Pipelines\HttpRequestBegin\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

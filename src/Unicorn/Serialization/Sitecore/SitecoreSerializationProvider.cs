@@ -28,7 +28,7 @@ namespace Unicorn.Serialization.Sitecore
 		/// <param name="predicate">The predicate to use. If null, uses Registry to look up the registered DI instance.</param>
 		public SitecoreSerializationProvider(IPredicate predicate, string rootPath = null, string logName = "UnicornItemSerialization")
 		{
-			rootPath = rootPath ?? PathUtils.Root;
+			rootPath = (rootPath == null || rootPath == "default") ? PathUtils.Root : rootPath;
 
 			Assert.ArgumentNotNullOrEmpty(rootPath, "rootPath");
 			Assert.ArgumentNotNullOrEmpty(logName, "logName");

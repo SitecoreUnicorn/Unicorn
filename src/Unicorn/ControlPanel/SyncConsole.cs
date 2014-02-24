@@ -1,6 +1,7 @@
 ﻿using Kamsar.WebConsole;
 using Unicorn.Dependencies;
 using Unicorn.Loader;
+using Unicorn.Logging;
 
 namespace Unicorn.ControlPanel
 {
@@ -9,11 +10,11 @@ namespace Unicorn.ControlPanel
 	/// </summary>
 	public class SyncConsole : ControlPanelConsole
 	{
-		private readonly IDependencyRegistry _dependencyRegistry;
+		private readonly IConfiguration[] _configurations;
 
-		public SyncConsole(bool isAutomatedTool, IDependencyRegistry dependencyRegistry) : base(isAutomatedTool)
+		public SyncConsole(bool isAutomatedTool, IConfiguration[] configurations) : base(isAutomatedTool)
 		{
-			_dependencyRegistry = dependencyRegistry;
+			_configurations = configurations;
 		}
 
 		protected override string Title
@@ -23,12 +24,17 @@ namespace Unicorn.ControlPanel
 
 		protected override void Process(IProgressStatus progress)
 		{
-			// tell the Unicorn DI container to wire to the console for its progress logging
-			_dependencyRegistry.Register(() => progress);
+			foreach (var configuration in _configurations)
+			{
+				using (new LoggingContext(new WebConsoleLogger(progress), configuration))
+				{
+					progress.ReportStatus("Processing Unicorn configuration " + configuration.Name);
 
-			var loader = _dependencyRegistry.Resolve<SerializationLoader>();
+					var loader = configuration.Resolve<SerializationLoader>();
 
-			loader.LoadAll(_dependencyRegistry);
+					loader.LoadAll(configuration);
+				}
+			}
 		}
 	}
 }

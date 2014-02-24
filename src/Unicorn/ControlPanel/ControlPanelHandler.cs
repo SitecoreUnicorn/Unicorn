@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Linq;
 using System.Web;
 using System.Web.SessionState;
 using System.Web.UI;
@@ -20,11 +21,11 @@ namespace Unicorn.ControlPanel
 			get { return false; }
 		}
 
-		private IDependencyRegistry _dependencyRegistry = Registry.CreateCopyOfDefault();
-		protected IDependencyRegistry DependencyRegistry 
+		private IConfiguration[] _configurations = UnicornConfigurationManager.Configurations;
+		protected IConfiguration[] Configurations
 		{
-			get { return _dependencyRegistry; }
-			set { _dependencyRegistry = value; } 
+			get { return _configurations; }
+			set { _configurations = value; }
 		}
 
 		public void ProcessRequest(HttpContext context)
@@ -72,49 +73,54 @@ namespace Unicorn.ControlPanel
 
 		protected virtual IEnumerable<IControlPanelControl> GetDefaultControls()
 		{
-			// bit of a hack - default config depends on the reg of one of these
-			DependencyRegistry.Register<IProgressStatus>(() => new StringProgressStatus());
+			var hasSerializedItems = Configurations.Any(config => ControlPanelUtility.HasAnySerializedItems(config.Resolve<IPredicate>(), config.Resolve<ISerializationProvider>()));
+			var hasValidSerializedItems = Configurations.Any(config => config.Resolve<IPredicate>().GetRootItems().Length > 0);
 
-			var hasSerializedItems = ControlPanelUtility.HasAnySerializedItems(DependencyRegistry.Resolve<IPredicate>(), DependencyRegistry.Resolve<ISerializationProvider>());
 			var isAuthorized = Authorization.IsAllowed;
 
-			yield return DependencyRegistry.Resolve<Html5HeadAndStyles>();
+			yield return new Html5HeadAndStyles();
 
-			var heading = DependencyRegistry.Resolve<Heading>();
+			var heading = new Heading();
 			heading.HasSerializedItems = hasSerializedItems;
+			heading.HasValidSerializedItems = hasValidSerializedItems;
 			heading.IsAuthenticated = isAuthorized;
 			yield return heading;
 
-			if (isAuthorized)
+			foreach (var configuration in Configurations)
 			{
-				if (hasSerializedItems)
+				if (isAuthorized)
 				{
-					yield return DependencyRegistry.Resolve<ControlOptions>();
+					if (hasSerializedItems)
+					{
+						yield return configuration.Resolve<ControlOptions>();
+					}
+
+					yield return configuration.Resolve<Configuration>();
+
+					if (!hasSerializedItems)
+					{
+						yield return configuration.Resolve<InitialSetup>();
+					}
+				}
+				else
+				{
+					yield return configuration.Resolve<AccessDenied>();
 				}
 
-				yield return DependencyRegistry.Resolve<Configuration>();
 
-				if (!hasSerializedItems)
-				{
-					yield return DependencyRegistry.Resolve<InitialSetup>();
-				}
-			}
-			else
-			{
-				yield return DependencyRegistry.Resolve<AccessDenied>();
 			}
 
-			yield return DependencyRegistry.Resolve<Html5Footer>();
+			yield return new Html5Footer();
 		}
 
 		protected virtual IEnumerable<IControlPanelControl> GetReserializeControls(bool isAutomatedTool)
 		{
-			yield return new ReserializeConsole(isAutomatedTool, DependencyRegistry);
+			yield return new ReserializeConsole(isAutomatedTool, Configurations);
 		}
 
 		protected virtual IEnumerable<IControlPanelControl> GetSyncControls(bool isAutomatedTool)
 		{
-			yield return new SyncConsole(isAutomatedTool, DependencyRegistry);
+			yield return new SyncConsole(isAutomatedTool, Configurations);
 		}
 
 		protected virtual SecurityState Authorization

@@ -1,3 +1,0 @@
-﻿TODO:
-- Write integration tests for Sitecore-based providers
-- Cleanup, docs, release.

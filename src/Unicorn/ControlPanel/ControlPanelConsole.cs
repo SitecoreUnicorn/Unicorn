@@ -97,6 +97,10 @@ namespace Unicorn.ControlPanel
 					Process(loggingConsole);
 				}
 			}
+			catch (Exception ex)
+			{
+				progress.ReportException(ex);
+			}
 			finally
 			{
 				heartbeat.Stop();

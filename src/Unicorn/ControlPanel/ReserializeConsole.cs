@@ -1,6 +1,7 @@
 ﻿using Kamsar.WebConsole;
 using Unicorn.Data;
 using Unicorn.Dependencies;
+using Unicorn.Logging;
 using Unicorn.Predicates;
 using Unicorn.Serialization;
 
@@ -8,11 +9,11 @@ namespace Unicorn.ControlPanel
 {
 	public class ReserializeConsole : ControlPanelConsole
 	{
-		private readonly IDependencyRegistry _dependencyRegistry;
+		private readonly IConfiguration[] _configurations;
 
-		public ReserializeConsole(bool isAutomatedTool, IDependencyRegistry dependencyRegistry) : base(isAutomatedTool)
+		public ReserializeConsole(bool isAutomatedTool, IConfiguration[] configurations) : base(isAutomatedTool)
 		{
-			_dependencyRegistry = dependencyRegistry;
+			_configurations = configurations;
 		}
 
 		protected override string Title
@@ -22,28 +23,33 @@ namespace Unicorn.ControlPanel
 
 		protected override void Process(IProgressStatus progress)
 		{
-			// tell the Unicorn DI container to wire to the console for its progress logging
-			_dependencyRegistry.Register(() => progress);
-
-			var predicate = _dependencyRegistry.Resolve<IPredicate>();
-			var serializationProvider = _dependencyRegistry.Resolve<ISerializationProvider>();
-
-			var roots = predicate.GetRootItems();
-
-			int index = 1;
-			foreach (var root in roots)
+			foreach (var configuration in _configurations)
 			{
-				var rootReference = serializationProvider.GetReference(root);
-				if (rootReference != null)
+				using (new LoggingContext(new WebConsoleLogger(progress), configuration))
 				{
-					progress.ReportStatus("[D] existing serialized items under {0}", MessageType.Warning, rootReference.DisplayIdentifier);
-					rootReference.Delete();
-				}
+					progress.ReportStatus("Processing Unicorn configuration " + configuration.Name);
 
-				progress.ReportStatus("[U] Serializing included items under root {0}", MessageType.Info, root.DisplayIdentifier);
-				Serialize(root, predicate, serializationProvider, progress);
-				progress.Report((int) ((index/(double) roots.Length)*100));
-				index++;
+					var predicate = configuration.Resolve<IPredicate>();
+					var serializationProvider = configuration.Resolve<ISerializationProvider>();
+
+					var roots = predicate.GetRootItems();
+
+					int index = 1;
+					foreach (var root in roots)
+					{
+						var rootReference = serializationProvider.GetReference(root);
+						if (rootReference != null)
+						{
+							progress.ReportStatus("[D] existing serialized items under {0}", MessageType.Warning, rootReference.DisplayIdentifier);
+							rootReference.Delete();
+						}
+
+						progress.ReportStatus("[U] Serializing included items under root {0}", MessageType.Info, root.DisplayIdentifier);
+						Serialize(root, predicate, serializationProvider, progress);
+						progress.Report((int) ((index/(double) roots.Length)*100));
+						index++;
+					}
+				}
 			}
 		}
 

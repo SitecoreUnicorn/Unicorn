@@ -8,6 +8,7 @@ using Sitecore.Pipelines.Save;
 using Sitecore.Data.Items;
 using Sitecore.Data.Fields;
 using Unicorn.Data;
+using Unicorn.Dependencies;
 using Unicorn.Predicates;
 using Unicorn.Serialization;
 
@@ -32,13 +33,17 @@ namespace Unicorn
 	/// </remarks>
 	public class SerializationConflictProcessor
 	{
-		private readonly ISerializationProvider _serializationProvider;
-		private readonly IPredicate _predicate;
+		private readonly IConfiguration[] _configurations;
 
-		public SerializationConflictProcessor(ISerializationProvider serializationProvider, IPredicate predicate)
+		public SerializationConflictProcessor()
+			: this(UnicornConfigurationManager.Configurations)
 		{
-			_serializationProvider = serializationProvider;
-			_predicate = predicate;
+			
+		}
+
+		protected SerializationConflictProcessor(IConfiguration[] configurations)
+		{
+			_configurations = configurations;
 		}
 
 		public void Process(SaveArgs args)
@@ -79,23 +84,27 @@ namespace Unicorn
 
 					var existingSitecoreItem = new SitecoreSourceItem(existingItem);
 
-					// ignore conflicts on items that Unicorn is not managing
-					if (!_predicate.Includes(existingSitecoreItem).IsIncluded) continue;
+					foreach (var configuration in _configurations)
+					{
+						// ignore conflicts on items that Unicorn is not managing
+						if (!configuration.Resolve<IPredicate>().Includes(existingSitecoreItem).IsIncluded) continue;
 
-					ISerializedReference serializedReference = _serializationProvider.GetReference(existingSitecoreItem);
+						ISerializedReference serializedReference = configuration.Resolve<ISerializationProvider>().GetReference(existingSitecoreItem);
 					
-					if(serializedReference == null) continue;
+						if(serializedReference == null) continue;
 
-					// not having an existing serialized version means no possibility of conflict here
-					ISerializedItem serializedItem = serializedReference.GetItem();
+						// not having an existing serialized version means no possibility of conflict here
+						ISerializedItem serializedItem = serializedReference.GetItem();
 
-					if (serializedItem == null) continue;
+						if (serializedItem == null) continue;
 
-					var fieldIssues = GetFieldSyncStatus(existingSitecoreItem, serializedItem);
+						var fieldIssues = GetFieldSyncStatus(existingSitecoreItem, serializedItem);
 
-					if (fieldIssues.Count == 0) continue;
+						if (fieldIssues.Count == 0) continue;
 
-					results.Add(existingItem, fieldIssues);
+						results.Add(existingItem, fieldIssues);
+					}
+					
 				}
 
 				// no problems

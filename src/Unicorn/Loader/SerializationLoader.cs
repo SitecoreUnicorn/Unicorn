@@ -43,7 +43,7 @@ namespace Unicorn.Loader
 		/// <summary>
 		/// Loads all items in the configured predicate
 		/// </summary>
-		public virtual void LoadAll(IDependencyRegistry dependencyConfiguration)
+		public virtual void LoadAll(IConfiguration dependencyConfiguration)
 		{
 			LoadAll(dependencyConfiguration.Resolve<IDeserializeFailureRetryer>(), dependencyConfiguration.Resolve<IConsistencyChecker>());
 		}
@@ -65,7 +65,7 @@ namespace Unicorn.Loader
 		/// <summary>
 		/// Loads a preset from serialized items on disk.
 		/// </summary>
-		public virtual void LoadTree(ISourceItem rootItem, IDependencyRegistry dependencyConfiguration)
+		public virtual void LoadTree(ISourceItem rootItem, IConfiguration dependencyConfiguration)
 		{
 			LoadTree(rootItem, dependencyConfiguration.Resolve<IDeserializeFailureRetryer>(), dependencyConfiguration.Resolve<IConsistencyChecker>());
 		}

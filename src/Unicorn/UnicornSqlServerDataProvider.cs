@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Sitecore.Data;
 using Sitecore.Data.DataProviders;
 using Sitecore.Data.Items;
@@ -27,7 +28,7 @@ namespace Unicorn
 			get { return _unicornDataProviders.AsReadOnly();  }
 		}
 
-		public UnicornSqlServerDataProvider(string connectionString) : this(connectionString, Registry.Default.Resolve<UnicornDataProvider>())
+		public UnicornSqlServerDataProvider(string connectionString) : this(connectionString, UnicornConfigurationManager.Configurations.Select(x=>x.Resolve<UnicornDataProvider>()).ToArray())
 		{
 		}
 		

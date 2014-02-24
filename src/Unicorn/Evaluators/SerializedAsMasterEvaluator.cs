@@ -3,6 +3,7 @@ using Sitecore.Data;
 using Sitecore.Diagnostics;
 using Unicorn.ControlPanel;
 using Unicorn.Data;
+using Unicorn.Logging;
 using Unicorn.Serialization;
 using System.Collections.Generic;
 
