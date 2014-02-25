@@ -1,4 +1,8 @@
-﻿using Kamsar.WebConsole;
+﻿using System;
+using System.Linq;
+using System.Web;
+using Kamsar.WebConsole;
+using Sitecore.StringExtensions;
 using Unicorn.Data;
 using Unicorn.Dependencies;
 using Unicorn.Logging;
@@ -11,7 +15,8 @@ namespace Unicorn.ControlPanel
 	{
 		private readonly IConfiguration[] _configurations;
 
-		public ReserializeConsole(bool isAutomatedTool, IConfiguration[] configurations) : base(isAutomatedTool)
+		public ReserializeConsole(bool isAutomatedTool, IConfiguration[] configurations)
+			: base(isAutomatedTool)
 		{
 			_configurations = configurations;
 		}
@@ -23,11 +28,13 @@ namespace Unicorn.ControlPanel
 
 		protected override void Process(IProgressStatus progress)
 		{
-			foreach (var configuration in _configurations)
+			foreach (var configuration in ResolveConfigurations())
 			{
+				var logger = configuration.Resolve<ILogger>();
+
 				using (new LoggingContext(new WebConsoleLogger(progress), configuration))
 				{
-					progress.ReportStatus("Processing Unicorn configuration " + configuration.Name);
+					logger.Info("Control Panel Reserialize: Processing Unicorn configuration " + configuration.Name);
 
 					var predicate = configuration.Resolve<IPredicate>();
 					var serializationProvider = configuration.Resolve<ISerializationProvider>();
@@ -40,20 +47,22 @@ namespace Unicorn.ControlPanel
 						var rootReference = serializationProvider.GetReference(root);
 						if (rootReference != null)
 						{
-							progress.ReportStatus("[D] existing serialized items under {0}", MessageType.Warning, rootReference.DisplayIdentifier);
+							logger.Warn("[D] existing serialized items under {0}".FormatWith(rootReference.DisplayIdentifier));
 							rootReference.Delete();
 						}
 
-						progress.ReportStatus("[U] Serializing included items under root {0}", MessageType.Info, root.DisplayIdentifier);
-						Serialize(root, predicate, serializationProvider, progress);
-						progress.Report((int) ((index/(double) roots.Length)*100));
+						logger.Info("[U] Serializing included items under root {0}".FormatWith(root.DisplayIdentifier));
+						Serialize(root, predicate, serializationProvider, logger);
+						progress.Report((int)((index / (double)roots.Length) * 100));
 						index++;
 					}
+
+					logger.Info("Control Panel Reserialize: Finished reserializing Unicorn configuration " + configuration.Name);
 				}
 			}
 		}
 
-		private void Serialize(ISourceItem root, IPredicate predicate, ISerializationProvider serializationProvider, IProgressStatus progress)
+		private void Serialize(ISourceItem root, IPredicate predicate, ISerializationProvider serializationProvider, ILogger logger)
 		{
 			var predicateResult = predicate.Includes(root);
 			if (predicateResult.IsIncluded)
@@ -62,13 +71,26 @@ namespace Unicorn.ControlPanel
 
 				foreach (var child in root.Children)
 				{
-					Serialize(child, predicate, serializationProvider, progress);
+					Serialize(child, predicate, serializationProvider, logger);
 				}
 			}
 			else
 			{
-				progress.ReportStatus("[S] {0} because {1}", MessageType.Warning, root.DisplayIdentifier, predicateResult.Justification);
+				logger.Warn("[S] {0} because {1}".FormatWith(root.DisplayIdentifier, predicateResult.Justification));
 			}
+		}
+
+		protected virtual IConfiguration[] ResolveConfigurations()
+		{
+			var config = HttpContext.Current.Request.QueryString["configuration"];
+
+			if (string.IsNullOrWhiteSpace(config)) return _configurations;
+
+			var targetConfiguration = _configurations.FirstOrDefault(x => x.Name == config);
+
+			if (targetConfiguration == null) throw new ArgumentException("Configuration requested was not defined.");
+
+			return new[] { targetConfiguration };
 		}
 	}
 }

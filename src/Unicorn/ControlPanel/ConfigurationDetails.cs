@@ -9,14 +9,14 @@ namespace Unicorn.ControlPanel
 	/// <summary>
 	/// Renders the current dependency/provider configuration for Unicorn, using IDocumentable to show additional details when available.
 	/// </summary>
-	public class Configuration : IControlPanelControl
+	public class ConfigurationDetails : IControlPanelControl
 	{
 		private readonly IPredicate _predicate;
 		private readonly ISerializationProvider _serializationProvider;
 		private readonly ISourceDataProvider _sourceDataProvider;
 		private readonly IEvaluator _evaluator;
 
-		public Configuration(IPredicate predicate, ISerializationProvider serializationProvider, ISourceDataProvider sourceDataProvider, IEvaluator evaluator)
+		public ConfigurationDetails(IPredicate predicate, ISerializationProvider serializationProvider, ISourceDataProvider sourceDataProvider, IEvaluator evaluator)
 		{
 			_predicate = predicate;
 			_serializationProvider = serializationProvider;
@@ -24,9 +24,18 @@ namespace Unicorn.ControlPanel
 			_evaluator = evaluator;
 		}
 
+		public string ConfigurationName { get; set; }
+		public bool CollapseByDefault { get; set; }
+
 		public void Render(HtmlTextWriter writer)
 		{
-			writer.Write("<h2>Current Configuration</h2>");
+			if (CollapseByDefault) writer.Write("<h4 class=\"expand\">{0} Details</h4>", ConfigurationName);
+			else writer.Write("<h4>{0} Details</h4>", ConfigurationName);
+
+			if(CollapseByDefault) writer.AddAttribute("class", "details collapsed");
+			else writer.AddAttribute("class", "details");
+
+			writer.RenderBeginTag("ul");
 
 			RenderType("Predicate", 
 				"Predicates define what items get included into Unicorn, because you don't want to serialize everything. You can implement your own to use any criteria for inclusion you can possibly imagine.", 
@@ -48,28 +57,32 @@ namespace Unicorn.ControlPanel
 				_evaluator,
 				writer);
 
+			writer.RenderEndTag(); // ul
 		}
 
 		private void RenderType(string categorization, string categoryDescription, object type, HtmlTextWriter writer)
 		{
 			var documentable = type as IDocumentable;
 
-			writer.RenderBeginTag("fieldset");
-				writer.RenderBeginTag("legend");
+			writer.RenderBeginTag("li");
+				writer.RenderBeginTag("h5");
 					writer.Write(categorization);
 					RenderHelp(categoryDescription, writer);
 				writer.RenderEndTag();
 
-				writer.RenderBeginTag("h4");
-					if (documentable == null)
-					{
-						writer.Write(type.GetType().Name + " (does not implement IDocumentable)");
-						writer.RenderEndTag();
-						return;
-					}
+				writer.RenderBeginTag("p");
+					writer.RenderBeginTag("strong");
+						if (documentable == null)
+						{
+							writer.Write(type.GetType().Name + " (does not implement IDocumentable)");
+							writer.RenderEndTag();
+							return;
+						}
 
-					writer.Write(documentable.FriendlyName);
-					writer.Write(" <pre>({0})</pre>", type.GetType().FullName);
+						writer.Write(documentable.FriendlyName);
+					writer.RenderEndTag();
+
+					writer.Write(" <code>({0})</code>", type.GetType().FullName);
 				writer.RenderEndTag();
 
 				if (!string.IsNullOrWhiteSpace(documentable.Description))
@@ -82,10 +95,6 @@ namespace Unicorn.ControlPanel
 					writer.RenderEndTag();
 					return;
 				}
-
-				writer.RenderBeginTag("h5");
-					writer.Write("Configuration Details");
-				writer.RenderEndTag();
 
 				writer.RenderBeginTag("ul");
 					foreach (var config in configuration)

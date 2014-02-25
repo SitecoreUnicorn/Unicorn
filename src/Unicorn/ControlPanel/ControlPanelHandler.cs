@@ -8,6 +8,7 @@ using System.Web.UI;
 using Kamsar.WebConsole;
 using Sitecore.Security.Authentication;
 using Sitecore.SecurityModel;
+using Sitecore.StringExtensions;
 using Unicorn.Dependencies;
 using Unicorn.Predicates;
 using Unicorn.Serialization;
@@ -73,8 +74,8 @@ namespace Unicorn.ControlPanel
 
 		protected virtual IEnumerable<IControlPanelControl> GetDefaultControls()
 		{
-			var hasSerializedItems = Configurations.Any(config => ControlPanelUtility.HasAnySerializedItems(config.Resolve<IPredicate>(), config.Resolve<ISerializationProvider>()));
-			var hasValidSerializedItems = Configurations.Any(config => config.Resolve<IPredicate>().GetRootItems().Length > 0);
+			var hasSerializedItems = Configurations.All(config => ControlPanelUtility.HasAnySerializedItems(config.Resolve<IPredicate>(), config.Resolve<ISerializationProvider>()));
+			var hasValidSerializedItems = Configurations.All(config => config.Resolve<IPredicate>().GetRootItems().Length > 0);
 
 			var isAuthorized = Authorization.IsAllowed;
 
@@ -86,28 +87,54 @@ namespace Unicorn.ControlPanel
 			heading.IsAuthenticated = isAuthorized;
 			yield return heading;
 
-			foreach (var configuration in Configurations)
+			if (isAuthorized)
 			{
-				if (isAuthorized)
+				if (Configurations.Length > 1 && hasSerializedItems && hasValidSerializedItems)
 				{
-					if (hasSerializedItems)
-					{
-						yield return configuration.Resolve<ControlOptions>();
-					}
+					yield return new Literal("<h2>Global Actions</h2>");
 
-					yield return configuration.Resolve<Configuration>();
+					yield return new ControlOptions();
 
-					if (!hasSerializedItems)
-					{
-						yield return configuration.Resolve<InitialSetup>();
-					}
-				}
-				else
-				{
-					yield return configuration.Resolve<AccessDenied>();
+					yield return new Literal("<h2>Configurations</h2>");
 				}
 
+				foreach (var configuration in Configurations)
+				{
+					var configurationHasSerializedItems = ControlPanelUtility.HasAnySerializedItems(configuration.Resolve<IPredicate>(), configuration.Resolve<ISerializationProvider>());
+					var configurationHasValidRootItems = configuration.Resolve<IPredicate>().GetRootItems().Length > 0;
 
+					yield return new Literal("<div class=\"configuration\"><h3>{0}</h3><section>".FormatWith(configuration.Name));
+
+					if(!configurationHasValidRootItems)
+						yield return new Literal("<p class=\"warning\">This configuration's predicate cannot resolve any valid root items. This usually means it is configured to look for nonexistant paths or GUIDs. Please review your predicate configuration.</p>");
+					else if (!configurationHasSerializedItems)
+						yield return new Literal("<p class=\"warning\">This configuration does not currently have any valid serialized items. You cannot sync it until you perform an initial serialization.</p>");
+
+					if (configurationHasSerializedItems)
+					{
+						var controlOptions = configuration.Resolve<ControlOptions>();
+						controlOptions.ConfigurationName = configuration.Name;
+						yield return controlOptions;
+					}
+
+					var configDetails = configuration.Resolve<ConfigurationDetails>();
+					configDetails.ConfigurationName = configuration.Name;
+					configDetails.CollapseByDefault = configurationHasSerializedItems;
+					yield return configDetails;
+
+					if (!configurationHasSerializedItems)
+					{
+						var initialSetup = configuration.Resolve<InitialSetup>();
+						initialSetup.ConfigurationName = configuration.Name;
+						yield return initialSetup;
+					}
+
+					yield return new Literal("</section></div>");
+				}
+			}
+			else
+			{
+				yield return new AccessDenied();
 			}
 
 			yield return new Html5Footer();

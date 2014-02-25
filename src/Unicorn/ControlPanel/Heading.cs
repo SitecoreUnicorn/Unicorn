@@ -22,9 +22,9 @@ namespace Unicorn.ControlPanel
 				if (!HasSerializedItems)
 				{
 					if(HasValidSerializedItems)
-						writer.Write("<p class=\"warning\">Warning: you have not serialized any items yet. Unicorn cannot operate until this is complete. Please review the configuration below and then perform initial serialization if it is accurate. If you need to change your config, see App_Config\\Include\\Serialization.config.</p>");
+						writer.Write("<p class=\"warning\">Warning: at least one configuration has not serialized any items yet. Unicorn cannot operate properly until this is complete. Please review the configuration below and then perform initial serialization if it is accurate. If you need to change your config, see App_Config\\Include\\Serialization.config.</p>");
 					else 
-						writer.Write("<p class=\"warning\">Warning: your current predicate configuration does not have any valid root items defined. Nothing will be serialized until valid root items to start serializing from can be resolved. Please review your predicate configuration.</p>");
+						writer.Write("<p class=\"warning\">Warning: your current predicate configuration for at least one configuration does not have any valid root items defined. Nothing will be serialized until valid root items to start serializing from can be resolved. Please review your predicate configuration.</p>");
 				}
 			}
 		}

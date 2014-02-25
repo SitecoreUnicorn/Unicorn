@@ -90,11 +90,9 @@ namespace Unicorn.ControlPanel
 
 			try
 			{
-				// log to both to the web console AND the Sitecore logs
-				var loggingConsole = new TeeProgressStatus(progress, new SitecoreLogProgressStatus());
 				using (new SecurityDisabler())
 				{
-					Process(loggingConsole);
+					Process(progress);
 				}
 			}
 			catch (Exception ex)
@@ -108,6 +106,7 @@ namespace Unicorn.ControlPanel
 
 			progress.Report(100);
 			progress.ReportTransientStatus("Completed.");
+			progress.ReportStatus(_isAutomatedTool ? "\r\n" : "<br>");
 			progress.ReportStatus("Completed. Want to <a href=\"?verb=\">return to the control panel?</a>");
 		}
 
