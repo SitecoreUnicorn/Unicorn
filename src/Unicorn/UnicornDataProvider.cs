@@ -192,6 +192,9 @@ namespace Unicorn
 
 		protected virtual bool HasConsequentialChanges(ItemChanges changes)
 		{
+			// properties, e.g. template, etc are always consequential
+			if (changes.HasPropertiesChanged) return true;
+
 			foreach (FieldChange change in changes.FieldChanges)
 			{
 				if (change.OriginalValue == change.Value) continue;
