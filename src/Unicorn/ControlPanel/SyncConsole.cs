@@ -39,7 +39,7 @@ namespace Unicorn.ControlPanel
 
 					loader.LoadAll(configuration);
 
-					logger.Info("Control Panel Sync: Completed syncing Unicorn configuration" + configuration.Name);
+					logger.Info("Control Panel Sync: Completed syncing Unicorn configuration " + configuration.Name);
 				}
 			}
 		}
