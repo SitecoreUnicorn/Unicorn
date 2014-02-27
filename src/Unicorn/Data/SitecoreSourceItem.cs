@@ -85,10 +85,13 @@ namespace Unicorn.Data
 			get { return _item.Children.Select(x => (ISourceItem)new SitecoreSourceItem(x)).ToArray(); }
 		}
 
+		private FieldDictionary _sharedFields;
 		public FieldDictionary SharedFields
 		{
 			get
 			{
+				if (_sharedFields != null) return _sharedFields;
+
 				_item.Fields.ReadAll();
 				var fields = new FieldDictionary();
 				foreach (Field field in _item.Fields)
@@ -97,16 +100,19 @@ namespace Unicorn.Data
 						fields.Add(field.ID.ToString(), field.Value);
 				}
 
-				return fields;
+				return _sharedFields = fields;
 			}
 		}
 
+		private ItemVersion[] _versions;
 		public ItemVersion[] Versions
 		{
 			get
 			{
+				if (_versions != null) return _versions;
+
 				var versions = _item.Versions.GetVersions(true);
-				return versions.Select(itemVersion =>
+				return _versions = versions.Select(itemVersion =>
 				{
 					var version = new ItemVersion(itemVersion.Language.Name, itemVersion.Version.Number);
 					itemVersion.Fields.ReadAll();
