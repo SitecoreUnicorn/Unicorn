@@ -1,5 +1,4 @@
-﻿using System;
-using Unicorn.Data;
+﻿using Unicorn.Data;
 using Unicorn.Serialization;
 
 namespace Unicorn.Evaluators
@@ -10,26 +9,28 @@ namespace Unicorn.Evaluators
 		/// Called when an item is evaluated for deletion
 		/// </summary>
 		void DeletedItem(ISourceItem deletedItem);
-
-		/// <summary>
-		/// Called when an item cannot be evaluated for an update (e.g. it had no valid criteria to compare)
-		/// </summary>
-		void CannotEvaluateUpdate(ISerializedItem serializedItem, ItemVersion version);
-
-		/// <summary>
-		/// Fired when the Modified timestamp is different between serialized and source
-		/// </summary>
-		void IsModifiedMatch(ISerializedItem serializedItem, ItemVersion version, DateTime serializedModified, DateTime itemModified);
-
-		/// <summary>
-		/// Fired when a version's Revision GUID is different between serialized and source
-		/// </summary>
-		void IsRevisionMatch(ISerializedItem serializedItem, ItemVersion version, string serializedRevision, string itemRevision);
-
+		
 		/// <summary>
 		/// Fired when an item's name is different between serialized and source
 		/// </summary>
-		void IsNameMatch(ISerializedItem serializedItem, ISourceItem existingItem, ItemVersion version);
+		void IsNameMatch(ISerializedItem serializedItem, ISourceItem existingItem);
+
+		/// <summary>
+		/// Fired when an item's template is different between serialized and source
+		/// </summary>
+		void IsTemplateMatch(ISerializedItem serializedItem, ISourceItem existingItem);
+
+		/// <summary>
+		/// Fired when a shared field value is different between serialized and source
+		/// </summary>
+		/// <remarks>Note that the sourceValue may be null</remarks>
+		void IsSharedFieldMatch(ISerializedItem serializedItem, string fieldName, string serializedValue, string sourceValue);
+
+		/// <summary>
+		/// Fired when a version's field value is different between serialized and source
+		/// </summary>
+		/// <remarks>Note that the sourceValue may be null</remarks>
+		void IsVersionedFieldMatch(ISerializedItem serializedItem, ItemVersion version, string fieldName, string serializedValue, string sourceValue);
 
 		/// <summary>
 		/// Fired when a later version is found in the serialized version of an item

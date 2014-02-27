@@ -9,6 +9,7 @@ namespace Unicorn.Evaluators
 	public class DefaultSerializedAsMasterEvaluatorLogger : ISerializedAsMasterEvaluatorLogger
 	{
 		private readonly ILogger _logger;
+		private const int MaxFieldLenthToDisplayValue = 40;
 
 		public DefaultSerializedAsMasterEvaluatorLogger(ILogger logger)
 		{
@@ -20,28 +21,38 @@ namespace Unicorn.Evaluators
 			_logger.Warn("[D] {0} because it did not exist in the serialization provider.".FormatWith(deletedItem.DisplayIdentifier));
 		}
 
-
-		public void CannotEvaluateUpdate(ISerializedItem serializedItem, ItemVersion version)
+		public void IsSharedFieldMatch(ISerializedItem serializedItem, string fieldName, string serializedValue, string sourceValue)
 		{
-			_logger.Warn("{0} ({1} #{2}): Serialized version had no modified or revision field to check for update.".FormatWith(serializedItem.ItemPath, version.Language, version.VersionNumber));
+			if (serializedValue.Length < MaxFieldLenthToDisplayValue && (sourceValue == null || sourceValue.Length < MaxFieldLenthToDisplayValue))
+			{
+				_logger.Debug("> Field {0} - Serialized {1}, Source {2}".FormatWith(fieldName, serializedValue, sourceValue));
+			}
+			else
+			{
+				_logger.Debug("> Field {0} - Value mismatch (values too long to display)".FormatWith(fieldName));
+			}
 		}
 
-
-		public void IsModifiedMatch(ISerializedItem serializedItem, ItemVersion version, System.DateTime serializedModified, System.DateTime itemModified)
+		public void IsVersionedFieldMatch(ISerializedItem serializedItem, ItemVersion version, string fieldName, string serializedValue, string sourceValue)
 		{
-			_logger.Debug("> Modified - {0}#{1}: Serialized {2}, Source {3}".FormatWith(version.Language, version.VersionNumber, serializedModified.ToString("G"), itemModified.ToString("G")));
+			if (serializedValue.Length < MaxFieldLenthToDisplayValue && (sourceValue == null || sourceValue.Length < MaxFieldLenthToDisplayValue))
+			{
+				_logger.Debug("> Field {0} - {1}#{2}: Serialized {3}, Source {4}".FormatWith(fieldName, version.Language, version.VersionNumber, serializedValue, sourceValue));
+			}
+			else
+			{
+				_logger.Debug("> Field {0} - {1}#{2}: Value mismatch (values too long to display)".FormatWith(fieldName, version.Language, version.VersionNumber));
+			}
 		}
 
-
-		public void IsRevisionMatch(ISerializedItem serializedItem, ItemVersion version, string serializedRevision, string itemRevision)
+		public void IsTemplateMatch(ISerializedItem serializedItem, ISourceItem existingItem)
 		{
-			_logger.Debug("> Revision - {0}#{1}: Serialized {2}, Source {3}".FormatWith(version.Language, version.VersionNumber, serializedRevision, itemRevision));
+			_logger.Debug("> Template: Serialized \"{0}\", Source \"{1}\"".FormatWith(serializedItem.TemplateName, existingItem.TemplateName));
 		}
 
-
-		public void IsNameMatch(ISerializedItem serializedItem, ISourceItem existingItem, ItemVersion version)
+		public void IsNameMatch(ISerializedItem serializedItem, ISourceItem existingItem)
 		{
-			_logger.Debug("> Name - {0}#{1}: Serialized \"{2}\", Source \"{3}\"".FormatWith(version.Language, version.VersionNumber, serializedItem.Name, existingItem.Name));
+			_logger.Debug("> Name: Serialized \"{0}\", Source \"{1}\"".FormatWith(serializedItem.Name, existingItem.Name));
 		}
 
 

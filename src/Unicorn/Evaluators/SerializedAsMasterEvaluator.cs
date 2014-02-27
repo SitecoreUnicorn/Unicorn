@@ -67,6 +67,13 @@ namespace Unicorn.Evaluators
 
 			if (existingItem.Id == RootId) return false; // we never want to update the Sitecore root item
 
+			// check if templates are different
+			if (IsTemplateMatch(existingItem, serializedItem, deferredUpdateLog)) return true;
+
+			// check if names are different
+			if (IsNameMatch(existingItem, serializedItem, deferredUpdateLog)) return true;
+
+			// check if source has version(s) that serialized does not
 			var orphanVersions = existingItem.Versions.Where(sourceItemVersion => serializedItem.GetVersion(sourceItemVersion.Language, sourceItemVersion.VersionNumber) == null).ToArray();
 			if (orphanVersions.Length > 0)
 			{
@@ -74,91 +81,80 @@ namespace Unicorn.Evaluators
 				return true; // source contained versions not present in the serialized version, which is a difference
 			}
 
-			// see if the modified date is different in any version (because disk is master, ANY changes we want to force overwrite)
+			// check if shared fields have any mismatching values
+			if (AnyFieldMatch(serializedItem.SharedFields, existingItem.SharedFields, existingItem, serializedItem, deferredUpdateLog))
+				return true;
+
+			// see if the serialized versions have any mismatching values in the source data
 			return serializedItem.Versions.Any(serializedItemVersion =>
+			{
+				var sourceItemVersion = existingItem.GetVersion(serializedItemVersion.Language, serializedItemVersion.VersionNumber);
+
+				// version exists in serialized item but does not in source version
+				if (sourceItemVersion == null)
 				{
-					bool passedComparisons = false; // this flag lets us differentiate between items that we could not determine equality for, and items that just matched every criteria and don't need updating
+					deferredUpdateLog.AddEntry(x => x.NewSerializedVersionMatch(serializedItemVersion, serializedItem, existingItem));
+					return true;
+				}
 
-					var sourceItemVersion = existingItem.GetVersion(serializedItemVersion.Language, serializedItemVersion.VersionNumber);
+				// field values mismatch
+				var fieldMatch = AnyFieldMatch(serializedItemVersion.Fields, sourceItemVersion.Fields, existingItem, serializedItem, deferredUpdateLog, serializedItemVersion);
+				if (fieldMatch) return true;
 
-					// version exists in serialized item but does not in source version
-					if (sourceItemVersion == null)
-					{
-						deferredUpdateLog.AddEntry(x => x.NewSerializedVersionMatch(serializedItemVersion, serializedItem, existingItem));
-						return true;
-					}
-
-					var modifiedMatch = IsModifiedMatch(sourceItemVersion, serializedItemVersion, existingItem, serializedItem, deferredUpdateLog);
-					if (modifiedMatch != null)
-					{
-						if (modifiedMatch.Value) return true;
-
-						passedComparisons = true;
-					}
-
-					// ocasionally a version will not have a modified date or a modified date will not get updated, only a revision change so we compare those as a backup
-					var revisionMatch = IsRevisionMatch(sourceItemVersion, serializedItemVersion, existingItem, serializedItem, deferredUpdateLog);
-
-					if (revisionMatch != null)
-					{
-						if (revisionMatch.Value) return true;
-
-						passedComparisons = true;
-					}
-
-					// as a last check, see if the names do not match. Renames, for example, only change the name and not the revision or modified date (wtf?)
-					// unlike other checks, this one does not count as 'passing a comparison' if it fails to match a force. Having names be equal is not a strong enough measure of equality.
-					if (IsNameMatch(existingItem, serializedItem, serializedItemVersion, deferredUpdateLog)) return true;
-
-					// if we get here and no comparisons were passed, we have no valid updated or revision to compare. Let's ignore the item as if it was a real item it'd have one of these.
-					if (!passedComparisons && !serializedItem.ItemPath.StartsWith("/sitecore/templates/System") && !serializedItem.ItemPath.StartsWith("/sitecore/templates/Sitecore Client")) // this occurs a lot in stock system templates - we ignore warnings for those as it's expected.
-						deferredUpdateLog.AddEntry(x => x.CannotEvaluateUpdate(serializedItem, serializedItemVersion));
-
-					return false;
-				});
+				// if we get here everything matches to the best of our knowledge, so we return false (e.g. "do not update this item")
+				return false;
+			});
 		}
 
-		protected virtual bool? IsModifiedMatch(ItemVersion sourceItemVersion, ItemVersion serializedItemVersion, ISourceItem existingItem, ISerializedItem serializedItem, DeferredLogWriter<ISerializedAsMasterEvaluatorLogger> deferredUpdateLog)
-		{
-			var serializedModified = serializedItemVersion.Updated;
-			if (serializedModified == null) return null;
-
-			var itemModified = sourceItemVersion.Updated;
-
-			if (itemModified == null) return null;
-
-			var result = !serializedModified.Value.Equals(itemModified.Value);
-
-			if (result)
-				deferredUpdateLog.AddEntry(x => x.IsModifiedMatch(serializedItem, serializedItemVersion, serializedModified.Value, itemModified.Value));
-
-			return result;
-		}
-
-		protected virtual bool? IsRevisionMatch(ItemVersion sourceItemVersion, ItemVersion serializedItemVersion, ISourceItem existingItem, ISerializedItem serializedItem, DeferredLogWriter<ISerializedAsMasterEvaluatorLogger> deferredUpdateLog)
-		{
-			var serializedRevision = serializedItemVersion.Revision;
-
-			if (string.IsNullOrEmpty(serializedRevision)) return null;
-
-			var result = !serializedRevision.Equals(sourceItemVersion.Revision);
-
-			if (result)
-				deferredUpdateLog.AddEntry(x => x.IsRevisionMatch(serializedItem, serializedItemVersion, serializedRevision, sourceItemVersion.Revision));
-
-			return result;
-		}
-
-		protected virtual bool IsNameMatch(ISourceItem existingItem, ISerializedItem serializedItem, ItemVersion version, DeferredLogWriter<ISerializedAsMasterEvaluatorLogger> deferredUpdateLog)
+		protected virtual bool IsNameMatch(ISourceItem existingItem, ISerializedItem serializedItem, DeferredLogWriter<ISerializedAsMasterEvaluatorLogger> deferredUpdateLog)
 		{
 			if (!serializedItem.Name.Equals(existingItem.Name))
 			{
-				deferredUpdateLog.AddEntry(x => x.IsNameMatch(serializedItem, existingItem, version));
+				deferredUpdateLog.AddEntry(x => x.IsNameMatch(serializedItem, existingItem));
 
 				return true;
 			}
 
 			return false;
+		}
+
+		protected virtual bool IsTemplateMatch(ISourceItem existingItem, ISerializedItem serializedItem, DeferredLogWriter<ISerializedAsMasterEvaluatorLogger> deferredUpdateLog)
+		{
+			bool match = !serializedItem.TemplateId.Equals(existingItem.TemplateId);
+			if(match)
+				deferredUpdateLog.AddEntry(x=>x.IsTemplateMatch(serializedItem, existingItem));
+
+			return match;
+		}
+
+		protected virtual bool AnyFieldMatch(FieldDictionary sourceFields, FieldDictionary targetFields, ISourceItem existingItem, ISerializedItem serializedItem, DeferredLogWriter<ISerializedAsMasterEvaluatorLogger> deferredUpdateLog, ItemVersion version = null)
+		{
+			return sourceFields.Any(x =>
+			{
+				bool isMatch = IsFieldMatch(x.Value, targetFields, x.Key);
+				if(isMatch) deferredUpdateLog.AddEntry(logger =>
+				{
+					string sourceFieldValue;
+					targetFields.TryGetValue(x.Key, out sourceFieldValue);
+
+					if (version == null) logger.IsSharedFieldMatch(serializedItem, x.Key, x.Value, sourceFieldValue);
+					else logger.IsVersionedFieldMatch(serializedItem, version, x.Key, x.Value, sourceFieldValue);
+				});
+				return isMatch;
+			});
+		}
+
+		protected virtual bool IsFieldMatch(string sourceFieldValue, FieldDictionary targetFields, string fieldId)
+		{
+			// note that returning "true" means the values DO NOT MATCH EACH OTHER.
+
+			if (sourceFieldValue == null) return false;
+
+			// it's a "match" if the target item does not contain the source field
+			string targetFieldValue;
+			if (!targetFields.TryGetValue(fieldId, out targetFieldValue)) return true;
+
+			return !sourceFieldValue.Equals(targetFieldValue);
 		}
 
 		protected virtual ISourceItem DoDeserialization(ISerializedItem serializedItem)
