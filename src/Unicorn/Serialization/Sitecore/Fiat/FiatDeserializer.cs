@@ -202,10 +202,10 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 					targetItem.ChangeTemplate(newTemplate);
 				}
 
-				_logger.ChangedTemplate(targetItem, oldTemplate);
-
 				ClearCaches(targetItem.Database, targetItem.ID);
 				targetItem.Reload();
+				
+				_logger.ChangedTemplate(targetItem, oldTemplate);
 			}
 		}
 
