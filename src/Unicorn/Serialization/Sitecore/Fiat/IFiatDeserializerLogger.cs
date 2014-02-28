@@ -26,5 +26,7 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 		void UpdatedChangedFieldValue(Item item, SyncField field, string oldValue);
 
 		void ResetFieldThatDidNotExistInSerialized(global::Sitecore.Data.Fields.Field field);
+
+		void SkippedPastingIgnoredField(Item item, SyncField field);
 	}
 }

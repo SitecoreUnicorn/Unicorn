@@ -104,6 +104,8 @@
     <Compile Include="Loader\ISerializationLoaderLogger.cs" />
     <Compile Include="Logging\ILogger.cs" />
     <Compile Include="Logging\SitecoreLogger.cs" />
+    <Compile Include="Predicates\ConfigurationFieldPredicate.cs" />
+    <Compile Include="Predicates\IFieldPredicate.cs" />
     <Compile Include="Predicates\PredicateResult.cs" />
     <Compile Include="Predicates\IPredicate.cs" />
     <Compile Include="Predicates\SerializationPresetPredicate.cs" />

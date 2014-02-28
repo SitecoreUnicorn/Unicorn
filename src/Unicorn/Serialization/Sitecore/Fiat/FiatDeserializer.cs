@@ -15,18 +15,22 @@ using Sitecore.Data.Templates;
 using Sitecore.Diagnostics;
 using Sitecore.Globalization;
 using Sitecore.IO;
+using Unicorn.Predicates;
 
 namespace Unicorn.Serialization.Sitecore.Fiat
 {
 	public class FiatDeserializer
 	{
 		private readonly IFiatDeserializerLogger _logger;
+		private readonly IFieldPredicate _fieldPredicate;
 
-		public FiatDeserializer(IFiatDeserializerLogger logger)
+		public FiatDeserializer(IFiatDeserializerLogger logger, IFieldPredicate fieldPredicate)
 		{
 			Assert.ArgumentNotNull(logger, "logger");
+			Assert.ArgumentNotNull(fieldPredicate, "fieldPredicate");
 
 			_logger = logger;
+			_fieldPredicate = fieldPredicate;
 		}
 
 		/// <summary>
@@ -308,6 +312,12 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 		/// <exception cref="T:Sitecore.Data.Serialization.Exceptions.FieldIsMissingFromTemplateException"/>
 		protected virtual void PasteSyncField(Item item, SyncField field, bool ignoreMissingTemplateFields, bool creatingNewItem)
 		{
+			if (!_fieldPredicate.Includes(field.FieldID).IsIncluded)
+			{
+				_logger.SkippedPastingIgnoredField(item, field);
+				return;
+			}
+
 			Template template = AssertTemplate(item.Database, item.TemplateID);
 			if (template.GetField(field.FieldID) == null)
 			{

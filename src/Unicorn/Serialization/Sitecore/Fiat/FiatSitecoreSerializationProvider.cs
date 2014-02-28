@@ -10,12 +10,12 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 	public class FiatSitecoreSerializationProvider : SitecoreSerializationProvider
 	{
 		private readonly FiatDeserializer _deserializer;
-		public FiatSitecoreSerializationProvider(IPredicate predicate, IFiatDeserializerLogger logger, string rootPath = null, string logName = "UnicornItemSerialization")
+		public FiatSitecoreSerializationProvider(IPredicate predicate, IFieldPredicate fieldPredicate, IFiatDeserializerLogger logger, string rootPath = null, string logName = "UnicornItemSerialization")
 			: base(predicate, rootPath, logName)
 		{
 			Assert.ArgumentNotNull(logger, "logger");
 
-			_deserializer = new FiatDeserializer(logger);
+			_deserializer = new FiatDeserializer(logger, fieldPredicate);
 		}
 
 		public override ISourceItem DeserializeItem(ISerializedItem serializedItem, bool ignoreMissingTemplateFields)

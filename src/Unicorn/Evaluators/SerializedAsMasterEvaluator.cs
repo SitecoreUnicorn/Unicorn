@@ -4,6 +4,7 @@ using Sitecore.Diagnostics;
 using Unicorn.ControlPanel;
 using Unicorn.Data;
 using Unicorn.Logging;
+using Unicorn.Predicates;
 using Unicorn.Serialization;
 using System.Collections.Generic;
 
@@ -11,28 +12,31 @@ namespace Unicorn.Evaluators
 {
 	public class SerializedAsMasterEvaluator : IEvaluator, IDocumentable
 	{
-		protected readonly ISerializedAsMasterEvaluatorLogger Logger;
+		private readonly ISerializedAsMasterEvaluatorLogger _logger;
+		private readonly IFieldPredicate _fieldPredicate;
 		protected static readonly ID RootId = new ID("{11111111-1111-1111-1111-111111111111}");
 
-		public SerializedAsMasterEvaluator(ISerializedAsMasterEvaluatorLogger logger)
+		public SerializedAsMasterEvaluator(ISerializedAsMasterEvaluatorLogger logger, IFieldPredicate fieldPredicate)
 		{
 			Assert.ArgumentNotNull(logger, "logger");
+			Assert.ArgumentNotNull(fieldPredicate, "fieldPredicate");
 
-			Logger = logger;
+			_logger = logger;
+			_fieldPredicate = fieldPredicate;
 		}
 
 		public void EvaluateOrphans(ISourceItem[] orphanItems)
 		{
 			Assert.ArgumentNotNull(orphanItems, "orphanItems");
 
-			EvaluatorUtility.RecycleItems(orphanItems, item => Logger.DeletedItem(item));
+			EvaluatorUtility.RecycleItems(orphanItems, item => _logger.DeletedItem(item));
 		}
 
 		public ISourceItem EvaluateNewSerializedItem(ISerializedItem newItem)
 		{
 			Assert.ArgumentNotNull(newItem, "newItem");
 
-			Logger.DeserializedNewItem(newItem);
+			_logger.DeserializedNewItem(newItem);
 
 			var updatedItem = DoDeserialization(newItem);
 
@@ -48,9 +52,9 @@ namespace Unicorn.Evaluators
 
 			if (ShouldUpdateExisting(serializedItem, existingItem, deferredUpdateLog))
 			{
-				Logger.SerializedUpdatedItem(serializedItem);
+				_logger.SerializedUpdatedItem(serializedItem);
 
-				deferredUpdateLog.ExecuteDeferredActions(Logger);
+				deferredUpdateLog.ExecuteDeferredActions(_logger);
 
 				var updatedItem = DoDeserialization(serializedItem);
 
@@ -135,6 +139,8 @@ namespace Unicorn.Evaluators
 
 			return sourceFields.Any(x =>
 			{
+				if (!_fieldPredicate.Includes(x.Key).IsIncluded) return false;
+
 				bool isMatch = IsFieldMatch(x.Value, targetFields, x.Key);
 				if(isMatch) deferredUpdateLog.AddEntry(logger =>
 				{

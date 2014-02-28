@@ -98,7 +98,9 @@ namespace Unicorn
 
 						if (serializedItem == null) continue;
 
-						var fieldIssues = GetFieldSyncStatus(existingSitecoreItem, serializedItem);
+						var fieldPredicate = configuration.Resolve<IFieldPredicate>();
+
+						var fieldIssues = GetFieldSyncStatus(existingSitecoreItem, serializedItem, fieldPredicate);
 
 						if (fieldIssues.Count == 0) continue;
 
@@ -133,7 +135,7 @@ namespace Unicorn
 			}
 		}
 
-		private IList<FieldDesynchronization> GetFieldSyncStatus(SitecoreSourceItem item, ISerializedItem serializedItem)
+		private IList<FieldDesynchronization> GetFieldSyncStatus(SitecoreSourceItem item, ISerializedItem serializedItem, IFieldPredicate fieldPredicate)
 		{
 			var desyncs = new List<FieldDesynchronization>();
 
@@ -149,7 +151,12 @@ namespace Unicorn
 
 			foreach (Field field in item.InnerItem.Fields)
 			{
-				if (field.ID == FieldIDs.Revision || field.ID == FieldIDs.Updated || field.ID == FieldIDs.Created || field.ID == FieldIDs.CreatedBy || field.ID == FieldIDs.UpdatedBy) continue; 
+				if (field.ID == FieldIDs.Revision || 
+					field.ID == FieldIDs.Updated || 
+					field.ID == FieldIDs.Created || 
+					field.ID == FieldIDs.CreatedBy || 
+					field.ID == FieldIDs.UpdatedBy ||
+					!fieldPredicate.Includes(field.ID).IsIncluded) continue; 
 				// we're doing a data comparison here - revision, created (by), updated (by) don't matter
 				// skipping these fields allows us to ignore spurious saves the template builder makes to unchanged items being conflicts
 			

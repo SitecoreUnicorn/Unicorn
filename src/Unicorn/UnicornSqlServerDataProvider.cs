@@ -22,17 +22,19 @@ namespace Unicorn
 	/// </summary>
 	public class UnicornSqlServerDataProvider : SqlServerDataProvider
 	{
-		private readonly List<UnicornDataProvider> _unicornDataProviders = new List<UnicornDataProvider>(); 
+		private readonly List<UnicornDataProvider> _unicornDataProviders = new List<UnicornDataProvider>();
 		protected ReadOnlyCollection<UnicornDataProvider> UnicornDataProviders
 		{
-			get { return _unicornDataProviders.AsReadOnly();  }
+			get { return _unicornDataProviders.AsReadOnly(); }
 		}
 
-		public UnicornSqlServerDataProvider(string connectionString) : this(connectionString, UnicornConfigurationManager.Configurations.Select(x=>x.Resolve<UnicornDataProvider>()).ToArray())
+		public UnicornSqlServerDataProvider(string connectionString)
+			: this(connectionString, UnicornConfigurationManager.Configurations.Select(x => x.Resolve<UnicornDataProvider>()).ToArray())
 		{
 		}
-		
-		protected UnicornSqlServerDataProvider(string connectionString, params UnicornDataProvider[] unicornDataProviders) : base(connectionString)
+
+		protected UnicornSqlServerDataProvider(string connectionString, params UnicornDataProvider[] unicornDataProviders)
+			: base(connectionString)
 		{
 			if (unicornDataProviders == null) return; // you can pass null for this from derived classes
 			// for times when you want to use AddUnicornDataProvider() to construct your providers from a method
@@ -68,7 +70,7 @@ namespace Unicorn
 			return true;
 		}
 
-// ReSharper disable once InconsistentNaming
+		// ReSharper disable once InconsistentNaming
 		public override bool CopyItem(ItemDefinition source, ItemDefinition destination, string copyName, ID copyID, CallContext context)
 		{
 			if (!base.CopyItem(source, destination, copyName, copyID, context)) return false;

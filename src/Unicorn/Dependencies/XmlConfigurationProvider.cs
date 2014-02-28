@@ -84,9 +84,9 @@ namespace Unicorn.Dependencies
 			// now we get a list of any nodes that are NOT on the explicit map list.
 			// these nodes are ad-hoc DI registrations where we'll register any interfaces they implement with the container
 			// for example loggers and other non-essential mappings get loaded here. As usual, specific config overrides defaults.
-			var configurationAdHocRegisterNodes = configuration.ChildNodes.Cast<XmlElement>().Where(x => !configMapping.ContainsKey(x.Name)).ToArray();
+			var configurationAdHocRegisterNodes = configuration.ChildNodes.OfType<XmlElement>().Where(x => !configMapping.ContainsKey(x.Name)).ToArray();
 			// ReSharper disable once SimplifyLinqExpression
-			var defaultAdHocRegisterNodes = defaults.ChildNodes.Cast<XmlElement>().Where(node => !configMapping.ContainsKey(node.Name) && !configurationAdHocRegisterNodes.Any(x => x.Name == node.Name)).ToArray();
+			var defaultAdHocRegisterNodes = defaults.ChildNodes.OfType<XmlElement>().Where(node => !configMapping.ContainsKey(node.Name) && !configurationAdHocRegisterNodes.Any(x => x.Name == node.Name)).ToArray();
 			// note that the default nodes remove dupes from the local configuration in the statement above.
 
 			foreach (XmlElement adHocElement in configurationAdHocRegisterNodes.Concat(defaultAdHocRegisterNodes))
@@ -164,11 +164,8 @@ namespace Unicorn.Dependencies
 				.Where(x => x.Name != "type" && x.Name != "singleInstance")
 				.Select(x => new KeyValuePair<string, object>(x.Name, x.InnerText));
 
-			if (typeNode.HasChildNodes)
-			{
-				// if there's an XML body under the object we pass it the XML element as 'configNode'
-				attributes = attributes.Concat(new[] { new KeyValuePair<string, object>("configNode", typeNode) });
-			}
+			// we pass it the XML element as 'configNode'
+			attributes = attributes.Concat(new[] { new KeyValuePair<string, object>("configNode", typeNode) });
 
 			return attributes.ToArray();
 		}

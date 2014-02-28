@@ -7,6 +7,7 @@ using Sitecore.Data;
 using Sitecore.Diagnostics;
 using Unicorn.Data;
 using Unicorn.Evaluators;
+using Unicorn.Predicates;
 using Unicorn.Serialization;
 using Assert = NUnit.Framework.Assert;
 
@@ -67,7 +68,7 @@ namespace Unicorn.Tests.Evaluator
 		public void EvaluateNewSerializedItem_LogsCreatedItem()
 		{
 			var logger = new Mock<ISerializedAsMasterEvaluatorLogger>();
-			var evaluator = new SerializedAsMasterEvaluator(logger.Object);
+			var evaluator = new SerializedAsMasterEvaluator(logger.Object, CreateTestFieldPredicate());
 
 			var newItem = new Mock<ISerializedItem>();
 			newItem.Setup(x => x.Deserialize(It.IsAny<bool>())).Returns(new Mock<ISourceItem>().Object);
@@ -260,7 +261,7 @@ namespace Unicorn.Tests.Evaluator
 		{
 			var logger = new Mock<ISerializedAsMasterEvaluatorLogger>();
 
-			var evaluator = new SerializedAsMasterEvaluator(logger.Object);
+			var evaluator = new SerializedAsMasterEvaluator(logger.Object, CreateTestFieldPredicate());
 
 			var item = new Mock<ISourceItem>();
 			var sourceVersion = CreateTestVersion("en", 1, sourceModified, "REVISION");
@@ -292,7 +293,16 @@ namespace Unicorn.Tests.Evaluator
 		{
 			var logger = new Mock<ISerializedAsMasterEvaluatorLogger>();
 
-			return new SerializedAsMasterEvaluator(logger.Object);
+			return new SerializedAsMasterEvaluator(logger.Object, CreateTestFieldPredicate());
+		}
+
+		private IFieldPredicate CreateTestFieldPredicate()
+		{
+			var predicate = new Mock<IFieldPredicate>();
+			predicate.Setup(x => x.Includes(It.IsAny<string>())).Returns(new PredicateResult(true));
+			predicate.Setup(x => x.Includes(It.IsAny<ID>())).Returns(new PredicateResult(true));
+
+			return predicate.Object;
 		}
 
 		internal static ItemVersion CreateTestVersion(string language, int version, DateTime modified, string revision)

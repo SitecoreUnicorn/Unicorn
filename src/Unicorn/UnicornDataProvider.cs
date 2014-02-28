@@ -20,17 +20,20 @@ namespace Unicorn
 	{
 		private readonly ISerializationProvider _serializationProvider;
 		private readonly IPredicate _predicate;
+		private readonly IFieldPredicate _fieldPredicate;
 		private readonly IUnicornDataProviderLogger _logger;
 		private static bool _disableSerialization;
 
-		public UnicornDataProvider(ISerializationProvider serializationProvider, IPredicate predicate, IUnicornDataProviderLogger logger)
+		public UnicornDataProvider(ISerializationProvider serializationProvider, IPredicate predicate, IFieldPredicate fieldPredicate, IUnicornDataProviderLogger logger)
 		{
 			Assert.ArgumentNotNull(serializationProvider, "serializationProvider");
 			Assert.ArgumentNotNull(predicate, "predicate");
+			Assert.ArgumentNotNull(fieldPredicate, "fieldPredicate");
 			Assert.ArgumentNotNull(logger, "logger");
 
 			_logger = logger;
 			_predicate = predicate;
+			_fieldPredicate = fieldPredicate;
 			_serializationProvider = serializationProvider;
 		}
 
@@ -200,6 +203,7 @@ namespace Unicorn
 				if (change.OriginalValue == change.Value) continue;
 				if (change.FieldID == FieldIDs.Revision) continue;
 				if (change.FieldID == FieldIDs.Updated) continue;
+				if (!_fieldPredicate.Includes(change.FieldID).IsIncluded) continue;
 
 				return true;
 			}
