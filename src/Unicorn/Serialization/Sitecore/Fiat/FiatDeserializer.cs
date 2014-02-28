@@ -105,7 +105,7 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 					}
 
 					foreach (SyncField field in syncItem.SharedFields)
-						PasteSyncField(targetItem, field, ignoreMissingTemplateFields);
+						PasteSyncField(targetItem, field, ignoreMissingTemplateFields, newItemWasCreated);
 				}
 
 				ClearCaches(database, itemId);
@@ -121,7 +121,7 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 
 				foreach (SyncVersion syncVersion in syncItem.Versions)
 				{
-					var version = PasteSyncVersion(targetItem, syncVersion, ignoreMissingTemplateFields);
+					var version = PasteSyncVersion(targetItem, syncVersion, ignoreMissingTemplateFields, newItemWasCreated);
 					if (versionTable.ContainsKey(version.Uri))
 						versionTable.Remove(version.Uri);
 				}
@@ -204,7 +204,7 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 
 				ClearCaches(targetItem.Database, targetItem.ID);
 				targetItem.Reload();
-				
+
 				_logger.ChangedTemplate(targetItem, oldTemplate);
 			}
 		}
@@ -239,8 +239,9 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 		/// <param name="item">The item.</param>
 		/// <param name="syncVersion">The sync version.</param>
 		/// <param name="ignoreMissingTemplateFields">Whether to ignore fields in the serialized item that do not exist on the Sitecore template</param>
+		/// <param name="creatingNewItem">Whether the item under update is new or not (controls logging verbosity)</param>
 		/// <returns>The version that was pasted</returns>
-		protected virtual Item PasteSyncVersion(Item item, SyncVersion syncVersion, bool ignoreMissingTemplateFields)
+		protected virtual Item PasteSyncVersion(Item item, SyncVersion syncVersion, bool ignoreMissingTemplateFields, bool creatingNewItem)
 		{
 			Language language = Language.Parse(syncVersion.Language);
 			var targetVersion = global::Sitecore.Data.Version.Parse(syncVersion.Version);
@@ -250,13 +251,15 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 			if (languageVersionItem == null)
 			{
 				languageVersionItem = languageItem.Versions.AddVersion();
-				_logger.AddedNewVersion(languageVersionItem);
+				if (!creatingNewItem)
+					_logger.AddedNewVersion(languageVersionItem);
 			}
 
-// ReSharper disable once SimplifyLinqExpression
+			// ReSharper disable once SimplifyLinqExpression
 			if (!languageVersionItem.Versions.GetVersionNumbers().Any(x => x.Number == languageVersionItem.Version.Number))
 			{
-				_logger.AddedNewVersion(languageVersionItem);
+				if (!creatingNewItem)
+					_logger.AddedNewVersion(languageVersionItem);
 			}
 
 			using (new EditContext(languageVersionItem))
@@ -282,7 +285,7 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 					if (ID.TryParse(field.FieldID, out result) && result == FieldIDs.Owner)
 						wasOwnerFieldParsed = true;
 
-					PasteSyncField(languageVersionItem, field, ignoreMissingTemplateFields);
+					PasteSyncField(languageVersionItem, field, ignoreMissingTemplateFields, creatingNewItem);
 				}
 
 				if (!wasOwnerFieldParsed)
@@ -301,8 +304,9 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 		/// <param name="item">The item.</param>
 		/// <param name="field">The field.</param>
 		/// <param name="ignoreMissingTemplateFields">Whether to ignore fields in the serialized item that do not exist on the Sitecore template</param>
+		/// <param name="creatingNewItem">Whether the item under update is new or not (controls logging verbosity)</param>
 		/// <exception cref="T:Sitecore.Data.Serialization.Exceptions.FieldIsMissingFromTemplateException"/>
-		protected virtual void PasteSyncField(Item item, SyncField field, bool ignoreMissingTemplateFields)
+		protected virtual void PasteSyncField(Item item, SyncField field, bool ignoreMissingTemplateFields, bool creatingNewItem)
 		{
 			Template template = AssertTemplate(item.Database, item.TemplateID);
 			if (template.GetField(field.FieldID) == null)
@@ -325,13 +329,15 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 				byte[] buffer = System.Convert.FromBase64String(field.FieldValue);
 				itemField.SetBlobStream(new MemoryStream(buffer, false));
 
-				_logger.WroteBlobStream(item, field);
+				if (!creatingNewItem)
+					_logger.WroteBlobStream(item, field);
 			}
 			else if (!field.FieldValue.Equals(itemField.Value))
 			{
 				var oldValue = itemField.Value;
 				itemField.SetValue(field.FieldValue, true);
-				_logger.UpdatedChangedFieldValue(item, field, oldValue);
+				if (!creatingNewItem)
+					_logger.UpdatedChangedFieldValue(item, field, oldValue);
 			}
 		}
 
