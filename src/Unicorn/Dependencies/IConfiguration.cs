@@ -16,16 +16,8 @@ namespace Unicorn.Dependencies
 		T Resolve<T>() where T : class;
 
 		/// <summary>
-		/// Registers a dependency that is constructed again each time it is requested using a factory delegate method. Will overwrite any existing dependency for this type.
-		/// </summary>
-		/// <typeparam name="TType">The dependency type being registered (interface or abstract class)</typeparam>
-		/// <param name="instanceFactory">Method invoked to construct the dependency when requested</param>
-		void Register<TType>(Func<TType> instanceFactory)
-			where TType : class;
-
-		/// <summary>
 		/// Registers a singleton instance of a dependency that is constructed only once per registry instance.
 		/// </summary>
-		void Register(Type type, Type implementation, KeyValuePair<string, object>[] unmappedConstructorParameters);
+		void Register(Type type, Type implementation, bool singleInstance, KeyValuePair<string, object>[] unmappedConstructorParameters);
 	}
 }

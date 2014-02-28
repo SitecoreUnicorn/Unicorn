@@ -102,15 +102,15 @@ namespace Unicorn.Dependencies
 		/// </summary>
 		protected virtual void RegisterGenericConfigTypeByInterfaces(XmlElement configuration, XmlElement defaults, string elementName, IConfiguration registry)
 		{
-			var type = GetConfigType(configuration, defaults, elementName, "type");
+			var type = GetConfigType(configuration, defaults, elementName);
 
-			var interfaces = type.GetInterfaces();
+			var interfaces = type.Type.GetInterfaces();
 
 			var attributes = GetUnmappedAttributes(configuration, defaults, elementName);
 
 			foreach (var @interface in interfaces)
 			{
-				registry.Register(@interface, type, attributes);
+				registry.Register(@interface, type.Type, type.SingleInstance, attributes);
 			}
 		}
 
@@ -120,32 +120,34 @@ namespace Unicorn.Dependencies
 		protected virtual void RegisterExpectedConfigType<TResultType>(XmlElement configuration, XmlElement defaults, string elementName, IConfiguration registry)
 			where TResultType : class
 		{
-			var type = GetConfigType(configuration, defaults, elementName, "type");
+			var type = GetConfigType(configuration, defaults, elementName);
 
-			if (!typeof(TResultType).IsAssignableFrom(type))
+			if (!typeof(TResultType).IsAssignableFrom(type.Type))
 				throw new InvalidOperationException("Invalid type for Unicorn config node {0} (expected {1} implementation)".FormatWith(elementName, typeof(TResultType).FullName));
 
-			registry.Register(typeof(TResultType), type, GetUnmappedAttributes(configuration, defaults, elementName));
+			registry.Register(typeof(TResultType), type.Type, type.SingleInstance, GetUnmappedAttributes(configuration, defaults, elementName));
 		}
 
 		/// <summary>
 		/// Resolves an attribute of an XML element into a C# Type, using the Assembly Qualified Name
 		/// </summary>
-		protected Type GetConfigType(XmlElement configuration, XmlElement defaults, string elementName, string attributeName)
+		protected TypeRegistration GetConfigType(XmlElement configuration, XmlElement defaults, string elementName)
 		{
 			var typeNode = configuration[elementName] ?? defaults[elementName];
 
 			Assert.IsNotNull(typeNode, "Could not find a valid value for Unicorn config node " + elementName);
 
-			var typeString = GetAttributeValue(typeNode, attributeName);
+			var typeString = GetAttributeValue(typeNode, "type");
 
-			Assert.IsNotNullOrEmpty(typeString, "Missing value for Unicorn config node {0}, {1} attribute (type expected).".FormatWith(elementName, attributeName));
+			var isSingleInstance = "true".Equals(GetAttributeValue(typeNode, "singleInstance"));
+
+			Assert.IsNotNullOrEmpty(typeString, "Missing value for Unicorn config node {0}, type attribute (type expected).".FormatWith(elementName));
 
 			var type = Type.GetType(typeString, false);
 
-			Assert.IsNotNull(type, "Invalid type {0} for Unicorn config node {1}, attribute {2}".FormatWith(typeString, elementName, attributeName));
+			Assert.IsNotNull(type, "Invalid type {0} for Unicorn config node {1}, attribute type".FormatWith(typeString, elementName));
 
-			return type;
+			return new TypeRegistration { Type = type, SingleInstance = isSingleInstance };
 		}
 
 		/// <summary>
@@ -157,19 +159,19 @@ namespace Unicorn.Dependencies
 
 			Assert.IsNotNull(typeNode, "Could not find a valid value for Unicorn config node " + elementName);
 
-// ReSharper disable once PossibleNullReferenceException
+			// ReSharper disable once PossibleNullReferenceException
 			var attributes = typeNode.Attributes.Cast<XmlAttribute>()
-				.Where(x => x.Name != "type")
+				.Where(x => x.Name != "type" && x.Name != "singleInstance")
 				.Select(x => new KeyValuePair<string, object>(x.Name, x.InnerText));
 
 			if (typeNode.HasChildNodes)
 			{
 				// if there's an XML body under the object we pass it the XML element as 'configNode'
-				attributes = attributes.Concat(new[] {new KeyValuePair<string, object>("configNode", typeNode)});
+				attributes = attributes.Concat(new[] { new KeyValuePair<string, object>("configNode", typeNode) });
 			}
 
 			return attributes.ToArray();
-		} 
+		}
 
 		/// <summary>
 		/// Gets an XML attribute value, returning null if it does not exist and its inner text otherwise.
@@ -183,6 +185,12 @@ namespace Unicorn.Dependencies
 			if (attributeItem == null) return null;
 
 			return attributeItem.InnerText;
+		}
+
+		protected class TypeRegistration
+		{
+			public Type Type { get; set; }
+			public bool SingleInstance { get; set; }
 		}
 	}
 }

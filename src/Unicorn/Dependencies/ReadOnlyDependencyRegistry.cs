@@ -25,12 +25,7 @@ namespace Unicorn.Dependencies
 			return _innerRegistry.Resolve<T>();
 		}
 
-		public void Register<TType>(Func<TType> instanceFactory) where TType : class
-		{
-			throw new InvalidOperationException("You cannot register new dependencies on a read-only dependency registry.");
-		}
-
-		public void Register(Type type, Type implementation, KeyValuePair<string, object>[] unmappedConstructorParameters)
+		public void Register(Type type, Type implementation, bool singleInstance, KeyValuePair<string, object>[] unmappedConstructorParameters)
 		{
 			throw new InvalidOperationException("You cannot register new dependencies on a read-only dependency registry.");
 		}

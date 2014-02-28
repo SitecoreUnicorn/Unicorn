@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Ninject;
 using Ninject.Syntax;
 
@@ -29,19 +28,14 @@ namespace Unicorn.Dependencies
 			return Container.Get<T>();
 		}
 
-		/// <summary>
-		/// Registers a dependency that is constructed again each time it is requested using a factory delegate method. Will overwrite any existing dependency for this type.
-		/// </summary>
-		/// <typeparam name="TType">The dependency type being registered (interface or abstract class)</typeparam>
-		/// <param name="instanceFactory">Method invoked to construct the dependency when requested</param>
-		public void Register<TType>(Func<TType> instanceFactory) where TType : class
+		public void Register(Type type, Type implementation, bool singleInstance, KeyValuePair<string, object>[] unmappedConstructorParameters)
 		{
-			Container.Bind<TType>().ToMethod(ctx => instanceFactory()).InSingletonScope();
-		}
+			IBindingWithSyntax<object> bind = Container.Bind(type).To(implementation);
 
-		public void Register(Type type, Type implementation, KeyValuePair<string, object>[] unmappedConstructorParameters)
-		{
-			IBindingWithSyntax<object> bind = Container.Bind(type).To(implementation).InSingletonScope();
+			if (singleInstance)
+				bind = ((IBindingInSyntax<object>) bind).InSingletonScope();
+			else
+				bind = ((IBindingInSyntax<object>) bind).InTransientScope();
 
 			if (unmappedConstructorParameters == null) return;
 
