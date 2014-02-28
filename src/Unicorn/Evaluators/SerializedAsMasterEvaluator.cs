@@ -120,6 +120,8 @@ namespace Unicorn.Evaluators
 
 		protected virtual bool IsTemplateMatch(ISourceItem existingItem, ISerializedItem serializedItem, DeferredLogWriter<ISerializedAsMasterEvaluatorLogger> deferredUpdateLog)
 		{
+			if (existingItem.TemplateId == (ID) null && serializedItem.TemplateId == (ID) null) return false;
+
 			bool match = !serializedItem.TemplateId.Equals(existingItem.TemplateId);
 			if(match)
 				deferredUpdateLog.AddEntry(x=>x.IsTemplateMatch(serializedItem, existingItem));
@@ -129,6 +131,8 @@ namespace Unicorn.Evaluators
 
 		protected virtual bool AnyFieldMatch(FieldDictionary sourceFields, FieldDictionary targetFields, ISourceItem existingItem, ISerializedItem serializedItem, DeferredLogWriter<ISerializedAsMasterEvaluatorLogger> deferredUpdateLog, ItemVersion version = null)
 		{
+			if (sourceFields == null) return false;
+
 			return sourceFields.Any(x =>
 			{
 				bool isMatch = IsFieldMatch(x.Value, targetFields, x.Key);

@@ -41,9 +41,8 @@ namespace Unicorn.Tests.Loader
 			var rootItem = CreateTestTree(1);
 
 			var serializationProvider = new Mock<ISerializationProvider>();
-			serializationProvider.Setup(x => x.GetReference(rootItem)).Returns((ISerializedReference)null);
+			serializationProvider.Setup(x => x.GetReference(rootItem)).Returns((ISerializedReference) null);
 
-			var progress = new StringProgressStatus();
 			var logger = new DefaultSerializationLoaderLogger(new Mock<ILogger>().Object);
 
 			var loader = new SerializationLoader(serializationProvider.Object, new Mock<ISourceDataProvider>().Object, new Mock<IPredicate>().Object, new Mock<IEvaluator>().Object, logger);

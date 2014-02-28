@@ -3,6 +3,7 @@ using System.Linq;
 using Moq;
 using NUnit.Framework;
 using Sitecore;
+using Sitecore.Data;
 using Sitecore.Diagnostics;
 using Unicorn.Data;
 using Unicorn.Evaluators;
@@ -202,6 +203,28 @@ namespace Unicorn.Tests.Evaluator
 			serialized.Setup(x => x.Name).Returns("SERIALIZED");
 			serialized.Setup(x => x.Deserialize(It.IsAny<bool>())).Returns(new Mock<ISourceItem>().Object);
 			var version = CreateTestVersion("en", 1, new DateTime(2013, 1, 1), "REVISION");
+
+			serialized.Setup(x => x.Versions).Returns(new[] { version });
+
+			evaluator.EvaluateUpdate(serialized.Object, item.Object);
+
+			serialized.Verify(x => x.Deserialize(false));
+		}
+
+		[Test]
+		public void EvaluateUpdate_Deserializes_WhenTemplatesAreUnequal()
+		{
+			var evaluator = CreateTestEvaluator();
+
+			var item = new Mock<ISourceItem>();
+			var sourceVersion = CreateTestVersion("en", 1, new DateTime(2013, 1, 1), "REVISION");
+			item.Setup(x => x.Versions).Returns(new[] { sourceVersion });
+			item.Setup(x => x.TemplateId).Returns(ID.NewID);
+
+			var serialized = new Mock<ISerializedItem>();
+			serialized.Setup(x => x.Deserialize(It.IsAny<bool>())).Returns(new Mock<ISourceItem>().Object);
+			var version = CreateTestVersion("en", 1, new DateTime(2013, 1, 1), "REVISION");
+			serialized.Setup(x => x.TemplateId).Returns(ID.NewID);
 
 			serialized.Setup(x => x.Versions).Returns(new[] { version });
 
