@@ -55,6 +55,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConfigurationUtility.cs" />
     <Compile Include="ControlPanel\AccessDenied.cs" />
     <Compile Include="ControlPanel\ConfigurationDetails.cs" />
     <Compile Include="ControlPanel\ControlOptions.cs" />

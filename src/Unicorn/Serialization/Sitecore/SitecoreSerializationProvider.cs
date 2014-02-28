@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Web;
 using Sitecore.Configuration;
 using Sitecore.Data.Serialization;
 using Sitecore.Data.Serialization.Exceptions;
@@ -29,6 +30,9 @@ namespace Unicorn.Serialization.Sitecore
 		public SitecoreSerializationProvider(IPredicate predicate, string rootPath = null, string logName = "UnicornItemSerialization")
 		{
 			rootPath = (rootPath == null || rootPath == "default") ? PathUtils.Root : rootPath;
+
+			// allow root-relative serialization path (e.g. ~/data/serialization or ~/../data/serialization)
+			rootPath = ConfigurationUtility.ResolveConfigurationPath(rootPath);
 
 			Assert.ArgumentNotNullOrEmpty(rootPath, "rootPath");
 			Assert.ArgumentNotNullOrEmpty(logName, "logName");
