@@ -2,14 +2,14 @@
 using System.Linq;
 using System.Web;
 using Kamsar.WebConsole;
-using Unicorn.Dependencies;
+using Unicorn.Configuration;
 using Unicorn.Loader;
 using Unicorn.Logging;
 
 namespace Unicorn.ControlPanel
 {
 	/// <summary>
-	/// Runs a Unicorn sync using current DI configuration in a WebConsole, and logs it to the Sitecore log as well
+	/// Runs a Unicorn sync in a WebConsole of a configuration or configurations
 	/// </summary>
 	public class SyncConsole : ControlPanelConsole
 	{

@@ -4,7 +4,6 @@ using Moq;
 using NUnit.Framework;
 using Sitecore;
 using Sitecore.Data;
-using Sitecore.Diagnostics;
 using Unicorn.Data;
 using Unicorn.Evaluators;
 using Unicorn.Predicates;

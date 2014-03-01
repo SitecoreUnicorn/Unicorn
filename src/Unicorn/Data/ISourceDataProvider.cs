@@ -2,6 +2,9 @@
 
 namespace Unicorn.Data
 {
+	/// <summary>
+	/// Gets data items from the source - e.g. Sitecore - for comparison with some serialized items
+	/// </summary>
 	public interface ISourceDataProvider
 	{
 		/// <summary>

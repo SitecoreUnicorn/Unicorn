@@ -7,8 +7,8 @@ using Sitecore.Diagnostics;
 using Sitecore.Pipelines.Save;
 using Sitecore.Data.Items;
 using Sitecore.Data.Fields;
+using Unicorn.Configuration;
 using Unicorn.Data;
-using Unicorn.Dependencies;
 using Unicorn.Predicates;
 using Unicorn.Serialization;
 

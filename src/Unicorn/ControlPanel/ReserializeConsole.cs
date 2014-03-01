@@ -3,14 +3,17 @@ using System.Linq;
 using System.Web;
 using Kamsar.WebConsole;
 using Sitecore.StringExtensions;
+using Unicorn.Configuration;
 using Unicorn.Data;
-using Unicorn.Dependencies;
 using Unicorn.Logging;
 using Unicorn.Predicates;
 using Unicorn.Serialization;
 
 namespace Unicorn.ControlPanel
 {
+	/// <summary>
+	/// Renders a WebConsole that handles reserialize - or initial serialize - for Unicorn configurations
+	/// </summary>
 	public class ReserializeConsole : ControlPanelConsole
 	{
 		private readonly IConfiguration[] _configurations;

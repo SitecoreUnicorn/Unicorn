@@ -4,6 +4,9 @@ using Unicorn.Predicates;
 
 namespace Unicorn.ControlPanel
 {
+	/// <summary>
+	/// Allows performing the initial serialization of an empty configuration.
+	/// </summary>
 	public class InitialSetup : IControlPanelControl
 	{
 		private readonly IPredicate _predicate;

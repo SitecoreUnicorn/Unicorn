@@ -4,8 +4,8 @@ using Sitecore.Diagnostics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Unicorn.Configuration;
 using Unicorn.Data;
-using Unicorn.Dependencies;
 using Unicorn.Predicates;
 using Unicorn.Serialization;
 using Unicorn.Evaluators;
@@ -14,7 +14,7 @@ using System.Diagnostics;
 namespace Unicorn.Loader
 {
 	/// <summary>
-	/// Custom loader that processes serialization loading with progress and additional rules options
+	/// The loader is the heart of Unicorn syncing. It encapsulates the logic required to walk the tree according to a predicate and invoke the evaluator to decide what to do with the tree items.
 	/// </summary>
 	public class SerializationLoader
 	{

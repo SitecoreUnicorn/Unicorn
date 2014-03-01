@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Ninject;
 using Ninject.Syntax;
 
-namespace Unicorn.Dependencies
+namespace Unicorn.Configuration
 {
 	/// <summary>
 	/// Defines a registered set of Unicorn dependencies using Ninject to lookup the dependencies
@@ -19,9 +19,6 @@ namespace Unicorn.Dependencies
 
 		public string Name { get; private set; }
 
-		/// <summary>
-		/// Resolves a requested type, either directly registered or via constructor injection
-		/// </summary>
 		public T Resolve<T>()
 			where T : class
 		{

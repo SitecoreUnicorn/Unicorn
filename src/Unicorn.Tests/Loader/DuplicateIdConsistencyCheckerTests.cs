@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using Moq;
+﻿using Moq;
 using NUnit.Framework;
 using Sitecore.Data;
 using Unicorn.Loader;

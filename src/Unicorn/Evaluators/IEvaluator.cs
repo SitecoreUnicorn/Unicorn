@@ -3,6 +3,9 @@ using Unicorn.Serialization;
 
 namespace Unicorn.Evaluators
 {
+	/// <summary>
+	/// Evaluators decide what to do with items when new items, orphans, or comparisons are found
+	/// </summary>
 	public interface IEvaluator
 	{
 		/// <summary>

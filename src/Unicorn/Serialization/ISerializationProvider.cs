@@ -2,6 +2,9 @@
 
 namespace Unicorn.Serialization
 {
+	/// <summary>
+	/// Defines how to serialize and deserialize items.
+	/// </summary>
 	public interface ISerializationProvider
 	{
 		/// <summary>

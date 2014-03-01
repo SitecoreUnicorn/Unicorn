@@ -3,6 +3,9 @@ using Sitecore;
 
 namespace Unicorn.Data
 {
+	/// <summary>
+	/// Represents a given version of an item. Note that this is used both by ISourceItem AND ISerializedItem.
+	/// </summary>
 	public class ItemVersion
 	{
 		public ItemVersion(string language, int versionNumber)

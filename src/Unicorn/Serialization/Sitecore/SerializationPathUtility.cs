@@ -12,6 +12,11 @@ using Unicorn.Data;
 
 namespace Unicorn.Serialization.Sitecore
 {
+	/// <summary>
+	/// This class reimplements or normalizes the implementation of a lot of Sitecore's PathUtils class.
+	/// That class unfortunately hates strong typing, and many of its methods simply do not support an explicitly specified
+	/// serialization root path at all. These implementations get around that.
+	/// </summary>
 	public static class SerializationPathUtility
 	{
 		/// <summary>

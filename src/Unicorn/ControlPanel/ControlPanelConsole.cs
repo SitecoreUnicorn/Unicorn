@@ -10,7 +10,9 @@ namespace Unicorn.ControlPanel
 {
 	/// <summary>
 	/// Creates a Html5WebConsole to render something into, using Unicorn chrome
-	/// Also logs console output to the Sitecore log.
+	/// 
+	/// Note that classes using this need to use LoggingContext/WebConsoleLogger to attach the WebConsole
+	/// to the current Unicorn logger instance or they will not receive Unicorn log output.
 	/// </summary>
 	public abstract class ControlPanelConsole : IControlPanelControl
 	{

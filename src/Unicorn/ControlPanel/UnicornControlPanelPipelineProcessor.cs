@@ -3,18 +3,21 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
 using System.Web;
-using System.Web.SessionState;
 using System.Web.UI;
 using Sitecore.Pipelines.HttpRequest;
 using Sitecore.Security.Authentication;
 using Sitecore.SecurityModel;
 using Sitecore.StringExtensions;
-using Unicorn.Dependencies;
+using Unicorn.Configuration;
 using Unicorn.Predicates;
 using Unicorn.Serialization;
 
 namespace Unicorn.ControlPanel
 {
+	/// <summary>
+	/// This is a httpRequestBegin pipeline processor that is effectively a sitecore-integrated HTTP handler.
+	/// It renders the Unicorn control panel UI if the current URL matches the activationUrl.
+	/// </summary>
 	public class UnicornControlPanelPipelineProcessor : HttpRequestProcessor
 	{
 		private readonly string _activationUrl;

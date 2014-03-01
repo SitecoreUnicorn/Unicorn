@@ -1,8 +1,16 @@
 ﻿using System;
-using Unicorn.Dependencies;
+using Unicorn.Configuration;
 
 namespace Unicorn.Logging
 {
+	/// <summary>
+	/// The LoggingContext allows you to temporarily register a new logger with the PubSubLogger for a finite period of execution.
+	/// </summary>
+	/// <example>
+	///		using(new LoggingContext(new WebConsoleLogger(console))) {
+	///			// code that should be logged to the web console too
+	///		} // when using goes out of scope the logger is detatched from the PubSubLogger
+	/// </example>
 	public sealed class LoggingContext : IDisposable
 	{
 		private readonly ILogger _logger;
@@ -24,13 +32,3 @@ namespace Unicorn.Logging
 		}
 	}
 }
-
-/*
-TODO
-ported stuff to use ILogger
-Need to make it simple to use
-Add ILogger to default dep registry (pubsub logger)
-Fix tests for ILogger
-Need to implement multiple-configuration design - some classes' ctor params will need to allow for multiple, possibly
- * XML config grammar (default + extensions thereof)
-*/

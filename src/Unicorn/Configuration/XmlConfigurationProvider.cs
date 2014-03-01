@@ -13,10 +13,10 @@ using Unicorn.Logging;
 using Unicorn.Predicates;
 using Unicorn.Serialization;
 
-namespace Unicorn.Dependencies
+namespace Unicorn.Configuration
 {
 	/// <summary>
-	/// Reads Unicorn dependency configurations from XML (e.g. Sitecore web.config section)
+	/// Reads Unicorn dependency configurations from XML (e.g. Sitecore web.config section sitecore/unicorn)
 	/// </summary>
 	public class XmlConfigurationProvider : IConfigurationProvider
 	{

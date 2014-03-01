@@ -9,6 +9,16 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 {
 	public class FiatSitecoreSerializationProvider : SitecoreSerializationProvider
 	{
+		public override string FriendlyName
+		{
+			get { return "Fiat Sitecore Serialization Provider"; }
+		}
+
+		public override string Description
+		{
+			get { return "Stores serialized items using Sitecore's built-in serialization engine. Uses a custom deserializer that allows much more information to be gleaned compared to the default APIs, is faster, and supports field exclusions."; }
+		}
+
 		private readonly FiatDeserializer _deserializer;
 		public FiatSitecoreSerializationProvider(IPredicate predicate, IFieldPredicate fieldPredicate, IFiatDeserializerLogger logger, string rootPath = null, string logName = "UnicornItemSerialization")
 			: base(predicate, rootPath, logName)
@@ -44,14 +54,6 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 			}
 		}
 
-		public override string FriendlyName
-		{
-			get { return "Fiat Sitecore Serialization Provider"; }
-		}
-
-		public override string Description
-		{
-			get { return "Stores serialized items using Sitecore's built-in serialization engine. Uses a custom deserializer that allows much more information to be gleaned compared to the default APIs. Also, it's faster."; }
-		}
+		
 	}
 }

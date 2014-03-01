@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Web;
 using Sitecore.Configuration;
 using Sitecore.Data.Serialization;
 using Sitecore.Data.Serialization.Exceptions;
@@ -15,6 +14,10 @@ using Unicorn.Predicates;
 
 namespace Unicorn.Serialization.Sitecore
 {
+	/// <summary>
+	/// Serializes and deserializes items using the standard Sitecore serialization APIs.
+	/// NOTE: this does not support FieldPredicates. You should probably use FiatSitecoreSerializationProvider instead of this.
+	/// </summary>
 	public class SitecoreSerializationProvider : ISerializationProvider, IDocumentable
 	{
 		private readonly string _rootPath;

@@ -6,7 +6,7 @@ using Sitecore.Data.Items;
 using Sitecore.Data.SqlServer;
 using Sitecore.Globalization;
 using System.Collections.ObjectModel;
-using Unicorn.Dependencies;
+using Unicorn.Configuration;
 
 namespace Unicorn
 {

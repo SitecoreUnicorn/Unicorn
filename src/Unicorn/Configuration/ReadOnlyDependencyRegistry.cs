@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Sitecore.Diagnostics;
 
-namespace Unicorn.Dependencies
+namespace Unicorn.Configuration
 {
 	/// <summary>
 	/// This wrapper class prevents performing dependency reconfiguration on configurations after the setup phase is complete.

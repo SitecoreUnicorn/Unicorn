@@ -1,7 +1,10 @@
 ﻿using Sitecore.Configuration;
 
-namespace Unicorn.Dependencies
+namespace Unicorn.Configuration
 {
+	/// <summary>
+	/// This is the primary class to read configurations with. It reads the configuration provider from serialization.config and loads its configurations per its implementation.
+	/// </summary>
 	public static class UnicornConfigurationManager
 	{
 		private static readonly IConfigurationProvider Instance;

@@ -2,6 +2,9 @@
 
 namespace Unicorn.Logging
 {
+	/// <summary>
+	/// Logger that writes to the Sitecore logs
+	/// </summary>
 	public class SitecoreLogger : ILogger
 	{
 		public void Info(string message)

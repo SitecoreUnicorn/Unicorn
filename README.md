@@ -4,7 +4,7 @@ Unicorn is a utility for Sitecore that solves the issue of moving templates, ren
 
 For basic usage, Unicorn 2 has two moving parts:
 * Data provider - The default Sitecore data provider is extended to automatically serialize item changes as they are made to Sitecore. This means that at any given time, what's serialized is the "master copy."
-* Control panel - this tool (/unicorn.axd) is a page that can sync the state of Sitecore to the state stored on disk (respecting presets and exclusions). You do this after you pull down someone else's serialized changes from source control.
+* Control panel - this tool (/unicorn.aspx) is a page that can sync the state of Sitecore to the state stored on disk (respecting presets and exclusions). You do this after you pull down someone else's serialized changes from source control.
 
 Unicorn avoids the need to manually select changes to merge unlike some other serialization-based solutions because the disk is always kept up to date by the data provider. This means that if you pull changes in from someone else's Sitecore instance you will have to immediately merge and/or conflict resolve the serialized files in your source control system - leaving the disk still the master copy of everything. Then if you execute the sync page, the merged changes are synced into your Sitecore database.
 
@@ -12,26 +12,29 @@ Before using Unicorn you should review the [Sitecore Serialization Guide](http:/
 
 ## Initial Setup
 * Install Unicorn. This is as simple as adding the Unicorn NuGet package to your project.
-* Configure what to serialize as a serialization preset. There will be an `App_Config/Include/Serialization.config` file installed, which has a commented example of this syntax.
-* Visit $yoursite/unicorn.axd and tell it to run the initial serialization. This will take the preset you configured and serialize all of the included items in it to disk. *NOTE: make sure you serialize an authoritative database with all items present. Other databases will be made to look just like this one when sync occurs.*
-* Commit your serialized items to source control
+* Configure what to serialize in the example configuration's _Predicate_ registration. There will be an `App_Config/Include/Serialization.config` file installed, which has a commented example of this syntax.
+* Visit $yoursite/unicorn.aspx and it will walk you through initial serialization. This will take the preset you configured and serialize all of the included items in it to disk. *NOTE: make sure you serialize an authoritative database with all items present. Other databases will be made to look just like this one when sync occurs.*
+* Commit your serialized items to source control.
 
 ## Using Unicorn
 When using Unicorn it's important to follow the expected workflow.
 
-* When you update/pull from your source control system, you should execute the Sync operation on `/unicorn.axd` if any changes to .item files were present
-* When you commit to source control, include your changed items along with your code changes
+* When you update/pull from your source control system, you should execute the Sync operation on `/unicorn.aspx` if any changes to .item files were present
+* When you commit to source control, include your changed items along with your code changes. Unicorn will automatically serialize item changes you make in Sitecore to items that match the predicate(s) configured.
 * Conflicts in items are resolved at the source control level - at any given time, the disk is considered the master copy of the Sitecore items (due to local changes being automatically serialized as they're made)
 
 ## Unicorn Features
 
 There are a few special features that Unicorn has that are worth mentioning.
 
+* You can define multiple _configurations_, which allow you a lot of flexibility: you can serialize items to different places on disk, set up groups that can be synced separately, and override any aspect of Unicorn in each configuration.
 * Unicorn rejects "inconsequential" changes to items. The Sitecore Template Editor likes to make a lot of item saves that change nothing but the last modified date and revision. These are ignored to reduce churn in your source control.
 * During a sync operation, Unicorn can detect improperly merged renamed items (e.g. two serialized items with the same ID in different files) and will report that fact as an error.
 * Automatic retries are performed in the event of a load failure during a sync, which means that syncing items with a missing template along with the template itself in the same sync session will work correctly.
 * A custom deserialize routine allows Unicorn to report on exactly what was changed about a deserialized item (changed fields, added/removed versions, etc)
 * The control panel writes all console output - e.g. of a sync - to both the screen and the Sitecore log file. This provides a handy audit trail of what synchronizations did in the event of someone asking where an item went.
+* You can use _FieldPredicate_s to ignore deserialization and changes to specific fields you don't want to sync.
+* The automatic serialization cannot be blocked by event disabling code because it runs at a data provider level.
 
 ## Automated Deployment
 
@@ -43,7 +46,7 @@ The Unicorn control panel looks for a pre-shared "Authenticate" HTTP header that
 	
 Then when your build script calls the Unicorn control panel simply pass this key value along as an Authenticate HTTP header. For example using PowerShell 3.0 or later (such as with [Beaver](https://github.com/kamsar/Beaver)) you would use this:
 
-	$url = 'http://your-site-authoring-url/unicorn.axd?verb=Sync'
+	$url = 'http://your-site-authoring-url/unicorn.aspx?verb=Sync'
 	$deploymentToolAuthToken = 'generate-a-long-random-string-for-this'
     $result = Invoke-WebRequest -Uri $url -Headers @{ "Authenticate" = $deploymentToolAuthToken } -TimeoutSec 10800 -UseBasicParsing
 	
@@ -64,7 +67,7 @@ NOTE: When deploying to a Content Delivery server, the Unicorn Control Panel HTT
 _Note: these rules concern the default Evaluator only. This is probably what makes sense for most people, but be aware you can plug in and change all of this!_
 
 * The disk is considered the master at all times. Because the Unicorn data provider is automatically serializing item changes as they are made in Sitecore, changes you make are already serialized. Others' serialized updates from source control merge just like code.
-* "Changed" items are determined by any difference in modified date (not only newer times on disk - ANY difference, because disk is the master copy) or the revision field.
+* "Changed" items are determined by any difference in field values (in shared or versioned fields, across all versions).
 * Items that exist in Sitecore but not on disk are deleted, because the disk is the master.
 
 ## Pitfalls
@@ -76,28 +79,22 @@ _Note: these rules concern the default Evaluator only. This is probably what mak
 ## Manual Installation/Install from Source
 
 * Clone the repository
-* Place a copy of your Sitecore.Kernel.dll assembly (Sitecore 7+) in /lib/sitecore
-* Build the project using Visual Studio 2012 or later
+* Place a copy of your Sitecore.Kernel.dll assembly in /lib/sitecore/v7 (for a 7.0 build) or /lib/sitecore/v6 (for a 6.x build)
+* Build the project for your Sitecore version using Visual Studio 2012 or later
 * Copy Unicorn.dll and Kamsar.WebConsole.dll to your main project in whatever fashion you wish (project reference, as binary references, etc)
 * Copy Serialization.config to your App_Config\Include folder
-* Register the Unicorn Control Panel under `system.webServer/handlers` in your Web.config: 
-
-		<add name="Unicorn" path="unicorn.axd" verb="GET" type="Unicorn.ControlPanel.ControlPanelHandler, Unicorn" />
-	
 * Configure Serialization.config to your liking
-* Hit $yoursite/unicorn.axd to perform an initial serialization of your configured predicate
+* Hit $yoursite/unicorn.aspx to perform initial serialization of your configured predicate
 
 ## Advanced Usage and Customization
 
 Unicorn 2 uses a very flexible configuration system based on Dependency Injection that allows you to plug in your own rules for almost any part of what Unicorn does.
 
-### Dependency Registry
+### Configurations
 
-The `IDependencyRegistry` is the heart of all Unicorn customizations. This is an abstracted IoC container that contains registrations for all other pluggable types. The default implementation uses a built-in copy of the [TinyIoC](https://github.com/grumpydev/TinyIoC) library, but it is generic enough to get wired to any IoC container if you prefer your own.
+The `IConfiguration` is the heart of all Unicorn customizations. This is an abstracted IoC container that contains registrations for all other pluggable types. The default implementation uses (Ninject)[http://www.ninject.org/], but it is generic enough to get wired to other IoC containers if you prefer your own.
 
-The default registry is registered in Serialization.config, so you can wholesale change the default wirings by changing the class that is configured there to your own implementation. The real power comes however in being able to make copies of the default config (using the `Registry` class) and inject your own 'temporary dependencies' into the copy. This enables scenarios like serializing multiple presets to different locations on the filesystem and other advanced usages.
-
-For examples of usage, check out the `Unicorn.ControlPanel` namespace, specifically `SyncConsole`, as well as the `Unicorn.Dependencies.DefaultDependencyRegistry` class.
+But wait, there's more. You can configure more than one IConfiguration using the IConfigurationProvider. The default provider is registered in Serialization.config (configurationProvider element). It reads configuration from...the Serialization.config. The _defaults_ element defines the standard dependency configuration, and the _configurations/*_ elements define custom configurations that can override the defaults. Each dependency type can have non-DI constructor params passed to it by adding XML attributes to the main declaration - e.g. `<foo type="..." bar="hello">` would pass "hello" to `public MyType(string bar)`. You can also receive any XML body passed to the dependency to a `configNode` `XmlNode` parameter. This is how the `SerializationPresetPredicate` defines its preset.
 
 ### Evaluator
 
@@ -117,13 +114,19 @@ The default predicate uses _serialization presets_, but it's easy to imagine oth
 
 For examples see `Unicorn.Predicates.SerializationPresetPredicate`
 
+### Field Predicate
+
+The Field Predicate is a way to exclude certain fields from being controlled by Unicorn. Note that the control is not complete in that the value of ignored fields is never stored; it is stored and updated when other fields' values that are included change. However it is never deserialized or considered in the evaluator, and thus the value is effectively ignored.
+
+For examples see `Unicorn.Predicates.ConfigurationFieldPredicate`
+
 ### Serialization Provider
 
 The serialization provider defines the way that items are serialized. The default serialization provider writes Sitecore standard .item files to disk.
 
 You could just as much implement a SQL-based serialization provider, serialize as JSON, or other ideas if you wanted to.
 
-For examples see `Unicorn.Serialization.Sitecore.SitecoreSerializationProvider` and `Unicorn.Serialization.Sitecore.Fiat.FiatSitecoreSerializationProvider` (the Fiat provider uses a custom deserializer that gives better diagnostics)
+For examples see `Unicorn.Serialization.Sitecore.SitecoreSerializationProvider` and `Unicorn.Serialization.Sitecore.Fiat.FiatSitecoreSerializationProvider` (the Fiat provider uses a custom deserializer that gives better diagnostics, supports field predicates, etc)
 
 ### Source Data Provider
 

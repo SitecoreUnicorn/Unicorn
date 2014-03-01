@@ -10,6 +10,9 @@ using System.Collections.Generic;
 
 namespace Unicorn.Evaluators
 {
+	/// <summary>
+	/// Evaluates to overwrite the source data if ANY differences exist in the serialized version.
+	/// </summary>
 	public class SerializedAsMasterEvaluator : IEvaluator, IDocumentable
 	{
 		private readonly ISerializedAsMasterEvaluatorLogger _logger;

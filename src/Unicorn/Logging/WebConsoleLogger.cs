@@ -2,6 +2,9 @@
 
 namespace Unicorn.Logging
 {
+	/// <summary>
+	/// Logger that writes to a WebConsole.
+	/// </summary>
 	public class WebConsoleLogger : ILogger
 	{
 		private readonly IProgressStatus _progress;

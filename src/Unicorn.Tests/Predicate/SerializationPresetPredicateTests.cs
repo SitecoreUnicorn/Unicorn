@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System;
+﻿using System;
 using System.IO;
 using System.Reflection;
 using System.Xml;
@@ -172,6 +171,7 @@ namespace Unicorn.Tests.Predicate
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
 
+// ReSharper disable once RedundantArgumentName
 			var item = CreateTestSerializedReference(IncludedPath, database: ExcludedDatabase);
 			var includes = predicate.Includes(item);
 
@@ -194,9 +194,8 @@ namespace Unicorn.Tests.Predicate
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
 
-// ReSharper disable RedundantArgumentDefaultValue
+// ReSharper disable once RedundantArgumentDefaultValue
 			var item = CreateTestSerializedItem(IncludedPath, database: IncludedDatabase);
-// ReSharper restore RedundantArgumentDefaultValue
 			var includes = predicate.Includes(item);
 
 			Assert.IsTrue(includes.IsIncluded, "Include serialized item by database failed.");
@@ -207,9 +206,9 @@ namespace Unicorn.Tests.Predicate
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
 
-// ReSharper disable RedundantArgumentDefaultValue
+// ReSharper disable once RedundantArgumentName
+// ReSharper disable once RedundantArgumentDefaultValue
 			var item = CreateTestSerializedReference(IncludedPath, database: IncludedDatabase);
-// ReSharper restore RedundantArgumentDefaultValue
 			var includes = predicate.Includes(item);
 
 			Assert.IsTrue(includes.IsIncluded, "Include serialized reference by database failed.");
@@ -220,9 +219,8 @@ namespace Unicorn.Tests.Predicate
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
 
-// ReSharper disable RedundantArgumentDefaultValue
+// ReSharper disable once RedundantArgumentDefaultValue
 			var item = CreateTestSourceItem(IncludedPath, database: IncludedDatabase);
-// ReSharper restore RedundantArgumentDefaultValue
 			var includes = predicate.Includes(item);
 
 			Assert.IsTrue(includes.IsIncluded, "Include source item by database failed.");
@@ -285,6 +283,7 @@ namespace Unicorn.Tests.Predicate
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
 
+// ReSharper disable once RedundantArgumentName
 			var item = CreateTestSerializedItem(IncludedPath, templateId: ExcludedTemplateId);
 			var includes = predicate.Includes(item);
 
@@ -296,6 +295,7 @@ namespace Unicorn.Tests.Predicate
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
 
+// ReSharper disable once RedundantArgumentName
 			var item = CreateTestSourceItem(IncludedPath, templateId: ExcludedTemplateId);
 			var includes = predicate.Includes(item);
 
@@ -307,6 +307,7 @@ namespace Unicorn.Tests.Predicate
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
 
+// ReSharper disable once RedundantArgumentName
 			var item = CreateTestSerializedItem(IncludedPath, templateId: IncludedTemplateId);
 			var includes = predicate.Includes(item);
 
@@ -318,6 +319,7 @@ namespace Unicorn.Tests.Predicate
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
 
+// ReSharper disable once RedundantArgumentName
 			var item = CreateTestSourceItem(IncludedPath, templateId: IncludedTemplateId);
 			var includes = predicate.Includes(item);
 

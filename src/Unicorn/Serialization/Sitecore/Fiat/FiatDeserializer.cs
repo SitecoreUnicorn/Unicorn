@@ -19,6 +19,13 @@ using Unicorn.Predicates;
 
 namespace Unicorn.Serialization.Sitecore.Fiat
 {
+	/// <summary>
+	/// This is a re-implementation of the way Sitecore does deserialization. Unlike the stock deserializer,
+	/// this exposes much richer logging and only sets field values if they have changed (which is faster).
+	/// It also enables FieldPredicate support, which allows ignoring deserialization of certain fields.
+	/// 
+	/// The FiatSitecoreSerializationProvider makes use of this for its deserialization routines.
+	/// </summary>
 	public class FiatDeserializer
 	{
 		private readonly IFiatDeserializerLogger _logger;

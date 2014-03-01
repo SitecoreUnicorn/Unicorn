@@ -3,6 +3,9 @@ using Unicorn.Data;
 
 namespace Unicorn.Serialization
 {
+	/// <summary>
+	/// A serialized item is a reference to a concrete item. In Sitecore serialization terms, this refers to a .item file, as opposed to a folder.
+	/// </summary>
 	public interface ISerializedItem : ISerializedReference
 	{
 		ID Id { get; }

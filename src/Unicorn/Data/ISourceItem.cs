@@ -2,6 +2,9 @@
 
 namespace Unicorn.Data
 {
+	/// <summary>
+	/// A source item - e.g. a Sitecore item
+	/// </summary>
 	public interface ISourceItem
 	{
 		/// <summary>

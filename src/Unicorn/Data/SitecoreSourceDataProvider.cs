@@ -8,6 +8,9 @@ using Unicorn.ControlPanel;
 
 namespace Unicorn.Data
 {
+	/// <summary>
+	/// Acquires source data from Sitecore. This is just fine 99.9% of the time :)
+	/// </summary>
 	public class SitecoreSourceDataProvider : ISourceDataProvider, IDocumentable
 	{
 		public void ResetTemplateEngine()
