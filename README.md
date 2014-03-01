@@ -11,6 +11,7 @@ Unicorn avoids the need to manually select changes to merge unlike some other se
 Before using Unicorn you should review the [Sitecore Serialization Guide](http://sdn.sitecore.net/upload/sitecore7/70/serialization_guide_sc70-a4.pdf) available on SDN and familiarize yourself with how item serialization works. Make sure to read the 'Pitfalls' section below as well :)
 
 ## Initial Setup
+* You'll need Sitecore 6.5.0 (121009) or later. Tested with Sitecore through 7.1 Update-1.
 * Install Unicorn. This is as simple as adding the Unicorn NuGet package to your project.
 * Configure what to serialize in the example configuration's _Predicate_ registration. There will be an `App_Config/Include/Serialization.config` file installed, which has a commented example of this syntax.
 * Visit $yoursite/unicorn.aspx and it will walk you through initial serialization. This will take the preset you configured and serialize all of the included items in it to disk. *NOTE: make sure you serialize an authoritative database with all items present. Other databases will be made to look just like this one when sync occurs.*
