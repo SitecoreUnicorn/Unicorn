@@ -158,10 +158,12 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 			{
 				throw;
 			}
+#if SITECORE_7
 			catch (FieldIsMissingFromTemplateException)
 			{
 				throw;
 			}
+#endif
 			catch (Exception ex)
 			{
 				if (newItemWasCreated)
@@ -334,7 +336,13 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 			if (template.GetField(field.FieldID) == null)
 			{
 				if (!ignoreMissingTemplateFields)
+				{
+#if SITECORE_7
 					throw new FieldIsMissingFromTemplateException("Field '" + field.FieldName + "' does not exist in template '" + template.Name + "'", FileUtil.MakePath(item.Template.InnerItem.Database.Name, item.Template.InnerItem.Paths.FullPath), FileUtil.MakePath(item.Database.Name, item.Paths.FullPath), item.ID);
+#else
+					throw new Exception("Field '" + field.FieldName + "' does not exist in template '" + template.Name + "'");
+#endif
+				}
 
 				_logger.SkippedMissingTemplateField(item, field);
 				return;

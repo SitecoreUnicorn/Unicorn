@@ -17,5 +17,6 @@
 	
 	<files>
 		<file src="Serialization.config" target="content\App_Config\Include" />
+		<file src="bin\Releasev6\Unicorn.*" target="lib\net40" />
 	</files>
 </package>
