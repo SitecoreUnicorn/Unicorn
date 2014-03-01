@@ -5,7 +5,7 @@ using System.Linq;
 using System.Web;
 using System.Web.SessionState;
 using System.Web.UI;
-using Kamsar.WebConsole;
+using Sitecore.Pipelines.HttpRequest;
 using Sitecore.Security.Authentication;
 using Sitecore.SecurityModel;
 using Sitecore.StringExtensions;
@@ -15,11 +15,13 @@ using Unicorn.Serialization;
 
 namespace Unicorn.ControlPanel
 {
-	public class ControlPanelHandler : IHttpHandler, IRequiresSessionState
+	public class UnicornControlPanelPipelineProcessor : HttpRequestProcessor
 	{
-		public bool IsReusable
+		private readonly string _activationUrl;
+
+		public UnicornControlPanelPipelineProcessor(string activationUrl)
 		{
-			get { return false; }
+			_activationUrl = activationUrl;
 		}
 
 		private IConfiguration[] _configurations = UnicornConfigurationManager.Configurations;
@@ -27,6 +29,17 @@ namespace Unicorn.ControlPanel
 		{
 			get { return _configurations; }
 			set { _configurations = value; }
+		}
+
+		public override void Process(HttpRequestArgs args)
+		{
+			if (string.IsNullOrWhiteSpace(_activationUrl)) return;
+
+			if (args.Context.Request.RawUrl.StartsWith(_activationUrl, StringComparison.OrdinalIgnoreCase))
+			{
+				ProcessRequest(args.Context);
+				args.Context.Response.End();
+			}
 		}
 
 		public void ProcessRequest(HttpContext context)
@@ -190,5 +203,7 @@ namespace Unicorn.ControlPanel
 			public bool IsAllowed { get; private set; }
 			public bool IsAutomatedTool { get; private set; }
 		}
+
+		
 	}
 }

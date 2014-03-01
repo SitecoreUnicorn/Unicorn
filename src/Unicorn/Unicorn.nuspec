@@ -5,7 +5,7 @@
     <version>$version$</version>
     <title>$title$</title>
     <authors>Kam Figy</authors>
-    <owners>Kam Figy</owners>
+    <owners>Kam Figy, ISITE Design</owners>
     <licenseUrl>http://opensource.org/licenses/MIT</licenseUrl>
     <projectUrl>https://github.com/kamsar/Unicorn</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
@@ -13,13 +13,9 @@
     <releaseNotes>Complete refactoring</releaseNotes>
     <copyright>Copyright 2014</copyright>
     <tags>sitecore serialization</tags>
-	<dependencies>
-		<dependency id="Kamsar.WebConsole" version="1.2.2" />
-	</dependencies>
   </metadata>
 	
 	<files>
 		<file src="Serialization.config" target="content\App_Config\Include" />
-		<file src="..\..\Build\web.config.transform" target="content" />
 	</files>
 </package>

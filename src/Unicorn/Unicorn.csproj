@@ -59,7 +59,7 @@
     <Compile Include="ControlPanel\AccessDenied.cs" />
     <Compile Include="ControlPanel\ConfigurationDetails.cs" />
     <Compile Include="ControlPanel\ControlOptions.cs" />
-    <Compile Include="ControlPanel\ControlPanelHandler.cs" />
+    <Compile Include="ControlPanel\UnicornControlPanelPipelineProcessor.cs" />
     <Compile Include="ControlPanel\ControlPanelUtility.cs" />
     <Compile Include="ControlPanel\Heading.cs" />
     <Compile Include="ControlPanel\Html5Footer.cs" />
@@ -139,6 +139,7 @@
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
 	   Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
