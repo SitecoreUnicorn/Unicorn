@@ -12,16 +12,16 @@ Before using Unicorn you should review the [Sitecore Serialization Guide](http:/
 
 ## Is this like TDS?
 
-Unicorn solves some of the same issues as (Hedgehog's TDS)[https://www.hhogdev.com/products/team-development-for-sitecore/overview.aspx]. The major difference in approach is that because Unicorn forces all of the merging to be done on the disk, you never have to manually select what to update when you're running a sync operation or remember to write changed items to disk. Unless you have actual collisions, this saves a lot of time because you can take advantage of Git or SVN to do automerges for you. That said, TDS and Unicorn have different feature sets and goals. TDS is a monolithic product with commercial support and marketing that does a lot more than just serialization. Unicorn is relatively simple, free and open source, and does one thing well. Use whatever makes you happy :)
+Unicorn solves some of the same issues as [Hedgehog's TDS](https://www.hhogdev.com/products/team-development-for-sitecore/overview.aspx). The major difference in approach is that because Unicorn forces all of the merging to be done on the disk, you never have to manually select what to update when you're running a sync operation or remember to write changed items to disk. Unless you have actual collisions, this saves a lot of time because you can take advantage of Git or SVN to do automerges for you. That said, TDS and Unicorn have different feature sets and goals. TDS is a monolithic product with commercial support and marketing that does a lot more than just serialization. Unicorn is relatively simple, free and open source, and does one thing well. Use whatever makes you happy :)
 
 ## Initial Setup
-* Upgrading from 1.x? (Read this)[https://github.com/kamsar/Unicorn/wiki/Upgrading-to-Unicorn-2]
+* Upgrading from 1.x? [Read this](https://github.com/kamsar/Unicorn/wiki/Upgrading-to-Unicorn-2)
 * You'll need Sitecore 6.5.0 (121009) or later. Tested with Sitecore through 7.1 Update-1.
 * Install Unicorn. This is as simple as adding the Unicorn NuGet package to your project.
 * Configure what to serialize in the example configuration's _Predicate_ registration. There will be an `App_Config/Include/Serialization.config` file installed, which has a commented example of this syntax.
 * Visit $yoursite/unicorn.aspx and it will walk you through initial serialization. This will take the preset you configured and serialize all of the included items in it to disk. 
 	* NOTE: make sure you serialize an authoritative database with all items present. Other databases will be made to look just like this one when sync occurs.
-	* NOTE: if you're using Git, you need to make sure that Git doesn't fool with the line endings of your serialized files. Add `*.item -text` to the a `.gitattributes` file in the repo root. See (this blog post)[http://seankearney.com/post/Using-Team-Development-for-Sitecore-with-GitHub] for details.
+	* NOTE: if you're using Git, you need to make sure that Git doesn't fool with the line endings of your serialized files. Add `*.item -text` to the a `.gitattributes` file in the repo root. See [this blog post](http://seankearney.com/post/Using-Team-Development-for-Sitecore-with-GitHub) for details.
 * Commit your serialized items to source control.
 
 ## Using Unicorn
@@ -100,7 +100,7 @@ Unicorn 2 uses a very flexible configuration system based on Dependency Injectio
 
 ### Configurations
 
-The `IConfiguration` is the heart of all Unicorn customizations. This is an abstracted IoC container that contains registrations for all other pluggable types. The default implementation uses (Ninject)[http://www.ninject.org/], but it is generic enough to get wired to other IoC containers if you prefer your own.
+The `IConfiguration` is the heart of all Unicorn customizations. This is an abstracted IoC container that contains registrations for all other pluggable types. The default implementation uses [Ninject](http://www.ninject.org/), but it is generic enough to get wired to other IoC containers if you prefer your own.
 
 But wait, there's more. You can configure more than one IConfiguration using the IConfigurationProvider. The default provider is registered in Serialization.config (configurationProvider element). It reads configuration from...the Serialization.config. The _defaults_ element defines the standard dependency configuration, and the _configurations/*_ elements define custom configurations that can override the defaults. Each dependency type can have non-DI constructor params passed to it by adding XML attributes to the main declaration - e.g. `<foo type="..." bar="hello">` would pass "hello" to `public MyType(string bar)`. You can also receive any XML body passed to the dependency to a `configNode` `XmlNode` parameter. This is how the `SerializationPresetPredicate` defines its preset.
 
