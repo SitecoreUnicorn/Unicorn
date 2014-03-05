@@ -8,8 +8,14 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unicorn.Tests", "src\Unicorn.Tests\Unicorn.Tests.csproj", "{7E03DC10-5D06-4173-89CA-2AEFBA4FAD55}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unicorn-SC6", "src\Unicorn\Unicorn-SC6.csproj", "{2C79B630-8F40-45DB-90FA-8EE7C419FF23}"
+	ProjectSection(ProjectDependencies) = postProject
+		{82C4441B-E11E-4601-B6B7-C5AD71B2AB70} = {82C4441B-E11E-4601-B6B7-C5AD71B2AB70}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unicorn.Tests-SC6", "src\Unicorn.Tests\Unicorn.Tests-SC6.csproj", "{BCF3AC28-674B-42C5-8FA6-05CB4514689F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7E03DC10-5D06-4173-89CA-2AEFBA4FAD55} = {7E03DC10-5D06-4173-89CA-2AEFBA4FAD55}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
