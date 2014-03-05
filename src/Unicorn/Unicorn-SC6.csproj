@@ -5,7 +5,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{82C4441B-E11E-4601-B6B7-C5AD71B2AB70}</ProjectGuid>
+    <ProjectGuid>{2C79B630-8F40-45DB-90FA-8EE7C419FF23}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Unicorn</RootNamespace>

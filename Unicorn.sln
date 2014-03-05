@@ -7,6 +7,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unicorn", "src\Unicorn\Unic
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unicorn.Tests", "src\Unicorn.Tests\Unicorn.Tests.csproj", "{7E03DC10-5D06-4173-89CA-2AEFBA4FAD55}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unicorn-SC6", "src\Unicorn\Unicorn-SC6.csproj", "{2C79B630-8F40-45DB-90FA-8EE7C419FF23}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unicorn.Tests-SC6", "src\Unicorn.Tests\Unicorn.Tests-SC6.csproj", "{BCF3AC28-674B-42C5-8FA6-05CB4514689F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +25,14 @@ Global
 		{7E03DC10-5D06-4173-89CA-2AEFBA4FAD55}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7E03DC10-5D06-4173-89CA-2AEFBA4FAD55}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7E03DC10-5D06-4173-89CA-2AEFBA4FAD55}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2C79B630-8F40-45DB-90FA-8EE7C419FF23}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2C79B630-8F40-45DB-90FA-8EE7C419FF23}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2C79B630-8F40-45DB-90FA-8EE7C419FF23}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2C79B630-8F40-45DB-90FA-8EE7C419FF23}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BCF3AC28-674B-42C5-8FA6-05CB4514689F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BCF3AC28-674B-42C5-8FA6-05CB4514689F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BCF3AC28-674B-42C5-8FA6-05CB4514689F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BCF3AC28-674B-42C5-8FA6-05CB4514689F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
