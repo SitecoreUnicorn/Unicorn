@@ -262,7 +262,16 @@ namespace Unicorn.Loader
 			// if we're forcing an update (ie deleting stuff not on disk) we send the items that we found that weren't on disk off to get evaluated as orphans
 			if (orphanCandidates.Count > 0)
 			{
-				Evaluator.EvaluateOrphans(orphanCandidates.Values.ToArray());
+				bool disableNewSerialization = UnicornDataProvider.DisableSerialization;
+				try
+				{
+					UnicornDataProvider.DisableSerialization = true;
+					Evaluator.EvaluateOrphans(orphanCandidates.Values.ToArray());
+				}
+				finally
+				{
+					UnicornDataProvider.DisableSerialization = disableNewSerialization;
+				}
 			}
 		}
 
