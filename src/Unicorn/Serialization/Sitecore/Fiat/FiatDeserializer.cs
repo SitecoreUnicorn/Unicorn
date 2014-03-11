@@ -333,14 +333,15 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 				item.Database.Engines.TemplateEngine.Reset();
 				template = AssertTemplate(item.Database, item.TemplateID);
 			}
+
 			if (template.GetField(field.FieldID) == null)
 			{
 				if (!ignoreMissingTemplateFields)
 				{
 #if SITECORE_7
-					throw new FieldIsMissingFromTemplateException("Field '" + field.FieldName + "' does not exist in template '" + template.Name + "'", FileUtil.MakePath(item.Template.InnerItem.Database.Name, item.Template.InnerItem.Paths.FullPath), FileUtil.MakePath(item.Database.Name, item.Paths.FullPath), item.ID);
+					throw new FieldIsMissingFromTemplateException("Field '" + field.FieldName + "' (" + field.FieldID + ") does not exist in template '" + template.Name + "'", FileUtil.MakePath(item.Template.InnerItem.Database.Name, item.Template.InnerItem.Paths.FullPath), FileUtil.MakePath(item.Database.Name, item.Paths.FullPath), item.ID);
 #else
-					throw new Exception("Field '" + field.FieldName + "' does not exist in template '" + template.Name + "'");
+					throw new Exception("Field '" + field.FieldName + "' (" + field.FieldID + ") does not exist in template '" + template.Name + "'");
 #endif
 				}
 
