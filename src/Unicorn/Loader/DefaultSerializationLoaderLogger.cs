@@ -33,7 +33,7 @@ namespace Unicorn.Loader
 
 		public void SkippedItemMissingInSerializationProvider(ISerializedReference item, string serializationProviderName)
 		{
-			_logger.Warn("[S] {0}. Unable to get a serialized item for the path. <br />This usually indicates an orphaned serialized item tree in {1} which should be removed. <br />Less commonly, it could also indicate a sparsely serialized tree which is not supported.".FormatWith(item.DisplayIdentifier, serializationProviderName));
+			_logger.Warn("[S] {0}. Unable to get a serialized item for the path. <br />This usually indicates an orphaned serialized item tree in {1} which should be removed. <br />Less commonly, it could also indicate a sparsely serialized tree which is not supported, or a serialized item that is named differently than its metadata.".FormatWith(item.DisplayIdentifier, serializationProviderName));
 		}
 
 		public void SkippedItem(ISourceItem skippedItem, string predicateName, string justification)

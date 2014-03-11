@@ -33,13 +33,21 @@ namespace Unicorn.ControlPanel
 				var logger = configuration.Resolve<ILogger>();
 				using (new LoggingContext(new WebConsoleLogger(progress), configuration))
 				{
-					logger.Info("Control Panel Sync: Processing Unicorn configuration " + configuration.Name);
+					try
+					{
+						logger.Info("Control Panel Sync: Processing Unicorn configuration " + configuration.Name);
 
-					var loader = configuration.Resolve<SerializationLoader>();
+						var loader = configuration.Resolve<SerializationLoader>();
 
-					loader.LoadAll(configuration);
+						loader.LoadAll(configuration);
 
-					logger.Info("Control Panel Sync: Completed syncing Unicorn configuration " + configuration.Name);
+						logger.Info("Control Panel Sync: Completed syncing Unicorn configuration " + configuration.Name);
+					}
+					catch (Exception ex)
+					{
+						logger.Error(ex);
+						break;
+					}
 				}
 			}
 		}

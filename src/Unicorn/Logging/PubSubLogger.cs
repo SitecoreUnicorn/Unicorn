@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
 
 namespace Unicorn.Logging
 {
@@ -54,6 +55,14 @@ namespace Unicorn.Logging
 			foreach (var logger in _loggers)
 			{
 				logger.Error(message);
+			}
+		}
+
+		public void Error(Exception exception)
+		{
+			foreach (var logger in _loggers)
+			{
+				logger.Error(exception);
 			}
 		}
 

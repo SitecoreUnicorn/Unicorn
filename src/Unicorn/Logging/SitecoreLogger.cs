@@ -27,5 +27,10 @@ namespace Unicorn.Logging
 		{
 			Log.Error("[Unicorn]: " + message, this);
 		}
+
+		public void Error(System.Exception exception)
+		{
+			Log.Error(new ExceptionFormatter().FormatExceptionAsText(exception), this);
+		}
 	}
 }

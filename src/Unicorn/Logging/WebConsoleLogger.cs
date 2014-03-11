@@ -1,4 +1,5 @@
-﻿using Kamsar.WebConsole;
+﻿using System;
+using Kamsar.WebConsole;
 
 namespace Unicorn.Logging
 {
@@ -32,6 +33,11 @@ namespace Unicorn.Logging
 		public void Error(string message)
 		{
 			_progress.ReportStatus(message, MessageType.Error);
+		}
+
+		public void Error(Exception exception)
+		{
+			_progress.ReportStatus(new ExceptionFormatter().FormatExceptionAsHtml(exception), MessageType.Error);
 		}
 	}
 }

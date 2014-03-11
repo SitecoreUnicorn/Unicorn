@@ -37,30 +37,38 @@ namespace Unicorn.ControlPanel
 
 				using (new LoggingContext(new WebConsoleLogger(progress), configuration))
 				{
-					logger.Info("Control Panel Reserialize: Processing Unicorn configuration " + configuration.Name);
-
-					var predicate = configuration.Resolve<IPredicate>();
-					var serializationProvider = configuration.Resolve<ISerializationProvider>();
-
-					var roots = predicate.GetRootItems();
-
-					int index = 1;
-					foreach (var root in roots)
+					try
 					{
-						var rootReference = serializationProvider.GetReference(root);
-						if (rootReference != null)
+						logger.Info("Control Panel Reserialize: Processing Unicorn configuration " + configuration.Name);
+
+						var predicate = configuration.Resolve<IPredicate>();
+						var serializationProvider = configuration.Resolve<ISerializationProvider>();
+
+						var roots = predicate.GetRootItems();
+
+						int index = 1;
+						foreach (var root in roots)
 						{
-							logger.Warn("[D] existing serialized items under {0}".FormatWith(rootReference.DisplayIdentifier));
-							rootReference.Delete();
+							var rootReference = serializationProvider.GetReference(root);
+							if (rootReference != null)
+							{
+								logger.Warn("[D] existing serialized items under {0}".FormatWith(rootReference.DisplayIdentifier));
+								rootReference.Delete();
+							}
+
+							logger.Info("[U] Serializing included items under root {0}".FormatWith(root.DisplayIdentifier));
+							Serialize(root, predicate, serializationProvider, logger);
+							progress.Report((int) ((index/(double) roots.Length)*100));
+							index++;
 						}
 
-						logger.Info("[U] Serializing included items under root {0}".FormatWith(root.DisplayIdentifier));
-						Serialize(root, predicate, serializationProvider, logger);
-						progress.Report((int)((index / (double)roots.Length) * 100));
-						index++;
+						logger.Info("Control Panel Reserialize: Finished reserializing Unicorn configuration " + configuration.Name);
 					}
-
-					logger.Info("Control Panel Reserialize: Finished reserializing Unicorn configuration " + configuration.Name);
+					catch (Exception ex)
+					{
+						logger.Error(ex);
+						break;
+					}
 				}
 			}
 		}

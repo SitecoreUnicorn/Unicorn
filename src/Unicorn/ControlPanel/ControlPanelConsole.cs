@@ -97,10 +97,6 @@ namespace Unicorn.ControlPanel
 					Process(progress);
 				}
 			}
-			catch (Exception ex)
-			{
-				progress.ReportException(ex);
-			}
 			finally
 			{
 				heartbeat.Stop();

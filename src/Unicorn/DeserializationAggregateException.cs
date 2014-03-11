@@ -26,7 +26,7 @@ namespace Unicorn
 
 		public override string Message
 		{
-			get { return base.Message + " (" + InnerExceptions.Length + " inner failures)\n" + string.Join("\n", InnerExceptions.Select(x => x.Message)); }
+			get { return base.Message + " (" + InnerExceptions.Length + " inner failures)\r\n" + string.Join("\r\n\r\n", InnerExceptions.Select(x => x.Message)); }
 		}
 
 		protected DeserializationAggregateException(
