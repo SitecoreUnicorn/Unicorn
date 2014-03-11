@@ -74,6 +74,15 @@ namespace Unicorn
 			}
 			else if (HasConsequentialChanges(changes)) // it's a simple update - but we reject it if only inconsequential fields (last updated, revision) were changed - again, template builder FTW
 			{
+				// in some cases, such as template changes, we can have outdated information in the itemChanges.Item
+				// for example invalid field IDs in language versions that are not the current item version. To mitigate this threat
+				// to invalid serialized values, we first nuke the item from the cache before we serialize it to make sure we get the freshest data
+				changes.Item.Database.Caches.ItemCache.RemoveItem(changes.Item.ID);
+				changes.Item.Database.Caches.DataCache.RemoveItemInformation(changes.Item.ID);
+
+				// reacquire the source item after cleaning the cache
+				sourceItem = new SitecoreSourceItem(changes.Item.Database.GetItem(changes.Item.ID, changes.Item.Language, changes.Item.Version));
+
 				_serializationProvider.SerializeItem(sourceItem);
 				_logger.SavedItem(_serializationProvider.LogName, sourceItem);
 			}
