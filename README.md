@@ -31,6 +31,8 @@ When deploying to a Content Delivery server, the Unicorn sync tool page and seri
 
 [Andrew Lansdowne](https://twitter.com/Rangler2) has also written a post specifically about [setting up Unicorn with TeamCity and WebDeploy](http://andrew.lansdowne.me/2013/06/07/auto-deploy-sitecore-items-using-unicorn-and-teamcity/) that may be useful when setting up automated deployments.
 
+You can also enable automatic database syncronization by setting "UnicornSyncDatabase" value to "true" in the Serialization.config and set "UnicornPublishDatabase" to "true" if you want to automatically publish the items after the syncronization.
+
 ## Unicorn's Sync Rules
 
 * The disk is considered the master at all times. The event handlers make this usable, because local changes are already serialized on disk (and so updates from SCM must merge with local at that time just like code)
