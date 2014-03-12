@@ -36,30 +36,42 @@ namespace Unicorn
 			_itemsProcessed = 0;
 
 			var reference = new ItemReference(options.Preset.Database, options.Preset.Path);
-			var physicalPath = PathUtils.GetDirectoryPath(reference.ToString());
+            var startingItemPath = reference.ToString();
 
-			options.Progress.ReportStatus("Loading serialized items from " + physicalPath, MessageType.Info);
+            var itemPath = PathUtils.GetFilePath(startingItemPath);
+            var folderPath = PathUtils.GetDirectoryPath(startingItemPath);
 
-			if (!Directory.Exists(physicalPath)) throw new FileNotFoundException("The root serialization path " + physicalPath + " did not exist!", physicalPath);
+            options.Progress.ReportStatus("Loading serialized items from " + folderPath, MessageType.Info);
+
+            if (!File.Exists(itemPath) && !Directory.Exists(folderPath))
+                throw new DirectoryNotFoundException("The root serialization path " + folderPath + " did not exist!");
 
 			if (options.DisableEvents)
 			{
 				using (new EventDisabler())
 				{
-					LoadTreePaths(physicalPath, options);
+					LoadTreePaths(startingItemPath, options);
 				}
 
-				string targetDatabase = GetTargetDatabase(physicalPath, options);
+				string targetDatabase = GetTargetDatabase(folderPath, options);
 				DeserializationFinished(targetDatabase);
 
 				return;
 			}
 
-			LoadTreePaths(physicalPath, options);	
+			LoadTreePaths(folderPath, options);	
 		}
 
-		private void LoadTreePaths(string physicalPath, AdvancedLoadOptions options)
+        private void LoadTreePaths(string startingItemPath, AdvancedLoadOptions options)
 		{
+            var physicalPath = PathUtils.GetDirectoryPath(startingItemPath);
+            var rootItemPath = PathUtils.GetFilePath(startingItemPath);
+            if (File.Exists(rootItemPath))
+            {
+                ItemLoadResult rootItemResult;
+                DoLoadItem(rootItemPath, options, out rootItemResult);
+            }
+			
 			DoLoadTree(physicalPath, options);
 			DoLoadTree(PathUtils.GetShortPath(physicalPath), options);
 			options.Progress.ReportStatus(string.Format("Finished loading serialized items from {0} ({1} total items synchronized)", physicalPath, _itemsProcessed), MessageType.Info);
