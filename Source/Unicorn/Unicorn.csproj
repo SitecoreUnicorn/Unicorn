@@ -53,6 +53,7 @@
   <ItemGroup>
     <Compile Include="AdvancedLoadOptions.cs" />
     <Compile Include="FilteredItemHandler.cs" />
+    <Compile Include="FilteredItemLoader.cs" />
     <Compile Include="PresetExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SerializationConflictProcessor.cs" />
