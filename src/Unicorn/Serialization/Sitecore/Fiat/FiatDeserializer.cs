@@ -262,6 +262,10 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 			AssertTemplate(database, templateId);
 
 			Item targetItem = ItemManager.AddFromTemplate(syncItem.Name, templateId, destinationParentItem, itemId);
+
+			if(targetItem == null)
+				throw new DeserializationException("Creating " + syncItem.DatabaseName + ":" + syncItem.ItemPath + " failed. API returned null.");
+
 			targetItem.Versions.RemoveAll(true);
 
 			return targetItem;
