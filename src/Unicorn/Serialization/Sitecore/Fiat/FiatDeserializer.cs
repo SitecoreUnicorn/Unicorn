@@ -212,7 +212,29 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 				using (new EditContext(targetItem))
 				{
 					targetItem.RuntimeSettings.ReadOnlyStatistics = true;
-					targetItem.ChangeTemplate(newTemplate);
+					try
+					{
+						targetItem.ChangeTemplate(newTemplate);
+					}
+					catch
+					{
+						// this generally means that we tried to sync an item and change its template AND we already deleted the item's old template in the same sync
+						// the Sitecore change template API chokes if the item's CURRENT template is unavailable, but we can get around that
+						// issure reported to Sitecore Support (406546)
+						lock (targetItem.SyncRoot)
+						{
+							Template sourceTemplate = TemplateManager.GetTemplate(targetItem);
+							Template targetTemplate = TemplateManager.GetTemplate(newTemplate.ID, targetItem.Database);
+							
+							Error.AssertNotNull(targetTemplate, "Could not get target in ChangeTemplate");
+
+							// this is probably true if we got here. This is the check the Sitecore API fails to make, and throws a NullReferenceException.
+							if (sourceTemplate == null) sourceTemplate = targetTemplate;
+
+							TemplateChangeList templateChangeList = sourceTemplate.GetTemplateChangeList(targetTemplate);
+							TemplateManager.ChangeTemplate(targetItem, templateChangeList);
+						}
+					}
 				}
 
 				ClearCaches(targetItem.Database, targetItem.ID);
