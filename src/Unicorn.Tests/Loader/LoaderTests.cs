@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System;
 using Moq;
@@ -25,28 +26,13 @@ namespace Unicorn.Tests.Loader
 		[Test]
 		public void LoadTree_ThrowsError_WhenRetryerIsNull()
 		{
-			Assert.Throws<ArgumentNullException>(() => CreateTestLoader(null, null, null, null, null).LoadTree(new Mock<ISourceItem>().Object, null, new Mock<IConsistencyChecker>().Object));
+			Assert.Throws<ArgumentNullException>(() => CreateTestLoader(null, null, null, null, null).LoadTree(new Mock<ISerializedItem>().Object, null, new Mock<IConsistencyChecker>().Object));
 		}
 
 		[Test]
 		public void LoadTree_ThrowsError_WhenConsistencyCheckerIsNull()
 		{
-			Assert.Throws<ArgumentNullException>(() => CreateTestLoader(null, null, null, null, null).LoadTree(new Mock<ISourceItem>().Object, new Mock<IDeserializeFailureRetryer>().Object, null));
-		}
-
-		[Test]
-		public void LoadTree_ThrowsError_WhenRootDoesNotExist()
-		{
-			var rootItem = CreateTestTree(1);
-
-			var serializationProvider = new Mock<ISerializationProvider>();
-			serializationProvider.Setup(x => x.GetReference(rootItem)).Returns((ISerializedReference) null);
-
-			var logger = new DefaultSerializationLoaderLogger(new Mock<ILogger>().Object);
-
-			var loader = new SerializationLoader(serializationProvider.Object, new Mock<ISourceDataProvider>().Object, new Mock<IPredicate>().Object, new Mock<IEvaluator>().Object, logger);
-
-			Assert.Throws<InvalidOperationException>(() => TestLoadTree(loader, rootItem));
+			Assert.Throws<ArgumentNullException>(() => CreateTestLoader(null, null, null, null, null).LoadTree(new Mock<ISerializedItem>().Object, new Mock<IDeserializeFailureRetryer>().Object, null));
 		}
 
 		[Test]
@@ -83,7 +69,7 @@ namespace Unicorn.Tests.Loader
 
 			var loader = CreateTestLoader(serializationProvider.Object, null, predicate, null, logger.Object);
 
-			TestLoadTree(loader, root);
+			TestLoadTree(loader, serializedRootItem);
 
 			logger.Verify(x => x.SkippedItemPresentInSerializationProvider(serializedRootItem, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()));
 		}
@@ -106,7 +92,7 @@ namespace Unicorn.Tests.Loader
 
 			var loader = CreateTestLoader(serializationProvider.Object, null, predicate, evaluator.Object, null);
 
-			TestLoadTree(loader, root);
+			TestLoadTree(loader, serializedRootItem.Object);
 
 			evaluator.Verify(x => x.EvaluateNewSerializedItem(serializedRootItem.Object));
 		}
@@ -130,7 +116,7 @@ namespace Unicorn.Tests.Loader
 
 			var loader = CreateTestLoader(serializationProvider.Object, sourceDataProvider.Object, predicate, null, logger.Object);
 
-			TestLoadTree(loader, root);
+			TestLoadTree(loader, serializedRootItem);
 
 			logger.Verify(x => x.SkippedItem(root.Children[0], It.IsAny<string>(), It.IsAny<string>()));
 		}
@@ -167,7 +153,7 @@ namespace Unicorn.Tests.Loader
 
 			var loader = CreateTestLoader(serializationProvider.Object, sourceDataProvider.Object, predicate, evaluator.Object, logger.Object);
 
-			TestLoadTree(loader, root);
+			TestLoadTree(loader, serializedRootItem.Object);
 
 			evaluator.Verify(x => x.EvaluateUpdate(serializedChildItem.Object, root.Children[0]));
 		}
@@ -198,7 +184,7 @@ namespace Unicorn.Tests.Loader
 
 			var loader = CreateTestLoader(serializationProvider.Object, sourceDataProvider.Object, predicate, evaluator.Object, null);
 
-			TestLoadTree(loader, root);
+			TestLoadTree(loader, serializedRootItem.Object);
 
 			evaluator.Verify(x => x.EvaluateOrphans(It.Is<ISourceItem[]>(y => y.Contains(root.Children[0]))));
 		}
@@ -229,7 +215,7 @@ namespace Unicorn.Tests.Loader
 
 			var loader = CreateTestLoader(serializationProvider.Object, sourceDataProvider.Object, predicate, evaluator.Object, null);
 
-			TestLoadTree(loader, root);
+			TestLoadTree(loader, serializedRootItem.Object);
 
 			evaluator.Verify(x => x.EvaluateOrphans(It.IsAny<ISourceItem[]>()), Times.Never());
 		}
@@ -253,7 +239,7 @@ namespace Unicorn.Tests.Loader
 
 			var loader = CreateTestLoader(serializationProvider.Object, sourceDataProvider.Object, predicate, evaluator.Object, null);
 
-			TestLoadTree(loader, root);
+			TestLoadTree(loader, serializedRootItem);
 
 			evaluator.Verify(x => x.EvaluateOrphans(It.IsAny<ISourceItem[]>()), Times.Never());
 		}
@@ -282,7 +268,7 @@ namespace Unicorn.Tests.Loader
 
 			var loader = CreateTestLoader(serializationProvider.Object, sourceDataProvider.Object, predicate, evaluator.Object, null);
 
-			TestLoadTree(loader, root);
+			TestLoadTree(loader, serializedRootItem.Object);
 
 			evaluator.Verify(x => x.EvaluateNewSerializedItem(serializedChildItem.Object));
 		}
@@ -307,7 +293,7 @@ namespace Unicorn.Tests.Loader
 
 			var loader = CreateTestLoader(serializationProvider.Object, null, predicate, null, logger.Object);
 
-			Assert.Throws<ConsistencyException>((() => loader.LoadTree(root, new Mock<IDeserializeFailureRetryer>().Object, consistencyChecker.Object)));
+			Assert.Throws<ConsistencyException>((() => loader.LoadTree(serializedRootItem.Object, new Mock<IDeserializeFailureRetryer>().Object, consistencyChecker.Object)));
 		}
 
 		private SerializationLoader CreateTestLoader(ISerializationProvider serializationProvider, ISourceDataProvider sourceDataProvider, IPredicate predicate, IEvaluator evaluator, ISerializationLoaderLogger logger)
@@ -317,12 +303,14 @@ namespace Unicorn.Tests.Loader
 			var mockPredicate = new Mock<IPredicate>();
 			var mockEvaluator = new Mock<IEvaluator>();
 			var mockLogger = new Mock<ISerializationLoaderLogger>();
+			var pathResolver = new PredicateRootPathResolver(predicate ?? mockPredicate.Object, serializationProvider ?? mockSerializationProvider.Object, sourceDataProvider ?? mockSourceDataProvider.Object);
 
 			return new SerializationLoader(serializationProvider ?? mockSerializationProvider.Object,
 				sourceDataProvider ?? mockSourceDataProvider.Object,
 				predicate ?? mockPredicate.Object,
 				evaluator ?? mockEvaluator.Object,
-				logger ?? mockLogger.Object);
+				logger ?? mockLogger.Object,
+				pathResolver);
 		}
 
 		private ISourceItem CreateTestTree(int depth)
@@ -386,7 +374,7 @@ namespace Unicorn.Tests.Loader
 			return predicate.Object;
 		}
 
-		private void TestLoadTree(SerializationLoader loader, ISourceItem root, IDeserializeFailureRetryer retryer = null, IConsistencyChecker consistencyChecker = null)
+		private void TestLoadTree(SerializationLoader loader, ISerializedItem root, IDeserializeFailureRetryer retryer = null, IConsistencyChecker consistencyChecker = null)
 		{
 			if (retryer == null) retryer = new Mock<IDeserializeFailureRetryer>().Object;
 			if (consistencyChecker == null)

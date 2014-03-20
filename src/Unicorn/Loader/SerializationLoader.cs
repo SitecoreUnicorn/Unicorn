@@ -24,16 +24,19 @@ namespace Unicorn.Loader
 		protected readonly IEvaluator Evaluator;
 		protected readonly ISourceDataProvider SourceDataProvider;
 		protected readonly ISerializationLoaderLogger Logger;
+		protected readonly PredicateRootPathResolver PredicateRootPathResolver;
 
-		public SerializationLoader(ISerializationProvider serializationProvider, ISourceDataProvider sourceDataProvider, IPredicate predicate, IEvaluator evaluator, ISerializationLoaderLogger logger)
+		public SerializationLoader(ISerializationProvider serializationProvider, ISourceDataProvider sourceDataProvider, IPredicate predicate, IEvaluator evaluator, ISerializationLoaderLogger logger, PredicateRootPathResolver predicateRootPathResolver)
 		{
 			Assert.ArgumentNotNull(serializationProvider, "serializationProvider");
 			Assert.ArgumentNotNull(sourceDataProvider, "sourceDataProvider");
 			Assert.ArgumentNotNull(predicate, "predicate");
 			Assert.ArgumentNotNull(evaluator, "evaluator");
 			Assert.ArgumentNotNull(logger, "logger");
+			Assert.ArgumentNotNull(predicateRootPathResolver, "predicateRootPathResolver");
 
 			Logger = logger;
+			PredicateRootPathResolver = predicateRootPathResolver;
 			Evaluator = evaluator;
 			Predicate = predicate;
 			SerializationProvider = serializationProvider;
@@ -55,7 +58,7 @@ namespace Unicorn.Loader
 		{
 			Assert.ArgumentNotNull(retryer, "retryer");
 
-			var roots = Predicate.GetRootItems();
+			var roots = PredicateRootPathResolver.GetRootSerializedItems();
 			foreach (var root in roots)
 			{
 				LoadTree(root, retryer, consistencyChecker);
@@ -65,7 +68,7 @@ namespace Unicorn.Loader
 		/// <summary>
 		/// Loads a preset from serialized items on disk.
 		/// </summary>
-		public virtual void LoadTree(ISourceItem rootItem, IConfiguration dependencyConfiguration)
+		public virtual void LoadTree(ISerializedItem rootItem, IConfiguration dependencyConfiguration)
 		{
 			LoadTree(rootItem, dependencyConfiguration.Resolve<IDeserializeFailureRetryer>(), dependencyConfiguration.Resolve<IConsistencyChecker>());
 		}
@@ -73,7 +76,7 @@ namespace Unicorn.Loader
 		/// <summary>
 		/// Loads a preset from serialized items on disk.
 		/// </summary>
-		public virtual void LoadTree(ISourceItem rootItem, IDeserializeFailureRetryer retryer, IConsistencyChecker consistencyChecker)
+		public virtual void LoadTree(ISerializedItem rootItem, IDeserializeFailureRetryer retryer, IConsistencyChecker consistencyChecker)
 		{
 			Assert.ArgumentNotNull(rootItem, "rootItem");
 			Assert.ArgumentNotNull(retryer, "retryer");
@@ -83,25 +86,15 @@ namespace Unicorn.Loader
 			var timer = new Stopwatch();
 			timer.Start();
 
-			ISerializedReference rootSerializedReference = SerializationProvider.GetReference(rootItem);
-
-			if (rootSerializedReference == null)
-				throw new InvalidOperationException(string.Format("{0} was unable to find a root serialized reference for {1}", SerializationProvider.GetType().Name, rootItem.DisplayIdentifier));
-
-			ISerializedItem rootSerializedItem = rootSerializedReference.GetItem();
-
-			if (rootSerializedItem == null)
-				throw new InvalidOperationException(string.Format("{0} was unable to find a root serialized item for {1}", SerializationProvider.GetType().Name, rootItem.DisplayIdentifier));
-
-			Logger.BeginLoadingTree(rootSerializedItem);
+			Logger.BeginLoadingTree(rootItem);
 
 			using (new EventDisabler())
 			{
 				// load the root item (LoadTreeRecursive only evaluates children)
-				DoLoadItem(rootSerializedItem, consistencyChecker);
+				DoLoadItem(rootItem, consistencyChecker);
 
 				// load children of the root
-				LoadTreeRecursive(rootSerializedItem, retryer, consistencyChecker);
+				LoadTreeRecursive(rootItem, retryer, consistencyChecker);
 
 				retryer.RetryAll(SourceDataProvider, item => DoLoadItem(item, null), item => LoadTreeRecursive(item, retryer, null));
 			}
@@ -109,7 +102,7 @@ namespace Unicorn.Loader
 			timer.Stop();
 
 			SourceDataProvider.DeserializationComplete(rootItem.DatabaseName);
-			Logger.EndLoadingTree(rootSerializedItem, _itemsProcessed, timer.ElapsedMilliseconds);
+			Logger.EndLoadingTree(rootItem, _itemsProcessed, timer.ElapsedMilliseconds);
 		}
 
 		/// <summary>

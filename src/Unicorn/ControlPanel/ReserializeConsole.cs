@@ -44,7 +44,7 @@ namespace Unicorn.ControlPanel
 						var predicate = configuration.Resolve<IPredicate>();
 						var serializationProvider = configuration.Resolve<ISerializationProvider>();
 
-						var roots = predicate.GetRootItems();
+						var roots = configuration.Resolve<PredicateRootPathResolver>().GetRootSourceItems();
 
 						int index = 1;
 						foreach (var root in roots)
@@ -53,6 +53,8 @@ namespace Unicorn.ControlPanel
 							if (rootReference != null)
 							{
 								logger.Warn("[D] existing serialized items under {0}".FormatWith(rootReference.DisplayIdentifier));
+								// TODO: this doesn't really account for excluded children - it just nukes everything.
+								// ideally it would leave excluded serialized items alone.
 								rootReference.Delete();
 							}
 

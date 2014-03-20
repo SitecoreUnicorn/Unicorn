@@ -90,8 +90,8 @@ namespace Unicorn.ControlPanel
 
 		protected virtual IEnumerable<IControlPanelControl> GetDefaultControls()
 		{
-			var hasSerializedItems = Configurations.All(config => ControlPanelUtility.HasAnySerializedItems(config.Resolve<IPredicate>(), config.Resolve<ISerializationProvider>()));
-			var hasValidSerializedItems = Configurations.All(config => config.Resolve<IPredicate>().GetRootItems().Length > 0);
+			var hasSerializedItems = Configurations.All(ControlPanelUtility.HasAnySerializedItems);
+			var hasValidSerializedItems = Configurations.All(ControlPanelUtility.HasAnySourceItems);
 
 			var isAuthorized = Authorization.IsAllowed;
 
@@ -116,8 +116,8 @@ namespace Unicorn.ControlPanel
 
 				foreach (var configuration in Configurations)
 				{
-					var configurationHasSerializedItems = ControlPanelUtility.HasAnySerializedItems(configuration.Resolve<IPredicate>(), configuration.Resolve<ISerializationProvider>());
-					var configurationHasValidRootItems = configuration.Resolve<IPredicate>().GetRootItems().Length > 0;
+					var configurationHasSerializedItems = ControlPanelUtility.HasAnySerializedItems(configuration);
+					var configurationHasValidRootItems = ControlPanelUtility.HasAnySourceItems(configuration);
 
 					yield return new Literal("<div class=\"configuration\"><h3>{0}</h3><section>".FormatWith(configuration.Name));
 
@@ -140,9 +140,7 @@ namespace Unicorn.ControlPanel
 
 					if (!configurationHasSerializedItems)
 					{
-						var initialSetup = configuration.Resolve<InitialSetup>();
-						initialSetup.ConfigurationName = configuration.Name;
-						yield return initialSetup;
+						yield return new InitialSetup(configuration);
 					}
 
 					yield return new Literal("</section></div>");

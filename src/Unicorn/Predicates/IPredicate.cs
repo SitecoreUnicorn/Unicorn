@@ -12,6 +12,6 @@ namespace Unicorn.Predicates
 		PredicateResult Includes(ISourceItem item);
 		PredicateResult Includes(ISerializedReference item);
 
-		ISourceItem[] GetRootItems();
+		PredicateRootPath[] GetRootPaths();
 	}
 }

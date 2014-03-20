@@ -28,6 +28,15 @@ namespace Unicorn.Serialization.Sitecore
 		}
 
 		/// <summary>
+		/// Gets the physical path to the .item file that defines the source item. Returns the path regardless of if the item file exists.
+		/// WARNING: This overload may not work correctly with over-length paths due to a bug in Sitecore. Use the ISourceItem version whenever possible.
+		/// </summary>
+		public static string GetSerializedItemPath(string rootDirectory, string database, string path)
+		{
+			return PathUtils.GetDirectoryPath(new ItemReference(database, path).ToString(), rootDirectory) + PathUtils.Extension;
+		}
+
+		/// <summary>
 		/// Gets the physical path to the directory that contains children of the item path/database name
 		/// </summary>
 		public static string GetSerializedReferencePath(string rootDirectory, ISourceItem sourceItem)

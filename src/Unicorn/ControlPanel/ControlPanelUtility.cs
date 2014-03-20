@@ -1,5 +1,5 @@
-﻿using Unicorn.Predicates;
-using Unicorn.Serialization;
+﻿using Unicorn.Configuration;
+using Unicorn.Predicates;
 
 namespace Unicorn.ControlPanel
 {
@@ -8,24 +8,17 @@ namespace Unicorn.ControlPanel
 		/// <summary>
 		/// Checks if any of the current predicate's root paths exist in the serialization provider
 		/// </summary>
-		public static bool HasAnySerializedItems(IPredicate predicate, ISerializationProvider serializationProvider)
+		public static bool HasAnySerializedItems(IConfiguration configuration)
 		{
-			var rootItems = predicate.GetRootItems();
-			bool hasSerializedItems = false;
+			return configuration.Resolve<PredicateRootPathResolver>().GetRootSerializedItems().Length > 0;
+		}
 
-			foreach (var rootItem in rootItems)
-			{
-				var reference = serializationProvider.GetReference(rootItem);
-				if (reference == null || reference.GetItem() == null)
-				{
-					continue;
-				}
-
-				hasSerializedItems = true;
-				break;
-			}
-
-			return hasSerializedItems;
+		/// <summary>
+		/// Checks if any of the current predicate's root paths exist in the source provider
+		/// </summary>
+		public static bool HasAnySourceItems(IConfiguration configuration)
+		{
+			return configuration.Resolve<PredicateRootPathResolver>().GetRootSourceItems().Length > 0;
 		}
 	}
 }

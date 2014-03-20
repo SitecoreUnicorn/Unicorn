@@ -34,5 +34,11 @@ namespace Unicorn.Serialization
 		/// and while it indicates the store is capable of storing the path, it does not guarantee that path is serialized.
 		/// </summary>
 		ISerializedReference GetReference(ISourceItem sourceItem);
+
+		/// <summary>
+		/// Attempts to get a serialized item (references don't count) from the provider
+		/// </summary>
+		/// <returns>The item or null if it does not exist</returns>
+		ISerializedItem GetItemByPath(string database, string path);
 	}
 }

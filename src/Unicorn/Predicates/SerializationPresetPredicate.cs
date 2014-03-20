@@ -7,7 +7,6 @@ using Sitecore.Configuration;
 using Sitecore.Data;
 using Sitecore.Data.Serialization.Presets;
 using Sitecore.Diagnostics;
-using Sitecore.StringExtensions;
 using Unicorn.ControlPanel;
 using Unicorn.Data;
 using Unicorn.Serialization;
@@ -17,14 +16,10 @@ namespace Unicorn.Predicates
 	public class SerializationPresetPredicate : IPredicate, IDocumentable
 	{
 		private readonly IList<IncludeEntry> _preset;
-		private readonly ISourceDataProvider _sourceDataProvider;
 
-		public SerializationPresetPredicate(ISourceDataProvider sourceDataProvider, string presetName)
+		public SerializationPresetPredicate(string presetName)
 		{
-			Assert.ArgumentNotNull(sourceDataProvider, "sourceDataProvider");
 			Assert.ArgumentNotNullOrEmpty(presetName, "presetName");
-
-			_sourceDataProvider = sourceDataProvider;
 
 			var config = Factory.GetConfigNode("serialization/" + presetName);
 			
@@ -34,12 +29,9 @@ namespace Unicorn.Predicates
 			_preset = PresetFactory.Create(config);
 		}
 
-		public SerializationPresetPredicate(ISourceDataProvider sourceDataProvider, XmlNode configNode)
+		public SerializationPresetPredicate(XmlNode configNode)
 		{
-			Assert.ArgumentNotNull(sourceDataProvider, "sourceDataProvider");
 			Assert.ArgumentNotNull(configNode, "configNode");
-
-			_sourceDataProvider = sourceDataProvider;
 
 			_preset = PresetFactory.Create(configNode);
 		}
@@ -79,20 +71,12 @@ namespace Unicorn.Predicates
 			return priorityResult ?? result; // return the last failure
 		}
 
-		public ISourceItem[] GetRootItems()
+		public PredicateRootPath[] GetRootPaths()
 		{
-			var items = new List<ISourceItem>();
-
-			foreach (var include in _preset)
-			{
-				var item = _sourceDataProvider.GetItemByPath(include.Database, include.Path);
-
-				if (item != null) items.Add(item);
-				else Log.Warn("Unable to resolve root item for serialization preset {0}:{1}".FormatWith(include.Database, include.Path), this);
-			}
-
-			return items.ToArray();
+			return _preset.Select(include => new PredicateRootPath(include.Database, include.Path)).ToArray();
 		}
+
+		
 
 		/// <summary>
 		/// Checks if a preset includes a given item

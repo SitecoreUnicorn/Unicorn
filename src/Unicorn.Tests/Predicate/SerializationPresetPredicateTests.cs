@@ -28,13 +28,13 @@ namespace Unicorn.Tests.Predicate
 		[Test]
 		public void ctor_ThrowsArgumentNullException_WhenPresetIsNull()
 		{
-			Assert.Throws<ArgumentNullException>(() => new SerializationPresetPredicate(new Mock<ISourceDataProvider>().Object, (string)null));
+			Assert.Throws<ArgumentNullException>(() => new SerializationPresetPredicate((string)null));
 		}
 
 		[Test]
 		public void ctor_ThrowsArgumentNullException_WhenNodeIsNull()
 		{
-			Assert.Throws<ArgumentNullException>(() => new SerializationPresetPredicate(new Mock<ISourceDataProvider>().Object, (XmlNode)null));
+			Assert.Throws<ArgumentNullException>(() => new SerializationPresetPredicate((XmlNode)null));
 		}
 
 		//
@@ -384,13 +384,15 @@ namespace Unicorn.Tests.Predicate
 			sourceDataProvider.Setup(x => x.GetItemByPath("master", "/sitecore/layout/Simulators")).Returns(sourceItem1.Object);
 			sourceDataProvider.Setup(x => x.GetItemByPath("core", "/sitecore/content")).Returns(sourceItem2.Object);
 
-			var predicate = new SerializationPresetPredicate(sourceDataProvider.Object, CreateTestConfiguration());
+			var predicate = new SerializationPresetPredicate(CreateTestConfiguration());
 
-			var roots = predicate.GetRootItems();
+			var roots = predicate.GetRootPaths();
 
 			Assert.IsTrue(roots.Length == 2, "Expected two root paths from test config");
-			Assert.AreEqual(roots[0], sourceItem1.Object, "Expected first root to be source item 1");
-			Assert.AreEqual(roots[1], sourceItem2.Object, "Expected first root to be source item 2");
+			Assert.AreEqual(roots[0].Database, "master", "Expected first root to be in master db");
+			Assert.AreEqual(roots[0].Path, "/sitecore/layout/Simulators", "Expected first root to be /sitecore/layout/Simulators");
+			Assert.AreEqual(roots[1].Database, "core", "Expected second root to be in core db");
+			Assert.AreEqual(roots[1].Path, "/sitecore/content", "Expected second root to be /sitecore/content");
 		}
 
 		private ISourceItem CreateTestSourceItem(string path, ID templateId = null, string template = "Test", ID id = null, string database = "master")
@@ -428,7 +430,7 @@ namespace Unicorn.Tests.Predicate
 
 		private SerializationPresetPredicate CreateTestPredicate(XmlNode configNode)
 		{
-			return new SerializationPresetPredicate(new Mock<ISourceDataProvider>().Object, configNode);
+			return new SerializationPresetPredicate(configNode);
 		}
 
 		private XmlNode CreateTestConfiguration()

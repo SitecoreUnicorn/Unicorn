@@ -111,6 +111,8 @@
     <Compile Include="Predicates\IFieldPredicate.cs" />
     <Compile Include="Predicates\PredicateResult.cs" />
     <Compile Include="Predicates\IPredicate.cs" />
+    <Compile Include="Predicates\PredicateRootPath.cs" />
+    <Compile Include="Predicates\PredicateRootPathResolver.cs" />
     <Compile Include="Predicates\SerializationPresetPredicate.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SerializationConflictProcessor.cs" />
@@ -139,6 +141,7 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="Serialization.config" />
+    <None Include="Unicorn.nuspec" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

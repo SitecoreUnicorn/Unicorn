@@ -93,6 +93,17 @@ namespace Unicorn.Serialization.Sitecore
 			return new SitecoreSerializedReference(physicalPath, this);
 		}
 
+		public ISerializedItem GetItemByPath(string database, string path)
+		{
+			var physicalPath = SerializationPathUtility.GetSerializedItemPath(_rootPath, database, path);
+
+			if (!File.Exists(physicalPath)) return null;
+
+			var reference = new SitecoreSerializedReference(physicalPath, this);
+
+			return GetItem(reference);
+		}
+
 		public virtual ISerializedReference[] GetChildReferences(ISerializedReference parent, bool recursive)
 		{
 			Assert.ArgumentNotNull(parent, "parent");
