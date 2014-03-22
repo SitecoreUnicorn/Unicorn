@@ -257,8 +257,11 @@ namespace Unicorn.Serialization.Sitecore
 			if (Directory.Exists(oldSerializedChildrenReference.ProviderId))
 				MoveDescendants(oldSerializedChildrenReference, updatedItem, renamedItem);
 
-			// delete the original serialized item from pre-rename
-			DeleteSerializedItem(new SitecoreSerializedReference(SerializationPathUtility.GetReferenceItemPath(oldSerializedChildrenReference), this));
+			// delete the original serialized item from pre-rename (unless the names only differ by case, in which case we'd delete the item entirely because NTFS is case insensitive!)
+			if (!renamedItem.Name.Equals(oldName, StringComparison.OrdinalIgnoreCase))
+			{
+				DeleteSerializedItem(new SitecoreSerializedReference(SerializationPathUtility.GetReferenceItemPath(oldSerializedChildrenReference), this));
+			}
 		}
 
 		public virtual void MoveSerializedItem(ISourceItem sourceItem, ISourceItem newParentItem)
@@ -345,7 +348,15 @@ namespace Unicorn.Serialization.Sitecore
 			string newItemReferencePath = SerializationPathUtility.GetReferenceDirectoryPath(newItem);
 
 			// if the paths were the same, no moving occurs (this can happen when saving templates, which spuriously can report "renamed" when they are not actually any such thing)
-			if (oldReference.ProviderId.Equals(newItemReferencePath, StringComparison.OrdinalIgnoreCase)) return;
+			if (oldReference.ProviderId.Equals(newItemReferencePath, StringComparison.Ordinal)) return;
+
+			// this is for renaming an item that differs only by case from the original. Because NTFS is case-insensitive the 'new parent' exists
+			// already, but it will use the old name. Not quite what we want. So we need to manually rename the folder.
+			if (oldReference.ProviderId.Equals(newItemReferencePath, StringComparison.OrdinalIgnoreCase) && Directory.Exists(oldReference.ProviderId))
+			{
+				Directory.Move(oldReference.ProviderId, oldReference.ProviderId + "_tempunicorn");
+				Directory.Move(oldReference.ProviderId + "_tempunicorn", newItemReferencePath);
+			}
 
 			var descendantItems = GetDescendants(sourceItem).Cast<SitecoreSourceItem>();
 
@@ -371,8 +382,11 @@ namespace Unicorn.Serialization.Sitecore
 				UpdateSerializedItem(new SitecoreSerializedItem(syncItem, newPhysicalPath, this));
 			}
 
-			// remove the old children folder if it exists
-			if (Directory.Exists(oldReference.ProviderId)) Directory.Delete(oldReference.ProviderId, true);
+			// remove the old children folder if it exists - as long as the original name was not a case insensitive version of this item
+			if (Directory.Exists(oldReference.ProviderId) && !oldReference.ProviderId.Equals(newItemReferencePath, StringComparison.OrdinalIgnoreCase))
+			{
+				Directory.Delete(oldReference.ProviderId, true);
+			}
 		}
 
 		protected IList<ISourceItem> GetDescendants(ISourceItem sourceItem)
@@ -397,6 +411,10 @@ namespace Unicorn.Serialization.Sitecore
 			var parentPath = Directory.GetParent(SerializationPathUtility.GetReferenceDirectoryPath(serializedItem));
 			if (parentPath != null && !parentPath.Exists)
 				Directory.CreateDirectory(parentPath.FullName);
+
+			// if the file already exists, delete it. Why? Because the FS is case-insensitive, if an item is renamed by case only it won't actually rename
+			// on the filesystem. Deleting it first makes sure this occurs.
+			if(File.Exists(serializedItem.ProviderId)) File.Delete(serializedItem.ProviderId);
 
 			using (var fileStream = File.Open(serializedItem.ProviderId, FileMode.Create, FileAccess.Write, FileShare.Write))
 			{
