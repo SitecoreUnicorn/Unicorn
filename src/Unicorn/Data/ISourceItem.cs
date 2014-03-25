@@ -42,6 +42,7 @@ namespace Unicorn.Data
 
 		FieldDictionary SharedFields { get; }
 		ItemVersion[] Versions { get; }
+		bool IsFieldComparable(string fieldId);
 
 		/// <summary>
 		/// Gets the item's child items

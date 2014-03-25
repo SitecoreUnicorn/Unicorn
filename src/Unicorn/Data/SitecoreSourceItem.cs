@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Sitecore.Data;
 using Sitecore.Data.Events;
 using Sitecore.Data.Fields;
@@ -125,6 +126,15 @@ namespace Unicorn.Data
 					return version;
 				}).ToArray();
 			}
+		}
+
+		public bool IsFieldComparable(string fieldId)
+		{
+			var field = _item.Fields[fieldId];
+
+			if (field == null) return false;
+
+			return !field.Type.Equals("attachment", StringComparison.OrdinalIgnoreCase);
 		}
 	}
 }

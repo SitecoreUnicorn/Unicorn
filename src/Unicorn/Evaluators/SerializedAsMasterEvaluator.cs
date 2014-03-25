@@ -144,6 +144,8 @@ namespace Unicorn.Evaluators
 			{
 				if (!_fieldPredicate.Includes(x.Key).IsIncluded) return false;
 
+				if (!existingItem.IsFieldComparable(x.Key)) return false;
+
 				bool isMatch = IsFieldMatch(x.Value, targetFields, x.Key);
 				if(isMatch) deferredUpdateLog.AddEntry(logger =>
 				{
