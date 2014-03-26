@@ -303,7 +303,8 @@ namespace Unicorn.Tests.Loader
 			var mockPredicate = new Mock<IPredicate>();
 			var mockEvaluator = new Mock<IEvaluator>();
 			var mockLogger = new Mock<ISerializationLoaderLogger>();
-			var pathResolver = new PredicateRootPathResolver(predicate ?? mockPredicate.Object, serializationProvider ?? mockSerializationProvider.Object, sourceDataProvider ?? mockSourceDataProvider.Object);
+			var mockLogger2 = new Mock<ILogger>();
+			var pathResolver = new PredicateRootPathResolver(predicate ?? mockPredicate.Object, serializationProvider ?? mockSerializationProvider.Object, sourceDataProvider ?? mockSourceDataProvider.Object, mockLogger2.Object);
 
 			return new SerializationLoader(serializationProvider ?? mockSerializationProvider.Object,
 				sourceDataProvider ?? mockSourceDataProvider.Object,
