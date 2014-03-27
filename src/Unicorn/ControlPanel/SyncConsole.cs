@@ -5,6 +5,7 @@ using Kamsar.WebConsole;
 using Unicorn.Configuration;
 using Unicorn.Loader;
 using Unicorn.Logging;
+using Unicorn.Predicates;
 
 namespace Unicorn.ControlPanel
 {
@@ -31,15 +32,27 @@ namespace Unicorn.ControlPanel
 			foreach (var configuration in ResolveConfigurations())
 			{
 				var logger = configuration.Resolve<ILogger>();
+
 				using (new LoggingContext(new WebConsoleLogger(progress), configuration))
 				{
 					try
 					{
 						logger.Info("Control Panel Sync: Processing Unicorn configuration " + configuration.Name);
 
+						var pathResolver = configuration.Resolve<PredicateRootPathResolver>();
+						var retryer = configuration.Resolve<IDeserializeFailureRetryer>();
+						var consistencyChecker = configuration.Resolve<IConsistencyChecker>();
 						var loader = configuration.Resolve<SerializationLoader>();
 
-						loader.LoadAll(configuration);
+						var roots = pathResolver.GetRootSerializedItems();
+
+						for (int index = 0; index < roots.Length; index++)
+						{
+							// note: this would be simpler if we used loader.LoadAll() here
+							// however, we wouldn't be able to track progress.
+							loader.LoadTree(roots[index], retryer, consistencyChecker);
+							progress.Report((int)(((index + 1) / (double)roots.Length) * 100));
+						}
 
 						logger.Info("Control Panel Sync: Completed syncing Unicorn configuration " + configuration.Name);
 					}
