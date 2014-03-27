@@ -21,7 +21,7 @@ Unicorn solves some of the same issues as [Hedgehog's TDS](https://www.hhogdev.c
 * Configure what to serialize in the example configuration's _Predicate_ registration. There will be an `App_Config/Include/Serialization.config` file installed, which has a commented example of this syntax.
 * Visit $yoursite/unicorn.aspx and it will walk you through initial serialization. This will take the preset you configured and serialize all of the included items in it to disk. 
 	* NOTE: make sure you serialize an authoritative database with all items present. Other databases will be made to look just like this one when sync occurs.
-	* NOTE: if you're using Git, you need to make sure that Git doesn't fool with the line endings of your serialized files. Add `*.item -text` to the a `.gitattributes` file in the repo root. See [this blog post](http://seankearney.com/post/Using-Team-Development-for-Sitecore-with-GitHub) for details.
+	* NOTE: if you're using Git, you need to make sure that Git doesn't fool with the line endings of your serialized files. Add `*.item -text` to a `.gitattributes` file in the repo root. See [this blog post](http://seankearney.com/post/Using-Team-Development-for-Sitecore-with-GitHub) for details.
 * Commit your serialized items to source control.
 
 ## Using Unicorn
