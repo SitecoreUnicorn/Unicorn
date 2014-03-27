@@ -76,6 +76,7 @@
     <Compile Include="Data\SitecoreSourceDataProvider.cs" />
     <Compile Include="Configuration\XmlConfigurationProvider.cs" />
     <Compile Include="Configuration\IConfigurationProvider.cs" />
+    <Compile Include="Loader\DebugSerializationLoaderLogger.cs" />
     <Compile Include="Logging\ExceptionFormatter.cs" />
     <Compile Include="Logging\LoggingContext.cs" />
     <Compile Include="Logging\WebConsoleLogger.cs" />

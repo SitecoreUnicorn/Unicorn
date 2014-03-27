@@ -16,12 +16,12 @@ namespace Unicorn.Evaluators
 			_logger = logger;
 		}
 
-		public void DeletedItem(ISourceItem deletedItem)
+		public virtual void DeletedItem(ISourceItem deletedItem)
 		{
 			_logger.Warn("[D] {0} because it did not exist in the serialization provider.".FormatWith(deletedItem.DisplayIdentifier));
 		}
 
-		public void IsSharedFieldMatch(ISerializedItem serializedItem, string fieldName, string serializedValue, string sourceValue)
+		public virtual void IsSharedFieldMatch(ISerializedItem serializedItem, string fieldName, string serializedValue, string sourceValue)
 		{
 			if (serializedValue.Length < MaxFieldLenthToDisplayValue && (sourceValue == null || sourceValue.Length < MaxFieldLenthToDisplayValue))
 			{
@@ -33,7 +33,7 @@ namespace Unicorn.Evaluators
 			}
 		}
 
-		public void IsVersionedFieldMatch(ISerializedItem serializedItem, ItemVersion version, string fieldName, string serializedValue, string sourceValue)
+		public virtual void IsVersionedFieldMatch(ISerializedItem serializedItem, ItemVersion version, string fieldName, string serializedValue, string sourceValue)
 		{
 			if (serializedValue.Length < MaxFieldLenthToDisplayValue && (sourceValue == null || sourceValue.Length < MaxFieldLenthToDisplayValue))
 			{
@@ -45,33 +45,33 @@ namespace Unicorn.Evaluators
 			}
 		}
 
-		public void IsTemplateMatch(ISerializedItem serializedItem, ISourceItem existingItem)
+		public virtual void IsTemplateMatch(ISerializedItem serializedItem, ISourceItem existingItem)
 		{
 			_logger.Debug("> Template: Serialized \"{0}\", Source \"{1}\"".FormatWith(serializedItem.TemplateName, existingItem.TemplateName));
 		}
 
-		public void IsNameMatch(ISerializedItem serializedItem, ISourceItem existingItem)
+		public virtual void IsNameMatch(ISerializedItem serializedItem, ISourceItem existingItem)
 		{
 			_logger.Debug("> Name: Serialized \"{0}\", Source \"{1}\"".FormatWith(serializedItem.Name, existingItem.Name));
 		}
 
 
-		public void NewSerializedVersionMatch(ItemVersion newSerializedVersion, ISerializedItem serializedItem, ISourceItem existingItem)
+		public virtual void NewSerializedVersionMatch(ItemVersion newSerializedVersion, ISerializedItem serializedItem, ISourceItem existingItem)
 		{
 			_logger.Debug("> New version {0}#{1} (serialized)".FormatWith(newSerializedVersion.Language, newSerializedVersion.VersionNumber));
 		}
 
-		public void OrphanSourceVersion(ISourceItem existingItem, ISerializedItem serializedItem, ItemVersion[] orphanSourceVersions)
+		public virtual void OrphanSourceVersion(ISourceItem existingItem, ISerializedItem serializedItem, ItemVersion[] orphanSourceVersions)
 		{
 			_logger.Debug("> Orphaned version{0} {1} (source)".FormatWith(orphanSourceVersions.Length > 1 ? "s" : string.Empty, string.Join(", ", orphanSourceVersions.Select(x => x.Language + "#" + x.VersionNumber))));
 		}
 
-		public void DeserializedNewItem(ISerializedItem serializedItem)
+		public virtual void DeserializedNewItem(ISerializedItem serializedItem)
 		{
 			_logger.Info("[A] {0}".FormatWith(serializedItem.DisplayIdentifier));
 		}
 
-		public void SerializedUpdatedItem(ISerializedItem serializedItem)
+		public virtual void SerializedUpdatedItem(ISerializedItem serializedItem)
 		{
 			_logger.Info("[U] {0}".FormatWith(serializedItem.DisplayIdentifier));
 		}

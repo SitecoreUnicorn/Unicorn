@@ -13,7 +13,7 @@ namespace Unicorn.Loader
 			_logger = logger;
 		}
 
-		public void DuplicateFound(ISerializedItem existingItem, ISerializedItem duplicateItem)
+		public virtual void DuplicateFound(ISerializedItem existingItem, ISerializedItem duplicateItem)
 		{
 			_logger.Error("Duplicate serialized item IDs were detected ({0}) - this usually indicates corruption in the serialization provider data.<br>Item 1: {1}<br> Item 1 ProviderId: {2}<br>Item 2: {3}<br>Item 2 ProviderId: {4}".FormatWith(existingItem.Id, existingItem.DisplayIdentifier, existingItem.ProviderId, duplicateItem.DisplayIdentifier, duplicateItem.ProviderId));
 		}

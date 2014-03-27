@@ -68,12 +68,12 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 				_logger.Debug("* [U] {0}#{1}: {2}".FormatWith(item.Language.Name, item.Version.Number, field.FieldName));
 		}
 
-		public void ResetFieldThatDidNotExistInSerialized(Field field)
+		public virtual void ResetFieldThatDidNotExistInSerialized(Field field)
 		{
 			
 		}
 
-		public void SkippedPastingIgnoredField(Item item, SyncField field)
+		public virtual void SkippedPastingIgnoredField(Item item, SyncField field)
 		{
 			
 		}
