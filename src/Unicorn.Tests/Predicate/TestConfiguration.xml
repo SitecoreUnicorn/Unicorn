@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+
+<preset name="test">
+	<include database="master" path="/sitecore/layout/Simulators">
+		<exclude path="/sitecore/layout/Simulators/Android Phone" />
+		<exclude template="No Silverlight Support Trait" />
+		<exclude templateid="{317ADE1D-337A-464A-B7D0-06B4424FC0EA}" /> <!-- no flash support trait -->
+		<exclude id="{E1DC505A-F86F-4C05-B409-AE2246AD3441}" /> <!-- blackberry sim item -->
+	</include>
+	<include database="core" path="/sitecore/content" />
+</preset>

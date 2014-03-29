@@ -1,14 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unicorn", "Source\Unicorn\Unicorn.csproj", "{82C4441B-E11E-4601-B6B7-C5AD71B2AB70}"
+# Visual Studio 2013
+VisualStudioVersion = 12.0.30110.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unicorn", "src\Unicorn\Unicorn.csproj", "{82C4441B-E11E-4601-B6B7-C5AD71B2AB70}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{2D4534E2-A136-48AA-8AA6-920E51B84B43}"
-	ProjectSection(SolutionItems) = preProject
-		.nuget\NuGet.Config = .nuget\NuGet.Config
-		.nuget\NuGet.exe = .nuget\NuGet.exe
-		.nuget\NuGet.targets = .nuget\NuGet.targets
-	EndProjectSection
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unicorn.Tests", "src\Unicorn.Tests\Unicorn.Tests.csproj", "{7E03DC10-5D06-4173-89CA-2AEFBA4FAD55}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unicorn-SC6", "src\Unicorn\Unicorn-SC6.csproj", "{2C79B630-8F40-45DB-90FA-8EE7C419FF23}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unicorn.Tests-SC6", "src\Unicorn.Tests\Unicorn.Tests-SC6.csproj", "{BCF3AC28-674B-42C5-8FA6-05CB4514689F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,6 +21,18 @@ Global
 		{82C4441B-E11E-4601-B6B7-C5AD71B2AB70}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{82C4441B-E11E-4601-B6B7-C5AD71B2AB70}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{82C4441B-E11E-4601-B6B7-C5AD71B2AB70}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E03DC10-5D06-4173-89CA-2AEFBA4FAD55}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E03DC10-5D06-4173-89CA-2AEFBA4FAD55}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E03DC10-5D06-4173-89CA-2AEFBA4FAD55}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E03DC10-5D06-4173-89CA-2AEFBA4FAD55}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2C79B630-8F40-45DB-90FA-8EE7C419FF23}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2C79B630-8F40-45DB-90FA-8EE7C419FF23}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2C79B630-8F40-45DB-90FA-8EE7C419FF23}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2C79B630-8F40-45DB-90FA-8EE7C419FF23}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BCF3AC28-674B-42C5-8FA6-05CB4514689F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BCF3AC28-674B-42C5-8FA6-05CB4514689F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BCF3AC28-674B-42C5-8FA6-05CB4514689F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BCF3AC28-674B-42C5-8FA6-05CB4514689F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

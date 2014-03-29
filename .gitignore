@@ -10,19 +10,15 @@ Thumbs.db
 ######## GENERAL .NET IGNORES ########
 
 # Ignore binaries in the source
-Source/*/bin
-Source/*/obj
+src/*/bin
+src/*/obj
+src/*/v6obj
 
 # Ignore user-scoped solution and project settings
 *.user
 *.suo
 
-# Ignore generated Version.cs files
-Source/*/Properties/Version.cs
-
 # NuGet packages
 packages/*
 !packages/repositories.config
-
-Source/Unicorn/*.nupkg
 Build/*.nupkg
