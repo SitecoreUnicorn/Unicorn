@@ -19,6 +19,7 @@ Unicorn solves some of the same issues as [Hedgehog's TDS](https://www.hhogdev.c
 * You'll need Sitecore 6.5.0 (121009) or later. Tested with Sitecore through 7.1 Update-1.
 * Install Unicorn. This is as simple as adding the Unicorn NuGet package to your project.
 * Configure what to serialize in the example configuration's _Predicate_ registration. There will be an `App_Config/Include/Serialization.config` file installed, which has a commented example of this syntax.
+* Run a build in Visual Studio to make sure the output files are up to date.
 * Visit $yoursite/unicorn.aspx and it will walk you through initial serialization. This will take the preset you configured and serialize all of the included items in it to disk. 
 	* NOTE: make sure you serialize an authoritative database with all items present. Other databases will be made to look just like this one when sync occurs.
 	* NOTE: if you're using Git, you need to make sure that Git doesn't fool with the line endings of your serialized files. Add `*.item -text` to a `.gitattributes` file in the repo root. See [this blog post](http://seankearney.com/post/Using-Team-Development-for-Sitecore-with-GitHub) for details.
