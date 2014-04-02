@@ -15,6 +15,7 @@ using Sitecore.Data.Templates;
 using Sitecore.Diagnostics;
 using Sitecore.Globalization;
 using Sitecore.IO;
+using Sitecore.StringExtensions;
 using Unicorn.Predicates;
 
 namespace Unicorn.Serialization.Sitecore.Fiat
@@ -259,7 +260,7 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 			var templateId = ID.Parse(syncItem.TemplateID);
 			var itemId = ID.Parse(syncItem.ID);
 
-			AssertTemplate(database, templateId);
+			AssertTemplate(database, templateId, syncItem.ItemPath);
 
 			Item targetItem = ItemManager.AddFromTemplate(syncItem.Name, templateId, destinationParentItem, itemId);
 
@@ -353,11 +354,11 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 				return;
 			}
 
-			Template template = AssertTemplate(item.Database, item.TemplateID);
+			Template template = AssertTemplate(item.Database, item.TemplateID, item.Paths.Path);
 			if (template.GetField(field.FieldID) == null)
 			{
 				item.Database.Engines.TemplateEngine.Reset();
-				template = AssertTemplate(item.Database, item.TemplateID);
+				template = AssertTemplate(item.Database, item.TemplateID, item.Paths.Path);
 			}
 
 			if (template.GetField(field.FieldID) == null)
@@ -418,10 +419,11 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 		/// </summary>
 		/// <param name="database">The database.</param>
 		/// <param name="templateId">The template.</param>
+		/// <param name="itemPath">The path to the item being asserted (used if an error occurs)</param>
 		/// <returns>
 		/// The template being asserted.
 		/// </returns>
-		protected virtual Template AssertTemplate(Database database, ID templateId)
+		protected virtual Template AssertTemplate(Database database, ID templateId, string itemPath)
 		{
 			Template template = database.Engines.TemplateEngine.GetTemplate(templateId);
 			if (template == null)
@@ -429,7 +431,10 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 				database.Engines.TemplateEngine.Reset();
 				template = database.Engines.TemplateEngine.GetTemplate(templateId);
 			}
-			Assert.IsNotNull(template, "Template: " + templateId + " not found");
+
+			if(template == null)
+				throw new DeserializationException("Template {0} for item {1} not found".FormatWith(templateId, itemPath));
+
 			return template;
 		}
 	}
