@@ -12,7 +12,7 @@ namespace Unicorn
 	{
 		void RenamedItem(string providerName, ISourceItem sourceItem, string oldName);
 
-		void SavedItem(string providerName, ISourceItem sourceItem);
+		void SavedItem(string providerName, ISourceItem sourceItem, string triggerReason);
 
 		void MovedItemToNonIncludedLocation(string providerName, ISerializedItem existingItem);
 

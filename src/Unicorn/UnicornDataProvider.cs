@@ -55,6 +55,17 @@ namespace Unicorn
 		public DataProvider DataProvider { get; set; }
 		protected Database Database { get { return DataProvider.Database; } }
 
+		public void CreateItem(ItemDefinition newItem, ID templateId, ItemDefinition parent, CallContext context)
+		{
+			if (DisableSerialization) return;
+
+			if (DisableSerialization) return;
+
+			Assert.ArgumentNotNull(newItem, "itemDefinition");
+
+			SerializeItemIfIncluded(newItem, "Created");
+		}
+
 		public void SaveItem(ItemDefinition itemDefinition, ItemChanges changes, CallContext context)
 		{
 			if (DisableSerialization) return;
@@ -69,8 +80,8 @@ namespace Unicorn
 			string oldName = changes.Renamed ? changes.Properties["name"].OriginalValue.ToString() : string.Empty;
 			if (changes.Renamed && !oldName.Equals(sourceItem.Name, StringComparison.Ordinal)) // it's a rename, in which the name actually changed (template builder will cause 'renames' for the same name!!!)
 			{
-				_logger.RenamedItem(_serializationProvider.LogName, sourceItem, oldName);
 				_serializationProvider.RenameSerializedItem(sourceItem, oldName);
+				_logger.RenamedItem(_serializationProvider.LogName, sourceItem, oldName);
 			}
 			else if (HasConsequentialChanges(changes)) // it's a simple update - but we reject it if only inconsequential fields (last updated, revision) were changed - again, template builder FTW
 			{
@@ -84,7 +95,7 @@ namespace Unicorn
 				sourceItem = new SitecoreSourceItem(changes.Item.Database.GetItem(changes.Item.ID, changes.Item.Language, changes.Item.Version));
 
 				_serializationProvider.SerializeItem(sourceItem);
-				_logger.SavedItem(_serializationProvider.LogName, sourceItem);
+				_logger.SavedItem(_serializationProvider.LogName, sourceItem, "Saved");
 			}
 		}
 
@@ -133,7 +144,7 @@ namespace Unicorn
 
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
 
-			SerializeItemIfIncluded(itemDefinition);
+			SerializeItemIfIncluded(itemDefinition, "Version Added");
 		}
 
 		public void DeleteItem(ItemDefinition itemDefinition, CallContext context)
@@ -156,7 +167,7 @@ namespace Unicorn
 
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
 
-			SerializeItemIfIncluded(itemDefinition);
+			SerializeItemIfIncluded(itemDefinition, "Version Removed");
 		}
 
 		public void RemoveVersions(ItemDefinition itemDefinition, Language language, bool removeSharedData, CallContext context)
@@ -165,10 +176,10 @@ namespace Unicorn
 
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
 
-			SerializeItemIfIncluded(itemDefinition);
+			SerializeItemIfIncluded(itemDefinition, "Versions Removed");
 		}
 
-		protected virtual bool SerializeItemIfIncluded(ItemDefinition itemDefinition)
+		protected virtual bool SerializeItemIfIncluded(ItemDefinition itemDefinition, string triggerReason)
 		{
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
 
@@ -177,7 +188,7 @@ namespace Unicorn
 			if (!_predicate.Includes(sourceItem).IsIncluded) return false; // item was not included so we get out
 
 			_serializationProvider.SerializeItem(sourceItem);
-			_logger.SavedItem(_serializationProvider.LogName, sourceItem);
+			_logger.SavedItem(_serializationProvider.LogName, sourceItem, triggerReason);
 
 			return true;
 		}

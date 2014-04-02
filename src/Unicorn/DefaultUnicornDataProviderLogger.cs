@@ -23,9 +23,9 @@ namespace Unicorn
 			_logger.Info(string.Format("{0}: Renamed serialized item to {1} from {2}", providerName, sourceItem.ItemPath, oldName));
 		}
 
-		public virtual void SavedItem(string providerName, ISourceItem sourceItem)
+		public virtual void SavedItem(string providerName, ISourceItem sourceItem, string triggerReason)
 		{
-			_logger.Info(string.Format("{0}: Serialized {1} ({2}) to disk.", providerName, sourceItem.ItemPath, sourceItem.Id));
+			_logger.Info(string.Format("{0}: Serialized {1} ({2}) to disk ({3}).", providerName, sourceItem.ItemPath, sourceItem.Id, triggerReason));
 		}
 
 		public virtual void MovedItemToNonIncludedLocation(string providerName, ISerializedItem existingItem)
