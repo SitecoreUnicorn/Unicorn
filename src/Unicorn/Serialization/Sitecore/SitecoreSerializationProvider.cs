@@ -113,46 +113,43 @@ namespace Unicorn.Serialization.Sitecore
 
 			Func<string, string[]> parseDirectory = path =>
 				{
-					if (Directory.Exists(path))
+					if (!Directory.Exists(path)) return new string[0];
+
+					var resultSet = new HashSet<string>();
+
+					string[] files = Directory.GetFiles(path, "*" + PathUtils.Extension);
+
+					foreach (var file in files)
+						resultSet.Add(file);
+
+					string[] directories = SerializationPathUtility.GetDirectories(path, this);
+
+					// add directories that aren't already ref'd indirectly by a file
+					foreach (var directory in directories)
 					{
-						var resultSet = new HashSet<string>();
+						if (CommonUtils.IsDirectoryHidden(directory)) continue;
 
-						string[] files = Directory.GetFiles(path, "*" + PathUtils.Extension);
-
-						foreach (var file in files)
-							resultSet.Add(file);
-
-						string[] directories = SerializationPathUtility.GetDirectories(path, _rootPath);
-
-						// add directories that aren't already ref'd indirectly by a file
-						foreach (var directory in directories)
-						{
-							if (CommonUtils.IsDirectoryHidden(directory)) continue;
-
-							if (!resultSet.Contains(directory + PathUtils.Extension))
-								resultSet.Add(directory);
-						}
-
-						string[] resultArray = resultSet.ToArray();
-
-						// make sure if a "templates" item exists in the current set, it goes first
-						if (resultArray.Length > 1)
-						{
-							for (int i = 1; i < resultArray.Length; i++)
-							{
-								if ("templates".Equals(Path.GetFileName(resultArray[i]), StringComparison.OrdinalIgnoreCase))
-								{
-									string text = resultArray[0];
-									resultArray[0] = resultArray[i];
-									resultArray[i] = text;
-								}
-							}
-						}
-
-						return resultArray;
+						if (!resultSet.Contains(directory + PathUtils.Extension))
+							resultSet.Add(directory);
 					}
 
-					return new string[0];
+					string[] resultArray = resultSet.ToArray();
+
+					// make sure if a "templates" item exists in the current set, it goes first
+					if (resultArray.Length > 1)
+					{
+						for (int i = 1; i < resultArray.Length; i++)
+						{
+							if ("templates".Equals(Path.GetFileName(resultArray[i]), StringComparison.OrdinalIgnoreCase))
+							{
+								string text = resultArray[0];
+								resultArray[0] = resultArray[i];
+								resultArray[i] = text;
+							}
+						}
+					}
+
+					return resultArray;
 				};
 
 			var results = Enumerable.Concat(parseDirectory(longPath), parseDirectory(shortPath));
@@ -187,11 +184,19 @@ namespace Unicorn.Serialization.Sitecore
 			Assert.ArgumentNotNull(parent, "parent");
 
 			var path = SerializationPathUtility.GetReferenceDirectoryPath(parent);
-			if (!Directory.Exists(path)) return new ISerializedItem[0];
+			var shortPath = SerializationPathUtility.GetShortSerializedReferencePath(_rootPath, parent);
 
-			string[] files = Directory.GetFiles(path, "*" + PathUtils.Extension);
+			var fileNames = new List<string>();
 
-			return files.Select(ReadItemFromDisk).ToArray();
+			bool longPathExists = Directory.Exists(path);
+			bool shortPathExists = Directory.Exists(shortPath);
+
+			if (!longPathExists && !shortPathExists) return new ISerializedItem[0];
+
+			if (longPathExists) fileNames.AddRange(Directory.GetFiles(path, "*" + PathUtils.Extension));
+			if (shortPathExists) fileNames.AddRange(Directory.GetFiles(shortPath, "*" + PathUtils.Extension));
+
+			return fileNames.Select(ReadItemFromDisk).ToArray();
 		}
 
 		public bool IsStandardValuesItem(ISerializedItem item)
@@ -423,7 +428,7 @@ namespace Unicorn.Serialization.Sitecore
 			// on the filesystem. Deleting it first makes sure this occurs.
 			if (File.Exists(serializedItem.ProviderId)) File.Delete(serializedItem.ProviderId);
 
-			using (var fileStream = File.Open(serializedItem.ProviderId, FileMode.Create, FileAccess.Write, FileShare.Write))
+			using (var fileStream = File.Open(serializedItem.ProviderId, FileMode.Create, FileAccess.Write, FileShare.None))
 			{
 				using (var writer = new StreamWriter(fileStream))
 				{
