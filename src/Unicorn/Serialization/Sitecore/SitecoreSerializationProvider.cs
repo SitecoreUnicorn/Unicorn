@@ -322,11 +322,18 @@ namespace Unicorn.Serialization.Sitecore
 
 		protected virtual ISerializedItem ReadItemFromDisk(string fullPath)
 		{
-			using (var reader = new StreamReader(fullPath))
+			try
 			{
-				var syncItem = SyncItem.ReadItem(new Tokenizer(reader), true);
+				using (var reader = new StreamReader(fullPath))
+				{
+					var syncItem = SyncItem.ReadItem(new Tokenizer(reader), true);
 
-				return new SitecoreSerializedItem(syncItem, fullPath, this);
+					return new SitecoreSerializedItem(syncItem, fullPath, this);
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception("Error loading " + fullPath, ex);
 			}
 		}
 
@@ -414,7 +421,7 @@ namespace Unicorn.Serialization.Sitecore
 
 			// if the file already exists, delete it. Why? Because the FS is case-insensitive, if an item is renamed by case only it won't actually rename
 			// on the filesystem. Deleting it first makes sure this occurs.
-			if(File.Exists(serializedItem.ProviderId)) File.Delete(serializedItem.ProviderId);
+			if (File.Exists(serializedItem.ProviderId)) File.Delete(serializedItem.ProviderId);
 
 			using (var fileStream = File.Open(serializedItem.ProviderId, FileMode.Create, FileAccess.Write, FileShare.Write))
 			{
