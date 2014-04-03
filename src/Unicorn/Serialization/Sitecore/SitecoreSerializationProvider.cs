@@ -7,6 +7,7 @@ using Sitecore.Data.Serialization;
 using Sitecore.Data.Serialization.Exceptions;
 using Sitecore.Data.Serialization.ObjectModel;
 using Sitecore.Diagnostics;
+using Sitecore.IO;
 using Sitecore.StringExtensions;
 using Unicorn.ControlPanel;
 using Unicorn.Data;
@@ -97,7 +98,14 @@ namespace Unicorn.Serialization.Sitecore
 		{
 			var physicalPath = SerializationPathUtility.GetSerializedItemPath(_rootPath, database, path);
 
-			if (!File.Exists(physicalPath)) return null;
+			if (!File.Exists(physicalPath))
+			{
+				// check for a short-path version
+				physicalPath = SerializationPathUtility.GetShortSerializedItemPath(_rootPath, database, path);
+
+				if(!File.Exists(physicalPath))
+					return null;
+			}
 
 			var reference = new SitecoreSerializedReference(physicalPath, this);
 
@@ -174,9 +182,13 @@ namespace Unicorn.Serialization.Sitecore
 
 			var path = SerializationPathUtility.GetReferenceItemPath(reference);
 
-			if (!File.Exists(path)) return null;
+			if (File.Exists(path)) return ReadItemFromDisk(path);
 
-			return ReadItemFromDisk(path);
+			var shortPath = SerializationPathUtility.GetShortSerializedItemPath(_rootPath, reference);
+
+			if (File.Exists(shortPath)) return ReadItemFromDisk(shortPath);
+
+			return null;
 		}
 
 		public virtual ISerializedItem[] GetChildItems(ISerializedReference parent)
@@ -255,17 +267,24 @@ namespace Unicorn.Serialization.Sitecore
 			var updatedItem = SerializeItem(renamedItem);
 
 			// find the children directory path of the previous item name, if it exists, and move them to the new child path
-			var renamedParentSerializationDirectory = Directory.GetParent(SerializationPathUtility.GetSerializedReferencePath(_rootPath, renamedItem));
+			var renamedParentSerializationDirectory = SerializationPathUtility.GetReferenceParentPath(_rootPath, updatedItem);
 
-			var oldSerializedChildrenReference = new SitecoreSerializedReference(renamedParentSerializationDirectory.FullName + Path.DirectorySeparatorChar + oldName, this);
+			var oldSerializedChildrenReference = new SitecoreSerializedReference(renamedParentSerializationDirectory + Path.DirectorySeparatorChar + oldName, this);
+
+			var shortOldSerializedChildrenPath = SerializationPathUtility.GetShortSerializedReferencePath(_rootPath, oldSerializedChildrenReference);
+			var shortOldSerializedChildrenReference = new SitecoreSerializedReference(shortOldSerializedChildrenPath, this);
 
 			if (Directory.Exists(oldSerializedChildrenReference.ProviderId))
 				MoveDescendants(oldSerializedChildrenReference, updatedItem, renamedItem);
 
+			if (Directory.Exists(shortOldSerializedChildrenPath))
+				MoveDescendants(shortOldSerializedChildrenReference, updatedItem, renamedItem);
+
 			// delete the original serialized item from pre-rename (unless the names only differ by case, in which case we'd delete the item entirely because NTFS is case insensitive!)
 			if (!renamedItem.Name.Equals(oldName, StringComparison.OrdinalIgnoreCase))
 			{
-				DeleteSerializedItem(new SitecoreSerializedReference(SerializationPathUtility.GetReferenceItemPath(oldSerializedChildrenReference), this));
+				// note that we don't have to worry about short paths here because DeleteSerializedItem() knows how to find them
+				DeleteSerializedItem(oldSerializedChildrenReference);
 			}
 		}
 
@@ -304,13 +323,31 @@ namespace Unicorn.Serialization.Sitecore
 
 		public virtual void DeleteSerializedItem(ISerializedReference item)
 		{
+			DeleteItemRecursive(item);
+
+			CleanupObsoleteShortens();
+		}
+
+		protected virtual void DeleteItemRecursive(ISerializedReference reference)
+		{
+			foreach (var child in reference.GetChildReferences(false))
+			{
+				DeleteItemRecursive(child);
+			}
+
 			// kill the serialized file
-			if (File.Exists(item.ProviderId)) File.Delete(item.ProviderId);
+			var fileItem = reference.GetItem();
+			if (fileItem != null && File.Exists(fileItem.ProviderId)) File.Delete(fileItem.ProviderId);
 
 			// remove any serialized children
-			var directory = SerializationPathUtility.GetReferenceDirectoryPath(item);
+			var directory = SerializationPathUtility.GetReferenceDirectoryPath(reference);
 
 			if (Directory.Exists(directory)) Directory.Delete(directory, true);
+
+			// clean up any hashpaths for this item
+			var shortDirectory = SerializationPathUtility.GetShortSerializedReferencePath(_rootPath, reference);
+
+			if (Directory.Exists(shortDirectory)) Directory.Delete(shortDirectory, true);
 
 			// clean up empty parent folder(s)
 			var parentDirectory = Directory.GetParent(directory);
@@ -381,9 +418,7 @@ namespace Unicorn.Serialization.Sitecore
 
 				// the newPhysicalPath will point to the OLD physical path pre-move/rename.
 				// We re-root the path to point to the new parent item's base path to fix that before we write to disk
-				// Note that an obscene edge case here would be that moving/renaming to a path that is too long for the FS
-				// would break here - because we're re-rooting without consideing short paths
-				var newPhysicalPath = SerializationPathUtility.GetSerializedItemPath(_rootPath, descendant);
+				var newPhysicalPath = SerializationPathUtility.GetSerializedItemPath(_rootPath, syncItem.DatabaseName, syncItem.ItemPath);
 
 				newPhysicalPath = newPhysicalPath.Replace(oldReference.ProviderId, newItemReferencePath);
 
@@ -433,6 +468,40 @@ namespace Unicorn.Serialization.Sitecore
 				using (var writer = new StreamWriter(fileStream))
 				{
 					typed.InnerItem.Serialize(writer);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Performs cleanup for shorten folders which referenced link items were already deleted.
+		/// </summary>
+		protected virtual void CleanupObsoleteShortens()
+		{
+			foreach (string directory in Directory.GetDirectories(_rootPath))
+			{
+				string path = FileUtil.MakePath(directory, "link");
+				if (File.Exists(path))
+				{
+					string linkContents = File.ReadAllText(path);
+
+					ItemReference itemReference = ItemReference.Parse(linkContents.Replace('\\', '/'));
+					if (itemReference != null && itemReference.GetItem() == null)
+					{
+						FileUtil.DeleteDirectory(directory, true);
+					}
+					else
+					{
+						// clean directories with only the link file, even if the link is valid (no items exist under the link)
+						// (if the children length is 1 and we got here we know the link file exists and thus it MUST be the 1 item)
+						if (Directory.GetFileSystemEntries(directory).Length == 1)
+							Directory.Delete(directory, true);
+					}
+				}
+				else
+				{
+					// clean empty directories
+					if (Directory.GetFileSystemEntries(directory).Length == 0)
+						Directory.Delete(directory);
 				}
 			}
 		}

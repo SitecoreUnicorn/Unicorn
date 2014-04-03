@@ -29,7 +29,29 @@ namespace Unicorn.Serialization.Sitecore
 		/// </summary>
 		public static string GetSerializedItemPath(string rootDirectory, string database, string path)
 		{
-			return PathUtils.GetDirectoryPath(new ItemReference(database, path).ToString(), rootDirectory) + PathUtils.Extension;
+			return GetSerializedReferencePath(rootDirectory, database, path) + PathUtils.Extension;
+		}
+
+		/// <summary>
+		/// Gets the short path to a serialized item. Note that this means the short path of the PARENT, combined with the item name of what's passed in
+		/// </summary>
+		public static string GetShortSerializedItemPath(string rootDirectory, ISerializedReference reference)
+		{
+			return GetShortSerializedItemPath(rootDirectory, reference.DatabaseName, reference.ItemPath);
+		}
+
+		/// <summary>
+		/// Gets the short path to a serialized item. Note that this means the short path of the PARENT, combined with the item name of what's passed in
+		/// </summary>
+		public static string GetShortSerializedItemPath(string rootDirectory, string database, string itemPath)
+		{
+			var itemRootPath = itemPath.TrimEnd('/');
+
+			int lastDirectoryIndex = itemRootPath.LastIndexOf('/');
+			var parentItemPath = itemRootPath.Substring(0, lastDirectoryIndex);
+			var contextItemName = itemRootPath.Substring(lastDirectoryIndex + 1);
+
+			return string.Format("{0}\\{1}{2}", GetShortSerializedReferencePath(rootDirectory, database, parentItemPath), contextItemName, PathUtils.Extension);
 		}
 
 		/// <summary>
@@ -47,14 +69,32 @@ namespace Unicorn.Serialization.Sitecore
 		}
 
 		/// <summary>
+		/// Gets the physical path to the directory that contains children of the item path/database name. Returns the path regardless of if the directory exists.
+		/// WARNING: This overload may not work correctly with over-length paths due to a bug in Sitecore. Use the ISourceItem version whenever possible.
+		/// </summary>
+		public static string GetSerializedReferencePath(string rootDirectory, string database, string path)
+		{
+			return PathUtils.GetDirectoryPath(new ItemReference(database, path).ToString(), rootDirectory);
+		}
+
+		/// <summary>
 		/// Gets the shortened version of a reference path. The short path is utilized when the actual path becomes longer than the OS allows paths to be, and is based on a hash.
 		/// This method will return the short path regardless of if it exists, and will return it even for path lengths that do not require using the shortened version.
 		/// </summary>
 		public static string GetShortSerializedReferencePath(string rootDirectory, ISerializedReference reference)
 		{
+			return GetShortSerializedReferencePath(rootDirectory, reference.DatabaseName, reference.ItemPath);
+		}
+
+		/// <summary>
+		/// Gets the shortened version of a reference path. The short path is utilized when the actual path becomes longer than the OS allows paths to be, and is based on a hash.
+		/// This method will return the short path regardless of if it exists, and will return it even for path lengths that do not require using the shortened version.
+		/// </summary>
+		public static string GetShortSerializedReferencePath(string rootDirectory, string databaseName, string itemPath)
+		{
 			// note that wer're constructing a virtual path here and not using the ProviderId. This is because the provider ID could be a short path
 			// and if it is, we would otherwise generate an invalid short path for this item (hashing a short path instead of the full path).
-			var path = string.Format("{0}\\{1}{2}", rootDirectory.TrimEnd('\\'), reference.DatabaseName, reference.ItemPath.Replace('/', '\\'));
+			var path = string.Format("{0}\\{1}", rootDirectory.TrimEnd('\\'), new ItemReference(databaseName, itemPath).ToString().Replace('/', '\\'));
 
 			if (!path.StartsWith(rootDirectory, StringComparison.InvariantCultureIgnoreCase))
 				throw new ArgumentException("Reference path is not under the serialization root!");
@@ -76,6 +116,18 @@ namespace Unicorn.Serialization.Sitecore
 		public static string GetReferenceItemPath(ISerializedReference reference)
 		{
 			return reference.ProviderId.EndsWith(PathUtils.Extension, StringComparison.OrdinalIgnoreCase) ? reference.ProviderId : reference.ProviderId + PathUtils.Extension;
+		}
+
+		/// <summary>
+		/// Gets the parent physical reference path of a serialized reference, respecting short paths
+		/// </summary>
+		public static string GetReferenceParentPath(string rootPath, ISerializedReference reference)
+		{
+			var itemRootPath = reference.ItemPath.TrimEnd('/');
+
+			var parentItemPath = itemRootPath.Substring(0, itemRootPath.LastIndexOf('/'));
+
+			return GetSerializedReferencePath(rootPath, reference.DatabaseName, parentItemPath);
 		}
 
 		public static string[] GetDirectories(string physicalPath, SitecoreSerializationProvider provider)

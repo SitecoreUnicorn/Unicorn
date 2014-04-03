@@ -69,7 +69,7 @@ namespace Unicorn.Serialization.Sitecore
 
 			var reference = ItemReference.Parse(itemPath);
 
-			_itemPath = reference.Path;
+			_itemPath = reference.Path.TrimEnd('/');
 			_databaseName = reference.Database;
 		}
 
