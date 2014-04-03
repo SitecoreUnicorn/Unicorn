@@ -414,19 +414,15 @@ namespace Unicorn.Serialization.Sitecore
 			{
 				var syncItem = ItemSynchronization.BuildSyncItem(descendant.InnerItem);
 
-				syncItem.ItemPath = syncItem.ItemPath.Replace(oldReference.ItemPath, newItem.ItemPath);
-
 				// the newPhysicalPath will point to the OLD physical path pre-move/rename.
 				// We re-root the path to point to the new parent item's base path to fix that before we write to disk
 				var newPhysicalPath = SerializationPathUtility.GetSerializedItemPath(_rootPath, syncItem.DatabaseName, syncItem.ItemPath);
-
-				newPhysicalPath = newPhysicalPath.Replace(oldReference.ProviderId, newItemReferencePath);
 
 				var newSerializedItem = new SitecoreSerializedItem(syncItem, newPhysicalPath, this);
 
 				if (!_predicate.Includes(newSerializedItem).IsIncluded) continue; // if the moved child location is outside the predicate, do not re-serialize
 
-				UpdateSerializedItem(new SitecoreSerializedItem(syncItem, newPhysicalPath, this));
+				UpdateSerializedItem(newSerializedItem);
 			}
 
 			// remove the old children folder if it exists - as long as the original name was not a case insensitive version of this item
