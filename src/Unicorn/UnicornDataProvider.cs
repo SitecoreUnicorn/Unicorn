@@ -73,7 +73,7 @@ namespace Unicorn
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
 			Assert.ArgumentNotNull(changes, "changes");
 
-			var sourceItem = new SitecoreSourceItem(changes.Item);
+			var sourceItem = GetItemWithoutCache(changes.Item);
 
 			if (!_predicate.Includes(sourceItem).IsIncluded) return;
 
@@ -85,19 +85,12 @@ namespace Unicorn
 			}
 			else if (HasConsequentialChanges(changes)) // it's a simple update - but we reject it if only inconsequential fields (last updated, revision) were changed - again, template builder FTW
 			{
-				// in some cases, such as template changes, we can have outdated information in the itemChanges.Item
-				// for example invalid field IDs in language versions that are not the current item version. To mitigate this threat
-				// to invalid serialized values, we first nuke the item from the cache before we serialize it to make sure we get the freshest data
-				changes.Item.Database.Caches.ItemCache.RemoveItem(changes.Item.ID);
-				changes.Item.Database.Caches.DataCache.RemoveItemInformation(changes.Item.ID);
-
-				// reacquire the source item after cleaning the cache
-				sourceItem = new SitecoreSourceItem(changes.Item.Database.GetItem(changes.Item.ID, changes.Item.Language, changes.Item.Version));
-
 				_serializationProvider.SerializeItem(sourceItem);
 				_logger.SavedItem(_serializationProvider.LogName, sourceItem, "Saved");
 			}
 		}
+
+		
 
 		public void MoveItem(ItemDefinition itemDefinition, ItemDefinition destination, CallContext context)
 		{
@@ -130,6 +123,7 @@ namespace Unicorn
 			if (DisableSerialization) return;
 
 			// copying is easy - all we have to do is serialize the copyID. Copied children will all result in multiple calls to CopyItem so we don't even need to worry about them.
+			RemoveItemFromCache(copyId);
 			var copiedItem = new SitecoreSourceItem(Database.GetItem(copyId));
 
 			if (!_predicate.Includes(copiedItem).IsIncluded) return; // destination parent is not in a path that we are serializing, so skip out
@@ -208,11 +202,6 @@ namespace Unicorn
 			return reference.GetItem();
 		}
 
-		protected virtual ISourceItem GetSourceFromDefinition(ItemDefinition definition)
-		{
-			return new SitecoreSourceItem(Database.GetItem(definition.ID));
-		}
-
 		protected virtual bool HasConsequentialChanges(ItemChanges changes)
 		{
 			// properties, e.g. template, etc are always consequential
@@ -231,6 +220,33 @@ namespace Unicorn
 			_logger.SaveRejectedAsInconsequential(_serializationProvider.LogName, changes);
 
 			return false;
+		}
+		
+		protected virtual ISourceItem GetSourceFromDefinition(ItemDefinition definition)
+		{
+			RemoveItemFromCache(definition.ID);
+			return new SitecoreSourceItem(Database.GetItem(definition.ID));
+		}
+
+		/// <summary>
+		/// When items are acquired from the data provider they can be stale in cache, which fouls up serializing them.
+		/// Renames and template changes are particularly vulnerable to this.
+		/// </summary>
+		protected virtual SitecoreSourceItem GetItemWithoutCache(Item item)
+		{
+			RemoveItemFromCache(item.ID);
+
+			// reacquire the source item after cleaning the cache
+			return new SitecoreSourceItem(item.Database.GetItem(item.ID, item.Language, item.Version));
+		}
+
+		protected virtual void RemoveItemFromCache(ID id)
+		{
+			// in some cases, such as template changes, we can have outdated information in the itemChanges.Item
+			// for example invalid field IDs in language versions that are not the current item version. To mitigate this threat
+			// to invalid serialized values, we first nuke the item from the cache before we serialize it to make sure we get the freshest data
+			Database.Caches.ItemCache.RemoveItem(id);
+			Database.Caches.DataCache.RemoveItemInformation(id);
 		}
 	}
 }
