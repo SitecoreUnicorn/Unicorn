@@ -352,6 +352,8 @@ namespace Unicorn.Serialization.Sitecore
 			// clean up empty parent folder(s)
 			var parentDirectory = Directory.GetParent(directory);
 
+			if (!parentDirectory.Exists) return;
+
 			do
 			{
 				if (parentDirectory.GetFileSystemInfos().Length > 0) break;

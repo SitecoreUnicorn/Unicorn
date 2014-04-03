@@ -98,7 +98,7 @@ namespace Unicorn
 
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
 
-			var sourceItem = GetSourceFromDefinition(itemDefinition);
+			var sourceItem = GetSourceFromDefinition(itemDefinition, true); // we use cache here because we want the old path present before the move
 			var destinationItem = GetSourceFromDefinition(destination);
 
 			if (!_predicate.Includes(destinationItem).IsIncluded) // if the destination we are moving to is NOT included for serialization, we delete the existing item
@@ -123,7 +123,6 @@ namespace Unicorn
 			if (DisableSerialization) return;
 
 			// copying is easy - all we have to do is serialize the copyID. Copied children will all result in multiple calls to CopyItem so we don't even need to worry about them.
-			RemoveItemFromCache(copyId);
 			var copiedItem = new SitecoreSourceItem(Database.GetItem(copyId));
 
 			if (!_predicate.Includes(copiedItem).IsIncluded) return; // destination parent is not in a path that we are serializing, so skip out
@@ -221,10 +220,15 @@ namespace Unicorn
 
 			return false;
 		}
-		
-		protected virtual ISourceItem GetSourceFromDefinition(ItemDefinition definition)
+
+		protected ISourceItem GetSourceFromDefinition(ItemDefinition definition)
 		{
-			RemoveItemFromCache(definition.ID);
+			return GetSourceFromDefinition(definition, false);
+		}
+		
+		protected virtual ISourceItem GetSourceFromDefinition(ItemDefinition definition, bool useCache)
+		{
+			if(!useCache) RemoveItemFromCache(definition.ID);
 			return new SitecoreSourceItem(Database.GetItem(definition.ID));
 		}
 
