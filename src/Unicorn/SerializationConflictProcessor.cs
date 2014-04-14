@@ -156,6 +156,7 @@ namespace Unicorn
 					field.ID == FieldIDs.Created || 
 					field.ID == FieldIDs.CreatedBy || 
 					field.ID == FieldIDs.UpdatedBy ||
+					field.Type.Equals("attachment", StringComparison.OrdinalIgnoreCase) ||
 					!fieldPredicate.Includes(field.ID).IsIncluded) continue; 
 				// we're doing a data comparison here - revision, created (by), updated (by) don't matter
 				// skipping these fields allows us to ignore spurious saves the template builder makes to unchanged items being conflicts
