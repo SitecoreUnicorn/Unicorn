@@ -46,37 +46,37 @@ namespace Unicorn.Loader
 		/// <summary>
 		/// Loads all items in the configured predicate
 		/// </summary>
-		public virtual void LoadAll(IConfiguration dependencyConfiguration)
-		{
-			LoadAll(dependencyConfiguration.Resolve<IDeserializeFailureRetryer>(), dependencyConfiguration.Resolve<IConsistencyChecker>());
-		}
-
-		/// <summary>
-		/// Loads all items in the configured predicate
-		/// </summary>
 		public virtual void LoadAll(IDeserializeFailureRetryer retryer, IConsistencyChecker consistencyChecker)
 		{
 			Assert.ArgumentNotNull(retryer, "retryer");
 
 			var roots = PredicateRootPathResolver.GetRootSerializedItems();
-			foreach (var root in roots)
-			{
-				LoadTree(root, retryer, consistencyChecker);
-			}
+			LoadAll(roots, retryer, consistencyChecker);
 		}
 
-		/// <summary>
-		/// Loads a preset from serialized items on disk.
-		/// </summary>
-		public virtual void LoadTree(ISerializedItem rootItem, IConfiguration dependencyConfiguration)
+		public virtual void LoadAll(ISerializedItem[] rootItems, IDeserializeFailureRetryer retryer, IConsistencyChecker consistencyChecker, Action<ISerializedItem> rootLoadedCallback = null)
 		{
-			LoadTree(rootItem, dependencyConfiguration.Resolve<IDeserializeFailureRetryer>(), dependencyConfiguration.Resolve<IConsistencyChecker>());
+			Assert.ArgumentNotNull(rootItems, "rootItems");
+			Assert.IsTrue(rootItems.Length > 0, "No root items were passed!");
+
+			using (new EventDisabler())
+			{
+				foreach (var rootItem in rootItems)
+				{
+					LoadTree(rootItem, retryer, consistencyChecker);
+					if (rootLoadedCallback != null) rootLoadedCallback(rootItem);
+				}
+			}
+			
+			retryer.RetryAll(SourceDataProvider, item => DoLoadItem(item, null), item => LoadTreeRecursive(item, retryer, null));
+
+			SourceDataProvider.DeserializationComplete(rootItems[0].DatabaseName);
 		}
 
 		/// <summary>
-		/// Loads a preset from serialized items on disk.
+		/// Loads a tree from serialized items on disk.
 		/// </summary>
-		public virtual void LoadTree(ISerializedItem rootItem, IDeserializeFailureRetryer retryer, IConsistencyChecker consistencyChecker)
+		protected virtual void LoadTree(ISerializedItem rootItem, IDeserializeFailureRetryer retryer, IConsistencyChecker consistencyChecker)
 		{
 			Assert.ArgumentNotNull(rootItem, "rootItem");
 			Assert.ArgumentNotNull(retryer, "retryer");
@@ -88,21 +88,16 @@ namespace Unicorn.Loader
 
 			Logger.BeginLoadingTree(rootItem);
 
-			using (new EventDisabler())
-			{
-				// load the root item (LoadTreeRecursive only evaluates children)
-				DoLoadItem(rootItem, consistencyChecker);
 
-				// load children of the root
-				LoadTreeRecursive(rootItem, retryer, consistencyChecker);
+			// load the root item (LoadTreeRecursive only evaluates children)
+			DoLoadItem(rootItem, consistencyChecker);
 
-				retryer.RetryAll(SourceDataProvider, item => DoLoadItem(item, null), item => LoadTreeRecursive(item, retryer, null));
-			}
+			// load children of the root
+			LoadTreeRecursive(rootItem, retryer, consistencyChecker);
+
+			Logger.EndLoadingTree(rootItem, _itemsProcessed, timer.ElapsedMilliseconds);
 
 			timer.Stop();
-
-			SourceDataProvider.DeserializationComplete(rootItem.DatabaseName);
-			Logger.EndLoadingTree(rootItem, _itemsProcessed, timer.ElapsedMilliseconds);
 		}
 
 		/// <summary>
@@ -124,7 +119,7 @@ namespace Unicorn.Loader
 			{
 				// load the current level
 				LoadOneLevel(root, retryer, consistencyChecker);
-			
+
 				// check if we have child paths to recurse down
 				var children = root.GetChildReferences(false);
 

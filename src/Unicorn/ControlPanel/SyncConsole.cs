@@ -46,13 +46,13 @@ namespace Unicorn.ControlPanel
 
 						var roots = pathResolver.GetRootSerializedItems();
 
-						for (int index = 0; index < roots.Length; index++)
+						var index = 0;
+
+						loader.LoadAll(roots, retryer, consistencyChecker, item =>
 						{
-							// note: this would be simpler if we used loader.LoadAll() here
-							// however, we wouldn't be able to track progress.
-							loader.LoadTree(roots[index], retryer, consistencyChecker);
 							progress.Report((int)(((index + 1) / (double)roots.Length) * 100));
-						}
+							index++;
+						});
 
 						logger.Info("Control Panel Sync: Completed syncing Unicorn configuration " + configuration.Name);
 					}
