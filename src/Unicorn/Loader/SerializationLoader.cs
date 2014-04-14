@@ -217,7 +217,7 @@ namespace Unicorn.Loader
 							orphanCandidates.Remove(loadedItem.Item.Id);
 
 							// check if we have any child serialized items under this loaded child item (existing children) -
-							// if we do not, we can orphan any children of the loaded item as well
+							// if we do not, we can orphan any included children of the loaded item as well
 							var loadedItemsChildren = child.GetChildReferences(false);
 
 							if (loadedItemsChildren.Length == 0) // no children were serialized on disk
@@ -225,7 +225,8 @@ namespace Unicorn.Loader
 								var loadedChildren = loadedItem.Item.Children;
 								foreach (ISourceItem loadedChild in loadedChildren)
 								{
-									orphanCandidates.Add(loadedChild.Id, loadedChild);
+									if(Predicate.Includes(loadedChild).IsIncluded)
+										orphanCandidates.Add(loadedChild.Id, loadedChild);
 								}
 							}
 						}
