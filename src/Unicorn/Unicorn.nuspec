@@ -10,7 +10,7 @@
     <projectUrl>https://github.com/kamsar/Unicorn</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Unicorn is a utility for Sitecore that solves the issue of moving templates, renderings, and other database items between Sitecore instances.</description>
-    <releaseNotes>Critical bug fixes with long paths</releaseNotes>
+    <releaseNotes>Critical bug fixes for moving and renaming</releaseNotes>
     <copyright>Copyright 2014</copyright>
     <tags>sitecore serialization</tags>
   </metadata>
