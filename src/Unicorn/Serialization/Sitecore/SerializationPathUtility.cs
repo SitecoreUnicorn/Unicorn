@@ -118,18 +118,6 @@ namespace Unicorn.Serialization.Sitecore
 			return reference.ProviderId.EndsWith(PathUtils.Extension, StringComparison.OrdinalIgnoreCase) ? reference.ProviderId : reference.ProviderId + PathUtils.Extension;
 		}
 
-		/// <summary>
-		/// Gets the parent physical reference path of a serialized reference, respecting short paths
-		/// </summary>
-		public static string GetReferenceParentPath(string rootPath, ISerializedReference reference)
-		{
-			var itemRootPath = reference.ItemPath.TrimEnd('/');
-
-			var parentItemPath = itemRootPath.Substring(0, itemRootPath.LastIndexOf('/'));
-
-			return GetSerializedReferencePath(rootPath, reference.DatabaseName, parentItemPath);
-		}
-
 		public static string[] GetDirectories(string physicalPath, SitecoreSerializationProvider provider)
 		{
 			if (!Directory.Exists(physicalPath))
