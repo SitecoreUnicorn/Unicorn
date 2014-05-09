@@ -8,9 +8,9 @@ namespace Unicorn
 		/// </summary>
 		public static string ResolveConfigurationPath(string configPath)
 		{
-			if (configPath.StartsWith("~"))
+			if (configPath.StartsWith("~/"))
 			{
-				return System.Web.Hosting.HostingEnvironment.MapPath("~/") + configPath.Substring(1).Replace('/', '\\');
+				return System.Web.Hosting.HostingEnvironment.MapPath("~") + configPath.Substring(2).Replace('/', '\\');
 				// +1 to Stack Overflow:
 				// http://stackoverflow.com/questions/4742257/how-to-use-server-mappath-when-httpcontext-current-is-nothing
 			}
