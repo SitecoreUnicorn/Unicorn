@@ -115,6 +115,8 @@
     <Compile Include="Predicates\PredicateRootPathResolver.cs" />
     <Compile Include="Predicates\SerializationPresetPredicate.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Publishing\AutoPublishSerializedAsMasterEvaluatorLogger.cs" />
+    <Compile Include="Publishing\ManualPublishQueueHandler.cs" />
     <Compile Include="SerializationConflictProcessor.cs" />
     <Compile Include="Loader\SerializationLoader.cs" />
     <Compile Include="Serialization\ISerializedItemExtensions.cs" />

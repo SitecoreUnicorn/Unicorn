@@ -76,7 +76,7 @@ namespace Unicorn.Loader
 		/// <summary>
 		/// Loads a tree from serialized items on disk.
 		/// </summary>
-		protected virtual void LoadTree(ISerializedItem rootItem, IDeserializeFailureRetryer retryer, IConsistencyChecker consistencyChecker)
+		protected internal virtual void LoadTree(ISerializedItem rootItem, IDeserializeFailureRetryer retryer, IConsistencyChecker consistencyChecker)
 		{
 			Assert.ArgumentNotNull(rootItem, "rootItem");
 			Assert.ArgumentNotNull(retryer, "retryer");

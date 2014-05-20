@@ -3,9 +3,11 @@ using System.Linq;
 using System.Web;
 using Kamsar.WebConsole;
 using Unicorn.Configuration;
+using Unicorn.Evaluators;
 using Unicorn.Loader;
 using Unicorn.Logging;
 using Unicorn.Predicates;
+using Unicorn.Publishing;
 
 namespace Unicorn.ControlPanel
 {
@@ -29,7 +31,9 @@ namespace Unicorn.ControlPanel
 
 		protected override void Process(IProgressStatus progress)
 		{
-			foreach (var configuration in ResolveConfigurations())
+			var configurations = ResolveConfigurations();
+
+			foreach (var configuration in configurations)
 			{
 				var logger = configuration.Resolve<ILogger>();
 
@@ -62,6 +66,12 @@ namespace Unicorn.ControlPanel
 						break;
 					}
 				}
+			}
+
+			if (configurations.Any(x => x.Resolve<ISerializedAsMasterEvaluatorLogger>().GetType() == typeof (AutoPublishSerializedAsMasterEvaluatorLogger)))
+			{
+				progress.ReportStatus("Automatically publishing synced items for configurations that request it...");
+				ManualPublishQueueHandler.Process();
 			}
 		}
 
