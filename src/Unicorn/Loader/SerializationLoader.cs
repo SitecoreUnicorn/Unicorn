@@ -4,7 +4,6 @@ using Sitecore.Diagnostics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Unicorn.Configuration;
 using Unicorn.Data;
 using Unicorn.Predicates;
 using Unicorn.Serialization;
