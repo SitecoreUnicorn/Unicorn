@@ -51,6 +51,7 @@ namespace Unicorn.Remoting
 		public RemotingPackageManifest Manifest { get; set; }
 
 		[JsonProperty] // TODO: fix reading packages from disk - this is not being written to the json manifest
+			// TODO: add a safety net that prevents remoting to yourself?
 		public string Configuration
 		{
 			get { return _configuration.Name; }

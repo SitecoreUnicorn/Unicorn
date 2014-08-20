@@ -141,7 +141,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="Serialization.config" />
+    <None Include="Serialization.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Unicorn.nuspec" />
   </ItemGroup>
   <ItemGroup />
