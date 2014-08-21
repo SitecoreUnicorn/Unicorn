@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.ObjectModel;
 using Unicorn.Data;
 using Unicorn.Serialization;
 
@@ -10,7 +10,7 @@ namespace Unicorn.Pipelines.UnicornSyncComplete
 		void PushChangedItem(ISerializedItem serializedItem, ChangeType type);
 		void PushChangedItem(ISourceItem sourceItem, ChangeType type);
 
-		IReadOnlyCollection<ChangeEntry> GetChanges();
+		ReadOnlyCollection<ChangeEntry> GetChanges();
 		void Reset();
 	}
 }

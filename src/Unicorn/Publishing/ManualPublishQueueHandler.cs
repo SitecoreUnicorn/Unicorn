@@ -7,6 +7,10 @@ using Sitecore.Publishing.Pipelines.Publish;
 
 namespace Unicorn.Publishing
 {
+	/// <summary>
+	/// Maintains a manual publish queue that arbitrary items can be added to
+	/// See http://www.velir.com/blog/index.php/2013/11/22/how-to-create-a-custom-publish-queue-in-sitecore/ among other sources
+	/// </summary>
 	public class ManualPublishQueueHandler : PublishProcessor
 	{
 		private static readonly ConcurrentQueue<ID> ManuallyAddedCandidates = new ConcurrentQueue<ID>();
@@ -20,7 +24,8 @@ namespace Unicorn.Publishing
 		{
 			if (ManuallyAddedCandidates.Count == 0) return false;
 
-			PublishManager.PublishItem(triggerItem, targets, new[] { triggerItem.Language }, true, true);
+			// the trigger item simply has to exist so the publish occurs - our queue will then be injected
+			PublishManager.PublishItem(triggerItem, targets, new[] { triggerItem.Language }, true, false);
 
 			return true;
 		}

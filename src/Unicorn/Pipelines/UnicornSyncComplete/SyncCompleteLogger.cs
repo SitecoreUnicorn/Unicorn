@@ -4,6 +4,9 @@ using Unicorn.Logging;
 
 namespace Unicorn.Pipelines.UnicornSyncComplete
 {
+	/// <summary>
+	/// Logs the metrics about the sync to the current logger
+	/// </summary>
 	public class SyncCompleteLogger : IUnicornSyncCompleteProcessor
 	{
 		public void Process(UnicornSyncCompletePipelineArgs args)

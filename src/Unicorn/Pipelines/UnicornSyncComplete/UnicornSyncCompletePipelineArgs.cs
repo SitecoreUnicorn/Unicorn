@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.ObjectModel;
 using Sitecore.Diagnostics;
 using Sitecore.Pipelines;
 using Unicorn.Configuration;
@@ -19,7 +19,7 @@ namespace Unicorn.Pipelines.UnicornSyncComplete
 			Configuration = configuration;
 		}
 
-		public IReadOnlyCollection<ChangeEntry> Changes { get; private set; } 
+		public ReadOnlyCollection<ChangeEntry> Changes { get; private set; } 
 		public IConfiguration Configuration { get; private set; }
 	}
 }
