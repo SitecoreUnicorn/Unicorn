@@ -2,10 +2,14 @@
 using System.Linq;
 using System.Web;
 using Kamsar.WebConsole;
+using Sitecore.Pipelines;
 using Unicorn.Configuration;
 using Unicorn.Evaluators;
 using Unicorn.Loader;
 using Unicorn.Logging;
+using Unicorn.Pipelines.UnicornSyncBegin;
+using Unicorn.Pipelines.UnicornSyncComplete;
+using Unicorn.Pipelines.UnicornSyncEnd;
 using Unicorn.Predicates;
 using Unicorn.Publishing;
 
@@ -43,6 +47,8 @@ namespace Unicorn.ControlPanel
 					{
 						logger.Info("Control Panel Sync: Processing Unicorn configuration " + configuration.Name);
 
+						CorePipeline.Run("unicornSyncBegin", new UnicornSyncBeginPipelineArgs(configuration));
+
 						var pathResolver = configuration.Resolve<PredicateRootPathResolver>();
 						var retryer = configuration.Resolve<IDeserializeFailureRetryer>();
 						var consistencyChecker = configuration.Resolve<IConsistencyChecker>();
@@ -58,6 +64,8 @@ namespace Unicorn.ControlPanel
 							index++;
 						});
 
+						CorePipeline.Run("unicornSyncComplete", new UnicornSyncCompletePipelineArgs(configuration));
+
 						logger.Info("Control Panel Sync: Completed syncing Unicorn configuration " + configuration.Name);
 					}
 					catch (Exception ex)
@@ -68,11 +76,7 @@ namespace Unicorn.ControlPanel
 				}
 			}
 
-			if (configurations.Any(x => x.Resolve<ISerializedAsMasterEvaluatorLogger>().GetType() == typeof (AutoPublishSerializedAsMasterEvaluatorLogger)))
-			{
-				progress.ReportStatus("Automatically publishing synced items for configurations that request it...");
-				ManualPublishQueueHandler.Process();
-			}
+			CorePipeline.Run("unicornSyncEnd", new UnicornSyncEndPipelineArgs(configurations));
 		}
 
 		protected virtual IConfiguration[] ResolveConfigurations()

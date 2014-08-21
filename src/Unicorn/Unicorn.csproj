@@ -108,6 +108,16 @@
     <Compile Include="Loader\ISerializationLoaderLogger.cs" />
     <Compile Include="Logging\ILogger.cs" />
     <Compile Include="Logging\SitecoreLogger.cs" />
+    <Compile Include="Pipelines\UnicornSyncBegin\IUnicornSyncBeginProcessor.cs" />
+    <Compile Include="Pipelines\UnicornSyncBegin\ResetSyncCompleteDataCollector.cs" />
+    <Compile Include="Pipelines\UnicornSyncBegin\UnicornSyncBeginPipelineArgs.cs" />
+    <Compile Include="Pipelines\UnicornSyncComplete\ChangeEntry.cs" />
+    <Compile Include="Pipelines\UnicornSyncComplete\ChangeType.cs" />
+    <Compile Include="Pipelines\UnicornSyncComplete\DefaultSyncCompleteDataCollector.cs" />
+    <Compile Include="Pipelines\UnicornSyncComplete\ISyncCompleteDataCollector.cs" />
+    <Compile Include="Pipelines\UnicornSyncComplete\IUnicornSyncCompleteProcessor.cs" />
+    <Compile Include="Pipelines\UnicornSyncComplete\SyncCompleteLogger.cs" />
+    <Compile Include="Pipelines\UnicornSyncComplete\UnicornSyncCompletePipelineArgs.cs" />
     <Compile Include="Predicates\ConfigurationFieldPredicate.cs" />
     <Compile Include="Predicates\IFieldPredicate.cs" />
     <Compile Include="Predicates\PredicateResult.cs" />
@@ -116,7 +126,6 @@
     <Compile Include="Predicates\PredicateRootPathResolver.cs" />
     <Compile Include="Predicates\SerializationPresetPredicate.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Publishing\AutoPublishSerializedAsMasterEvaluatorLogger.cs" />
     <Compile Include="Publishing\ManualPublishQueueHandler.cs" />
     <Compile Include="SerializationConflictProcessor.cs" />
     <Compile Include="Loader\SerializationLoader.cs" />
