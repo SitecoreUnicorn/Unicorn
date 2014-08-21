@@ -211,6 +211,7 @@ namespace Unicorn
 				if (change.OriginalValue == change.Value) continue;
 				if (change.FieldID == FieldIDs.Revision) continue;
 				if (change.FieldID == FieldIDs.Updated) continue;
+				if (change.FieldID == FieldIDs.UpdatedBy) continue;
 				if (!_fieldPredicate.Includes(change.FieldID).IsIncluded) continue;
 
 				return true;

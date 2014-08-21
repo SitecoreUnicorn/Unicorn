@@ -60,6 +60,8 @@ Then when your build script calls the Unicorn control panel simply pass this key
     $result = Invoke-WebRequest -Uri $url -Headers @{ "Authenticate" = $deploymentToolAuthToken } -TimeoutSec 10800 -UseBasicParsing
 	
 	Write-Host $result.Content
+
+If you're on Azure, note that `Invoke-WebRequest` has [a bug](https://github.com/kamsar/Unicorn/issues/29) that prevents it from working correctly on Azure. See [#29](https://github.com/kamsar/Unicorn/issues/29) for a workaround on the above script if on Azure.
 	
 Calls to the control panel from an automated script behave a little differently from interactive calls do. Specifically:
 

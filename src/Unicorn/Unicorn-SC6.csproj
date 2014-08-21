@@ -59,8 +59,10 @@
   <ItemGroup>
     <Compile Include="ConfigurationUtility.cs" />
     <Compile Include="ControlPanel\AccessDenied.cs" />
+    <Compile Include="ControlPanel\CheckIfFilterDisablerIsActive.cs" />
     <Compile Include="ControlPanel\ConfigurationDetails.cs" />
     <Compile Include="ControlPanel\ControlOptions.cs" />
+    <Compile Include="ControlPanel\ItemFilterDisabler.cs" />
     <Compile Include="ControlPanel\UnicornControlPanelPipelineProcessor.cs" />
     <Compile Include="ControlPanel\ControlPanelUtility.cs" />
     <Compile Include="ControlPanel\Heading.cs" />

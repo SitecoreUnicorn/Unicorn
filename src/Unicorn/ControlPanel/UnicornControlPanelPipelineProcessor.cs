@@ -71,6 +71,7 @@ namespace Unicorn.ControlPanel
 							controls = GetReserializeControls(Authorization.IsAutomatedTool);
 							break;
 						default:
+							context.Response.AddHeader("Content-Type", "text/html");
 							controls = GetDefaultControls();
 							break;
 					}
