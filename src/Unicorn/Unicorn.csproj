@@ -108,6 +108,20 @@
     <Compile Include="Loader\ISerializationLoaderLogger.cs" />
     <Compile Include="Logging\ILogger.cs" />
     <Compile Include="Logging\SitecoreLogger.cs" />
+    <Compile Include="Pipelines\UnicornSyncBegin\IUnicornSyncBeginProcessor.cs" />
+    <Compile Include="Pipelines\UnicornSyncBegin\ResetSyncCompleteDataCollector.cs" />
+    <Compile Include="Pipelines\UnicornSyncBegin\UnicornSyncBeginPipelineArgs.cs" />
+    <Compile Include="Pipelines\UnicornSyncComplete\AddSyncedItemsToPublishQueue.cs" />
+    <Compile Include="Pipelines\UnicornSyncComplete\ChangeEntry.cs" />
+    <Compile Include="Pipelines\UnicornSyncComplete\ChangeType.cs" />
+    <Compile Include="Pipelines\UnicornSyncComplete\DefaultSyncCompleteDataCollector.cs" />
+    <Compile Include="Pipelines\UnicornSyncComplete\ISyncCompleteDataCollector.cs" />
+    <Compile Include="Pipelines\UnicornSyncComplete\IUnicornSyncCompleteProcessor.cs" />
+    <Compile Include="Pipelines\UnicornSyncComplete\SyncCompleteLogger.cs" />
+    <Compile Include="Pipelines\UnicornSyncComplete\UnicornSyncCompletePipelineArgs.cs" />
+    <Compile Include="Pipelines\UnicornSyncEnd\IUnicornSyncEndProcessor.cs" />
+    <Compile Include="Pipelines\UnicornSyncEnd\TriggerAutoPublishSyncedItems.cs" />
+    <Compile Include="Pipelines\UnicornSyncEnd\UnicornSyncEndPipelineArgs.cs" />
     <Compile Include="Predicates\ConfigurationFieldPredicate.cs" />
     <Compile Include="Predicates\IFieldPredicate.cs" />
     <Compile Include="Predicates\PredicateResult.cs" />
@@ -116,6 +130,7 @@
     <Compile Include="Predicates\PredicateRootPathResolver.cs" />
     <Compile Include="Predicates\SerializationPresetPredicate.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Publishing\ManualPublishQueueHandler.cs" />
     <Compile Include="SerializationConflictProcessor.cs" />
     <Compile Include="Loader\SerializationLoader.cs" />
     <Compile Include="Serialization\ISerializedItemExtensions.cs" />
@@ -141,9 +156,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="Serialization.config">
-      <SubType>Designer</SubType>
-    </None>
+    <None Include="Serialization.AutoPublish.config" />
+    <None Include="Serialization.config" />
     <None Include="Unicorn.nuspec" />
   </ItemGroup>
   <ItemGroup />

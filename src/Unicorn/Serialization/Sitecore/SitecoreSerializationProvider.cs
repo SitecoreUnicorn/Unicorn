@@ -123,7 +123,7 @@ namespace Unicorn.Serialization.Sitecore
 				{
 					if (!Directory.Exists(path)) return new string[0];
 
-					var resultSet = new HashSet<string>();
+					var resultSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
 					try
 					{

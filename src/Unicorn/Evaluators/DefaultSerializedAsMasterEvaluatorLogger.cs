@@ -2,6 +2,7 @@
 using Sitecore.StringExtensions;
 using Unicorn.Data;
 using Unicorn.Logging;
+using Unicorn.Pipelines.UnicornSyncComplete;
 using Unicorn.Serialization;
 
 namespace Unicorn.Evaluators
@@ -9,16 +10,19 @@ namespace Unicorn.Evaluators
 	public class DefaultSerializedAsMasterEvaluatorLogger : ISerializedAsMasterEvaluatorLogger
 	{
 		private readonly ILogger _logger;
+		private readonly ISyncCompleteDataCollector _pipelineDataCollector;
 		private const int MaxFieldLenthToDisplayValue = 40;
 
-		public DefaultSerializedAsMasterEvaluatorLogger(ILogger logger)
+		public DefaultSerializedAsMasterEvaluatorLogger(ILogger logger, ISyncCompleteDataCollector pipelineDataCollector)
 		{
 			_logger = logger;
+			_pipelineDataCollector = pipelineDataCollector;
 		}
 
 		public virtual void DeletedItem(ISourceItem deletedItem)
 		{
 			_logger.Warn("[D] {0} because it did not exist in the serialization provider.".FormatWith(deletedItem.DisplayIdentifier));
+			_pipelineDataCollector.PushChangedItem(deletedItem, ChangeType.Deleted);
 		}
 
 		public virtual void IsSharedFieldMatch(ISerializedItem serializedItem, string fieldName, string serializedValue, string sourceValue)
@@ -69,11 +73,13 @@ namespace Unicorn.Evaluators
 		public virtual void DeserializedNewItem(ISerializedItem serializedItem)
 		{
 			_logger.Info("[A] {0}".FormatWith(serializedItem.DisplayIdentifier));
+			_pipelineDataCollector.PushChangedItem(serializedItem, ChangeType.Created);
 		}
 
 		public virtual void SerializedUpdatedItem(ISerializedItem serializedItem)
 		{
 			_logger.Info("[U] {0}".FormatWith(serializedItem.DisplayIdentifier));
+			_pipelineDataCollector.PushChangedItem(serializedItem, ChangeType.Modified);
 		}
 	}
 }
