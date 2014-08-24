@@ -62,6 +62,7 @@ namespace Unicorn.Remoting
 
 		private void ProcessFullSyncPackage(RemotingPackage package, IConfiguration configuration, ILogger logger)
 		{
+			package.Manifest.Strategy = RemotingStrategy.Full;
 			using (new SecurityDisabler())
 			{
 				var predicate = configuration.Resolve<IPredicate>();
@@ -78,6 +79,8 @@ namespace Unicorn.Remoting
 
 		private static void ProcessHistoryEnginePackage(RemotingPackage package, IConfiguration configuration, DateTime ifModifiedSince)
 		{
+			package.Manifest.Strategy = RemotingStrategy.Differential;
+
 			using (new SecurityDisabler())
 			{
 				var serializationProvider = package.SerializationProvider;

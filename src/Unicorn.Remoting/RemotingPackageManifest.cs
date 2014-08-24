@@ -19,6 +19,8 @@ namespace Unicorn.Remoting
 			_entries.Add(entry);
 		}
 
+		public RemotingStrategy Strategy { get; set; }
+		public string ConfigurationName { get; set; }
 		public DateTime LastSynchronized { get; set; }
 		public RemotingPackageManifestEntry[] HistoryEntries { get { return _entries.ToArray(); } }
 

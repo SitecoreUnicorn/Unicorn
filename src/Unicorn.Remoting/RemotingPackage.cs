@@ -15,7 +15,7 @@ namespace Unicorn.Remoting
 {
 	public class RemotingPackage
 	{
-		private IConfiguration _configuration;
+		private readonly IConfiguration _configuration;
 		private SitecoreSerializationProvider _serializationProvider;
 
 		public RemotingPackage(IConfiguration configuration)
@@ -23,14 +23,21 @@ namespace Unicorn.Remoting
 			Assert.ArgumentNotNull(configuration, "configuration");
 
 			_configuration = configuration;
-			Configuration = _configuration.Name;
+
 			Manifest = new RemotingPackageManifest();
+			Manifest.ConfigurationName = _configuration.Name;
+
 			TempDirectory = GenerateTempDirectory();
 		}
 
-		public RemotingPackage()
+		private RemotingPackage(RemotingPackageManifest manifest, string tempDirectory)
 		{
+			Assert.ArgumentNotNull(manifest, "manifest");
 
+			_configuration = UnicornConfigurationManager.Configurations.First(x => x.Name.Equals(manifest.ConfigurationName, StringComparison.Ordinal));
+			Manifest = manifest;
+
+			TempDirectory = tempDirectory;
 		}
 
 		public static RemotingPackage FromStream(Stream zipStream)
@@ -41,22 +48,14 @@ namespace Unicorn.Remoting
 
 			Compression.DecompressZipFileFromStream(zipStream, tempDirectory);
 
-			var package = JsonConvert.DeserializeObject<RemotingPackage>(File.ReadAllText(Path.Combine(tempDirectory, "manifest.json")));
+			var manifest = JsonConvert.DeserializeObject<RemotingPackageManifest>(File.ReadAllText(Path.Combine(tempDirectory, "manifest.json")));
 
-			package.TempDirectory = tempDirectory;
+			var package = new RemotingPackage(manifest, tempDirectory);
 
 			return package;
 		}
 
-		public RemotingPackageManifest Manifest { get; set; }
-
-		[JsonProperty] // TODO: fix reading packages from disk - this is not being written to the json manifest
-			// TODO: add a safety net that prevents remoting to yourself?
-		public string Configuration
-		{
-			get { return _configuration.Name; }
-			private set { _configuration = UnicornConfigurationManager.Configurations.First(x => x.Name.Equals(value, StringComparison.Ordinal)); }
-		}
+		public RemotingPackageManifest Manifest { get; private set; }
 
 		public ISerializationProvider SerializationProvider
 		{
@@ -69,7 +68,7 @@ namespace Unicorn.Remoting
 		}
 
 		public void WriteToHttpResponse(HttpResponseBase httpResponse)
-		{	
+		{
 			httpResponse.Clear();
 			httpResponse.ContentType = "application/zip";
 			httpResponse.AddHeader("Content-Disposition", "attachment;filename=remoting-package.zip");
@@ -84,9 +83,9 @@ namespace Unicorn.Remoting
 			Manifest.WriteToPackage(TempDirectory);
 
 			Compression.CompressDirectoryToStream(TempDirectory, stream);
-			
+
 			stream.Flush();
-			
+
 			Directory.Delete(TempDirectory, true);
 		}
 
@@ -95,6 +94,6 @@ namespace Unicorn.Remoting
 			return Path.Combine(HostingEnvironment.MapPath(Settings.TempFolderPath), Guid.NewGuid().ToString());
 		}
 
-		private string TempDirectory { get; set; }
+		public string TempDirectory { get; private set; }
 	}
 }
