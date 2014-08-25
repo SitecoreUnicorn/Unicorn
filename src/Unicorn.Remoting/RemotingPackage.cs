@@ -13,7 +13,7 @@ using Unicorn.Serialization.Sitecore;
 
 namespace Unicorn.Remoting
 {
-	public class RemotingPackage
+	public class RemotingPackage : IDisposable
 	{
 		private readonly IConfiguration _configuration;
 		private SitecoreSerializationProvider _serializationProvider;
@@ -73,7 +73,7 @@ namespace Unicorn.Remoting
 			httpResponse.ContentType = "application/zip";
 			httpResponse.AddHeader("Content-Disposition", "attachment;filename=remoting-package.zip");
 
-			WriteToStream(httpResponse.OutputStream); ;
+			WriteToStream(httpResponse.OutputStream);
 
 			httpResponse.End();
 		}
@@ -85,15 +85,21 @@ namespace Unicorn.Remoting
 			Compression.CompressDirectoryToStream(TempDirectory, stream);
 
 			stream.Flush();
-
-			Directory.Delete(TempDirectory, true);
 		}
 
 		private static string GenerateTempDirectory()
 		{
-			return Path.Combine(HostingEnvironment.MapPath(Settings.TempFolderPath), Guid.NewGuid().ToString());
+			var tempDirectory = Path.Combine(HostingEnvironment.MapPath(Settings.TempFolderPath), Guid.NewGuid().ToString());
+			Directory.CreateDirectory(tempDirectory);
+
+			return tempDirectory;
 		}
 
 		public string TempDirectory { get; private set; }
+
+		public void Dispose()
+		{
+			if(Directory.Exists(TempDirectory)) Directory.Delete(TempDirectory, true);
+		}
 	}
 }

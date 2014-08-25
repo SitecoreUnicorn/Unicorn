@@ -22,7 +22,16 @@ namespace Unicorn.Remoting
 		public RemotingStrategy Strategy { get; set; }
 		public string ConfigurationName { get; set; }
 		public DateTime LastSynchronized { get; set; }
-		public RemotingPackageManifestEntry[] HistoryEntries { get { return _entries.ToArray(); } }
+
+		public RemotingPackageManifestEntry[] HistoryEntries
+		{
+			get { return _entries.ToArray(); }
+			set
+			{
+				_entries.Clear();
+				_entries.AddRange(value);
+			}
+		}
 
 		public void WriteToPackage(string tempDirectory)
 		{

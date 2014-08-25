@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using Sitecore.Data.Engines;
 using Sitecore.Diagnostics;
+using Unicorn.Serialization.Sitecore;
 
 namespace Unicorn.Remoting
 {
@@ -29,6 +30,8 @@ namespace Unicorn.Remoting
 
 		private void WriteFullPackage(string path)
 		{
+			// TODO: this is super destructive and will nuke your whole serialization folder
+			// TODO: instead of just the root that you got in the package. 1-800-L2C-NOOB
 			if (Directory.Exists(path))
 				Directory.Delete(path, true);
 
@@ -39,23 +42,36 @@ namespace Unicorn.Remoting
 			CopyFilesRecursively(sourcePath, targetPath);
 		}
 
-		private void WriteDiffPackage(string path)
+		private void WriteDiffPackage(string targetBasePath)
 		{
 			var actions = _package.Manifest.HistoryEntries;
+			var packageBasePath = Path.Combine(_package.TempDirectory, "serialization");
 
 			foreach (var action in actions)
 			{
+				var itemPath = SerializationPathUtility.GetSerializedItemPath(packageBasePath, action.Database, action.ItemPath);
 				switch (action.Action)
 				{
 					case HistoryAction.AddedVersion:
 					case HistoryAction.Created:
 					case HistoryAction.Saved:
-						// TODO: copy single item and overwrite existing
-						
+						// copy single item and overwrite existing if any
+						var targetCopyPath = SerializationPathUtility.GetSerializedItemPath(targetBasePath, action.Database, action.ItemPath);
+
+						Assert.IsTrue(File.Exists(itemPath), "Expected serialization item {0} missing from package!", itemPath);
+
+						File.Copy(itemPath, targetCopyPath, true);
+
 						break;
 
 					case HistoryAction.Deleted:
-						// TODO: delete item
+						// delete item + child references
+						var targetDeletePath = SerializationPathUtility.GetSerializedItemPath(targetBasePath, action.Database, action.ItemPath);
+						var targetChildrenDeletePath = SerializationPathUtility.GetSerializedReferencePath(targetBasePath, action.Database, action.ItemPath);
+
+						if(File.Exists(targetDeletePath)) File.Delete(targetDeletePath);
+						if(Directory.Exists(targetChildrenDeletePath)) Directory.Delete(targetChildrenDeletePath, true);
+
 						break;
 
 					case HistoryAction.Moved:

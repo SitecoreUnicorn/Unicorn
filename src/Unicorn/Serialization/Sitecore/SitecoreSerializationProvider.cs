@@ -436,7 +436,7 @@ namespace Unicorn.Serialization.Sitecore
 				// the newPhysicalPath will point to the OLD physical path pre-move (but for renames we actually get the new path already).
 				// For moves, we re-root the path to point to the new parent item's base path to fix that before we write to disk
 				string newItemPath = (renaming) ? descendant.ItemPath : descendant.ItemPath.Replace(oldReference.ItemPath, newItem.ItemPath);
-				
+
 				var newPhysicalPath = SerializationPathUtility.GetSerializedItemPath(_rootPath, syncItem.DatabaseName, newItemPath);
 
 				var newSerializedItem = new SitecoreSerializedItem(syncItem, newPhysicalPath, this);

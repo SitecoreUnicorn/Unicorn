@@ -1,7 +1,5 @@
 ﻿using System;
-using System.IO;
 using System.Linq;
-using System.Web;
 using Sitecore.Configuration;
 using Sitecore.Data.Engines;
 using Sitecore.Diagnostics;
@@ -17,7 +15,7 @@ namespace Unicorn.Remoting
 {
 	public class RemotingService
 	{
-		public void GetItems(string configurationName, DateTime ifModifiedSince, HttpResponseBase httpResponse, Stream stream)
+		public RemotingPackage CreateRemotingPackage(string configurationName, DateTime ifModifiedSince)
 		{
 			Assert.ArgumentCondition(ifModifiedSince < DateTime.UtcNow, "ifModifiedSince", "ifModifiedSince was in the future. No no no.");
 
@@ -31,11 +29,7 @@ namespace Unicorn.Remoting
 
 			if (ifModifiedSince == Constants.NotSyncedDateTime || (DateTime.UtcNow - ifModifiedSince) > Factory.GetDatabase("master").Engines.HistoryEngine.Storage.EntryLifeTime)
 			{
-				// load using full sync methodology
-				// return HTTP 200
-				// return zip file of full sync dump
-				httpResponse.StatusCode = 200;
-
+				// load using full sync strategy - either we have nothing local or the last sync was too long ago to rely on history engine
 				logger.Info("Remoting full serialization: Processing Unicorn configuration " + configuration.Name);
 
 				ProcessFullSyncPackage(package, configuration, logger);
@@ -44,10 +38,7 @@ namespace Unicorn.Remoting
 			}
 			else
 			{
-				// load using history engine methodology
-				// return HTTP 203 partial information
-				// return zip file with changed serialized items, and manifest.json with history details
-				httpResponse.StatusCode = 203;
+				// load using history engine methodology (differential)
 
 				logger.Info("Remoting history engine serialization: Processing Unicorn configuration " + configuration.Name);
 
@@ -56,8 +47,7 @@ namespace Unicorn.Remoting
 				logger.Info("Remoting history engine serialization: Finished Unicorn configuration " + configuration.Name);
 			}
 
-			//package.WriteToHttpResponse(httpResponse);
-			package.WriteToStream(stream);
+			return package;
 		}
 
 		private void ProcessFullSyncPackage(RemotingPackage package, IConfiguration configuration, ILogger logger)
@@ -103,7 +93,7 @@ namespace Unicorn.Remoting
 
 							if (item == null) continue; // invalid history entry - item deleted
 
-							var manifestEntry = RemotingPackageManifestEntry.FromEntry(historyEntry);
+							var manifestEntry = RemotingPackageManifestEntry.FromEntry(historyEntry, historyDatabase.Name);
 
 							manifestEntry.OldItemPath = historyEntry.ItemPath; // on a moved entry, the itempath is the pre-move path
 							manifestEntry.ItemPath = item.Paths.Path; // the path from the Item is the post-move path
@@ -112,7 +102,7 @@ namespace Unicorn.Remoting
 						}
 						else if (historyEntry.Action == HistoryAction.Deleted)
 						{
-							package.Manifest.AddEntry(RemotingPackageManifestEntry.FromEntry(historyEntry));
+							package.Manifest.AddEntry(RemotingPackageManifestEntry.FromEntry(historyEntry, historyDatabase.Name));
 						}
 						else
 						{
@@ -123,7 +113,7 @@ namespace Unicorn.Remoting
 							// serialize updated item to package directory
 							serializationProvider.SerializeItem(new SitecoreSourceItem(item));
 
-							package.Manifest.AddEntry(RemotingPackageManifestEntry.FromEntry(historyEntry));
+							package.Manifest.AddEntry(RemotingPackageManifestEntry.FromEntry(historyEntry, historyDatabase.Name));
 						}
 					}
 				}
