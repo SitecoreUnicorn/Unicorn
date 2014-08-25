@@ -9,8 +9,6 @@ using Sitecore.Security.Authentication;
 using Sitecore.SecurityModel;
 using Sitecore.StringExtensions;
 using Unicorn.Configuration;
-using Unicorn.Predicates;
-using Unicorn.Serialization;
 
 namespace Unicorn.ControlPanel
 {

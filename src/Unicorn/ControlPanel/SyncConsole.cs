@@ -4,14 +4,12 @@ using System.Web;
 using Kamsar.WebConsole;
 using Sitecore.Pipelines;
 using Unicorn.Configuration;
-using Unicorn.Evaluators;
 using Unicorn.Loader;
 using Unicorn.Logging;
 using Unicorn.Pipelines.UnicornSyncBegin;
 using Unicorn.Pipelines.UnicornSyncComplete;
 using Unicorn.Pipelines.UnicornSyncEnd;
 using Unicorn.Predicates;
-using Unicorn.Publishing;
 
 namespace Unicorn.ControlPanel
 {
@@ -47,7 +45,20 @@ namespace Unicorn.ControlPanel
 					{
 						logger.Info("Control Panel Sync: Processing Unicorn configuration " + configuration.Name);
 
-						CorePipeline.Run("unicornSyncBegin", new UnicornSyncBeginPipelineArgs(configuration));
+						var beginArgs = new UnicornSyncBeginPipelineArgs(configuration);
+						CorePipeline.Run("unicornSyncBegin", beginArgs);
+
+						if (beginArgs.SyncIsHandled)
+						{
+							logger.Info("Unicorn Sync Begin pipeline signalled that it handled the sync for this configuration.");
+							continue;
+						}
+
+						if (beginArgs.Aborted)
+						{
+							logger.Error("Unicorn Sync Begin pipeline was aborted. Not executing sync for this configuration.");
+							continue;
+						}
 
 						var pathResolver = configuration.Resolve<PredicateRootPathResolver>();
 						var retryer = configuration.Resolve<IDeserializeFailureRetryer>();
