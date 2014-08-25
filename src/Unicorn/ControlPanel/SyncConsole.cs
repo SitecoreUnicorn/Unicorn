@@ -48,15 +48,15 @@ namespace Unicorn.ControlPanel
 						var beginArgs = new UnicornSyncBeginPipelineArgs(configuration);
 						CorePipeline.Run("unicornSyncBegin", beginArgs);
 
-						if (beginArgs.SyncIsHandled)
-						{
-							logger.Info("Unicorn Sync Begin pipeline signalled that it handled the sync for this configuration.");
-							continue;
-						}
-
 						if (beginArgs.Aborted)
 						{
 							logger.Error("Unicorn Sync Begin pipeline was aborted. Not executing sync for this configuration.");
+							continue;
+						}
+
+						if (beginArgs.SyncIsHandled)
+						{
+							logger.Info("Unicorn Sync Begin pipeline signalled that it handled the sync for this configuration.");
 							continue;
 						}
 
