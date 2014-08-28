@@ -69,6 +69,10 @@ namespace Unicorn.Remoting
 
 		private static void ProcessHistoryEnginePackage(RemotingPackage package, IConfiguration configuration, DateTime ifModifiedSince)
 		{
+			// TODO: need to "coalesce" history so we are not replaying more events than we need to
+			// e.g. create then move in one sync will cause the created item to not be present as a serialized item
+			// in the package because it was moved so the create fails
+
 			package.Manifest.Strategy = RemotingStrategy.Differential;
 
 			using (new SecurityDisabler())

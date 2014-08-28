@@ -6,5 +6,6 @@
 	public interface IRemotingSerializationProvider
 	{
 		string RemoteUrl { get; }
+		bool DisableDifferentialSync { get; }
 	}
 }

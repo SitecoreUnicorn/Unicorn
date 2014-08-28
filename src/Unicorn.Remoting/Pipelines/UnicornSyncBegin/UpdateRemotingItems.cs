@@ -1,10 +1,11 @@
 ﻿using System;
 using System.IO;
 using System.Net;
+using System.Web;
 using System.Web.Hosting;
-using Sitecore.ApplicationCenter.Applications;
 using Sitecore.Configuration;
 using Sitecore.StringExtensions;
+using Unicorn.Configuration;
 using Unicorn.Logging;
 using Unicorn.Pipelines.UnicornSyncBegin;
 using Unicorn.Remoting.Serialization;
@@ -33,10 +34,24 @@ namespace Unicorn.Remoting.Pipelines.UnicornSyncBegin
 				return;
 			}
 
+			if (HttpContext.Current != null && HttpContext.Current.Request.Url.Host.Equals(new Uri(remotingSerializationProvider.RemoteUrl).Host, StringComparison.OrdinalIgnoreCase))
+			{
+				logger.Warn("Remoting: Remote URL was local instance - skipping this configuration as it is by definition already synced.");
+				args.SyncIsHandled = true;
+				return;
+			}
+
 			var lastLoaded = GetLastLoadedTime(args.Configuration.Name);
+
+			// if you pass the force parameter, we do not use the history engine differential sync
+			if (remotingSerializationProvider.DisableDifferentialSync || (HttpContext.Current != null && HttpContext.Current.Request.QueryString["force"] != null))
+			{
+				lastLoaded = _unsyncedDateTimeValue;
+			}
+
 			var url = string.Format("{0}?c={1}&ts={2}", remotingSerializationProvider.RemoteUrl, args.Configuration.Name, lastLoaded);
 
-			var wc = new WebClient();
+			var webClient = new SuperWebClient();
 
 			// TODO; add signature to request
 
@@ -44,14 +59,13 @@ namespace Unicorn.Remoting.Pipelines.UnicornSyncBegin
 
 			try
 			{
-				
 				logger.Info("Remoting: Downloading updated items from {0} newer than {1}".FormatWith(remotingSerializationProvider.RemoteUrl, lastLoaded.ToLocalTime()));
 
 				var tempFileName = HostingEnvironment.MapPath("~/temp/" + Guid.NewGuid() + ".zip");
 
 				try
 				{
-					wc.DownloadFile(url, tempFileName);
+					webClient.DownloadFile(url, tempFileName);
 					using (var stream = File.OpenRead(tempFileName))
 					{
 						package = RemotingPackage.FromStream(stream);
@@ -62,14 +76,21 @@ namespace Unicorn.Remoting.Pipelines.UnicornSyncBegin
 					if (File.Exists(tempFileName)) File.Delete(tempFileName);
 				}
 
-				WritePackageToProvider(package, serializationProvider);
+				WritePackageToProvider(package, args.Configuration);
 
 				if (package.Manifest.Strategy == RemotingStrategy.Differential)
 				{
-					// TODO if differential package handle sync with a simple replay so it's fast
 					logger.Info("Remoting: received differential package with {0} changes. Replaying instead of sync.".FormatWith(package.Manifest.HistoryEntries.Length));
 
-					//TODO: uncomment once replay works. args.SyncIsHandled = true;
+					var replayer = new DifferentialPackageReplayer(package);
+
+					if (!replayer.Replay(logger))
+					{
+						logger.Error("Remoting package replay signalled an error. Aborting.");
+						args.AbortPipeline();
+						return;
+					}
+					else args.SyncIsHandled = true;
 				}
 				else
 				{
@@ -83,21 +104,17 @@ namespace Unicorn.Remoting.Pipelines.UnicornSyncBegin
 				// clean up temp files
 				if(package != null) package.Dispose();
 			}
-
-			// TODO: timestamp last updated management
-
-			args.AbortPipeline(); // TEMP for safety
 		}
 
-		protected virtual void WritePackageToProvider(RemotingPackage package, ISerializationProvider provider)
+		protected virtual void WritePackageToProvider(RemotingPackage package, IConfiguration configuration)
 		{
-			var sitecoreSerializationProvider = provider as SitecoreSerializationProvider;
+			var sitecoreSerializationProvider = configuration.Resolve<ISerializationProvider>() as SitecoreSerializationProvider;
 
 			if (sitecoreSerializationProvider == null) throw new InvalidOperationException("I only know how to write to SitecoreSerializationProvider types. Override WritePackageToProvider if you need to do others.");
 
-			var writer = new RemotingPackageWriter(package);
+			var writer = configuration.Resolve<RemotingPackageWriter>();
 
-			writer.WriteTo(sitecoreSerializationProvider.SerializationRoot);
+			writer.WriteTo(package, sitecoreSerializationProvider.SerializationRoot);
 		}
 
 		protected virtual DateTime GetLastLoadedTime(string configurationName)
@@ -110,6 +127,16 @@ namespace Unicorn.Remoting.Pipelines.UnicornSyncBegin
 		{
 			var db = Factory.GetDatabase("core");
 			db.Properties.SetDateValue("Unicorn_Remoting_" + configurationName, timestamp);
+		}
+
+		private class SuperWebClient : WebClient
+		{
+			protected override WebRequest GetWebRequest(Uri uri)
+			{
+				WebRequest w = base.GetWebRequest(uri);
+				w.Timeout = 20 * 60 * 1000;
+				return w;
+			}
 		}
 	}
 }

@@ -53,11 +53,11 @@
   <ItemGroup>
     <Compile Include="Compression.cs" />
     <Compile Include="Constants.cs" />
+    <Compile Include="DifferentialPackageReplayer.cs" />
     <Compile Include="Pipelines\HttpRequestBegin\RemotingServicePipelineProcessor.cs" />
     <Compile Include="Pipelines\UnicornSyncBegin\UpdateRemotingItems.cs" />
     <Compile Include="RemotingPackageManifest.cs" />
     <Compile Include="RemotingPackageManifestEntry.cs" />
-    <Compile Include="Loader\RemotingLoader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RemotingPackage.cs" />
     <Compile Include="RemotingPackageWriter.cs" />

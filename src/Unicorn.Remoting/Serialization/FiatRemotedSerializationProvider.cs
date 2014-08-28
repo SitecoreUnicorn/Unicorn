@@ -16,9 +16,8 @@ namespace Unicorn.Remoting.Serialization
 			RemoteUrl = remoteUrl;
 		}
 
-		// TODO: does it make sense to override writing methods here so that we do not keep unneeded serialized content on the remote?
-
 		public string RemoteUrl { get; private set; }
+		public bool DisableDifferentialSync { get; set; }
 
 		public override string FriendlyName
 		{

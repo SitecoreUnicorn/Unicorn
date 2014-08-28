@@ -1,51 +1,63 @@
 ﻿using System.IO;
 using Sitecore.Data.Engines;
 using Sitecore.Diagnostics;
+using Sitecore.StringExtensions;
+using Unicorn.Predicates;
+using Unicorn.Serialization;
 using Unicorn.Serialization.Sitecore;
 
 namespace Unicorn.Remoting
 {
 	public class RemotingPackageWriter
 	{
-		private readonly RemotingPackage _package;
+		private readonly ISerializationProvider _serializationProvider;
+		private readonly PredicateRootPathResolver _pathResolver;
 
-		public RemotingPackageWriter(RemotingPackage package)
+		public RemotingPackageWriter(ISerializationProvider serializationProvider, PredicateRootPathResolver pathResolver)
 		{
-			_package = package;
+			_serializationProvider = serializationProvider;
+			_pathResolver = pathResolver;
 		}
 
-		public void WriteTo(string path)
+		public void WriteTo(RemotingPackage package, string path)
 		{
-			Assert.IsTrue(_package.Manifest.Strategy != RemotingStrategy.Differential || Directory.Exists(path), "Invalid target directory! Must exist for differential strategy.");
+			Assert.IsTrue(package.Manifest.Strategy != RemotingStrategy.Differential || Directory.Exists(path), "Invalid target directory! Must exist for differential strategy.");
 
-			if (_package.Manifest.Strategy == RemotingStrategy.Full)
+			if (package.Manifest.Strategy == RemotingStrategy.Full)
 			{
-				WriteFullPackage(path);
+				WriteFullPackage(package, path);
 			}
 			else
 			{
-				WriteDiffPackage(path);
+				WriteDiffPackage(package, path);
 			}
 		}
 
-		private void WriteFullPackage(string path)
+		private void WriteFullPackage(RemotingPackage package, string path)
 		{
-			// TODO: this is super destructive and will nuke your whole serialization folder
-			// TODO: instead of just the root that you got in the package. 1-800-L2C-NOOB
-			if (Directory.Exists(path))
-				Directory.Delete(path, true);
+			// get rid of any existing serialized items before we overwrite them
+			var roots = _pathResolver.GetRootSourceItems();
 
-			var sourcePath = new DirectoryInfo(Path.Combine(_package.TempDirectory, "serialization"));
+			foreach (var root in roots)
+			{
+				var rootReference = _serializationProvider.GetReference(root);
+				if (rootReference != null)
+				{
+					rootReference.Delete();
+				}
+			}
+
+			var sourcePath = new DirectoryInfo(Path.Combine(package.TempDirectory, "serialization"));
 			var targetPath = new DirectoryInfo(path);
 
 			targetPath.Create();
 			CopyFilesRecursively(sourcePath, targetPath);
 		}
 
-		private void WriteDiffPackage(string targetBasePath)
+		private void WriteDiffPackage(RemotingPackage package, string targetBasePath)
 		{
-			var actions = _package.Manifest.HistoryEntries;
-			var packageBasePath = Path.Combine(_package.TempDirectory, "serialization");
+			var actions = package.Manifest.HistoryEntries;
+			var packageBasePath = Path.Combine(package.TempDirectory, "serialization");
 
 			foreach (var action in actions)
 			{
@@ -60,6 +72,7 @@ namespace Unicorn.Remoting
 
 						Assert.IsTrue(File.Exists(itemPath), "Expected serialization item {0} missing from package!", itemPath);
 
+						Directory.CreateDirectory(Path.GetDirectoryName(targetCopyPath));
 						File.Copy(itemPath, targetCopyPath, true);
 
 						break;
@@ -69,14 +82,32 @@ namespace Unicorn.Remoting
 						var targetDeletePath = SerializationPathUtility.GetSerializedItemPath(targetBasePath, action.Database, action.ItemPath);
 						var targetChildrenDeletePath = SerializationPathUtility.GetSerializedReferencePath(targetBasePath, action.Database, action.ItemPath);
 
-						if(File.Exists(targetDeletePath)) File.Delete(targetDeletePath);
-						if(Directory.Exists(targetChildrenDeletePath)) Directory.Delete(targetChildrenDeletePath, true);
+						if (File.Exists(targetDeletePath)) File.Delete(targetDeletePath);
+						if (Directory.Exists(targetChildrenDeletePath)) Directory.Delete(targetChildrenDeletePath, true);
 
 						break;
 
 					case HistoryAction.Moved:
-						// TODO: move item? or delete old path and copy new?
-						break;
+						var targetOldPath = SerializationPathUtility.GetSerializedItemPath(targetBasePath, action.Database, action.OldItemPath);
+						var targetOldChildrenPath = SerializationPathUtility.GetSerializedReferencePath(targetBasePath, action.Database, action.ItemPath);
+
+						if (File.Exists(targetOldPath)) File.Delete(targetOldPath);
+						if (Directory.Exists(targetOldChildrenPath)) Directory.Delete(targetOldChildrenPath, true);
+
+						var targetNewPath = SerializationPathUtility.GetSerializedItemPath(targetBasePath, action.Database, action.ItemPath);
+						var targetNewChildrenPath = SerializationPathUtility.GetSerializedReferencePath(targetBasePath, action.Database, action.ItemPath);
+
+						var itemChildrenPath = SerializationPathUtility.GetSerializedReferencePath(packageBasePath, action.Database, action.ItemPath);
+
+						Directory.CreateDirectory(Path.GetDirectoryName(targetNewPath));
+						File.Copy(itemPath, targetNewPath, true);
+
+						if (Directory.Exists(itemChildrenPath))
+						{
+							Directory.CreateDirectory(targetNewChildrenPath);
+							CopyFilesRecursively(new DirectoryInfo(itemChildrenPath), new DirectoryInfo(targetNewChildrenPath));
+						}
+				break;
 				}
 			}
 		}
@@ -87,7 +118,7 @@ namespace Unicorn.Remoting
 				CopyFilesRecursively(dir, target.CreateSubdirectory(dir.Name));
 
 			foreach (FileInfo file in source.GetFiles())
-				file.CopyTo(Path.Combine(target.FullName, file.Name));
+				file.CopyTo(Path.Combine(target.FullName, file.Name), true);
 		}
 	}
 }
