@@ -94,7 +94,7 @@ namespace Unicorn.Serialization.Sitecore
 			return new SitecoreSerializedReference(physicalPath, this);
 		}
 
-		public ISerializedItem GetItemByPath(string database, string path)
+		public virtual ISerializedItem GetItemByPath(string database, string path)
 		{
 			var physicalPath = SerializationPathUtility.GetSerializedItemPath(_rootPath, database, path);
 
@@ -220,7 +220,7 @@ namespace Unicorn.Serialization.Sitecore
 			return fileNames.Select(ReadItemFromDisk).ToArray();
 		}
 
-		public bool IsStandardValuesItem(ISerializedItem item)
+		public virtual bool IsStandardValuesItem(ISerializedItem item)
 		{
 			Assert.ArgumentNotNull(item, "item");
 
@@ -453,7 +453,7 @@ namespace Unicorn.Serialization.Sitecore
 			}
 		}
 
-		protected IList<ISourceItem> GetDescendants(ISourceItem sourceItem)
+		protected virtual IList<ISourceItem> GetDescendants(ISourceItem sourceItem)
 		{
 			var descendants = sourceItem.Children.ToList();
 
@@ -526,7 +526,7 @@ namespace Unicorn.Serialization.Sitecore
 		/// <summary>
 		/// The root path on disk this provider writes its files to
 		/// </summary>
-		public string SerializationRoot { get { return _rootPath; } }
+		public virtual string SerializationRoot { get { return _rootPath; } }
 
 		public virtual string FriendlyName
 		{
