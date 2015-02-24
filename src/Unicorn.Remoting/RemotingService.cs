@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using Sitecore.Collections;
 using Sitecore.Configuration;
+using Sitecore.Data;
 using Sitecore.Data.Engines;
 using Sitecore.Diagnostics;
 using Sitecore.SecurityModel;
@@ -85,12 +88,10 @@ namespace Unicorn.Remoting
 
 				foreach (var historyDatabase in historyDatabases)
 				{
-					var localHistory = historyDatabase.Engines.HistoryEngine.GetHistory(ifModifiedSince, DateTime.UtcNow);
+					var localHistory = GetMergedHistory(ifModifiedSince, historyDatabase);
 
 					foreach (var historyEntry in localHistory)
 					{
-						if (historyEntry.Action == HistoryAction.Copied) continue; // don't care - the newly copied items are create/save entries themselves
-
 						if (historyEntry.Action == HistoryAction.Moved)
 						{
 							var item = historyDatabase.GetItem(historyEntry.ItemId);
@@ -123,6 +124,41 @@ namespace Unicorn.Remoting
 				}
 
 				package.Manifest.LastSynchronized = DateTime.UtcNow;
+			}
+		}
+
+		private static IEnumerable<HistoryEntry> GetMergedHistory(DateTime ifModifiedSince, Database historyDatabase)
+		{
+			var rawHistory = historyDatabase.Engines.HistoryEngine.GetHistory(ifModifiedSince, DateTime.UtcNow)
+				.Where(x => x.Action != HistoryAction.Copied); // don't care - the newly copied items are create/save entries themselves
+
+			var itemHistory = rawHistory.GroupBy(x => x.ItemId);
+
+			var results = new List<HistoryEntry>();
+
+			foreach (var group in itemHistory)
+			{
+				// if only one entry for this item ID, keep it and stop
+				if (group.Count() == 1)
+				{
+					results.Add(group.First());
+					continue;
+				}
+
+				// if there are no moves we should be fine with just the first action (e.g. create/save/save/save/save or create/save/addversion)
+				if (group.All(x => x.Action != HistoryAction.Moved))
+				{
+					results.Add(group.First());
+					continue;
+				}
+
+				// if there are moves - but no create, this means we can just send the move (which will have the latest serialized content)
+				if (group.All(x => x.Action != HistoryAction.Created))
+				{
+					results.Add(group.First(x=>x.Action == HistoryAction.Moved));
+				}
+
+				// todo: make this work when more sober
 			}
 		}
 
