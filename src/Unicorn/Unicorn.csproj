@@ -156,8 +156,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="Serialization.AutoPublish.config" />
-    <None Include="Serialization.config" />
+    <None Include="Standard Config Files\Unicorn.AutoPublish.config" />
+    <None Include="Standard Config Files\Unicorn.config" />
+    <None Include="Standard Config Files\Unicorn.ControlPanel.config" />
+    <None Include="Standard Config Files\Unicorn.DataProvider.config" />
     <None Include="Unicorn.nuspec" />
   </ItemGroup>
   <ItemGroup />

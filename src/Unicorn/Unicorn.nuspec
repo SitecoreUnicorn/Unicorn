@@ -5,19 +5,21 @@
     <version>$version$</version>
     <title>$title$</title>
     <authors>Kam Figy</authors>
-    <owners>Kam Figy, ISITE Design</owners>
+    <owners>Kam Figy, Connective DX</owners>
     <licenseUrl>http://opensource.org/licenses/MIT</licenseUrl>
     <projectUrl>https://github.com/kamsar/Unicorn</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Unicorn is a utility for Sitecore that solves the issue of moving templates, renderings, and other database items between Sitecore instances.</description>
     <releaseNotes>Fixes minor issues (#25, 26, 27, 28 on GitHub)</releaseNotes>
-    <copyright>Copyright 2014</copyright>
+    <copyright>Copyright 2015</copyright>
     <tags>sitecore serialization</tags>
   </metadata>
 	
 	<files>
-		<file src="Serialization.config" target="content\App_Config\Include" />
-		<file src="Serialization.AutoPublish.config" target="content\App_Config\Include" />
+		<file src="Standard Config Files\Unicorn.config" target="content\App_Config\Include\Unicorn" />
+		<file src="Standard Config Files\Unicorn.AutoPublish.config" target="content\App_Config\Include\Unicorn" />
+		<file src="Standard Config Files\Unicorn.ControlPanel.config" target="content\App_Config\Include\Unicorn" />
+		<file src="Standard Config Files\Unicorn.DataProvider.config" target="content\App_Config\Include\Unicorn" />
 		<file src="bin\Releasev6\Unicorn.*" target="lib\net40" />
 	</files>
 </package>
