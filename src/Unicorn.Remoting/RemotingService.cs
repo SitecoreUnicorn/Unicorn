@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Sitecore.Collections;
 using Sitecore.Configuration;
 using Sitecore.Data;
 using Sitecore.Data.Engines;
@@ -158,8 +157,11 @@ namespace Unicorn.Remoting
 					results.Add(group.First(x=>x.Action == HistoryAction.Moved));
 				}
 
-				// todo: make this work when more sober
+				// TODO missing cases
+				throw new NotImplementedException("TODO: this should handle other cases, eg rename?");
 			}
+
+			return results;
 		}
 
 		private void Serialize(ISourceItem root, IPredicate predicate, ISerializationProvider serializationProvider, ILogger logger)
