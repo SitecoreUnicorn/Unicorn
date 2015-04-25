@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Sitecore;
 using Sitecore.Data;
 using Sitecore.Data.DataProviders;
@@ -46,7 +47,7 @@ namespace Unicorn
 			{
 				// we have to check standard serialization's disabled attribute as well,
 				// because if we do not serialization operations in the content editor will clash with ours
-				if (ItemHandler.DisabledLocally) return true; 
+				if (ItemHandler.DisabledLocally) return true;
 				return _disableSerialization;
 			}
 			set { _disableSerialization = value; }
@@ -90,7 +91,7 @@ namespace Unicorn
 			}
 		}
 
-		
+
 
 		public void MoveItem(ItemDefinition itemDefinition, ItemDefinition destination, CallContext context)
 		{
@@ -204,7 +205,8 @@ namespace Unicorn
 		protected virtual bool HasConsequentialChanges(ItemChanges changes)
 		{
 			// properties, e.g. template, etc are always consequential
-			if (changes.HasPropertiesChanged) return true;
+			// NOTE: sometimes you can get spurious 'changes' where the old and new value are the same. We reject those.
+			if (changes.HasPropertiesChanged && changes.Properties.Any(x => !x.Value.OriginalValue.Equals(x.Value.Value))) return true;
 
 			foreach (FieldChange change in changes.FieldChanges)
 			{
@@ -212,6 +214,7 @@ namespace Unicorn
 				if (change.FieldID == FieldIDs.Revision) continue;
 				if (change.FieldID == FieldIDs.Updated) continue;
 				if (change.FieldID == FieldIDs.UpdatedBy) continue;
+				if (change.FieldID == FieldIDs.Originator) continue;
 				if (!_fieldPredicate.Includes(change.FieldID).IsIncluded) continue;
 
 				return true;
@@ -226,10 +229,10 @@ namespace Unicorn
 		{
 			return GetSourceFromDefinition(definition, false);
 		}
-		
+
 		protected virtual ISourceItem GetSourceFromDefinition(ItemDefinition definition, bool useCache)
 		{
-			if(!useCache) RemoveItemFromCache(definition.ID);
+			if (!useCache) RemoveItemFromCache(definition.ID);
 			return new SitecoreSourceItem(Database.GetItem(definition.ID));
 		}
 
