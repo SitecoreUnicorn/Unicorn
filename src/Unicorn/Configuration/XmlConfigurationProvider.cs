@@ -35,7 +35,7 @@ namespace Unicorn.Configuration
 		{
 			var configNode = Factory.GetConfigNode("/sitecore/unicorn");
 
-			Assert.IsNotNull(configNode, "Root Unicorn config node not found. Missing Serialization.config?");
+			Assert.IsNotNull(configNode, "Root Unicorn config node not found. Missing Unicorn.config?");
 
 			var defaultsNode = configNode["defaults"];
 
@@ -44,7 +44,7 @@ namespace Unicorn.Configuration
 			var configurationNodes = configNode.SelectNodes("./configurations/configuration");
 
 			if (configurationNodes == null || configurationNodes.Count == 0)
-				throw new InvalidOperationException("No Unicorn configuration nodes found under unicorn/configurations/configuration. Missing Serialization.config?");
+				throw new InvalidOperationException("No Unicorn configuration nodes found under unicorn/configurations/configuration. Missing Unicorn.config?");
 
 			var configurations = new Collection<IConfiguration>();
 			foreach (XmlElement element in configurationNodes)
