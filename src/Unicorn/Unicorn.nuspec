@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <package >
   <metadata>
-    <id>$id$</id>
+    <id>Unicorn.Core</id>
     <version>$version$</version>
     <title>$title$</title>
     <authors>Kam Figy</authors>
-    <owners>Kam Figy, Connective DX</owners>
+    <owners>Kam Figy</owners>
     <licenseUrl>http://opensource.org/licenses/MIT</licenseUrl>
     <projectUrl>https://github.com/kamsar/Unicorn</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
@@ -16,10 +16,6 @@
   </metadata>
 	
 	<files>
-		<file src="Standard Config Files\Unicorn.config" target="content\App_Config\Include\Unicorn" />
-		<file src="Standard Config Files\Unicorn.AutoPublish.config" target="content\App_Config\Include\Unicorn" />
-		<file src="Standard Config Files\Unicorn.ControlPanel.config" target="content\App_Config\Include\Unicorn" />
-		<file src="Standard Config Files\Unicorn.DataProvider.config" target="content\App_Config\Include\Unicorn" />
 		<file src="bin\Releasev6\Unicorn.*" target="lib\net40" />
 	</files>
 </package>
