@@ -1,9 +1,9 @@
 ﻿using Sitecore.Data.Items;
 using Sitecore.Data.Serialization.ObjectModel;
 
-namespace Unicorn.Serialization.Sitecore.Fiat
+namespace Unicorn.Serialization.Sitecore.Formatting
 {
-	public interface IFiatDeserializerLogger
+	public interface IFiatFormatterLogger
 	{
 		void CreatedNewItem(Item targetItem);
 

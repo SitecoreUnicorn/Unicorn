@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Sitecore.Data.Serialization.ObjectModel;
 using Sitecore.Data;
 using System.Diagnostics;
+using System.Linq;
 using Unicorn.Data;
 
 namespace Unicorn.Serialization.Sitecore
@@ -114,7 +116,19 @@ namespace Unicorn.Serialization.Sitecore
 		
 		public bool IsStandardValuesItem
 		{
-			get { return _sourceProvider.IsStandardValuesItem(this); }
+			get
+			{
+				string[] array = ItemPath.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+				if (array.Length > 0)
+				{
+					if (array.Any(s => s.Equals("templates", StringComparison.OrdinalIgnoreCase)))
+					{
+						return array.Last().Equals("__Standard Values", StringComparison.OrdinalIgnoreCase);
+					}
+				}
+
+				return false;
+			}
 		}
 
 		public ISerializedItem GetItem()

@@ -61,6 +61,7 @@ namespace Unicorn.Serialization.Sitecore
 
 		private void LoadItemPath()
 		{
+			// BUG: reference to PathUtils here will be incompatible with AFS
 			var itemPath = PathUtils.MakeItemPath(ProviderId, _sourceProvider.SerializationRoot);
 
 			// this will result in a path that includes the db as its first node, e.g.

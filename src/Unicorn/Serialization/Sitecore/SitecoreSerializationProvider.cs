@@ -2,16 +2,16 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using Sitecore.Configuration;
 using Sitecore.Data.Serialization;
-using Sitecore.Data.Serialization.Exceptions;
-using Sitecore.Data.Serialization.ObjectModel;
 using Sitecore.Diagnostics;
 using Sitecore.IO;
-using Sitecore.StringExtensions;
 using Unicorn.ControlPanel;
 using Unicorn.Data;
 using Unicorn.Predicates;
+using Unicorn.Serialization.Sitecore.Formatting;
 
 namespace Unicorn.Serialization.Sitecore
 {
@@ -24,14 +24,16 @@ namespace Unicorn.Serialization.Sitecore
 		private readonly string _rootPath;
 		private readonly string _logName;
 		private readonly IPredicate _predicate;
+		private readonly ISitecoreSerializationFormatter _formatter;
 
 		/// <summary>
 		/// Default constructor
 		/// </summary>
+		/// <param name="formatter">The formatter defines the format in which serialized items are written to disk</param>
 		/// <param name="rootPath">The root serialization path to write files to. Defaults to PathUtils.RootPath if the default value (null) is passed.</param>
 		/// <param name="logName">The prefix to write log entries with. Useful if you have multiple serialization providers.</param>
 		/// <param name="predicate">The predicate to use. If null, uses Registry to look up the registered DI instance.</param>
-		public SitecoreSerializationProvider(IPredicate predicate, string rootPath = null, string logName = "UnicornItemSerialization")
+		public SitecoreSerializationProvider(IPredicate predicate, ISitecoreSerializationFormatter formatter, string rootPath = null, string logName = "UnicornItemSerialization")
 		{
 			rootPath = (rootPath == null || rootPath == "default") ? PathUtils.Root : rootPath;
 
@@ -43,6 +45,7 @@ namespace Unicorn.Serialization.Sitecore
 			Assert.ArgumentNotNull(predicate, "predicate");
 
 			_predicate = predicate;
+			_formatter = formatter;
 
 			// an unspoken expectation of the Sitecore path utils is that the serialization root is always post-fixed with the directory separator char
 			// if this is not the case, custom path resolution can result in weird sitecore path mappings
@@ -68,7 +71,8 @@ namespace Unicorn.Serialization.Sitecore
 
 			Assert.IsNotNull(sitecoreItem, "Item to serialize did not exist!");
 
-			var serializedPath = SerializationPathUtility.GetSerializedItemPath(_rootPath, item);
+
+			var serializedPath = GetSerializedItemPath(_rootPath, item);
 
 			var serializedItem = new SitecoreSerializedItem(ItemSynchronization.BuildSyncItem(sitecoreItem), serializedPath, this);
 
@@ -81,11 +85,11 @@ namespace Unicorn.Serialization.Sitecore
 		{
 			Assert.ArgumentNotNull(sourceItem, "sourceItem");
 
-			var physicalPath = SerializationPathUtility.GetSerializedReferencePath(_rootPath, sourceItem);
+			var physicalPath = GetSerializedReferencePath(_rootPath, sourceItem);
 
 			if (!Directory.Exists(physicalPath))
 			{
-				physicalPath = SerializationPathUtility.GetSerializedItemPath(_rootPath, sourceItem);
+				physicalPath = GetSerializedItemPath(_rootPath, sourceItem);
 
 				if (!File.Exists(physicalPath))
 					return null;
@@ -96,12 +100,12 @@ namespace Unicorn.Serialization.Sitecore
 
 		public virtual ISerializedItem GetItemByPath(string database, string path)
 		{
-			var physicalPath = SerializationPathUtility.GetSerializedItemPath(_rootPath, database, path);
+			var physicalPath = GetSerializedItemPath(_rootPath, database, path);
 
 			if (!File.Exists(physicalPath))
 			{
 				// check for a short-path version
-				physicalPath = SerializationPathUtility.GetShortSerializedItemPath(_rootPath, database, path);
+				physicalPath = GetShortSerializedItemPath(_rootPath, database, path);
 
 				if (!File.Exists(physicalPath))
 					return null;
@@ -116,58 +120,58 @@ namespace Unicorn.Serialization.Sitecore
 		{
 			Assert.ArgumentNotNull(parent, "parent");
 
-			var longPath = SerializationPathUtility.GetReferenceDirectoryPath(parent);
-			var shortPath = SerializationPathUtility.GetShortSerializedReferencePath(_rootPath, parent);
+			var longPath = GetReferenceDirectoryPath(parent);
+			var shortPath = GetShortSerializedReferencePath(_rootPath, parent);
 
 			Func<string, string[]> parseDirectory = path =>
+			{
+				if (!Directory.Exists(path)) return new string[0];
+
+				var resultSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+				try
 				{
-					if (!Directory.Exists(path)) return new string[0];
+					string[] files = Directory.GetFiles(path, "*" + PathUtils.Extension);
 
-					var resultSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+					foreach (var file in files)
+						resultSet.Add(file);
 
-					try
+					string[] directories = GetDirectories(path);
+
+					// add directories that aren't already ref'd indirectly by a file
+					foreach (var directory in directories)
 					{
-						string[] files = Directory.GetFiles(path, "*" + PathUtils.Extension);
+						if (CommonUtils.IsDirectoryHidden(directory)) continue;
 
-						foreach (var file in files)
-							resultSet.Add(file);
+						if (!resultSet.Contains(directory + PathUtils.Extension))
+							resultSet.Add(directory);
+					}
 
-						string[] directories = SerializationPathUtility.GetDirectories(path, this);
+					string[] resultArray = resultSet.ToArray();
 
-						// add directories that aren't already ref'd indirectly by a file
-						foreach (var directory in directories)
+					// make sure if a "templates" item exists in the current set, it goes first
+					if (resultArray.Length > 1)
+					{
+						for (int i = 1; i < resultArray.Length; i++)
 						{
-							if (CommonUtils.IsDirectoryHidden(directory)) continue;
-
-							if (!resultSet.Contains(directory + PathUtils.Extension))
-								resultSet.Add(directory);
-						}
-
-						string[] resultArray = resultSet.ToArray();
-
-						// make sure if a "templates" item exists in the current set, it goes first
-						if (resultArray.Length > 1)
-						{
-							for (int i = 1; i < resultArray.Length; i++)
+							if ("templates".Equals(Path.GetFileName(resultArray[i]), StringComparison.OrdinalIgnoreCase))
 							{
-								if ("templates".Equals(Path.GetFileName(resultArray[i]), StringComparison.OrdinalIgnoreCase))
-								{
-									string text = resultArray[0];
-									resultArray[0] = resultArray[i];
-									resultArray[i] = text;
-								}
+								string text = resultArray[0];
+								resultArray[0] = resultArray[i];
+								resultArray[i] = text;
 							}
 						}
+					}
 
-						return resultArray;
-					}
-					catch (DirectoryNotFoundException)
-					{
-						// it seems like occasionally, even though we use Directory.Exists() to make sure the parent dir exists, that when we actually call Directory.GetFiles()
-						// it throws an error that the directory does not exist during recursive deletes. If the directory does not exist, then we can safely assume no children are present.
-						return new string[0];
-					}
-				};
+					return resultArray;
+				}
+				catch (DirectoryNotFoundException)
+				{
+					// it seems like occasionally, even though we use Directory.Exists() to make sure the parent dir exists, that when we actually call Directory.GetFiles()
+					// it throws an error that the directory does not exist during recursive deletes. If the directory does not exist, then we can safely assume no children are present.
+					return new string[0];
+				}
+			};
 
 			var results = Enumerable.Concat(parseDirectory(longPath), parseDirectory(shortPath));
 
@@ -189,11 +193,11 @@ namespace Unicorn.Serialization.Sitecore
 		{
 			Assert.ArgumentNotNull(reference, "reference");
 
-			var path = SerializationPathUtility.GetReferenceItemPath(reference);
+			var path = GetReferenceItemPath(reference);
 
 			if (File.Exists(path)) return ReadItemFromDisk(path);
 
-			var shortPath = SerializationPathUtility.GetShortSerializedItemPath(_rootPath, reference);
+			var shortPath = GetShortSerializedItemPath(_rootPath, reference);
 
 			if (File.Exists(shortPath)) return ReadItemFromDisk(shortPath);
 
@@ -204,8 +208,8 @@ namespace Unicorn.Serialization.Sitecore
 		{
 			Assert.ArgumentNotNull(parent, "parent");
 
-			var path = SerializationPathUtility.GetReferenceDirectoryPath(parent);
-			var shortPath = SerializationPathUtility.GetShortSerializedReferencePath(_rootPath, parent);
+			var path = GetReferenceDirectoryPath(parent);
+			var shortPath = GetShortSerializedReferencePath(_rootPath, parent);
 
 			var fileNames = new List<string>();
 
@@ -220,48 +224,11 @@ namespace Unicorn.Serialization.Sitecore
 			return fileNames.Select(ReadItemFromDisk).ToArray();
 		}
 
-		public virtual bool IsStandardValuesItem(ISerializedItem item)
-		{
-			Assert.ArgumentNotNull(item, "item");
-
-			string[] array = item.ItemPath.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-			if (array.Length > 0)
-			{
-				if (array.Any(s => s.Equals("templates", StringComparison.OrdinalIgnoreCase)))
-				{
-					return array.Last().Equals("__Standard Values", StringComparison.OrdinalIgnoreCase);
-				}
-			}
-
-			return false;
-		}
-
 		public virtual ISourceItem DeserializeItem(ISerializedItem serializedItem, bool ignoreMissingTemplateFields)
 		{
 			Assert.ArgumentNotNull(serializedItem, "serializedItem");
 
-			var typed = serializedItem as SitecoreSerializedItem;
-
-			if (typed == null) throw new ArgumentException("Serialized item must be a SitecoreSerializedItem", "serializedItem");
-
-			try
-			{
-				var options = new LoadOptions { DisableEvents = true, ForceUpdate = true, UseNewID = false };
-
-				return new SitecoreSourceItem(ItemSynchronization.PasteSyncItem(typed.InnerItem, options, true));
-			}
-			catch (ParentItemNotFoundException ex)
-			{
-				string error = "Cannot load item from path '{0}'. Probable reason: parent item with ID '{1}' not found.".FormatWith(serializedItem.ProviderId, ex.ParentID);
-
-				throw new DeserializationException(error, ex);
-			}
-			catch (ParentForMovedItemNotFoundException ex2)
-			{
-				string error = "Item from path '{0}' cannot be moved to appropriate location. Possible reason: parent item with ID '{1}' not found.".FormatWith(serializedItem.ProviderId, ex2.ParentID);
-
-				throw new DeserializationException(error, ex2);
-			}
+			return _formatter.Deserialize(serializedItem, ignoreMissingTemplateFields);
 		}
 
 		public virtual void RenameSerializedItem(ISourceItem renamedItem, string oldName)
@@ -278,11 +245,11 @@ namespace Unicorn.Serialization.Sitecore
 			// find the children directory path of the previous item name, if it exists, and move them to the new child path
 			var oldItemPath = renamedItem.ItemPath.Substring(0, renamedItem.ItemPath.Length - renamedItem.Name.Length) + oldName;
 
-			var oldSerializedChildrenDirectoryPath = SerializationPathUtility.GetSerializedReferencePath(_rootPath, renamedItem.DatabaseName, oldItemPath);
+			var oldSerializedChildrenDirectoryPath = GetSerializedReferencePath(_rootPath, renamedItem.DatabaseName, oldItemPath);
 
 			var oldSerializedChildrenReference = new SitecoreSerializedReference(oldSerializedChildrenDirectoryPath, this);
 
-			var shortOldSerializedChildrenPath = SerializationPathUtility.GetShortSerializedReferencePath(_rootPath, oldSerializedChildrenReference);
+			var shortOldSerializedChildrenPath = GetShortSerializedReferencePath(_rootPath, oldSerializedChildrenReference);
 			var shortOldSerializedChildrenReference = new SitecoreSerializedReference(shortOldSerializedChildrenPath, this);
 
 			if (Directory.Exists(oldSerializedChildrenReference.ProviderId))
@@ -310,11 +277,11 @@ namespace Unicorn.Serialization.Sitecore
 			if (sitecoreParent == null) throw new ArgumentException("newParentItem must be a SitecoreSourceItem", "newParentItem");
 			if (sitecoreSource == null) throw new ArgumentException("sourceItem must be a SitecoreSourceItem", "sourceItem");
 
-			var oldRootDirectory = new SitecoreSerializedReference(SerializationPathUtility.GetSerializedReferencePath(_rootPath, sourceItem), this);
-			var oldRootItemPath = new SitecoreSerializedReference(SerializationPathUtility.GetReferenceItemPath(oldRootDirectory), this);
+			var oldRootDirectory = new SitecoreSerializedReference(GetSerializedReferencePath(_rootPath, sourceItem), this);
+			var oldRootItemPath = new SitecoreSerializedReference(GetReferenceItemPath(oldRootDirectory), this);
 
 			var newRootItemPath = newParentItem.ItemPath + "/" + sourceItem.Name;
-			var newRootSerializedPath = SerializationPathUtility.GetSerializedItemPath(_rootPath, newParentItem.DatabaseName, newRootItemPath);
+			var newRootSerializedPath = GetSerializedItemPath(_rootPath, newParentItem.DatabaseName, newRootItemPath);
 
 			var syncItem = ItemSynchronization.BuildSyncItem(sitecoreSource.InnerItem);
 
@@ -356,12 +323,12 @@ namespace Unicorn.Serialization.Sitecore
 			if (fileItem != null && File.Exists(fileItem.ProviderId)) File.Delete(fileItem.ProviderId);
 
 			// remove any serialized children
-			var directory = SerializationPathUtility.GetReferenceDirectoryPath(reference);
+			var directory = GetReferenceDirectoryPath(reference);
 
 			if (Directory.Exists(directory)) Directory.Delete(directory, true);
 
 			// clean up any hashpaths for this item
-			var shortDirectory = SerializationPathUtility.GetShortSerializedReferencePath(_rootPath, reference);
+			var shortDirectory = GetShortSerializedReferencePath(_rootPath, reference);
 
 			if (Directory.Exists(shortDirectory)) Directory.Delete(shortDirectory, true);
 
@@ -384,11 +351,9 @@ namespace Unicorn.Serialization.Sitecore
 		{
 			try
 			{
-				using (var reader = new StreamReader(fullPath))
+				using (var reader = File.OpenRead(fullPath))
 				{
-					var syncItem = SyncItem.ReadItem(new Tokenizer(reader), true);
-
-					return new SitecoreSerializedItem(syncItem, fullPath, this);
+					return new SitecoreSerializedItem(_formatter.Read(reader), fullPath, this);
 				}
 			}
 			catch (Exception ex)
@@ -413,7 +378,7 @@ namespace Unicorn.Serialization.Sitecore
 		protected virtual void MoveDescendants(ISerializedReference oldReference, ISerializedItem newItem, ISourceItem sourceItem, bool renaming)
 		{
 			// remove the extension from the new item's provider ID
-			string newItemReferencePath = SerializationPathUtility.GetReferenceDirectoryPath(newItem);
+			string newItemReferencePath = GetReferenceDirectoryPath(newItem);
 
 			// if the paths were the same, no moving occurs (this can happen when saving templates, which spuriously can report "renamed" when they are not actually any such thing)
 			if (oldReference.ProviderId.Equals(newItemReferencePath, StringComparison.Ordinal)) return;
@@ -437,7 +402,7 @@ namespace Unicorn.Serialization.Sitecore
 				// For moves, we re-root the path to point to the new parent item's base path to fix that before we write to disk
 				string newItemPath = (renaming) ? descendant.ItemPath : descendant.ItemPath.Replace(oldReference.ItemPath, newItem.ItemPath);
 
-				var newPhysicalPath = SerializationPathUtility.GetSerializedItemPath(_rootPath, syncItem.DatabaseName, newItemPath);
+				var newPhysicalPath = GetSerializedItemPath(_rootPath, syncItem.DatabaseName, newItemPath);
 
 				var newSerializedItem = new SitecoreSerializedItem(syncItem, newPhysicalPath, this);
 
@@ -472,7 +437,7 @@ namespace Unicorn.Serialization.Sitecore
 			if (typed == null) throw new ArgumentException("Serialized item must be a SitecoreSerializedItem", "serializedItem");
 
 			// create any requisite parent folder(s) for the serialized item
-			var parentPath = Directory.GetParent(SerializationPathUtility.GetReferenceDirectoryPath(serializedItem));
+			var parentPath = Directory.GetParent(GetReferenceDirectoryPath(serializedItem));
 			if (parentPath != null && !parentPath.Exists)
 				Directory.CreateDirectory(parentPath.FullName);
 
@@ -482,10 +447,7 @@ namespace Unicorn.Serialization.Sitecore
 
 			using (var fileStream = File.Open(serializedItem.ProviderId, FileMode.Create, FileAccess.Write, FileShare.None))
 			{
-				using (var writer = new StreamWriter(fileStream))
-				{
-					typed.InnerItem.Serialize(writer);
-				}
+				_formatter.Serialize(typed.InnerItem, fileStream);
 			}
 		}
 
@@ -527,6 +489,147 @@ namespace Unicorn.Serialization.Sitecore
 		/// The root path on disk this provider writes its files to
 		/// </summary>
 		public virtual string SerializationRoot { get { return _rootPath; } }
+
+		/// <summary>
+		/// Gets the physical path to the .item file that defines the source item. Returns the path regardless of if the item file exists.
+		/// </summary>
+		protected virtual string GetSerializedItemPath(string rootDirectory, ISourceItem sourceItem)
+		{
+			return GetSerializedReferencePath(rootDirectory, sourceItem) + PathUtils.Extension;
+		}
+
+		/// <summary>
+		/// Gets the physical path to the .item file that defines the source item. Returns the path regardless of if the item file exists.
+		/// WARNING: This overload may not work correctly with over-length paths due to a bug in Sitecore. Use the ISourceItem version whenever possible.
+		/// </summary>
+		protected virtual string GetSerializedItemPath(string rootDirectory, string database, string path)
+		{
+			return GetSerializedReferencePath(rootDirectory, database, path) + PathUtils.Extension;
+		}
+
+		/// <summary>
+		/// Gets the short path to a serialized item. Note that this means the short path of the PARENT, combined with the item name of what's passed in
+		/// </summary>
+		protected virtual string GetShortSerializedItemPath(string rootDirectory, ISerializedReference reference)
+		{
+			return GetShortSerializedItemPath(rootDirectory, reference.DatabaseName, reference.ItemPath);
+		}
+
+		/// <summary>
+		/// Gets the short path to a serialized item. Note that this means the short path of the PARENT, combined with the item name of what's passed in
+		/// </summary>
+		protected virtual string GetShortSerializedItemPath(string rootDirectory, string database, string itemPath)
+		{
+			var itemRootPath = itemPath.TrimEnd('/');
+
+			int lastDirectoryIndex = itemRootPath.LastIndexOf('/');
+			var parentItemPath = itemRootPath.Substring(0, lastDirectoryIndex);
+			var contextItemName = itemRootPath.Substring(lastDirectoryIndex + 1);
+
+			return string.Format("{0}\\{1}{2}", GetShortSerializedReferencePath(rootDirectory, database, parentItemPath), contextItemName, PathUtils.Extension);
+		}
+
+		/// <summary>
+		/// Gets the physical path to the directory that contains children of the item path/database name
+		/// </summary>
+		protected virtual string GetSerializedReferencePath(string rootDirectory, ISourceItem sourceItem)
+		{
+			var sitecoreSourceItem = sourceItem as SitecoreSourceItem;
+
+			Assert.IsNotNull(sitecoreSourceItem, "Source item must be a SitecoreSourceItem.");
+
+			// ReSharper disable PossibleNullReferenceException
+			return PathUtils.GetDirectoryPath(new ItemReference(sitecoreSourceItem.InnerItem).ToString(), rootDirectory);
+			// ReSharper restore PossibleNullReferenceException
+		}
+
+		/// <summary>
+		/// Gets the physical path to the directory that contains children of the item path/database name. Returns the path regardless of if the directory exists.
+		/// WARNING: This overload may not work correctly with over-length paths due to a bug in Sitecore. Use the ISourceItem version whenever possible.
+		/// </summary>
+		protected virtual string GetSerializedReferencePath(string rootDirectory, string database, string path)
+		{
+			return PathUtils.GetDirectoryPath(new ItemReference(database, path).ToString(), rootDirectory);
+		}
+
+		/// <summary>
+		/// Gets the shortened version of a reference path. The short path is utilized when the actual path becomes longer than the OS allows paths to be, and is based on a hash.
+		/// This method will return the short path regardless of if it exists, and will return it even for path lengths that do not require using the shortened version.
+		/// </summary>
+		protected virtual string GetShortSerializedReferencePath(string rootDirectory, ISerializedReference reference)
+		{
+			return GetShortSerializedReferencePath(rootDirectory, reference.DatabaseName, reference.ItemPath);
+		}
+
+		/// <summary>
+		/// Gets the shortened version of a reference path. The short path is utilized when the actual path becomes longer than the OS allows paths to be, and is based on a hash.
+		/// This method will return the short path regardless of if it exists, and will return it even for path lengths that do not require using the shortened version.
+		/// </summary>
+		protected virtual string GetShortSerializedReferencePath(string rootDirectory, string databaseName, string itemPath)
+		{
+			// note that wer're constructing a virtual path here and not using the ProviderId. This is because the provider ID could be a short path
+			// and if it is, we would otherwise generate an invalid short path for this item (hashing a short path instead of the full path).
+			var path = string.Format("{0}\\{1}", rootDirectory.TrimEnd('\\'), new ItemReference(databaseName, itemPath).ToString().Replace('/', '\\'));
+
+			if (!path.StartsWith(rootDirectory, StringComparison.InvariantCultureIgnoreCase))
+				throw new ArgumentException("Reference path is not under the serialization root!");
+
+			return Path.Combine(rootDirectory, GetShortPathHash(path.Substring(rootDirectory.Length)));
+		}
+
+		/// <summary>
+		/// A serialized reference might refer to a directory OR a serialized item file directly. This method makes sure we've got the directory version, if it refers to a file.
+		/// </summary>
+		protected virtual string GetReferenceDirectoryPath(ISerializedReference reference)
+		{
+			return PathUtils.StripPath(reference.ProviderId);
+		}
+
+		/// <summary>
+		/// A serialized reference might refer to a directory OR a serialized item file directly. This method makes sure we've got the item version, if it refers to a directory.
+		/// </summary>
+		protected virtual string GetReferenceItemPath(ISerializedReference reference)
+		{
+			return reference.ProviderId.EndsWith(PathUtils.Extension, StringComparison.OrdinalIgnoreCase) ? reference.ProviderId : reference.ProviderId + PathUtils.Extension;
+		}
+
+		protected virtual string[] GetDirectories(string physicalPath)
+		{
+			if (!Directory.Exists(physicalPath))
+				return new string[0];
+
+			return Directory.GetDirectories(physicalPath);
+		}
+
+		protected virtual HashAlgorithm ShortPathHashAlgorithm
+		{
+			get { return MD5.Create(); }
+		}
+
+		/// <summary>
+		/// This is an analog of the private PathUtils.GetHash() method. It is reproduced here because you cannot otherwise compute a short path for an arbitrary root path - only the default serialization path.
+		/// </summary>
+		protected virtual string GetShortPathHash(string path)
+		{
+			byte[] bytes = Encoding.UTF8.GetBytes(path.ToLowerInvariant());
+
+			ShortPathHashAlgorithm.Initialize();
+
+			byte[] hash = ShortPathHashAlgorithm.ComputeHash(bytes);
+			for (int index = 0; index < hash.Length; ++index)
+			{
+				hash[index % 4] ^= hash[index];
+			}
+
+			var stringBuilder = new StringBuilder();
+
+			for (int index = 0; index < 4; ++index)
+			{
+				stringBuilder.Append(hash[index].ToString("X" + 2));
+			}
+
+			return stringBuilder.ToString();
+		}
 
 		public virtual string FriendlyName
 		{

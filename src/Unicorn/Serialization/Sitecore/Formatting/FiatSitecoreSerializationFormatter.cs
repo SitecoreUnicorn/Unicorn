@@ -16,9 +16,10 @@ using Sitecore.Diagnostics;
 using Sitecore.Globalization;
 using Sitecore.IO;
 using Sitecore.StringExtensions;
+using Unicorn.Data;
 using Unicorn.Predicates;
 
-namespace Unicorn.Serialization.Sitecore.Fiat
+namespace Unicorn.Serialization.Sitecore.Formatting
 {
 	/// <summary>
 	/// This is a re-implementation of the way Sitecore does deserialization. Unlike the stock deserializer,
@@ -27,12 +28,12 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 	/// 
 	/// The FiatSitecoreSerializationProvider makes use of this for its deserialization routines.
 	/// </summary>
-	public class FiatDeserializer
+	public class FiatSitecoreSerializationFormatter : SitecoreSerializationFormatter
 	{
-		private readonly IFiatDeserializerLogger _logger;
+		private readonly IFiatFormatterLogger _logger;
 		private readonly IFieldPredicate _fieldPredicate;
 
-		public FiatDeserializer(IFiatDeserializerLogger logger, IFieldPredicate fieldPredicate)
+		public FiatSitecoreSerializationFormatter(IFiatFormatterLogger logger, IFieldPredicate fieldPredicate)
 		{
 			Assert.ArgumentNotNull(logger, "logger");
 			Assert.ArgumentNotNull(fieldPredicate, "fieldPredicate");
@@ -51,10 +52,15 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 		/// The pasted item.
 		/// </returns>
 		/// <exception cref="T:Sitecore.Data.Serialization.Exceptions.ParentItemNotFoundException"><c>ParentItemNotFoundException</c>.</exception><exception cref="T:System.Exception"><c>Exception</c>.</exception><exception cref="T:Sitecore.Data.Serialization.Exceptions.ParentForMovedItemNotFoundException"><c>ParentForMovedItemNotFoundException</c>.</exception>
-		public Item PasteSyncItem(SyncItem syncItem, bool ignoreMissingTemplateFields)
+		public override ISourceItem Deserialize(ISerializedItem serializedItem, bool ignoreMissingTemplateFields)
 		{
-			if (syncItem == null)
-				return null;
+			Assert.ArgumentNotNull(serializedItem, "serializedItem");
+
+			var typed = serializedItem as SitecoreSerializedItem;
+
+			if (typed == null) throw new ArgumentException("Serialized item must be a SitecoreSerializedItem", "serializedItem");
+
+			var syncItem = typed.InnerItem;
 
 			Database database = Factory.GetDatabase(syncItem.DatabaseName);
 
@@ -149,7 +155,7 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 
 				ClearCaches(targetItem.Database, targetItem.ID);
 
-				return targetItem;
+				return new SitecoreSourceItem(targetItem);
 			}
 			catch (ParentForMovedItemNotFoundException)
 			{
@@ -436,6 +442,16 @@ namespace Unicorn.Serialization.Sitecore.Fiat
 				throw new DeserializationException("Template {0} for item {1} not found".FormatWith(templateId, itemPath));
 
 			return template;
+		}
+
+		public override string FriendlyName
+		{
+			get { return "Fiat Serialization Formatter"; }
+		}
+
+		public override string Description
+		{
+			get { return "Uses standard Sitecore serialization format (.item files) but enables extended diagnostic output for deserialization."; }
 		}
 	}
 }

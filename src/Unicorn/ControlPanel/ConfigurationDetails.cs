@@ -3,6 +3,7 @@ using Unicorn.Data;
 using Unicorn.Evaluators;
 using Unicorn.Predicates;
 using Unicorn.Serialization;
+using Unicorn.Serialization.Sitecore.Formatting;
 
 namespace Unicorn.ControlPanel
 {
@@ -14,14 +15,16 @@ namespace Unicorn.ControlPanel
 		private readonly IPredicate _predicate;
 		private readonly ISerializationProvider _serializationProvider;
 		private readonly ISourceDataProvider _sourceDataProvider;
+		private readonly ISitecoreSerializationFormatter _formatter;
 		private readonly IEvaluator _evaluator;
 
-		public ConfigurationDetails(IPredicate predicate, ISerializationProvider serializationProvider, ISourceDataProvider sourceDataProvider, IEvaluator evaluator)
+		public ConfigurationDetails(IPredicate predicate, ISerializationProvider serializationProvider, ISourceDataProvider sourceDataProvider, IEvaluator evaluator, ISitecoreSerializationFormatter formatter)
 		{
 			_predicate = predicate;
 			_serializationProvider = serializationProvider;
 			_sourceDataProvider = sourceDataProvider;
 			_evaluator = evaluator;
+			_formatter = formatter;
 		}
 
 		public string ConfigurationName { get; set; }
@@ -46,6 +49,14 @@ namespace Unicorn.ControlPanel
 				"Defines how items are serialized - for example, using standard Sitecore serialization APIs, JSON to disk, XML in SQL server, etc",
 				_serializationProvider,
 				writer);
+
+			if (_formatter != null)
+			{
+				RenderType("Serialization Formatter",
+					"Defines the format the serialization provider writes serialized items with.",
+					_formatter,
+					writer);
+			}
 
 			RenderType("Source Data Provider",
 				"Defines how source data is read to compare with serialized data. Normally this is a Sitecore database.",

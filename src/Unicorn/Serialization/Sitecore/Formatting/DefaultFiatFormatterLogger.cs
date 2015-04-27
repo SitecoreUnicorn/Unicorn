@@ -4,13 +4,13 @@ using Sitecore.Data.Serialization.ObjectModel;
 using Sitecore.StringExtensions;
 using Unicorn.Logging;
 
-namespace Unicorn.Serialization.Sitecore.Fiat
+namespace Unicorn.Serialization.Sitecore.Formatting
 {
-	public class DefaultFiatDeserializerLogger : IFiatDeserializerLogger
+	public class DefaultFiatFormatterLogger : IFiatFormatterLogger
 	{
 		private readonly ILogger _logger;
 
-		public DefaultFiatDeserializerLogger(ILogger logger)
+		public DefaultFiatFormatterLogger(ILogger logger)
 		{
 			_logger = logger;
 		}

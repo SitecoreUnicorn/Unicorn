@@ -137,11 +137,11 @@
     <Compile Include="Serialization\ISerializedItemExtensions.cs" />
     <Compile Include="Data\FieldDictionary.cs" />
     <Compile Include="Data\SitecoreSourceItem.cs" />
-    <Compile Include="Serialization\Sitecore\Fiat\DefaultFiatDeserializerLogger.cs" />
-    <Compile Include="Serialization\Sitecore\Fiat\FiatDeserializer.cs" />
-    <Compile Include="Serialization\Sitecore\Fiat\FiatSitecoreSerializationProvider.cs" />
-    <Compile Include="Serialization\Sitecore\Fiat\IFiatDeserializerLogger.cs" />
-    <Compile Include="Serialization\Sitecore\SerializationPathUtility.cs" />
+    <Compile Include="Serialization\Sitecore\Formatting\DefaultFiatFormatterLogger.cs" />
+    <Compile Include="Serialization\Sitecore\Formatting\FiatSitecoreSerializationFormatter.cs" />
+    <Compile Include="Serialization\Sitecore\Formatting\IFiatFormatterLogger.cs" />
+    <Compile Include="Serialization\Sitecore\Formatting\ISitecoreSerializationFormatter.cs" />
+    <Compile Include="Serialization\Sitecore\Formatting\SitecoreSerializationFormatter.cs" />
     <Compile Include="Serialization\Sitecore\SyncItemExtensions.cs" />
     <Compile Include="Serialization\ISerializationProvider.cs" />
     <Compile Include="Serialization\ISerializedItem.cs" />
