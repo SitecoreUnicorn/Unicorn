@@ -87,11 +87,11 @@ namespace Unicorn.Serialization.Sitecore
 
 			var physicalPath = GetSerializedReferencePath(_rootPath, sourceItem);
 
-			if (!Directory.Exists(physicalPath))
+			if (!DirectoryExists(physicalPath))
 			{
 				physicalPath = GetSerializedItemPath(_rootPath, sourceItem);
 
-				if (!File.Exists(physicalPath))
+				if (!FileExists(physicalPath))
 					return null;
 			}
 
@@ -102,12 +102,12 @@ namespace Unicorn.Serialization.Sitecore
 		{
 			var physicalPath = GetSerializedItemPath(_rootPath, database, path);
 
-			if (!File.Exists(physicalPath))
+			if (!FileExists(physicalPath))
 			{
 				// check for a short-path version
 				physicalPath = GetShortSerializedItemPath(_rootPath, database, path);
 
-				if (!File.Exists(physicalPath))
+				if (physicalPath == null || !FileExists(physicalPath))
 					return null;
 			}
 
@@ -125,13 +125,13 @@ namespace Unicorn.Serialization.Sitecore
 
 			Func<string, string[]> parseDirectory = path =>
 			{
-				if (!Directory.Exists(path)) return new string[0];
+				if (path == null || !DirectoryExists(path)) return new string[0];
 
 				var resultSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
 				try
 				{
-					string[] files = Directory.GetFiles(path, "*" + PathUtils.Extension);
+					string[] files = GetChildFiles(path, "*" + PathUtils.Extension);
 
 					foreach (var file in files)
 						resultSet.Add(file);
@@ -195,11 +195,11 @@ namespace Unicorn.Serialization.Sitecore
 
 			var path = GetReferenceItemPath(reference);
 
-			if (File.Exists(path)) return ReadItemFromDisk(path);
+			if (FileExists(path)) return ReadItemFromDisk(path);
 
 			var shortPath = GetShortSerializedItemPath(_rootPath, reference);
 
-			if (File.Exists(shortPath)) return ReadItemFromDisk(shortPath);
+			if (shortPath != null && FileExists(shortPath)) return ReadItemFromDisk(shortPath);
 
 			return null;
 		}
@@ -213,13 +213,13 @@ namespace Unicorn.Serialization.Sitecore
 
 			var fileNames = new List<string>();
 
-			bool longPathExists = Directory.Exists(path);
-			bool shortPathExists = Directory.Exists(shortPath);
+			bool longPathExists = DirectoryExists(path);
+			bool shortPathExists = shortPath != null && DirectoryExists(shortPath);
 
 			if (!longPathExists && !shortPathExists) return new ISerializedItem[0];
 
-			if (longPathExists) fileNames.AddRange(Directory.GetFiles(path, "*" + PathUtils.Extension));
-			if (shortPathExists) fileNames.AddRange(Directory.GetFiles(shortPath, "*" + PathUtils.Extension));
+			if (longPathExists) fileNames.AddRange(GetChildFiles(path, "*" + PathUtils.Extension));
+			if (shortPathExists) fileNames.AddRange(GetChildFiles(shortPath, "*" + PathUtils.Extension));
 
 			return fileNames.Select(ReadItemFromDisk).ToArray();
 		}
@@ -252,10 +252,10 @@ namespace Unicorn.Serialization.Sitecore
 			var shortOldSerializedChildrenPath = GetShortSerializedReferencePath(_rootPath, oldSerializedChildrenReference);
 			var shortOldSerializedChildrenReference = new SitecoreSerializedReference(shortOldSerializedChildrenPath, this);
 
-			if (Directory.Exists(oldSerializedChildrenReference.ProviderId))
+			if (DirectoryExists(oldSerializedChildrenReference.ProviderId))
 				MoveDescendants(oldSerializedChildrenReference, updatedItem, renamedItem, true);
 
-			if (Directory.Exists(shortOldSerializedChildrenPath))
+			if (shortOldSerializedChildrenPath != null && DirectoryExists(shortOldSerializedChildrenPath))
 				MoveDescendants(shortOldSerializedChildrenReference, updatedItem, renamedItem, true);
 
 			// delete the original serialized item from pre-rename (unless the names only differ by case, in which case we'd delete the item entirely because NTFS is case insensitive!)
@@ -320,17 +320,17 @@ namespace Unicorn.Serialization.Sitecore
 
 			// kill the serialized file
 			var fileItem = reference.GetItem();
-			if (fileItem != null && File.Exists(fileItem.ProviderId)) File.Delete(fileItem.ProviderId);
+			if (fileItem != null && FileExists(fileItem.ProviderId)) DeleteFile(fileItem.ProviderId);
 
 			// remove any serialized children
 			var directory = GetReferenceDirectoryPath(reference);
 
-			if (Directory.Exists(directory)) Directory.Delete(directory, true);
+			if (DirectoryExists(directory)) DeleteDirectory(directory, true);
 
 			// clean up any hashpaths for this item
 			var shortDirectory = GetShortSerializedReferencePath(_rootPath, reference);
 
-			if (Directory.Exists(shortDirectory)) Directory.Delete(shortDirectory, true);
+			if (shortDirectory != null && DirectoryExists(shortDirectory)) DeleteDirectory(shortDirectory, true);
 
 			// clean up empty parent folder(s)
 			var parentDirectory = Directory.GetParent(directory);
@@ -385,10 +385,10 @@ namespace Unicorn.Serialization.Sitecore
 
 			// this is for renaming an item that differs only by case from the original. Because NTFS is case-insensitive the 'new parent' exists
 			// already, but it will use the old name. Not quite what we want. So we need to manually rename the folder.
-			if (oldReference.ProviderId.Equals(newItemReferencePath, StringComparison.OrdinalIgnoreCase) && Directory.Exists(oldReference.ProviderId))
+			if (oldReference.ProviderId.Equals(newItemReferencePath, StringComparison.OrdinalIgnoreCase) && DirectoryExists(oldReference.ProviderId))
 			{
-				Directory.Move(oldReference.ProviderId, oldReference.ProviderId + "_tempunicorn");
-				Directory.Move(oldReference.ProviderId + "_tempunicorn", newItemReferencePath);
+				MoveDirectory(oldReference.ProviderId, oldReference.ProviderId + "_tempunicorn");
+				MoveDirectory(oldReference.ProviderId + "_tempunicorn", newItemReferencePath);
 			}
 
 			var descendantItems = GetDescendants(sourceItem).Cast<SitecoreSourceItem>();
@@ -412,9 +412,9 @@ namespace Unicorn.Serialization.Sitecore
 			}
 
 			// remove the old children folder if it exists - as long as the original name was not a case insensitive version of this item
-			if (Directory.Exists(oldReference.ProviderId) && !oldReference.ProviderId.Equals(newItemReferencePath, StringComparison.OrdinalIgnoreCase))
+			if (DirectoryExists(oldReference.ProviderId) && !oldReference.ProviderId.Equals(newItemReferencePath, StringComparison.OrdinalIgnoreCase))
 			{
-				Directory.Delete(oldReference.ProviderId, true);
+				DeleteDirectory(oldReference.ProviderId, true);
 			}
 		}
 
@@ -443,7 +443,7 @@ namespace Unicorn.Serialization.Sitecore
 
 			// if the file already exists, delete it. Why? Because the FS is case-insensitive, if an item is renamed by case only it won't actually rename
 			// on the filesystem. Deleting it first makes sure this occurs.
-			if (File.Exists(serializedItem.ProviderId)) File.Delete(serializedItem.ProviderId);
+			if (FileExists(serializedItem.ProviderId)) DeleteFile(serializedItem.ProviderId);
 
 			using (var fileStream = File.Open(serializedItem.ProviderId, FileMode.Create, FileAccess.Write, FileShare.None))
 			{
@@ -456,10 +456,10 @@ namespace Unicorn.Serialization.Sitecore
 		/// </summary>
 		protected virtual void CleanupObsoleteShortens()
 		{
-			foreach (string directory in Directory.GetDirectories(_rootPath))
+			foreach (string directory in GetChildDirectories(_rootPath))
 			{
 				string path = FileUtil.MakePath(directory, "link");
-				if (File.Exists(path))
+				if (FileExists(path))
 				{
 					string linkContents = File.ReadAllText(path);
 
@@ -473,14 +473,14 @@ namespace Unicorn.Serialization.Sitecore
 						// clean directories with only the link file, even if the link is valid (no items exist under the link)
 						// (if the children length is 1 and we got here we know the link file exists and thus it MUST be the 1 item)
 						if (Directory.GetFileSystemEntries(directory).Length == 1)
-							Directory.Delete(directory, true);
+							DeleteDirectory(directory, true);
 					}
 				}
 				else
 				{
 					// clean empty directories
 					if (Directory.GetFileSystemEntries(directory).Length == 0)
-						Directory.Delete(directory);
+						DeleteDirectory(directory, false);
 				}
 			}
 		}
@@ -574,7 +574,7 @@ namespace Unicorn.Serialization.Sitecore
 			if (!path.StartsWith(rootDirectory, StringComparison.InvariantCultureIgnoreCase))
 				throw new ArgumentException("Reference path is not under the serialization root!");
 
-			return Path.Combine(rootDirectory, GetShortPathHash(path.Substring(rootDirectory.Length)));
+			return CombinePaths(rootDirectory, GetShortPathHash(path.Substring(rootDirectory.Length)));
 		}
 
 		/// <summary>
@@ -595,10 +595,50 @@ namespace Unicorn.Serialization.Sitecore
 
 		protected virtual string[] GetDirectories(string physicalPath)
 		{
-			if (!Directory.Exists(physicalPath))
+			if (!DirectoryExists(physicalPath))
 				return new string[0];
 
-			return Directory.GetDirectories(physicalPath);
+			return GetChildDirectories(physicalPath);
+		}
+
+		protected virtual bool DirectoryExists(string path)
+		{
+			return Directory.Exists(path);
+		}
+
+		protected virtual bool FileExists(string path)
+		{
+			return File.Exists(path);
+		}
+
+		protected virtual void DeleteFile(string path)
+		{
+			File.Delete(path);
+		}
+
+		protected virtual string[] GetChildDirectories(string path)
+		{
+			return Directory.GetDirectories(path);
+		}
+
+		protected virtual string[] GetChildFiles(string path, string filter)
+		{
+			return Directory.GetFiles(path, filter);
+		}
+
+		protected virtual string CombinePaths(string path1, string path2)
+		{
+			return Path.Combine(path1, path2);
+		}
+
+		protected virtual void DeleteDirectory(string path, bool recursive)
+		{
+			Directory.Delete(path, recursive);
+		}
+
+		protected virtual void MoveDirectory(string path, string newPath)
+		{
+			Directory.Move(path, newPath);
 		}
 
 		protected virtual HashAlgorithm ShortPathHashAlgorithm

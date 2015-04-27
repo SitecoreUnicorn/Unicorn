@@ -36,6 +36,9 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AlphaFS">
+      <HintPath>..\..\..\PGE2\packages\AlphaFS.2.0.1\lib\net45\AlphaFS.dll</HintPath>
+    </Reference>
     <Reference Include="Kamsar.WebConsole, Version=1.2.2.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\packages\Kamsar.WebConsole.1.2.2.0\lib\net40\Kamsar.WebConsole.dll</HintPath>
@@ -52,6 +55,7 @@
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Transactions" />
     <Reference Include="System.Web" />
     <Reference Include="System.Xml" />
   </ItemGroup>
@@ -142,6 +146,7 @@
     <Compile Include="Serialization\Sitecore\Formatting\IFiatFormatterLogger.cs" />
     <Compile Include="Serialization\Sitecore\Formatting\ISitecoreSerializationFormatter.cs" />
     <Compile Include="Serialization\Sitecore\Formatting\SitecoreSerializationFormatter.cs" />
+    <Compile Include="Serialization\Sitecore\LongwaveSitecoreSerializationProvider.cs" />
     <Compile Include="Serialization\Sitecore\SyncItemExtensions.cs" />
     <Compile Include="Serialization\ISerializationProvider.cs" />
     <Compile Include="Serialization\ISerializedItem.cs" />
