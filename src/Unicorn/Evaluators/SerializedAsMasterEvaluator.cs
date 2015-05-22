@@ -1,12 +1,14 @@
-﻿using System.Linq;
-using Sitecore.Data;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Gibson.Deserialization;
+using Gibson.Model;
+using Gibson.Predicates;
 using Sitecore.Diagnostics;
 using Unicorn.ControlPanel;
 using Unicorn.Data;
 using Unicorn.Logging;
 using Unicorn.Predicates;
-using Unicorn.Serialization;
-using System.Collections.Generic;
 
 namespace Unicorn.Evaluators
 {
@@ -17,25 +19,29 @@ namespace Unicorn.Evaluators
 	{
 		private readonly ISerializedAsMasterEvaluatorLogger _logger;
 		private readonly IFieldPredicate _fieldPredicate;
-		protected static readonly ID RootId = new ID("{11111111-1111-1111-1111-111111111111}");
+		private readonly ISourceDataStore _sourceDataStore;
+		private readonly IDeserializer _deserializer;
+		protected static readonly Guid RootId = new Guid("{11111111-1111-1111-1111-111111111111}");
 
-		public SerializedAsMasterEvaluator(ISerializedAsMasterEvaluatorLogger logger, IFieldPredicate fieldPredicate)
+		public SerializedAsMasterEvaluator(ISerializedAsMasterEvaluatorLogger logger, IFieldPredicate fieldPredicate, ISourceDataStore sourceDataStore, IDeserializer deserializer)
 		{
 			Assert.ArgumentNotNull(logger, "logger");
 			Assert.ArgumentNotNull(fieldPredicate, "fieldPredicate");
 
 			_logger = logger;
 			_fieldPredicate = fieldPredicate;
+			_sourceDataStore = sourceDataStore;
+			_deserializer = deserializer;
 		}
 
-		public void EvaluateOrphans(ISourceItem[] orphanItems)
+		public void EvaluateOrphans(ISerializableItem[] orphanItems)
 		{
 			Assert.ArgumentNotNull(orphanItems, "orphanItems");
 
-			EvaluatorUtility.RecycleItems(orphanItems, item => _logger.DeletedItem(item));
+			EvaluatorUtility.RecycleItems(orphanItems, _sourceDataStore, item => _logger.DeletedItem(item));
 		}
 
-		public ISourceItem EvaluateNewSerializedItem(ISerializedItem newItem)
+		public ISerializableItem EvaluateNewSerializedItem(ISerializableItem newItem)
 		{
 			Assert.ArgumentNotNull(newItem, "newItem");
 
@@ -46,7 +52,7 @@ namespace Unicorn.Evaluators
 			return updatedItem;
 		}
 
-		public ISourceItem EvaluateUpdate(ISerializedItem serializedItem, ISourceItem existingItem)
+		public ISerializableItem EvaluateUpdate(ISerializableItem serializedItem, ISerializableItem existingItem)
 		{
 			Assert.ArgumentNotNull(serializedItem, "serializedItem");
 			Assert.ArgumentNotNull(existingItem, "existingItem");
@@ -67,7 +73,7 @@ namespace Unicorn.Evaluators
 			return null;
 		}
 
-		protected virtual bool ShouldUpdateExisting(ISerializedItem serializedItem, ISourceItem existingItem, DeferredLogWriter<ISerializedAsMasterEvaluatorLogger> deferredUpdateLog)
+		protected virtual bool ShouldUpdateExisting(ISerializableItem serializedItem, ISerializableItem existingItem, DeferredLogWriter<ISerializedAsMasterEvaluatorLogger> deferredUpdateLog)
 		{
 			Assert.ArgumentNotNull(serializedItem, "serializedItem");
 			Assert.ArgumentNotNull(existingItem, "existingItem");
@@ -81,7 +87,7 @@ namespace Unicorn.Evaluators
 			if (IsNameMatch(existingItem, serializedItem, deferredUpdateLog)) return true;
 
 			// check if source has version(s) that serialized does not
-			var orphanVersions = existingItem.Versions.Where(sourceItemVersion => serializedItem.GetVersion(sourceItemVersion.Language, sourceItemVersion.VersionNumber) == null).ToArray();
+			var orphanVersions = existingItem.Versions.Where(sourceVersion => serializedItem.GetVersion(sourceVersion.Language.Name, sourceVersion.VersionNumber) == null).ToArray();
 			if (orphanVersions.Length > 0)
 			{
 				deferredUpdateLog.AddEntry(x => x.OrphanSourceVersion(existingItem, serializedItem, orphanVersions));
@@ -93,19 +99,19 @@ namespace Unicorn.Evaluators
 				return true;
 
 			// see if the serialized versions have any mismatching values in the source data
-			return serializedItem.Versions.Any(serializedItemVersion =>
+			return serializedItem.Versions.Any(serializedeVersion =>
 			{
-				var sourceItemVersion = existingItem.GetVersion(serializedItemVersion.Language, serializedItemVersion.VersionNumber);
+				var sourceISerializableVersion = existingItem.GetVersion(serializedeVersion.Language.Name, serializedeVersion.VersionNumber);
 
 				// version exists in serialized item but does not in source version
-				if (sourceItemVersion == null)
+				if (sourceISerializableVersion == null)
 				{
-					deferredUpdateLog.AddEntry(x => x.NewSerializedVersionMatch(serializedItemVersion, serializedItem, existingItem));
+					deferredUpdateLog.AddEntry(x => x.NewSerializedVersionMatch(serializedeVersion, serializedItem, existingItem));
 					return true;
 				}
 
 				// field values mismatch
-				var fieldMatch = AnyFieldMatch(serializedItemVersion.Fields, sourceItemVersion.Fields, existingItem, serializedItem, deferredUpdateLog, serializedItemVersion);
+				var fieldMatch = AnyFieldMatch(serializedeVersion.Fields, sourceISerializableVersion.Fields, existingItem, serializedItem, deferredUpdateLog, serializedeVersion);
 				if (fieldMatch) return true;
 
 				// if we get here everything matches to the best of our knowledge, so we return false (e.g. "do not update this item")
@@ -113,7 +119,7 @@ namespace Unicorn.Evaluators
 			});
 		}
 
-		protected virtual bool IsNameMatch(ISourceItem existingItem, ISerializedItem serializedItem, DeferredLogWriter<ISerializedAsMasterEvaluatorLogger> deferredUpdateLog)
+		protected virtual bool IsNameMatch(ISerializableItem existingItem, ISerializableItem serializedItem, DeferredLogWriter<ISerializedAsMasterEvaluatorLogger> deferredUpdateLog)
 		{
 			if (!serializedItem.Name.Equals(existingItem.Name))
 			{
@@ -125,9 +131,9 @@ namespace Unicorn.Evaluators
 			return false;
 		}
 
-		protected virtual bool IsTemplateMatch(ISourceItem existingItem, ISerializedItem serializedItem, DeferredLogWriter<ISerializedAsMasterEvaluatorLogger> deferredUpdateLog)
+		protected virtual bool IsTemplateMatch(ISerializableItem existingItem, ISerializableItem serializedItem, DeferredLogWriter<ISerializedAsMasterEvaluatorLogger> deferredUpdateLog)
 		{
-			if (existingItem.TemplateId == (ID) null && serializedItem.TemplateId == (ID) null) return false;
+			if (existingItem.TemplateId == default(Guid) && serializedItem.TemplateId == default(Guid)) return false;
 
 			bool match = !serializedItem.TemplateId.Equals(existingItem.TemplateId);
 			if(match)
@@ -136,45 +142,45 @@ namespace Unicorn.Evaluators
 			return match;
 		}
 
-		protected virtual bool AnyFieldMatch(FieldDictionary sourceFields, FieldDictionary targetFields, ISourceItem existingItem, ISerializedItem serializedItem, DeferredLogWriter<ISerializedAsMasterEvaluatorLogger> deferredUpdateLog, ItemVersion version = null)
+		protected virtual bool AnyFieldMatch(IEnumerable<ISerializableFieldValue> sourceFields, IEnumerable<ISerializableFieldValue> targetFields, ISerializableItem existingItem, ISerializableItem serializedItem, DeferredLogWriter<ISerializedAsMasterEvaluatorLogger> deferredUpdateLog, ISerializableVersion version = null)
 		{
 			if (sourceFields == null) return false;
+			var targetFieldIndex = targetFields.ToDictionary(x => x.FieldId);
 
 			return sourceFields.Any(x =>
 			{
-				if (!_fieldPredicate.Includes(x.Key).IsIncluded) return false;
+				if (!_fieldPredicate.Includes(x.FieldId).IsIncluded) return false;
 
-				if (!existingItem.IsFieldComparable(x.Key)) return false;
+				if (!x.IsFieldComparable()) return false;
 
-				bool isMatch = IsFieldMatch(x.Value, targetFields, x.Key);
+				bool isMatch = IsFieldMatch(x.Value, targetFieldIndex, x.FieldId);
 				if(isMatch) deferredUpdateLog.AddEntry(logger =>
 				{
-					string sourceFieldValue;
-					targetFields.TryGetValue(x.Key, out sourceFieldValue);
+					ISerializableFieldValue sourceFieldValue = targetFieldIndex[x.FieldId];
 
-					if (version == null) logger.IsSharedFieldMatch(serializedItem, x.Key, x.Value, sourceFieldValue);
-					else logger.IsVersionedFieldMatch(serializedItem, version, x.Key, x.Value, sourceFieldValue);
+					if (version == null) logger.IsSharedFieldMatch(serializedItem, x.FieldId, x.Value, sourceFieldValue.Value);
+					else logger.IsVersionedFieldMatch(serializedItem, version, x.FieldId, x.Value, sourceFieldValue.Value);
 				});
 				return isMatch;
 			});
 		}
 
-		protected virtual bool IsFieldMatch(string sourceFieldValue, FieldDictionary targetFields, string fieldId)
+		protected virtual bool IsFieldMatch(string sourceFieldValue, Dictionary<Guid, ISerializableFieldValue> targetFields, Guid fieldId)
 		{
 			// note that returning "true" means the values DO NOT MATCH EACH OTHER.
 
 			if (sourceFieldValue == null) return false;
 
 			// it's a "match" if the target item does not contain the source field
-			string targetFieldValue;
+			ISerializableFieldValue targetFieldValue;
 			if (!targetFields.TryGetValue(fieldId, out targetFieldValue)) return true;
 
-			return !sourceFieldValue.Equals(targetFieldValue);
+			return !sourceFieldValue.Equals(targetFieldValue.Value);
 		}
 
-		protected virtual ISourceItem DoDeserialization(ISerializedItem serializedItem)
+		protected virtual ISerializableItem DoDeserialization(ISerializableItem serializedItem)
 		{
-			ISourceItem updatedItem = serializedItem.Deserialize(false);
+			ISerializableItem updatedItem = _deserializer.Deserialize(serializedItem, false);
 
 			Assert.IsNotNull(updatedItem, "Do not return null from DeserializeItem() - throw an exception if an error occurs.");
 

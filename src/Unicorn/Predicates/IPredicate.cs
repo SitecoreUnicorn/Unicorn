@@ -1,5 +1,5 @@
-﻿using Unicorn.Data;
-using Unicorn.Serialization;
+﻿using Gibson.Model;
+using Gibson.Predicates;
 
 namespace Unicorn.Predicates
 {
@@ -9,8 +9,7 @@ namespace Unicorn.Predicates
 	public interface IPredicate
 	{
 		string Name { get; }
-		PredicateResult Includes(ISourceItem item);
-		PredicateResult Includes(ISerializedReference item);
+		PredicateResult Includes(ISerializableItem item);
 
 		PredicateRootPath[] GetRootPaths();
 	}

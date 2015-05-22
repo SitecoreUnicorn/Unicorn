@@ -1,4 +1,4 @@
-﻿using Unicorn.Serialization;
+﻿using Gibson.Model;
 
 namespace Unicorn.Loader
 {
@@ -8,7 +8,7 @@ namespace Unicorn.Loader
 	/// </summary>
 	public interface IConsistencyChecker
 	{
-		bool IsConsistent(ISerializedItem item);
-		void AddProcessedItem(ISerializedItem item);
+		bool IsConsistent(ISerializableItem item);
+		void AddProcessedItem(ISerializableItem item);
 	}
 }

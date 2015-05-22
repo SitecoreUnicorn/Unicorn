@@ -1,23 +1,24 @@
-﻿using Sitecore.Data.Fields;
+﻿using Gibson.Deserialization;
+using Gibson.Model;
+using Sitecore.Data;
+using Sitecore.Data.Fields;
 using Sitecore.Data.Items;
-using Sitecore.Data.Serialization.ObjectModel;
 using Sitecore.StringExtensions;
 using Unicorn.Logging;
 
-namespace Unicorn.Serialization.Sitecore.Formatting
+namespace Unicorn.Deserialization
 {
-	public class DefaultFiatFormatterLogger : IFiatFormatterLogger
+	public class DefaultDeserializerLogger : IDefaultDeserializerLogger
 	{
 		private readonly ILogger _logger;
-
-		public DefaultFiatFormatterLogger(ILogger logger)
+		public DefaultDeserializerLogger(ILogger logger)
 		{
 			_logger = logger;
 		}
 
 		public virtual void CreatedNewItem(Item targetItem)
 		{
-			
+
 		}
 
 		public virtual void MovedItemToNewParent(Item newParentItem, Item oldParentItem, Item movedItem)
@@ -37,7 +38,7 @@ namespace Unicorn.Serialization.Sitecore.Formatting
 
 		public virtual void ChangedBranchTemplate(Item targetItem, string oldBranchId)
 		{
-			
+
 		}
 
 		public virtual void ChangedTemplate(Item targetItem, TemplateItem oldTemplate)
@@ -50,32 +51,33 @@ namespace Unicorn.Serialization.Sitecore.Formatting
 			_logger.Debug("* [A] version {0}#{1}".FormatWith(newVersion.Language.Name, newVersion.Version.Number));
 		}
 
-		public virtual void SkippedMissingTemplateField(Item item, SyncField field)
+		public virtual void SkippedMissingTemplateField(Item item, ISerializableFieldValue field)
 		{
-			_logger.Warn("* Skipped field {0} because it did not exist on template {1}.".FormatWith(field.FieldName, item.TemplateName));
+			_logger.Warn("* Skipped field {0} because it did not exist on template {1}.".FormatWith(field.FieldId, item.TemplateName));
 		}
 
-		public virtual void WroteBlobStream(Item item, SyncField field)
+		public virtual void WroteBlobStream(Item item, ISerializableFieldValue field)
 		{
-			
+
 		}
 
-		public virtual void UpdatedChangedFieldValue(Item item, SyncField field, string oldValue)
+		public virtual void UpdatedChangedFieldValue(Item item, ISerializableFieldValue field, string oldValue)
 		{
-			if(item.Fields[field.FieldID].Shared)
-				_logger.Debug("* [U] {0}".FormatWith(field.FieldName));
+			var itemField = item.Fields[new ID(field.FieldId)];
+			if (itemField.Shared)
+				_logger.Debug("* [U] {0}".FormatWith(itemField.Name));
 			else
-				_logger.Debug("* [U] {0}#{1}: {2}".FormatWith(item.Language.Name, item.Version.Number, field.FieldName));
+				_logger.Debug("* [U] {0}#{1}: {2}".FormatWith(item.Language.Name, item.Version.Number, itemField.Name));
 		}
 
 		public virtual void ResetFieldThatDidNotExistInSerialized(Field field)
 		{
-			
+
 		}
 
-		public virtual void SkippedPastingIgnoredField(Item item, SyncField field)
+		public virtual void SkippedPastingIgnoredField(Item item, ISerializableFieldValue field)
 		{
-			
+
 		}
 	}
 }

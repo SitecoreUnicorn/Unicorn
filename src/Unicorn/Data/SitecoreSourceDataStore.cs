@@ -1,9 +1,13 @@
-﻿using Sitecore.Configuration;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Gibson.Model;
+using Sitecore.Configuration;
 using Sitecore.Data;
+using Sitecore.Data.Events;
 using Sitecore.Data.Serialization;
 using Sitecore.Diagnostics;
 using Sitecore.Eventing;
-using System.Collections.Generic;
 using Unicorn.ControlPanel;
 
 namespace Unicorn.Data
@@ -11,8 +15,28 @@ namespace Unicorn.Data
 	/// <summary>
 	/// Acquires source data from Sitecore. This is just fine 99.9% of the time :)
 	/// </summary>
-	public class SitecoreSourceDataProvider : ISourceDataProvider, IDocumentable
+	public class SitecoreSourceDataStore : ISourceDataStore, IDocumentable
 	{
+		public void Recycle(ISerializableItem item)
+		{
+			Assert.ArgumentNotNull(item, "item");
+
+			var database = GetDatabase(item.DatabaseName);
+			var itemId = new ID(item.Id);
+			var sitecoreItem = database.GetItem(itemId);
+
+			sitecoreItem.Recycle();
+
+			if (EventDisabler.IsActive)
+			{
+				database.Caches.ItemCache.RemoveItem(itemId);
+				database.Caches.DataCache.RemoveItemInformation(itemId);
+			}
+
+			if (database.Engines.TemplateEngine.IsTemplatePart(sitecoreItem))
+				database.Engines.TemplateEngine.Reset();
+		}
+
 		public void ResetTemplateEngine()
 		{
 			foreach (Database current in Factory.GetDatabases())
@@ -21,23 +45,22 @@ namespace Unicorn.Data
 			}
 		}
 
-		public ISourceItem GetItemById(string database, ID id)
+		public ISerializableItem GetById(string database, Guid id)
 		{
 			Assert.ArgumentNotNullOrEmpty(database, "database");
-			Assert.ArgumentNotNullOrEmpty(id, "id");
 
 			Database db = GetDatabase(database);
 
 			Assert.IsNotNull(db, "Database " + database + " did not exist!");
 
-			var dbItem = db.GetItem(id);
+			var dbItem = db.GetItem(new ID(id));
 
 			if (dbItem == null) return null;
 
-			return new SitecoreSourceItem(dbItem);
+			return new SerializableItem(dbItem);
 		}
-		
-		public ISourceItem GetItemByPath(string database, string path)
+
+		public ISerializableItem GetByPath(string database, string path)
 		{
 			Assert.ArgumentNotNullOrEmpty(database, "database");
 			Assert.ArgumentNotNullOrEmpty(path, "path");
@@ -50,7 +73,20 @@ namespace Unicorn.Data
 
 			if (dbItem == null) return null;
 
-			return new SitecoreSourceItem(dbItem);
+			return new SerializableItem(dbItem);
+		}
+
+		public ISerializableItem[] GetChildren(ISerializableItem parent)
+		{
+			Assert.ArgumentNotNull(parent, "parent");
+
+			var db = GetDatabase(parent.DatabaseName);
+
+			Assert.IsNotNull(db, "Database of item was null! Security issue?");
+
+			var item = db.GetItem(new ID(parent.Id));
+
+			return item.Children.Select(x => (ISerializableItem)new SerializableItem(x)).ToArray();
 		}
 
 		public void DeserializationComplete(string databaseName)

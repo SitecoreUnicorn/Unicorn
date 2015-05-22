@@ -1,24 +1,16 @@
-﻿using Unicorn.Data;
-using Unicorn.Serialization;
+﻿using Gibson.Model;
 
 namespace Unicorn.Pipelines.UnicornSyncComplete
 {
 	public class ChangeEntry
 	{
-		public ChangeEntry(ISerializedItem item, ChangeType type)
+		public ChangeEntry(ISerializableItem item, ChangeType type)
 		{
-			SerializedItem = item;
+			Item = item;
 			ChangeType = type;
 		}
 
-		public ChangeEntry(ISourceItem item, ChangeType type)
-		{
-			SourceItem = item;
-			ChangeType = type;
-		}
-
-		public ISerializedItem SerializedItem { get; private set; }
-		public ISourceItem SourceItem { get; private set; }
+		public ISerializableItem Item { get; private set; }
 		public ChangeType ChangeType { get; private set; }
 	}
 }

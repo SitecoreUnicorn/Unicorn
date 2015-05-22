@@ -1,21 +1,35 @@
-﻿using Sitecore.Data;
+﻿using System;
+using Gibson.Model;
 
 namespace Unicorn.Data
 {
 	/// <summary>
 	/// Gets data items from the source - e.g. Sitecore - for comparison with some serialized items
 	/// </summary>
-	public interface ISourceDataProvider
+	public interface ISourceDataStore
 	{
 		/// <summary>
 		/// Gets an item from the source data by ID
 		/// </summary>
-		ISourceItem GetItemById(string database, ID id);
+		ISerializableItem GetById(string database, Guid id);
 
 		/// <summary>
 		/// Gets an item from the source data by hierarchy path
 		/// </summary>
-		ISourceItem GetItemByPath(string database, string path);
+		ISerializableItem GetByPath(string database, string path);
+
+		/// <summary>
+		/// Gets children of an item
+		/// </summary>
+		/// <param name="parent"></param>
+		/// <returns></returns>
+		ISerializableItem[] GetChildren(ISerializableItem parent);
+
+		/// <summary>
+		/// Recycles (or deletes) an item
+		/// </summary>
+		/// <param name="item"></param>
+		void Recycle(ISerializableItem item);
 
 		/// <summary>
 		/// Signals the provider to clear its template engine after a template item has been modified.

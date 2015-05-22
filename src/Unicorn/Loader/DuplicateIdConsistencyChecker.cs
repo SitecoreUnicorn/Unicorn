@@ -1,21 +1,21 @@
 ﻿using System.Collections.Generic;
-using Unicorn.Serialization;
+using Gibson.Model;
 
 namespace Unicorn.Loader
 {
 	public class DuplicateIdConsistencyChecker : IConsistencyChecker
 	{
 		private readonly IDuplicateIdConsistencyCheckerLogger _logger;
-		private readonly Dictionary<string, ISerializedItem> _duplicateChecks = new Dictionary<string, ISerializedItem>();
+		private readonly Dictionary<string, ISerializableItem> _duplicateChecks = new Dictionary<string, ISerializableItem>();
 
 		public DuplicateIdConsistencyChecker(IDuplicateIdConsistencyCheckerLogger logger)
 		{
 			_logger = logger;
 		}
 
-		public bool IsConsistent(ISerializedItem item)
+		public bool IsConsistent(ISerializableItem item)
 		{
-			ISerializedItem duplicateItem;
+			ISerializableItem duplicateItem;
 			if(!_duplicateChecks.TryGetValue(CreateKey(item), out duplicateItem)) return true;
 
 			_logger.DuplicateFound(duplicateItem, item);
@@ -23,12 +23,12 @@ namespace Unicorn.Loader
 			return false;
 		}
 
-		public void AddProcessedItem(ISerializedItem item)
+		public void AddProcessedItem(ISerializableItem item)
 		{
 			_duplicateChecks.Add(CreateKey(item), item);
 		}
 
-		protected virtual string CreateKey(ISerializedItem item)
+		protected virtual string CreateKey(ISerializableItem item)
 		{
 			return item.Id + item.DatabaseName;
 		}

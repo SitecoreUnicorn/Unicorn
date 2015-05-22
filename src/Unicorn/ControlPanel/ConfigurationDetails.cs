@@ -1,9 +1,9 @@
 ﻿using System.Web.UI;
+using Gibson.SerializationFormatting;
+using Gibson.Storage;
 using Unicorn.Data;
 using Unicorn.Evaluators;
 using Unicorn.Predicates;
-using Unicorn.Serialization;
-using Unicorn.Serialization.Sitecore.Formatting;
 
 namespace Unicorn.ControlPanel
 {
@@ -13,15 +13,15 @@ namespace Unicorn.ControlPanel
 	public class ConfigurationDetails : IControlPanelControl
 	{
 		private readonly IPredicate _predicate;
-		private readonly ISerializationProvider _serializationProvider;
-		private readonly ISourceDataProvider _sourceDataProvider;
-		private readonly ISitecoreSerializationFormatter _formatter;
+		private readonly ISerializationStore _serializationStore;
+		private readonly ISourceDataStore _sourceDataProvider;
+		private readonly ISerializationFormatter _formatter;
 		private readonly IEvaluator _evaluator;
 
-		public ConfigurationDetails(IPredicate predicate, ISerializationProvider serializationProvider, ISourceDataProvider sourceDataProvider, IEvaluator evaluator, ISitecoreSerializationFormatter formatter)
+		public ConfigurationDetails(IPredicate predicate, ISerializationStore serializationStore, ISourceDataStore sourceDataProvider, IEvaluator evaluator, ISerializationFormatter formatter)
 		{
 			_predicate = predicate;
-			_serializationProvider = serializationProvider;
+			_serializationStore = serializationStore;
 			_sourceDataProvider = sourceDataProvider;
 			_evaluator = evaluator;
 			_formatter = formatter;
@@ -47,7 +47,7 @@ namespace Unicorn.ControlPanel
 
 			RenderType("Serialization Provider",
 				"Defines how items are serialized - for example, using standard Sitecore serialization APIs, JSON to disk, XML in SQL server, etc",
-				_serializationProvider,
+				_serializationStore,
 				writer);
 
 			if (_formatter != null)

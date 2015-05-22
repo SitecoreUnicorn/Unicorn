@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Linq;
+using Gibson.Model;
+using Gibson.Predicates;
+using Gibson.Storage;
 using Sitecore;
 using Sitecore.Data;
 using Sitecore.Data.DataProviders;
@@ -7,9 +10,7 @@ using Sitecore.Data.Items;
 using Sitecore.Data.Serialization;
 using Sitecore.Diagnostics;
 using Sitecore.Globalization;
-using Unicorn.Data;
 using Unicorn.Predicates;
-using Unicorn.Serialization;
 
 namespace Unicorn
 {
@@ -19,15 +20,15 @@ namespace Unicorn
 	/// </summary>
 	public class UnicornDataProvider
 	{
-		private readonly ISerializationProvider _serializationProvider;
+		private readonly ISerializationStore _serializationStore;
 		private readonly IPredicate _predicate;
 		private readonly IFieldPredicate _fieldPredicate;
 		private readonly IUnicornDataProviderLogger _logger;
 		private static bool _disableSerialization;
 
-		public UnicornDataProvider(ISerializationProvider serializationProvider, IPredicate predicate, IFieldPredicate fieldPredicate, IUnicornDataProviderLogger logger)
+		public UnicornDataProvider(ISerializationStore serializationStore, IPredicate predicate, IFieldPredicate fieldPredicate, IUnicornDataProviderLogger logger)
 		{
-			Assert.ArgumentNotNull(serializationProvider, "serializationProvider");
+			Assert.ArgumentNotNull(serializationStore, "serializationProvider");
 			Assert.ArgumentNotNull(predicate, "predicate");
 			Assert.ArgumentNotNull(fieldPredicate, "fieldPredicate");
 			Assert.ArgumentNotNull(logger, "logger");
@@ -35,7 +36,7 @@ namespace Unicorn
 			_logger = logger;
 			_predicate = predicate;
 			_fieldPredicate = fieldPredicate;
-			_serializationProvider = serializationProvider;
+			_serializationStore = serializationStore;
 		}
 
 		/// <summary>
@@ -81,13 +82,13 @@ namespace Unicorn
 			string oldName = changes.Renamed ? changes.Properties["name"].OriginalValue.ToString() : string.Empty;
 			if (changes.Renamed && !oldName.Equals(sourceItem.Name, StringComparison.Ordinal)) // it's a rename, in which the name actually changed (template builder will cause 'renames' for the same name!!!)
 			{
-				_serializationProvider.RenameSerializedItem(sourceItem, oldName);
-				_logger.RenamedItem(_serializationProvider.LogName, sourceItem, oldName);
+				_serializationStore.Save(sourceItem);
+				_logger.RenamedItem(_serializationStore.GetType().Name, sourceItem, oldName);
 			}
 			else if (HasConsequentialChanges(changes)) // it's a simple update - but we reject it if only inconsequential fields (last updated, revision) were changed - again, template builder FTW
 			{
-				_serializationProvider.SerializeItem(sourceItem);
-				_logger.SavedItem(_serializationProvider.LogName, sourceItem, "Saved");
+				_serializationStore.Save(sourceItem);
+				_logger.SavedItem(_serializationStore.GetType().Name, sourceItem, "Saved");
 			}
 		}
 
@@ -99,7 +100,7 @@ namespace Unicorn
 
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
 
-			var sourceItem = GetSourceFromDefinition(itemDefinition, true); // we use cache here because we want the old path present before the move
+			var sourceItem = GetSourceFromDefinition(itemDefinition); // we don't use cache here because we want the post-move path
 			var destinationItem = GetSourceFromDefinition(destination);
 
 			if (!_predicate.Includes(destinationItem).IsIncluded) // if the destination we are moving to is NOT included for serialization, we delete the existing item
@@ -108,15 +109,15 @@ namespace Unicorn
 
 				if (existingItem != null)
 				{
-					existingItem.Delete();
-					_logger.MovedItemToNonIncludedLocation(_serializationProvider.LogName, existingItem);
+					_serializationStore.Remove(existingItem.Id, existingItem.DatabaseName);
+					_logger.MovedItemToNonIncludedLocation(_serializationStore.GetType().Name, existingItem);
 				}
 
 				return;
 			}
 
-			_serializationProvider.MoveSerializedItem(sourceItem, destinationItem);
-			_logger.MovedItem(_serializationProvider.LogName, sourceItem, destinationItem);
+			_serializationStore.Save(sourceItem);
+			_logger.MovedItem(_serializationStore.GetType().Name, sourceItem, destinationItem);
 		}
 
 		public void CopyItem(ItemDefinition source, ItemDefinition destination, string copyName, ID copyId, CallContext context)
@@ -124,12 +125,12 @@ namespace Unicorn
 			if (DisableSerialization) return;
 
 			// copying is easy - all we have to do is serialize the copyID. Copied children will all result in multiple calls to CopyItem so we don't even need to worry about them.
-			var copiedItem = new SitecoreSourceItem(Database.GetItem(copyId));
+			var copiedItem = new SerializableItem(Database.GetItem(copyId));
 
 			if (!_predicate.Includes(copiedItem).IsIncluded) return; // destination parent is not in a path that we are serializing, so skip out
 
-			_serializationProvider.SerializeItem(copiedItem);
-			_logger.CopiedItem(_serializationProvider.LogName, () => GetSourceFromDefinition(source), copiedItem);
+			_serializationStore.Save(copiedItem);
+			_logger.CopiedItem(_serializationStore.GetType().Name, () => GetSourceFromDefinition(source), copiedItem);
 		}
 
 		public void AddVersion(ItemDefinition itemDefinition, VersionUri baseVersion, CallContext context)
@@ -147,12 +148,12 @@ namespace Unicorn
 
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
 
-			var existingItem = GetExistingSerializedItem(itemDefinition.ID);
+			var existingItem = GetExistingSerializedItem(itemDefinition.ID.Guid);
 
 			if (existingItem == null) return; // it was already gone or an item from a different data provider
 
-			existingItem.Delete();
-			_logger.DeletedItem(_serializationProvider.LogName, existingItem);
+			_serializationStore.Remove(existingItem.Id, existingItem.DatabaseName);
+			_logger.DeletedItem(_serializationStore.GetType().Name, existingItem);
 		}
 
 		public void RemoveVersion(ItemDefinition itemDefinition, VersionUri version, CallContext context)
@@ -181,25 +182,19 @@ namespace Unicorn
 
 			if (!_predicate.Includes(sourceItem).IsIncluded) return false; // item was not included so we get out
 
-			_serializationProvider.SerializeItem(sourceItem);
-			_logger.SavedItem(_serializationProvider.LogName, sourceItem, triggerReason);
+			_serializationStore.Save(sourceItem);
+			_logger.SavedItem(_serializationStore.GetType().Name, sourceItem, triggerReason);
 
 			return true;
 		}
 
-		protected virtual ISerializedItem GetExistingSerializedItem(ID id)
+		protected virtual ISerializableItem GetExistingSerializedItem(Guid id)
 		{
-			Assert.ArgumentNotNullOrEmpty(id, "id");
-
-			var item = Database.GetItem(id);
+			var item = Database.GetItem(new ID(id));
 
 			if (item == null) return null;
 
-			var reference = _serializationProvider.GetReference(new SitecoreSourceItem(item));
-
-			if (reference == null) return null;
-
-			return reference.GetItem();
+			return _serializationStore.GetById(item.ID.Guid, item.Database.Name);
 		}
 
 		protected virtual bool HasConsequentialChanges(ItemChanges changes)
@@ -215,37 +210,37 @@ namespace Unicorn
 				if (change.FieldID == FieldIDs.Updated) continue;
 				if (change.FieldID == FieldIDs.UpdatedBy) continue;
 				if (change.FieldID == FieldIDs.Originator) continue;
-				if (!_fieldPredicate.Includes(change.FieldID).IsIncluded) continue;
+				if (!_fieldPredicate.Includes(change.FieldID.Guid).IsIncluded) continue;
 
 				return true;
 			}
 
-			_logger.SaveRejectedAsInconsequential(_serializationProvider.LogName, changes);
+			_logger.SaveRejectedAsInconsequential(_serializationStore.GetType().Name, changes);
 
 			return false;
 		}
 
-		protected ISourceItem GetSourceFromDefinition(ItemDefinition definition)
+		protected ISerializableItem GetSourceFromDefinition(ItemDefinition definition)
 		{
 			return GetSourceFromDefinition(definition, false);
 		}
 
-		protected virtual ISourceItem GetSourceFromDefinition(ItemDefinition definition, bool useCache)
+		protected virtual ISerializableItem GetSourceFromDefinition(ItemDefinition definition, bool useCache)
 		{
 			if (!useCache) RemoveItemFromCache(definition.ID);
-			return new SitecoreSourceItem(Database.GetItem(definition.ID));
+			return new SerializableItem(Database.GetItem(definition.ID));
 		}
 
 		/// <summary>
 		/// When items are acquired from the data provider they can be stale in cache, which fouls up serializing them.
 		/// Renames and template changes are particularly vulnerable to this.
 		/// </summary>
-		protected virtual SitecoreSourceItem GetItemWithoutCache(Item item)
+		protected virtual ISerializableItem GetItemWithoutCache(Item item)
 		{
 			RemoveItemFromCache(item.ID);
 
 			// reacquire the source item after cleaning the cache
-			return new SitecoreSourceItem(item.Database.GetItem(item.ID, item.Language, item.Version));
+			return new SerializableItem(item.Database.GetItem(item.ID, item.Language, item.Version));
 		}
 
 		protected virtual void RemoveItemFromCache(ID id)

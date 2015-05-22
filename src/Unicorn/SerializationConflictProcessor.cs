@@ -2,15 +2,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Gibson.Model;
+using Gibson.Predicates;
+using Gibson.Storage;
 using Sitecore;
+using Sitecore.Data.Fields;
+using Sitecore.Data.Items;
 using Sitecore.Diagnostics;
 using Sitecore.Pipelines.Save;
-using Sitecore.Data.Items;
-using Sitecore.Data.Fields;
+using Sitecore.Web.UI.Sheer;
 using Unicorn.Configuration;
-using Unicorn.Data;
 using Unicorn.Predicates;
-using Unicorn.Serialization;
 
 namespace Unicorn
 {
@@ -66,7 +68,7 @@ namespace Unicorn
 			// no errors detected, we're good
 			if (string.IsNullOrEmpty(error)) return;
 
-			Sitecore.Web.UI.Sheer.SheerResponse.Confirm(error);
+			SheerResponse.Confirm(error);
 			args.WaitForPostBack();
 		}
 
@@ -82,25 +84,21 @@ namespace Unicorn
 
 					Assert.IsNotNull(existingItem, "Existing item {0} did not exist! This should never occur.", item.ID);
 
-					var existingSitecoreItem = new SitecoreSourceItem(existingItem);
+					var existingSitecoreItem = new SerializableItem(existingItem);
 
 					foreach (var configuration in _configurations)
 					{
 						// ignore conflicts on items that Unicorn is not managing
 						if (!configuration.Resolve<IPredicate>().Includes(existingSitecoreItem).IsIncluded) continue;
 
-						ISerializedReference serializedReference = configuration.Resolve<ISerializationProvider>().GetReference(existingSitecoreItem);
+						ISerializableItem serializedItem = configuration.Resolve<ISerializationStore>().GetById(existingSitecoreItem.Id, existingSitecoreItem.DatabaseName);
 					
-						if(serializedReference == null) continue;
-
 						// not having an existing serialized version means no possibility of conflict here
-						ISerializedItem serializedItem = serializedReference.GetItem();
-
 						if (serializedItem == null) continue;
 
 						var fieldPredicate = configuration.Resolve<IFieldPredicate>();
 
-						var fieldIssues = GetFieldSyncStatus(existingSitecoreItem, serializedItem, fieldPredicate);
+						var fieldIssues = GetFieldSyncStatus(existingItem, serializedItem, fieldPredicate);
 
 						if (fieldIssues.Count == 0) continue;
 
@@ -135,11 +133,11 @@ namespace Unicorn
 			}
 		}
 
-		private IList<FieldDesynchronization> GetFieldSyncStatus(SitecoreSourceItem item, ISerializedItem serializedItem, IFieldPredicate fieldPredicate)
+		private IList<FieldDesynchronization> GetFieldSyncStatus(Item item, ISerializableItem serializedItem, IFieldPredicate fieldPredicate)
 		{
 			var desyncs = new List<FieldDesynchronization>();
 
-			var serializedVersion = serializedItem.Versions.FirstOrDefault(x => x.VersionNumber == item.InnerItem.Version.Number && x.Language == item.InnerItem.Language.Name);
+			var serializedVersion = serializedItem.Versions.FirstOrDefault(x => x.VersionNumber == item.Version.Number && x.Language.Name == item.Language.Name);
 			
 			if (serializedVersion == null)
 			{
@@ -147,9 +145,12 @@ namespace Unicorn
 				return desyncs;
 			}
 
-			item.InnerItem.Fields.ReadAll();
+			item.Fields.ReadAll();
 
-			foreach (Field field in item.InnerItem.Fields)
+			var serializedSharedFields = serializedItem.SharedFields.ToDictionary(x => x.FieldId);
+			var serializedFields = serializedVersion.Fields.ToDictionary(x => x.FieldId);
+
+			foreach (Field field in item.Fields)
 			{
 				if (field.ID == FieldIDs.Revision || 
 					field.ID == FieldIDs.Updated || 
@@ -157,21 +158,21 @@ namespace Unicorn
 					field.ID == FieldIDs.CreatedBy || 
 					field.ID == FieldIDs.UpdatedBy ||
 					field.Type.Equals("attachment", StringComparison.OrdinalIgnoreCase) ||
-					!fieldPredicate.Includes(field.ID).IsIncluded) continue; 
+					!fieldPredicate.Includes(field.ID.Guid).IsIncluded) continue; 
 				// we're doing a data comparison here - revision, created (by), updated (by) don't matter
 				// skipping these fields allows us to ignore spurious saves the template builder makes to unchanged items being conflicts
 			
 				// find the field in the serialized item in either versioned or shared fields
-				string serializedField;
-				
-				if(!serializedVersion.Fields.TryGetValue(field.ID.ToString(), out serializedField))
-					serializedItem.SharedFields.TryGetValue(field.ID.ToString(), out serializedField);
+				ISerializableFieldValue serializedField;
+
+				if (!serializedFields.TryGetValue(field.ID.Guid, out serializedField))
+					serializedSharedFields.TryGetValue(field.ID.Guid, out serializedField);
 
 				// we ignore if the field doesn't exist in the serialized item. This is because if you added a field to a template,
 				// that does not immediately re-serialize all items based on that template so it's likely innocuous - we're not overwriting anything.
 				if (serializedField == null) continue;
 
-				if (!serializedField.Equals(field.Value, StringComparison.Ordinal))
+				if (!serializedField.Value.Equals(field.Value, StringComparison.Ordinal))
 				{
 					desyncs.Add(new FieldDesynchronization(field.Name));
 				}

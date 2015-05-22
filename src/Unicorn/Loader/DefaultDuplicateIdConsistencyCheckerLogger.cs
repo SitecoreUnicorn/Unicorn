@@ -1,6 +1,7 @@
-﻿using Sitecore.StringExtensions;
+﻿using Gibson.Model;
+using Sitecore.StringExtensions;
+using Unicorn.Data;
 using Unicorn.Logging;
-using Unicorn.Serialization;
 
 namespace Unicorn.Loader
 {
@@ -13,9 +14,9 @@ namespace Unicorn.Loader
 			_logger = logger;
 		}
 
-		public virtual void DuplicateFound(ISerializedItem existingItem, ISerializedItem duplicateItem)
+		public virtual void DuplicateFound(ISerializableItem existingItem, ISerializableItem duplicateItem)
 		{
-			_logger.Error("Duplicate serialized item IDs were detected ({0}) - this usually indicates corruption in the serialization provider data.<br>Item 1: {1}<br> Item 1 ProviderId: {2}<br>Item 2: {3}<br>Item 2 ProviderId: {4}".FormatWith(existingItem.Id, existingItem.DisplayIdentifier, existingItem.ProviderId, duplicateItem.DisplayIdentifier, duplicateItem.ProviderId));
+			_logger.Error("Duplicate serialized item IDs were detected ({0}) - this usually indicates corruption in the serialization provider data.<br>Item 1: {1}<br> Item 1 ProviderId: {2}<br>Item 2: {3}<br>Item 2 ProviderId: {4}".FormatWith(existingItem.Id, existingItem.GetDisplayIdentifier(), existingItem.SerializedItemId, duplicateItem.GetDisplayIdentifier(), duplicateItem.SerializedItemId));
 		}
 	}
 }

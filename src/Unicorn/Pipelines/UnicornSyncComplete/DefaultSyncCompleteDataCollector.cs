@@ -1,8 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using Unicorn.Data;
-using Unicorn.Serialization;
+using Gibson.Model;
 
 namespace Unicorn.Pipelines.UnicornSyncComplete
 {
@@ -13,14 +12,9 @@ namespace Unicorn.Pipelines.UnicornSyncComplete
 	{
 		private readonly Queue<ChangeEntry> _entries = new Queue<ChangeEntry>();
  
-		public void PushChangedItem(ISerializedItem serializedItem, ChangeType type)
+		public void PushChangedItem(ISerializableItem serializedItem, ChangeType type)
 		{
 			_entries.Enqueue(new ChangeEntry(serializedItem, type));
-		}
-
-		public void PushChangedItem(ISourceItem sourceItem, ChangeType type)
-		{
-			_entries.Enqueue(new ChangeEntry(sourceItem, type));
 		}
 
 		public ReadOnlyCollection<ChangeEntry> GetChanges()

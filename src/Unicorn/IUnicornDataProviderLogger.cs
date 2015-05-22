@@ -1,7 +1,6 @@
 ﻿using System;
+using Gibson.Model;
 using Sitecore.Data.Items;
-using Unicorn.Data;
-using Unicorn.Serialization;
 
 namespace Unicorn
 {
@@ -10,16 +9,16 @@ namespace Unicorn
 	/// </summary>
 	public interface IUnicornDataProviderLogger
 	{
-		void RenamedItem(string providerName, ISourceItem sourceItem, string oldName);
+		void RenamedItem(string providerName, ISerializableItem sourceItem, string oldName);
 
-		void SavedItem(string providerName, ISourceItem sourceItem, string triggerReason);
+		void SavedItem(string providerName, ISerializableItem sourceItem, string triggerReason);
 
-		void MovedItemToNonIncludedLocation(string providerName, ISerializedItem existingItem);
+		void MovedItemToNonIncludedLocation(string providerName, ISerializableItem existingItem);
 
-		void MovedItem(string providerName, ISourceItem sourceItem, ISourceItem destinationItem);
-		void CopiedItem(string providerName, Func<ISourceItem> sourceItem, ISourceItem copiedItem);
+		void MovedItem(string providerName, ISerializableItem sourceItem, ISerializableItem destinationItem);
+		void CopiedItem(string providerName, Func<ISerializableItem> sourceItem, ISerializableItem copiedItem);
 
-		void DeletedItem(string providerName, ISerializedItem existingItem);
+		void DeletedItem(string providerName, ISerializableItem existingItem);
 
 		void SaveRejectedAsInconsequential(string providerName, ItemChanges changes);
 	}

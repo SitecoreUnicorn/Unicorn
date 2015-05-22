@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Xml;
+using Gibson.Storage;
 using Sitecore.Configuration;
 using Sitecore.Diagnostics;
 using Sitecore.StringExtensions;
@@ -11,7 +12,6 @@ using Unicorn.Evaluators;
 using Unicorn.Loader;
 using Unicorn.Logging;
 using Unicorn.Predicates;
-using Unicorn.Serialization;
 
 namespace Unicorn.Configuration
 {
@@ -66,10 +66,10 @@ namespace Unicorn.Configuration
 			// these are config types we absolutely must have instances of to use Unicorn - an exception will throw if they don't exist
 			var configMapping = new Dictionary<string, Action<XmlElement, XmlElement, string, IConfiguration>>
 			{
-				{"sourceDataProvider", RegisterExpectedConfigType<ISourceDataProvider>},
+				{"sourceDataProvider", RegisterExpectedConfigType<ISourceDataStore>},
 				{"evaluator", RegisterExpectedConfigType<IEvaluator>},
 				{"predicate", RegisterExpectedConfigType<IPredicate>},
-				{"serializationProvider", RegisterExpectedConfigType<ISerializationProvider>},
+				{"serializationProvider", RegisterExpectedConfigType<ISerializationStore>},
 				{"logger", RegisterExpectedConfigType<ILogger>},
 				{"loaderLogger", RegisterExpectedConfigType<ISerializationLoaderLogger>},
 				{"loaderConsistencyChecker", RegisterExpectedConfigType<IConsistencyChecker>},

@@ -1,9 +1,9 @@
-﻿using Unicorn.Serialization;
+﻿using Gibson.Model;
 
 namespace Unicorn.Loader
 {
 	public interface IDuplicateIdConsistencyCheckerLogger
 	{
-		void DuplicateFound(ISerializedItem existingItem, ISerializedItem duplicateItem);
+		void DuplicateFound(ISerializableItem existingItem, ISerializableItem duplicateItem);
 	}
 }

@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Linq;
 using System.Web;
+using Gibson.Model;
+using Gibson.Storage;
 using Kamsar.WebConsole;
 using Sitecore.StringExtensions;
 using Unicorn.Configuration;
 using Unicorn.Data;
 using Unicorn.Logging;
 using Unicorn.Predicates;
-using Unicorn.Serialization;
 
 namespace Unicorn.ControlPanel
 {
@@ -42,24 +43,24 @@ namespace Unicorn.ControlPanel
 						logger.Info("Control Panel Reserialize: Processing Unicorn configuration " + configuration.Name);
 
 						var predicate = configuration.Resolve<IPredicate>();
-						var serializationProvider = configuration.Resolve<ISerializationProvider>();
+						var serializationStore = configuration.Resolve<ISerializationStore>();
 
 						var roots = configuration.Resolve<PredicateRootPathResolver>().GetRootSourceItems();
 
 						int index = 1;
 						foreach (var root in roots)
 						{
-							var rootReference = serializationProvider.GetReference(root);
+							var rootReference = serializationStore.GetById(root.Id, root.DatabaseName);
 							if (rootReference != null)
 							{
-								logger.Warn("[D] existing serialized items under {0}".FormatWith(rootReference.DisplayIdentifier));
-								// TODO: this doesn't really account for excluded children - it just nukes everything.
+								logger.Warn("[D] existing serialized items under {0}".FormatWith(rootReference.GetDisplayIdentifier()));
+								// this doesn't really account for excluded children - it just nukes everything.
 								// ideally it would leave excluded serialized items alone.
-								rootReference.Delete();
+								serializationStore.Remove(rootReference.Id, rootReference.DatabaseName);
 							}
 
-							logger.Info("[U] Serializing included items under root {0}".FormatWith(root.DisplayIdentifier));
-							Serialize(root, predicate, serializationProvider, logger);
+							logger.Info("[U] Serializing included items under root {0}".FormatWith(root.GetDisplayIdentifier()));
+							Serialize(root, predicate, serializationStore, logger);
 							progress.Report((int) ((index/(double) roots.Length)*100));
 							index++;
 						}
@@ -75,21 +76,21 @@ namespace Unicorn.ControlPanel
 			}
 		}
 
-		private void Serialize(ISourceItem root, IPredicate predicate, ISerializationProvider serializationProvider, ILogger logger)
+		private void Serialize(ISerializableItem root, IPredicate predicate, ISerializationStore serializationStore, ILogger logger)
 		{
 			var predicateResult = predicate.Includes(root);
 			if (predicateResult.IsIncluded)
 			{
-				serializationProvider.SerializeItem(root);
+				serializationStore.Save(root);
 
-				foreach (var child in root.Children)
+				foreach (var child in serializationStore.GetChildren(root.Id, root.DatabaseName))
 				{
-					Serialize(child, predicate, serializationProvider, logger);
+					Serialize(child, predicate, serializationStore, logger);
 				}
 			}
 			else
 			{
-				logger.Warn("[S] {0} because {1}".FormatWith(root.DisplayIdentifier, predicateResult.Justification));
+				logger.Warn("[S] {0} because {1}".FormatWith(root.GetDisplayIdentifier(), predicateResult.Justification));
 			}
 		}
 
