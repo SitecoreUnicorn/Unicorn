@@ -66,10 +66,10 @@ namespace Unicorn.Configuration
 			// these are config types we absolutely must have instances of to use Unicorn - an exception will throw if they don't exist
 			var configMapping = new Dictionary<string, Action<XmlElement, XmlElement, string, IConfiguration>>
 			{
-				{"sourceDataProvider", RegisterExpectedConfigType<ISourceDataStore>},
+				{"sourceDataStore", RegisterExpectedConfigType<ISourceDataStore>},
 				{"evaluator", RegisterExpectedConfigType<IEvaluator>},
 				{"predicate", RegisterExpectedConfigType<IPredicate>},
-				{"serializationProvider", RegisterExpectedConfigType<ISerializationStore>},
+				{"serializationStore", RegisterExpectedConfigType<ISerializationStore>},
 				{"logger", RegisterExpectedConfigType<ILogger>},
 				{"loaderLogger", RegisterExpectedConfigType<ISerializationLoaderLogger>},
 				{"loaderConsistencyChecker", RegisterExpectedConfigType<IConsistencyChecker>},

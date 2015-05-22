@@ -9,6 +9,8 @@ namespace Unicorn.Data
 		{
 			if (field == null) return false;
 
+			if (field.FieldType == null) return true; // null = "unprocessed"
+
 			return !field.FieldType.Equals("attachment", StringComparison.OrdinalIgnoreCase);
 		}
 	}

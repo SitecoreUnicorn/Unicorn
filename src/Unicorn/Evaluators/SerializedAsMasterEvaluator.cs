@@ -156,10 +156,12 @@ namespace Unicorn.Evaluators
 				bool isMatch = IsFieldMatch(x.Value, targetFieldIndex, x.FieldId);
 				if(isMatch) deferredUpdateLog.AddEntry(logger =>
 				{
-					ISerializableFieldValue sourceFieldValue = targetFieldIndex[x.FieldId];
-
-					if (version == null) logger.IsSharedFieldMatch(serializedItem, x.FieldId, x.Value, sourceFieldValue.Value);
-					else logger.IsVersionedFieldMatch(serializedItem, version, x.FieldId, x.Value, sourceFieldValue.Value);
+					ISerializableFieldValue sourceFieldValue;
+					if (targetFieldIndex.TryGetValue(x.FieldId, out sourceFieldValue))
+					{
+						if (version == null) logger.IsSharedFieldMatch(serializedItem, x.FieldId, x.Value, sourceFieldValue.Value);
+						else logger.IsVersionedFieldMatch(serializedItem, version, x.FieldId, x.Value, sourceFieldValue.Value);
+					}
 				});
 				return isMatch;
 			});

@@ -44,7 +44,7 @@ namespace Unicorn.Predicates
 
 			foreach (var include in _predicate.GetRootPaths())
 			{
-				var item = _serializationStore.GetByPath(include.Database, include.Path).ToArray();
+				var item = _serializationStore.GetByPath(include.Path, include.Database).ToArray();
 
 				if (item.Length == 1)
 				{

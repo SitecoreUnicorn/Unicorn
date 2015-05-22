@@ -44,6 +44,7 @@ namespace Unicorn.ControlPanel
 
 						var predicate = configuration.Resolve<IPredicate>();
 						var serializationStore = configuration.Resolve<ISerializationStore>();
+						var sourceStore = configuration.Resolve<ISourceDataStore>();
 
 						var roots = configuration.Resolve<PredicateRootPathResolver>().GetRootSourceItems();
 
@@ -60,7 +61,7 @@ namespace Unicorn.ControlPanel
 							}
 
 							logger.Info("[U] Serializing included items under root {0}".FormatWith(root.GetDisplayIdentifier()));
-							Serialize(root, predicate, serializationStore, logger);
+							Serialize(root, predicate, serializationStore, sourceStore, logger);
 							progress.Report((int) ((index/(double) roots.Length)*100));
 							index++;
 						}
@@ -76,16 +77,16 @@ namespace Unicorn.ControlPanel
 			}
 		}
 
-		private void Serialize(ISerializableItem root, IPredicate predicate, ISerializationStore serializationStore, ILogger logger)
+		private void Serialize(ISerializableItem root, IPredicate predicate, ISerializationStore serializationStore, ISourceDataStore sourceDataStore, ILogger logger)
 		{
 			var predicateResult = predicate.Includes(root);
 			if (predicateResult.IsIncluded)
 			{
 				serializationStore.Save(root);
 
-				foreach (var child in serializationStore.GetChildren(root.Id, root.DatabaseName))
+				foreach (var child in sourceDataStore.GetChildren(root))
 				{
-					Serialize(child, predicate, serializationStore, logger);
+					Serialize(child, predicate, serializationStore, sourceDataStore, logger);
 				}
 			}
 			else
