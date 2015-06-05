@@ -51,6 +51,7 @@ namespace Unicorn.ControlPanel
 
 			if (!Authorization.IsAllowed)
 			{
+				context.Response.AddHeader("Content-Type", "text/html");
 				controls = GetDefaultControls();
 			}
 			else
