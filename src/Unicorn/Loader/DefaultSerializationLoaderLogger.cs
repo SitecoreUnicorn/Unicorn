@@ -1,4 +1,4 @@
-﻿using Gibson.Model;
+﻿using Rainbow.Model;
 using Sitecore.StringExtensions;
 using Unicorn.Data;
 using Unicorn.Logging;

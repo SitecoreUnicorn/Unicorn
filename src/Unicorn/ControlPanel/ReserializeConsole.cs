@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Linq;
 using System.Web;
-using Gibson.Model;
-using Gibson.Storage;
+using Rainbow.Model;
+using Rainbow.Storage;
 using Kamsar.WebConsole;
 using Sitecore.StringExtensions;
 using Unicorn.Configuration;
@@ -43,7 +43,7 @@ namespace Unicorn.ControlPanel
 						logger.Info("Control Panel Reserialize: Processing Unicorn configuration " + configuration.Name);
 
 						var predicate = configuration.Resolve<IPredicate>();
-						var serializationStore = configuration.Resolve<ISerializationStore>();
+						var serializationStore = configuration.Resolve<IDataStore>();
 						var sourceStore = configuration.Resolve<ISourceDataStore>();
 
 						var roots = configuration.Resolve<PredicateRootPathResolver>().GetRootSourceItems();
@@ -77,7 +77,7 @@ namespace Unicorn.ControlPanel
 			}
 		}
 
-		private void Serialize(ISerializableItem root, IPredicate predicate, ISerializationStore serializationStore, ISourceDataStore sourceDataStore, ILogger logger)
+		private void Serialize(ISerializableItem root, IPredicate predicate, IDataStore serializationStore, ISourceDataStore sourceDataStore, ILogger logger)
 		{
 			var predicateResult = predicate.Includes(root);
 			if (predicateResult.IsIncluded)

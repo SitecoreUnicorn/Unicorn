@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Linq;
-using Gibson.Model;
-using Gibson.Predicates;
-using Gibson.Storage;
+using Rainbow.Model;
+using Rainbow.Predicates;
+using Rainbow.Storage;
+using Rainbow.Storage.Sc;
 using Sitecore;
 using Sitecore.Data;
 using Sitecore.Data.DataProviders;
@@ -20,13 +21,13 @@ namespace Unicorn
 	/// </summary>
 	public class UnicornDataProvider
 	{
-		private readonly ISerializationStore _serializationStore;
+		private readonly IDataStore _serializationStore;
 		private readonly IPredicate _predicate;
 		private readonly IFieldPredicate _fieldPredicate;
 		private readonly IUnicornDataProviderLogger _logger;
 		private static bool _disableSerialization;
 
-		public UnicornDataProvider(ISerializationStore serializationStore, IPredicate predicate, IFieldPredicate fieldPredicate, IUnicornDataProviderLogger logger)
+		public UnicornDataProvider(IDataStore serializationStore, IPredicate predicate, IFieldPredicate fieldPredicate, IUnicornDataProviderLogger logger)
 		{
 			Assert.ArgumentNotNull(serializationStore, "serializationProvider");
 			Assert.ArgumentNotNull(predicate, "predicate");

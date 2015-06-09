@@ -1,6 +1,6 @@
 ﻿using System.Web.UI;
-using Gibson.SerializationFormatting;
-using Gibson.Storage;
+using Rainbow.Formatting;
+using Rainbow.Storage;
 using Unicorn.Data;
 using Unicorn.Evaluators;
 using Unicorn.Predicates;
@@ -13,12 +13,12 @@ namespace Unicorn.ControlPanel
 	public class ConfigurationDetails : IControlPanelControl
 	{
 		private readonly IPredicate _predicate;
-		private readonly ISerializationStore _serializationStore;
+		private readonly IDataStore _serializationStore;
 		private readonly ISourceDataStore _sourceDataProvider;
 		private readonly ISerializationFormatter _formatter;
 		private readonly IEvaluator _evaluator;
 
-		public ConfigurationDetails(IPredicate predicate, ISerializationStore serializationStore, ISourceDataStore sourceDataProvider, IEvaluator evaluator, ISerializationFormatter formatter)
+		public ConfigurationDetails(IPredicate predicate, IDataStore serializationStore, ISourceDataStore sourceDataProvider, IEvaluator evaluator, ISerializationFormatter formatter)
 		{
 			_predicate = predicate;
 			_serializationStore = serializationStore;

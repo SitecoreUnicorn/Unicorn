@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Gibson.Deserialization;
-using Gibson.Model;
+using Rainbow.Model;
+using Rainbow.Storage.Sc.Deserialization;
 using Sitecore.Diagnostics;
 using Unicorn.Data;
 

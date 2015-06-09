@@ -1,4 +1,4 @@
-﻿using Gibson.Model;
+﻿using Rainbow.Model;
 
 namespace Unicorn.Pipelines.UnicornSyncComplete
 {

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-using Gibson.Model;
+using Rainbow.Model;
 
 namespace Unicorn.Data
 {

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Gibson.Model;
+using Rainbow.Model;
 using Sitecore.Diagnostics;
 using Unicorn.Data;
 

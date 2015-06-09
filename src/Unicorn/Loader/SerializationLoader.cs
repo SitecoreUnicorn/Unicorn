@@ -8,8 +8,8 @@ using Unicorn.Data;
 using Unicorn.Predicates;
 using Unicorn.Evaluators;
 using System.Diagnostics;
-using Gibson.Model;
-using Gibson.Storage;
+using Rainbow.Model;
+using Rainbow.Storage;
 
 namespace Unicorn.Loader
 {
@@ -19,14 +19,14 @@ namespace Unicorn.Loader
 	public class SerializationLoader
 	{
 		private int _itemsProcessed;
-		protected readonly ISerializationStore SerializationStore;
+		protected readonly IDataStore SerializationStore;
 		protected readonly IPredicate Predicate;
 		protected readonly IEvaluator Evaluator;
 		protected readonly ISourceDataStore SourceDataProvider;
 		protected readonly ISerializationLoaderLogger Logger;
 		protected readonly PredicateRootPathResolver PredicateRootPathResolver;
 
-		public SerializationLoader(ISerializationStore serializationStore, ISourceDataStore sourceDataProvider, IPredicate predicate, IEvaluator evaluator, ISerializationLoaderLogger logger, PredicateRootPathResolver predicateRootPathResolver)
+		public SerializationLoader(IDataStore serializationStore, ISourceDataStore sourceDataProvider, IPredicate predicate, IEvaluator evaluator, ISerializationLoaderLogger logger, PredicateRootPathResolver predicateRootPathResolver)
 		{
 			Assert.ArgumentNotNull(serializationStore, "serializationProvider");
 			Assert.ArgumentNotNull(sourceDataProvider, "sourceDataProvider");

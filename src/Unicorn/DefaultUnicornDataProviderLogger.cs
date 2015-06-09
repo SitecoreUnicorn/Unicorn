@@ -1,5 +1,5 @@
 ﻿using System;
-using Gibson.Model;
+using Rainbow.Model;
 using Sitecore.Data.Items;
 using Unicorn.Data;
 using Unicorn.Logging;

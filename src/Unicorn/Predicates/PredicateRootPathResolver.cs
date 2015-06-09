@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Gibson.Model;
-using Gibson.Storage;
+using Rainbow.Model;
+using Rainbow.Storage;
 using Sitecore.StringExtensions;
 using Unicorn.Data;
 using Unicorn.Logging;
@@ -11,11 +11,11 @@ namespace Unicorn.Predicates
 	public class PredicateRootPathResolver
 	{
 		private readonly IPredicate _predicate;
-		private readonly ISerializationStore _serializationStore;
+		private readonly IDataStore _serializationStore;
 		private readonly ISourceDataStore _sourceDataProvider;
 		private readonly ILogger _logger;
 
-		public PredicateRootPathResolver(IPredicate predicate, ISerializationStore serializationStore, ISourceDataStore sourceDataProvider, ILogger logger)
+		public PredicateRootPathResolver(IPredicate predicate, IDataStore serializationStore, ISourceDataStore sourceDataProvider, ILogger logger)
 		{
 			_predicate = predicate;
 			_serializationStore = serializationStore;

@@ -1,5 +1,5 @@
 ﻿using System;
-using Gibson.Model;
+using Rainbow.Model;
 using Unicorn.Data;
 
 namespace Unicorn.Loader

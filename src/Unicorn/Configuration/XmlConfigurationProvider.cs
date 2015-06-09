@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Xml;
-using Gibson.Storage;
+using Rainbow.Storage;
 using Sitecore.Configuration;
 using Sitecore.Diagnostics;
 using Sitecore.StringExtensions;
@@ -69,7 +69,7 @@ namespace Unicorn.Configuration
 				{"sourceDataStore", RegisterExpectedConfigType<ISourceDataStore>},
 				{"evaluator", RegisterExpectedConfigType<IEvaluator>},
 				{"predicate", RegisterExpectedConfigType<IPredicate>},
-				{"serializationStore", RegisterExpectedConfigType<ISerializationStore>},
+				{"serializationStore", RegisterExpectedConfigType<IDataStore>},
 				{"logger", RegisterExpectedConfigType<ILogger>},
 				{"loaderLogger", RegisterExpectedConfigType<ISerializationLoaderLogger>},
 				{"loaderConsistencyChecker", RegisterExpectedConfigType<IConsistencyChecker>},

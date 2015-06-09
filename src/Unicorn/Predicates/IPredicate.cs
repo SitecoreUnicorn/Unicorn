@@ -1,5 +1,5 @@
-﻿using Gibson.Model;
-using Gibson.Predicates;
+﻿using Rainbow.Model;
+using Rainbow.Predicates;
 
 namespace Unicorn.Predicates
 {

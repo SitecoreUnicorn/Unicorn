@@ -123,7 +123,10 @@
     <Compile Include="Pipelines\UnicornSyncEnd\IUnicornSyncEndProcessor.cs" />
     <Compile Include="Pipelines\UnicornSyncEnd\TriggerAutoPublishSyncedItems.cs" />
     <Compile Include="Pipelines\UnicornSyncEnd\UnicornSyncEndPipelineArgs.cs" />
+    <Compile Include="Predicates\ConfigurationFieldPredicate.cs" />
+    <Compile Include="Predicates\IFieldPredicate.cs" />
     <Compile Include="Predicates\IPredicate.cs" />
+    <Compile Include="Predicates\PredicateResult.cs" />
     <Compile Include="Predicates\PredicateRootPath.cs" />
     <Compile Include="Predicates\PredicateRootPathResolver.cs" />
     <Compile Include="Predicates\SerializationPresetPredicate.cs" />
@@ -145,9 +148,21 @@
     <None Include="Unicorn.nuspec" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Gibson\src\Gibson\Gibson.csproj">
+    <ProjectReference Include="..\..\..\Rainbow\src\Rainbow.Diff\Rainbow.Diff.csproj">
+      <Project>{a2259642-5e6b-4e80-8f48-269693a4dbe5}</Project>
+      <Name>Rainbow.Diff</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Rainbow\src\Rainbow.Storage.Sc\Rainbow.Storage.Sc.csproj">
+      <Project>{956afe8b-51cd-4d61-b8c1-bffdc749fd82}</Project>
+      <Name>Rainbow.Storage.Sc</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Rainbow\src\Rainbow.Storage.Yaml\Rainbow.Storage.Yaml.csproj">
+      <Project>{371181c9-45dc-4885-8894-43ffc235d124}</Project>
+      <Name>Rainbow.Storage.Yaml</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Rainbow\src\Rainbow\Rainbow.csproj">
       <Project>{8ff75c8b-2a9e-4d95-91ad-333071813199}</Project>
-      <Name>Gibson</Name>
+      <Name>Rainbow</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

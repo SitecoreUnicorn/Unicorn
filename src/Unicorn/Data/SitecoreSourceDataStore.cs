@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Gibson.Model;
+using Rainbow.Model;
+using Rainbow.Storage.Sc;
 using Sitecore.Configuration;
 using Sitecore.Data;
 using Sitecore.Data.Events;

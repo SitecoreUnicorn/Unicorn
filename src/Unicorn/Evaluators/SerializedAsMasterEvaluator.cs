@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Gibson.Deserialization;
-using Gibson.Model;
-using Gibson.Predicates;
+using Rainbow.Model;
+using Rainbow.Predicates;
+using Rainbow.Storage.Sc.Deserialization;
 using Sitecore.Diagnostics;
 using Unicorn.ControlPanel;
 using Unicorn.Data;
 using Unicorn.Logging;
-using Unicorn.Predicates;
 
 namespace Unicorn.Evaluators
 {

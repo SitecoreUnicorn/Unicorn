@@ -1,5 +1,5 @@
-﻿using Gibson.Deserialization;
-using Gibson.Model;
+﻿using Rainbow.Model;
+using Rainbow.Storage.Sc.Deserialization;
 using Sitecore.Data;
 using Sitecore.Data.Fields;
 using Sitecore.Data.Items;
@@ -71,11 +71,6 @@ namespace Unicorn.Deserialization
 		}
 
 		public virtual void ResetFieldThatDidNotExistInSerialized(Field field)
-		{
-
-		}
-
-		public virtual void SkippedPastingIgnoredField(Item item, ISerializableFieldValue field)
 		{
 
 		}
