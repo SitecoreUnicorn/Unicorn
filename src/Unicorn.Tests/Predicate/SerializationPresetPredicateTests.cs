@@ -1,13 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Xml;
 using Moq;
 using NUnit.Framework;
+using Rainbow.Model;
+using Rainbow.Storage;
 using Sitecore.Data;
 using Unicorn.Predicates;
-using Unicorn.Serialization;
-using Unicorn.Data;
 
 namespace Unicorn.Tests.Predicate
 {
@@ -18,18 +19,10 @@ namespace Unicorn.Tests.Predicate
 		private const string IncludedPath = "/sitecore/layout/Simulators/iPad";
 		private const string ExcludedDatabase = "fake";
 		private const string IncludedDatabase = "master";
-		private const string IncludedTemplateName = "Simulator";
-		private const string ExcludedTemplateName = "No Silverlight Support Trait";
-		private static readonly ID IncludedTemplateId = ID.NewID;
-		private static readonly ID ExcludedTemplateId = new ID("{317ADE1D-337A-464A-B7D0-06B4424FC0EA}");
-		private static readonly ID IncludedItemId = ID.NewID;
-		private static readonly ID ExcludedItemId = new ID("{E1DC505A-F86F-4C05-B409-AE2246AD3441}");
-
-		[Test]
-		public void ctor_ThrowsArgumentNullException_WhenPresetIsNull()
-		{
-			Assert.Throws<ArgumentNullException>(() => new SerializationPresetPredicate((string)null));
-		}
+		private static readonly Guid IncludedTemplateId = ID.NewID.Guid;
+		private static readonly Guid ExcludedTemplateId = new Guid("{317ADE1D-337A-464A-B7D0-06B4424FC0EA}");
+		private static readonly Guid IncludedItemId = ID.NewID.Guid;
+		private static readonly Guid ExcludedItemId = new Guid("{E1DC505A-F86F-4C05-B409-AE2246AD3441}");
 
 		[Test]
 		public void ctor_ThrowsArgumentNullException_WhenNodeIsNull()
@@ -46,7 +39,7 @@ namespace Unicorn.Tests.Predicate
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
 
-			var item = CreateTestSerializedItem(ExcludedPath.ToUpperInvariant());
+			var item = CreateTestItem(ExcludedPath.ToUpperInvariant());
 			var includes = predicate.Includes(item);
 
 			Assert.IsFalse(includes.IsIncluded, "Exclude serialized item by path failed.");
@@ -57,43 +50,10 @@ namespace Unicorn.Tests.Predicate
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
 
-			var item = CreateTestSerializedItem(ExcludedPath);
+			var item = CreateTestItem(ExcludedPath);
 			var includes = predicate.Includes(item);
 
 			Assert.IsFalse(includes.IsIncluded, "Exclude serialized item by path failed.");
-		}
-
-		[Test]
-		public void Includes_ExcludesSerializedReferenceByPath()
-		{
-			var predicate = CreateTestPredicate(CreateTestConfiguration());
-
-			var item = CreateTestSerializedReference(ExcludedPath);
-			var includes = predicate.Includes(item);
-
-			Assert.IsFalse(includes.IsIncluded, "Exclude serialized reference by path failed.");
-		}
-
-		[Test]
-		public void Includes_ExcludesSourceItemByPath()
-		{
-			var predicate = CreateTestPredicate(CreateTestConfiguration());
-
-			var item = CreateTestSourceItem(ExcludedPath);
-			var includes = predicate.Includes(item);
-
-			Assert.IsFalse(includes.IsIncluded, "Exclude source item by path failed.");
-		}
-
-		[Test]
-		public void Includes_ExcludesSourceItemByPath_WhenCaseDoesNotMatch()
-		{
-			var predicate = CreateTestPredicate(CreateTestConfiguration());
-
-			var item = CreateTestSourceItem(ExcludedPath.ToUpperInvariant());
-			var includes = predicate.Includes(item);
-
-			Assert.IsFalse(includes.IsIncluded, "Exclude source item by path failed.");
 		}
 
 		[Test]
@@ -101,7 +61,7 @@ namespace Unicorn.Tests.Predicate
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
 
-			var item = CreateTestSerializedItem(IncludedPath);
+			var item = CreateTestItem(IncludedPath);
 			var includes = predicate.Includes(item);
 
 			Assert.IsTrue(includes.IsIncluded, "Include serialized item by path failed.");
@@ -112,43 +72,10 @@ namespace Unicorn.Tests.Predicate
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
 
-			var item = CreateTestSerializedItem(IncludedPath.ToUpperInvariant());
+			var item = CreateTestItem(IncludedPath.ToUpperInvariant());
 			var includes = predicate.Includes(item);
 
 			Assert.IsTrue(includes.IsIncluded, "Include serialized item by path failed.");
-		}
-
-		[Test]
-		public void Includes_IncludesSerializedReferenceByPath()
-		{
-			var predicate = CreateTestPredicate(CreateTestConfiguration());
-
-			var item = CreateTestSerializedReference(IncludedPath);
-			var includes = predicate.Includes(item);
-
-			Assert.IsTrue(includes.IsIncluded, "Include serialized reference by path failed.");
-		}
-
-		[Test]
-		public void Includes_IncludesSourceItemByPath()
-		{
-			var predicate = CreateTestPredicate(CreateTestConfiguration());
-
-			var item = CreateTestSourceItem(IncludedPath);
-			var includes = predicate.Includes(item);
-
-			Assert.IsTrue(includes.IsIncluded, "Include source item by path failed.");
-		}
-
-		[Test]
-		public void Includes_IncludesSourceItemByPath_WhenCaseDoesNotMatch()
-		{
-			var predicate = CreateTestPredicate(CreateTestConfiguration());
-
-			var item = CreateTestSourceItem(IncludedPath.ToUpperInvariant());
-			var includes = predicate.Includes(item);
-
-			Assert.IsTrue(includes.IsIncluded, "Include source item by path failed.");
 		}
 
 		//
@@ -160,33 +87,10 @@ namespace Unicorn.Tests.Predicate
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
 
-			var item = CreateTestSerializedItem(IncludedPath, database: ExcludedDatabase);
+			var item = CreateTestItem(IncludedPath, database: ExcludedDatabase);
 			var includes = predicate.Includes(item);
 
 			Assert.IsFalse(includes.IsIncluded, "Exclude serialized item by database failed.");
-		}
-
-		[Test]
-		public void Includes_ExcludesSerializedReferenceByDatabase()
-		{
-			var predicate = CreateTestPredicate(CreateTestConfiguration());
-
-// ReSharper disable once RedundantArgumentName
-			var item = CreateTestSerializedReference(IncludedPath, database: ExcludedDatabase);
-			var includes = predicate.Includes(item);
-
-			Assert.IsFalse(includes.IsIncluded, "Exclude serialized reference by database failed.");
-		}
-
-		[Test]
-		public void Includes_ExcludesSourceItemByDatabase()
-		{
-			var predicate = CreateTestPredicate(CreateTestConfiguration());
-
-			var item = CreateTestSourceItem(IncludedPath, database: ExcludedDatabase);
-			var includes = predicate.Includes(item);
-
-			Assert.IsFalse(includes.IsIncluded, "Exclude source item by database failed.");
 		}
 
 		[Test]
@@ -194,84 +98,11 @@ namespace Unicorn.Tests.Predicate
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
 
-// ReSharper disable once RedundantArgumentDefaultValue
-			var item = CreateTestSerializedItem(IncludedPath, database: IncludedDatabase);
+			// ReSharper disable once RedundantArgumentDefaultValue
+			var item = CreateTestItem(IncludedPath, database: IncludedDatabase);
 			var includes = predicate.Includes(item);
 
 			Assert.IsTrue(includes.IsIncluded, "Include serialized item by database failed.");
-		}
-
-		[Test]
-		public void Includes_IncludesSerializedReferenceByDatabase()
-		{
-			var predicate = CreateTestPredicate(CreateTestConfiguration());
-
-// ReSharper disable once RedundantArgumentName
-// ReSharper disable once RedundantArgumentDefaultValue
-			var item = CreateTestSerializedReference(IncludedPath, database: IncludedDatabase);
-			var includes = predicate.Includes(item);
-
-			Assert.IsTrue(includes.IsIncluded, "Include serialized reference by database failed.");
-		}
-
-		[Test]
-		public void Includes_IncludesSourceItemByDatabase()
-		{
-			var predicate = CreateTestPredicate(CreateTestConfiguration());
-
-// ReSharper disable once RedundantArgumentDefaultValue
-			var item = CreateTestSourceItem(IncludedPath, database: IncludedDatabase);
-			var includes = predicate.Includes(item);
-
-			Assert.IsTrue(includes.IsIncluded, "Include source item by database failed.");
-		}
-
-		//
-		// TEMPLATE NAME INCLUSION/EXCLUSION
-		//
-
-		[Test]
-		public void Includes_ExcludesSerializedItemByTemplateName()
-		{
-			var predicate = CreateTestPredicate(CreateTestConfiguration());
-
-			var item = CreateTestSerializedItem(IncludedPath, template: ExcludedTemplateName);
-			var includes = predicate.Includes(item);
-
-			Assert.IsFalse(includes.IsIncluded, "Exclude serialized item by template name failed.");
-		}
-
-		[Test]
-		public void Includes_ExcludesSourceItemByTemplateName()
-		{
-			var predicate = CreateTestPredicate(CreateTestConfiguration());
-
-			var item = CreateTestSourceItem(IncludedPath, template: ExcludedTemplateName);
-			var includes = predicate.Includes(item);
-
-			Assert.IsFalse(includes.IsIncluded, "Exclude source item by template name failed.");
-		}
-
-		[Test]
-		public void Includes_IncludesSerializedItemByTemplateName()
-		{
-			var predicate = CreateTestPredicate(CreateTestConfiguration());
-
-			var item = CreateTestSerializedItem(IncludedPath, template: IncludedTemplateName);
-			var includes = predicate.Includes(item);
-
-			Assert.IsTrue(includes.IsIncluded, "Include serialized item by template name failed.");
-		}
-
-		[Test]
-		public void Includes_IncludesSourceItemByTemplateName()
-		{
-			var predicate = CreateTestPredicate(CreateTestConfiguration());
-
-			var item = CreateTestSourceItem(IncludedPath, template: IncludedTemplateName);
-			var includes = predicate.Includes(item);
-
-			Assert.IsTrue(includes.IsIncluded, "Include source item by template name failed.");
 		}
 
 		//
@@ -283,23 +114,11 @@ namespace Unicorn.Tests.Predicate
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
 
-// ReSharper disable once RedundantArgumentName
-			var item = CreateTestSerializedItem(IncludedPath, templateId: ExcludedTemplateId);
+			// ReSharper disable once RedundantArgumentName
+			var item = CreateTestItem(IncludedPath, templateId: ExcludedTemplateId);
 			var includes = predicate.Includes(item);
 
 			Assert.IsFalse(includes.IsIncluded, "Exclude serialized item by template ID failed.");
-		}
-
-		[Test]
-		public void Includes_ExcludesSourceItemByTemplateId()
-		{
-			var predicate = CreateTestPredicate(CreateTestConfiguration());
-
-// ReSharper disable once RedundantArgumentName
-			var item = CreateTestSourceItem(IncludedPath, templateId: ExcludedTemplateId);
-			var includes = predicate.Includes(item);
-
-			Assert.IsFalse(includes.IsIncluded, "Exclude source item by template ID failed.");
 		}
 
 		[Test]
@@ -307,23 +126,11 @@ namespace Unicorn.Tests.Predicate
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
 
-// ReSharper disable once RedundantArgumentName
-			var item = CreateTestSerializedItem(IncludedPath, templateId: IncludedTemplateId);
+			// ReSharper disable once RedundantArgumentName
+			var item = CreateTestItem(IncludedPath, templateId: IncludedTemplateId);
 			var includes = predicate.Includes(item);
 
 			Assert.IsTrue(includes.IsIncluded, "Include serialized item by template ID failed.");
-		}
-
-		[Test]
-		public void Includes_IncludesSourceItemByTemplateId()
-		{
-			var predicate = CreateTestPredicate(CreateTestConfiguration());
-
-// ReSharper disable once RedundantArgumentName
-			var item = CreateTestSourceItem(IncludedPath, templateId: IncludedTemplateId);
-			var includes = predicate.Includes(item);
-
-			Assert.IsTrue(includes.IsIncluded, "Include source item by template ID failed.");
 		}
 
 		//
@@ -335,21 +142,10 @@ namespace Unicorn.Tests.Predicate
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
 
-			var item = CreateTestSerializedItem(IncludedPath, id: ExcludedItemId);
+			var item = CreateTestItem(IncludedPath, id: ExcludedItemId);
 			var includes = predicate.Includes(item);
 
 			Assert.IsFalse(includes.IsIncluded, "Exclude serialized item by item ID failed.");
-		}
-
-		[Test]
-		public void Includes_ExcludesSourceItemByItemId()
-		{
-			var predicate = CreateTestPredicate(CreateTestConfiguration());
-
-			var item = CreateTestSourceItem(IncludedPath, id: ExcludedItemId);
-			var includes = predicate.Includes(item);
-
-			Assert.IsFalse(includes.IsIncluded, "Exclude source item by item ID failed.");
 		}
 
 		[Test]
@@ -357,32 +153,21 @@ namespace Unicorn.Tests.Predicate
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
 
-			var item = CreateTestSerializedItem(IncludedPath, id: IncludedItemId);
+			var item = CreateTestItem(IncludedPath, id: IncludedItemId);
 			var includes = predicate.Includes(item);
 
 			Assert.IsTrue(includes.IsIncluded, "Include serialized item by item ID failed.");
 		}
 
 		[Test]
-		public void Includes_IncludesSourceItemByItemId()
-		{
-			var predicate = CreateTestPredicate(CreateTestConfiguration());
-
-			var item = CreateTestSourceItem(IncludedPath, id: IncludedItemId);
-			var includes = predicate.Includes(item);
-
-			Assert.IsTrue(includes.IsIncluded, "Include source item by item ID failed.");
-		}
-
-		[Test]
 		public void GetRootItems_ReturnsExpectedRootValues()
 		{
-			var sourceItem1 = new Mock<ISourceItem>();
-			var sourceItem2 = new Mock<ISourceItem>();
+			var sourceItem1 = new Mock<ISerializableItem>();
+			var sourceItem2 = new Mock<ISerializableItem>();
 
-			var sourceDataProvider = new Mock<ISourceDataProvider>();
-			sourceDataProvider.Setup(x => x.GetItemByPath("master", "/sitecore/layout/Simulators")).Returns(sourceItem1.Object);
-			sourceDataProvider.Setup(x => x.GetItemByPath("core", "/sitecore/content")).Returns(sourceItem2.Object);
+			var sourceDataProvider = new Mock<IDataStore>();
+			sourceDataProvider.Setup(x => x.GetByPath("master", "/sitecore/layout/Simulators")).Returns(new[] { sourceItem1.Object });
+			sourceDataProvider.Setup(x => x.GetByPath("core", "/sitecore/content")).Returns(new[] { sourceItem2.Object });
 
 			var predicate = new SerializationPresetPredicate(CreateTestConfiguration());
 
@@ -395,34 +180,12 @@ namespace Unicorn.Tests.Predicate
 			Assert.AreEqual(roots[1].Path, "/sitecore/content", "Expected second root to be /sitecore/content");
 		}
 
-		private ISourceItem CreateTestSourceItem(string path, ID templateId = null, string template = "Test", ID id = null, string database = "master")
+		private ISerializableItem CreateTestItem(string path, Guid? templateId = null, Guid? id = null, string database = "master")
 		{
-			var item = new Mock<ISourceItem>();
-			item.SetupGet(x => x.ItemPath).Returns(path);
-			item.SetupGet(x => x.Id).Returns(id ?? ID.NewID);
-			item.SetupGet(x => x.TemplateName).Returns(template);
-			item.SetupGet(x => x.TemplateId).Returns(templateId ?? ID.NewID);
-			item.SetupGet(x => x.DatabaseName).Returns(database);
-
-			return item.Object;
-		}
-
-		private ISerializedItem CreateTestSerializedItem(string path, ID templateId = null, string template = "Test", ID id = null, string database = "master")
-		{
-			var item = new Mock<ISerializedItem>();
-			item.SetupGet(x => x.ItemPath).Returns(path);
-			item.SetupGet(x => x.Id).Returns(id ?? ID.NewID);
-			item.SetupGet(x => x.TemplateName).Returns(template);
-			item.SetupGet(x => x.TemplateId).Returns(templateId ?? ID.NewID);
-			item.SetupGet(x => x.DatabaseName).Returns(database);
-
-			return item.Object;
-		}
-
-		private ISerializedReference CreateTestSerializedReference(string path, string database = "master")
-		{
-			var item = new Mock<ISerializedReference>();
-			item.SetupGet(x => x.ItemPath).Returns(path);
+			var item = new Mock<ISerializableItem>();
+			item.SetupGet(x => x.Path).Returns(path);
+			item.SetupGet(x => x.Id).Returns(id ?? ID.NewID.Guid);
+			item.SetupGet(x => x.TemplateId).Returns(templateId ?? ID.NewID.Guid);
 			item.SetupGet(x => x.DatabaseName).Returns(database);
 
 			return item.Object;
@@ -437,9 +200,9 @@ namespace Unicorn.Tests.Predicate
 		{
 			var assembly = Assembly.GetExecutingAssembly();
 			string text;
-// ReSharper disable AssignNullToNotNullAttribute
+			// ReSharper disable AssignNullToNotNullAttribute
 			using (var textStreamReader = new StreamReader(assembly.GetManifestResourceStream("Unicorn.Tests.Predicate.TestConfiguration.xml")))
-// ReSharper restore AssignNullToNotNullAttribute
+			// ReSharper restore AssignNullToNotNullAttribute
 			{
 				text = textStreamReader.ReadToEnd();
 			}

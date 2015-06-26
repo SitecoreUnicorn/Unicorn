@@ -60,9 +60,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Evaluator\SerializedAsMasterEvaluatorTests.cs" />
+    <Compile Include="Configuration\MicroConfigurationTests.cs" />
+    <None Include="Evaluator\SerializedAsMasterEvaluatorTests.dis" />
     <Compile Include="Loader\DuplicateIdConsistencyCheckerTests.cs" />
-    <Compile Include="Loader\LoaderTests.cs" />
+    <None Include="Loader\LoaderTests.dis" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Predicate\SerializationPresetPredicateTests.cs" />
   </ItemGroup>

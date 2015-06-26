@@ -2,13 +2,10 @@
 using System.Linq;
 using Moq;
 using NUnit.Framework;
+using Rainbow.Model;
 using Sitecore;
 using Sitecore.Data;
-using Unicorn.Data;
 using Unicorn.Evaluators;
-using Unicorn.Predicates;
-using Unicorn.Serialization;
-using Assert = NUnit.Framework.Assert;
 
 namespace Unicorn.Tests.Evaluator
 {
@@ -26,7 +23,7 @@ namespace Unicorn.Tests.Evaluator
 		[Test]
 		public void EvaluateOrphans_RecyclesSingleOrphanItem()
 		{
-			var item = new Mock<ISourceItem>();
+			var item = new Mock<ISerializableItem>();
 			item.Setup(x => x.Recycle());
 
 			var evaluator = CreateTestEvaluator();
