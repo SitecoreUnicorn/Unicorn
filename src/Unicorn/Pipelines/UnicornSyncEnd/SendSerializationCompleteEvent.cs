@@ -1,0 +1,37 @@
+﻿using System.Linq;
+using Sitecore.Configuration;
+using Sitecore.Data;
+using Sitecore.Data.Serialization;
+using Sitecore.Diagnostics;
+using Sitecore.Eventing;
+using Unicorn.Predicates;
+
+namespace Unicorn.Pipelines.UnicornSyncEnd
+{
+	public class SendSerializationCompleteEvent : IUnicornSyncEndProcessor
+	{
+		public void Process(UnicornSyncEndPipelineArgs args)
+		{
+			var databases =	args.SyncedConfigurations.SelectMany(config => config.Resolve<IPredicate>().GetRootPaths())
+					.Select(path => path.Database)
+					.Distinct();
+
+			foreach (var database in databases)
+			{
+				DeserializationComplete(database);
+			}
+		}
+
+		protected virtual void DeserializationComplete(string databaseName)
+		{
+			Assert.ArgumentNotNullOrEmpty(databaseName, "databaseName");
+
+			EventManager.RaiseEvent(new SerializationFinishedEvent());
+			Database database = Factory.GetDatabase(databaseName, false);
+			if (database != null)
+			{
+				database.RemoteEvents.Queue.QueueEvent(new SerializationFinishedEvent());
+			}
+		}
+	}
+}
