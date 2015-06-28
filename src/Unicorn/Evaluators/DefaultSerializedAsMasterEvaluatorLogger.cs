@@ -87,7 +87,7 @@ namespace Unicorn.Evaluators
 
 		protected virtual string TryResolveItemName(string database, Guid fieldId)
 		{
-			var fieldItem = _sourceDataStore.GetById(database, fieldId);
+			var fieldItem = _sourceDataStore.GetById(fieldId, database);
 			if (fieldItem != null) return fieldItem.Name;
 
 			return fieldId.ToString();

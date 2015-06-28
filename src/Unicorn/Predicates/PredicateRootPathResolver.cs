@@ -1,25 +1,25 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Rainbow.Model;
-using Rainbow.Storage;
 using Sitecore.StringExtensions;
 using Unicorn.Data;
 using Unicorn.Logging;
 
 namespace Unicorn.Predicates
 {
+	// we'd killed IsourceDataStore. Now to fix the issues from that, and work out how we'll handle dep reg for IDataStore
 	public class PredicateRootPathResolver
 	{
 		private readonly IPredicate _predicate;
-		private readonly IDataStore _serializationStore;
-		private readonly ISourceDataStore _sourceDataProvider;
+		private readonly ITargetDataStore _targetDataStore;
+		private readonly ISourceDataStore _sourceDataStore;
 		private readonly ILogger _logger;
 
-		public PredicateRootPathResolver(IPredicate predicate, IDataStore serializationStore, ISourceDataStore sourceDataProvider, ILogger logger)
+		public PredicateRootPathResolver(IPredicate predicate, ITargetDataStore targetDataStore, ISourceDataStore sourceDataStore, ILogger logger)
 		{
 			_predicate = predicate;
-			_serializationStore = serializationStore;
-			_sourceDataProvider = sourceDataProvider;
+			_targetDataStore = targetDataStore;
+			_sourceDataStore = sourceDataStore;
 			_logger = logger;
 		}
 
@@ -29,7 +29,7 @@ namespace Unicorn.Predicates
 
 			foreach (var include in _predicate.GetRootPaths())
 			{
-				var item = _sourceDataProvider.GetByPath(include.Database, include.Path);
+				var item = _sourceDataStore.GetByPath(include.Database, include.Path).FirstOrDefault();
 
 				if (item != null) items.Add(item);
 				else _logger.Error("Unable to resolve root source item for predicate root path {0}:{1}. It has been skipped.".FormatWith(include.Database, include.Path));
@@ -44,7 +44,7 @@ namespace Unicorn.Predicates
 
 			foreach (var include in _predicate.GetRootPaths())
 			{
-				var item = _serializationStore.GetByPath(include.Path, include.Database).ToArray();
+				var item = _targetDataStore.GetByPath(include.Path, include.Database).ToArray();
 
 				if (item.Length == 1)
 				{

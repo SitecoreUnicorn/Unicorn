@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using Rainbow.Model;
 using Rainbow.Predicates;
-using Rainbow.Storage;
 using Rainbow.Storage.Sc;
 using Sitecore;
 using Sitecore.Data.Fields;
@@ -13,6 +12,7 @@ using Sitecore.Diagnostics;
 using Sitecore.Pipelines.Save;
 using Sitecore.Web.UI.Sheer;
 using Unicorn.Configuration;
+using Unicorn.Data;
 using Unicorn.Predicates;
 
 namespace Unicorn
@@ -92,7 +92,7 @@ namespace Unicorn
 						// ignore conflicts on items that Unicorn is not managing
 						if (!configuration.Resolve<IPredicate>().Includes(existingSitecoreItem).IsIncluded) continue;
 
-						ISerializableItem serializedItem = configuration.Resolve<IDataStore>().GetById(existingSitecoreItem.Id, existingSitecoreItem.DatabaseName);
+						ISerializableItem serializedItem = configuration.Resolve<ITargetDataStore>().GetById(existingSitecoreItem.Id, existingSitecoreItem.DatabaseName);
 					
 						// not having an existing serialized version means no possibility of conflict here
 						if (serializedItem == null) continue;

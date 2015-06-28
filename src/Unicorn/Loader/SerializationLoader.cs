@@ -1,15 +1,14 @@
-using Sitecore.Data;
-using Sitecore.Data.Events;
-using Sitecore.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using Unicorn.Data;
-using Unicorn.Predicates;
-using Unicorn.Evaluators;
 using System.Diagnostics;
+using System.Linq;
 using Rainbow.Model;
 using Rainbow.Storage;
+using Sitecore.Data.Events;
+using Sitecore.Diagnostics;
+using Unicorn.Data;
+using Unicorn.Evaluators;
+using Unicorn.Predicates;
 
 namespace Unicorn.Loader
 {
@@ -19,17 +18,17 @@ namespace Unicorn.Loader
 	public class SerializationLoader
 	{
 		private int _itemsProcessed;
-		protected readonly IDataStore SerializationStore;
+		protected readonly ITargetDataStore TargetDataStore;
 		protected readonly IPredicate Predicate;
 		protected readonly IEvaluator Evaluator;
-		protected readonly ISourceDataStore SourceDataProvider;
+		protected readonly ISourceDataStore SourceDataStore;
 		protected readonly ISerializationLoaderLogger Logger;
 		protected readonly PredicateRootPathResolver PredicateRootPathResolver;
 
-		public SerializationLoader(IDataStore serializationStore, ISourceDataStore sourceDataProvider, IPredicate predicate, IEvaluator evaluator, ISerializationLoaderLogger logger, PredicateRootPathResolver predicateRootPathResolver)
+		public SerializationLoader(ITargetDataStore targetDataStore, ISourceDataStore sourceDataStore, IPredicate predicate, IEvaluator evaluator, ISerializationLoaderLogger logger, PredicateRootPathResolver predicateRootPathResolver)
 		{
-			Assert.ArgumentNotNull(serializationStore, "serializationProvider");
-			Assert.ArgumentNotNull(sourceDataProvider, "sourceDataProvider");
+			Assert.ArgumentNotNull(targetDataStore, "serializationProvider");
+			Assert.ArgumentNotNull(sourceDataStore, "sourceDataStore");
 			Assert.ArgumentNotNull(predicate, "predicate");
 			Assert.ArgumentNotNull(evaluator, "evaluator");
 			Assert.ArgumentNotNull(logger, "logger");
@@ -39,8 +38,8 @@ namespace Unicorn.Loader
 			PredicateRootPathResolver = predicateRootPathResolver;
 			Evaluator = evaluator;
 			Predicate = predicate;
-			SerializationStore = serializationStore;
-			SourceDataProvider = sourceDataProvider;
+			TargetDataStore = targetDataStore;
+			SourceDataStore = sourceDataStore;
 		}
 
 		/// <summary>
@@ -68,9 +67,7 @@ namespace Unicorn.Loader
 				}
 			}
 			
-			retryer.RetryAll(SourceDataProvider, item => DoLoadItem(item, null), item => LoadTreeRecursive(item, retryer, null));
-
-			SourceDataProvider.DeserializationComplete(rootItems[0].DatabaseName);
+			retryer.RetryAll(SourceDataStore, item => DoLoadItem(item, null), item => LoadTreeRecursive(item, retryer, null));
 		}
 
 		/// <summary>
@@ -111,7 +108,7 @@ namespace Unicorn.Loader
 			var included = Predicate.Includes(root);
 			if (!included.IsIncluded)
 			{
-				Logger.SkippedItemPresentInSerializationProvider(root, Predicate.GetType().Name, SerializationStore.GetType().Name, included.Justification ?? string.Empty);
+				Logger.SkippedItemPresentInSerializationProvider(root, Predicate.GetType().Name, TargetDataStore.GetType().Name, included.Justification ?? string.Empty);
 				return;
 			}
 
@@ -121,7 +118,7 @@ namespace Unicorn.Loader
 				LoadOneLevel(root, retryer, consistencyChecker);
 
 				// check if we have child paths to recurse down
-				var children = SerializationStore.GetChildren(root.Id, root.DatabaseName).ToArray();
+				var children = TargetDataStore.GetChildren(root.Id, root.DatabaseName).ToArray();
 
 				if (children.Length > 0)
 				{
@@ -169,12 +166,12 @@ namespace Unicorn.Loader
 			var orphanCandidates = new Dictionary<Guid, ISerializableItem>();
 
 			// get the corresponding item from Sitecore
-			ISerializableItem rootSourceItem = SourceDataProvider.GetById(rootSerializedItem.DatabaseName, rootSerializedItem.Id);
+			ISerializableItem rootSourceItem = SourceDataStore.GetById(rootSerializedItem.Id, rootSerializedItem.DatabaseName);
 
 			// we add all of the root item's direct children to the "maybe orphan" list (we'll remove them as we find matching serialized children)
 			if (rootSourceItem != null)
 			{
-				var rootSourceChildren = SourceDataProvider.GetChildren(rootSourceItem);
+				var rootSourceChildren = SourceDataStore.GetChildren(rootSourceItem.Id, rootSourceItem.DatabaseName);
 				foreach (ISerializableItem child in rootSourceChildren)
 				{
 					// if the preset includes the child add it to the orphan-candidate list (if we don't deserialize it below, it will be marked orphan)
@@ -189,7 +186,7 @@ namespace Unicorn.Loader
 			}
 
 			// check for direct children of the target path
-			var serializedChildren = SerializationStore.GetChildren(rootSerializedItem.Id, rootSerializedItem.DatabaseName);
+			var serializedChildren = TargetDataStore.GetChildren(rootSerializedItem.Id, rootSerializedItem.DatabaseName);
 			foreach (var serializedChild in serializedChildren)
 			{
 				try
@@ -209,11 +206,11 @@ namespace Unicorn.Loader
 
 							// check if we have any child serialized items under this loaded child item (existing children) -
 							// if we do not, we can orphan any included children of the loaded item as well
-							var loadedItemSerializedChildren = SerializationStore.GetChildren(serializedChild.Id, serializedChild.DatabaseName);
+							var loadedItemSerializedChildren = TargetDataStore.GetChildren(serializedChild.Id, serializedChild.DatabaseName);
 
 							if (!loadedItemSerializedChildren.Any()) // no children were serialized on disk
 							{
-								var loadedSourceChildren = SourceDataProvider.GetChildren(loadedSourceItem.Item);
+								var loadedSourceChildren = SourceDataStore.GetChildren(loadedSourceItem.Item.Id, loadedSourceItem.Item.DatabaseName);
 								foreach (ISerializableItem loadedSourceChild in loadedSourceChildren)
 								{
 									// place any included source children on the orphan list for deletion, as no serialized children existed
@@ -280,12 +277,12 @@ namespace Unicorn.Loader
 
 				if (!included.IsIncluded)
 				{
-					Logger.SkippedItemPresentInSerializationProvider(serializedItem, Predicate.GetType().Name, SerializationStore.GetType().Name, included.Justification ?? string.Empty);
+					Logger.SkippedItemPresentInSerializationProvider(serializedItem, Predicate.GetType().Name, TargetDataStore.GetType().Name, included.Justification ?? string.Empty);
 					return new ItemLoadResult(ItemLoadStatus.Skipped);
 				}
 
 				// detect if we should run an update for the item or if it's already up to date
-				var existingItem = SourceDataProvider.GetById(serializedItem.DatabaseName, serializedItem.Id);
+				var existingItem = SourceDataStore.GetById(serializedItem.Id, serializedItem.DatabaseName);
 				ISerializableItem updatedItem;
 
 				// note that the evaluator is responsible for actual action being taken here

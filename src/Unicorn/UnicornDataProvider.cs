@@ -11,6 +11,7 @@ using Sitecore.Data.Items;
 using Sitecore.Data.Serialization;
 using Sitecore.Diagnostics;
 using Sitecore.Globalization;
+using Unicorn.Data;
 using Unicorn.Predicates;
 
 namespace Unicorn
@@ -21,15 +22,15 @@ namespace Unicorn
 	/// </summary>
 	public class UnicornDataProvider
 	{
-		private readonly IDataStore _serializationStore;
+		private readonly ITargetDataStore _targetDataStore;
 		private readonly IPredicate _predicate;
 		private readonly IFieldPredicate _fieldPredicate;
 		private readonly IUnicornDataProviderLogger _logger;
 		private static bool _disableSerialization;
 
-		public UnicornDataProvider(IDataStore serializationStore, IPredicate predicate, IFieldPredicate fieldPredicate, IUnicornDataProviderLogger logger)
+		public UnicornDataProvider(ITargetDataStore targetDataStore, IPredicate predicate, IFieldPredicate fieldPredicate, IUnicornDataProviderLogger logger)
 		{
-			Assert.ArgumentNotNull(serializationStore, "serializationProvider");
+			Assert.ArgumentNotNull(targetDataStore, "serializationProvider");
 			Assert.ArgumentNotNull(predicate, "predicate");
 			Assert.ArgumentNotNull(fieldPredicate, "fieldPredicate");
 			Assert.ArgumentNotNull(logger, "logger");
@@ -37,7 +38,7 @@ namespace Unicorn
 			_logger = logger;
 			_predicate = predicate;
 			_fieldPredicate = fieldPredicate;
-			_serializationStore = serializationStore;
+			_targetDataStore = targetDataStore;
 		}
 
 		/// <summary>
@@ -83,13 +84,13 @@ namespace Unicorn
 			string oldName = changes.Renamed ? changes.Properties["name"].OriginalValue.ToString() : string.Empty;
 			if (changes.Renamed && !oldName.Equals(sourceItem.Name, StringComparison.Ordinal)) // it's a rename, in which the name actually changed (template builder will cause 'renames' for the same name!!!)
 			{
-				_serializationStore.Save(sourceItem);
-				_logger.RenamedItem(_serializationStore.GetType().Name, sourceItem, oldName);
+				_targetDataStore.Save(sourceItem);
+				_logger.RenamedItem(_targetDataStore.GetType().Name, sourceItem, oldName);
 			}
 			else if (HasConsequentialChanges(changes)) // it's a simple update - but we reject it if only inconsequential fields (last updated, revision) were changed - again, template builder FTW
 			{
-				_serializationStore.Save(sourceItem);
-				_logger.SavedItem(_serializationStore.GetType().Name, sourceItem, "Saved");
+				_targetDataStore.Save(sourceItem);
+				_logger.SavedItem(_targetDataStore.GetType().Name, sourceItem, "Saved");
 			}
 		}
 
@@ -110,15 +111,15 @@ namespace Unicorn
 
 				if (existingItem != null)
 				{
-					_serializationStore.Remove(existingItem.Id, existingItem.DatabaseName);
-					_logger.MovedItemToNonIncludedLocation(_serializationStore.GetType().Name, existingItem);
+					_targetDataStore.Remove(existingItem.Id, existingItem.DatabaseName);
+					_logger.MovedItemToNonIncludedLocation(_targetDataStore.GetType().Name, existingItem);
 				}
 
 				return;
 			}
 
-			_serializationStore.Save(sourceItem);
-			_logger.MovedItem(_serializationStore.GetType().Name, sourceItem, destinationItem);
+			_targetDataStore.Save(sourceItem);
+			_logger.MovedItem(_targetDataStore.GetType().Name, sourceItem, destinationItem);
 		}
 
 		public void CopyItem(ItemDefinition source, ItemDefinition destination, string copyName, ID copyId, CallContext context)
@@ -130,8 +131,8 @@ namespace Unicorn
 
 			if (!_predicate.Includes(copiedItem).IsIncluded) return; // destination parent is not in a path that we are serializing, so skip out
 
-			_serializationStore.Save(copiedItem);
-			_logger.CopiedItem(_serializationStore.GetType().Name, () => GetSourceFromDefinition(source), copiedItem);
+			_targetDataStore.Save(copiedItem);
+			_logger.CopiedItem(_targetDataStore.GetType().Name, () => GetSourceFromDefinition(source), copiedItem);
 		}
 
 		public void AddVersion(ItemDefinition itemDefinition, VersionUri baseVersion, CallContext context)
@@ -153,8 +154,8 @@ namespace Unicorn
 
 			if (existingItem == null) return; // it was already gone or an item from a different data provider
 
-			_serializationStore.Remove(existingItem.Id, existingItem.DatabaseName);
-			_logger.DeletedItem(_serializationStore.GetType().Name, existingItem);
+			_targetDataStore.Remove(existingItem.Id, existingItem.DatabaseName);
+			_logger.DeletedItem(_targetDataStore.GetType().Name, existingItem);
 		}
 
 		public void RemoveVersion(ItemDefinition itemDefinition, VersionUri version, CallContext context)
@@ -183,8 +184,8 @@ namespace Unicorn
 
 			if (!_predicate.Includes(sourceItem).IsIncluded) return false; // item was not included so we get out
 
-			_serializationStore.Save(sourceItem);
-			_logger.SavedItem(_serializationStore.GetType().Name, sourceItem, triggerReason);
+			_targetDataStore.Save(sourceItem);
+			_logger.SavedItem(_targetDataStore.GetType().Name, sourceItem, triggerReason);
 
 			return true;
 		}
@@ -195,7 +196,7 @@ namespace Unicorn
 
 			if (item == null) return null;
 
-			return _serializationStore.GetById(item.ID.Guid, item.Database.Name);
+			return _targetDataStore.GetById(item.ID.Guid, item.Database.Name);
 		}
 
 		protected virtual bool HasConsequentialChanges(ItemChanges changes)
@@ -216,7 +217,7 @@ namespace Unicorn
 				return true;
 			}
 
-			_logger.SaveRejectedAsInconsequential(_serializationStore.GetType().Name, changes);
+			_logger.SaveRejectedAsInconsequential(_targetDataStore.GetType().Name, changes);
 
 			return false;
 		}

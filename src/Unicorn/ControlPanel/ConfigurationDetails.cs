@@ -1,6 +1,5 @@
 ﻿using System.Web.UI;
 using Rainbow.Formatting;
-using Rainbow.Storage;
 using Unicorn.Data;
 using Unicorn.Evaluators;
 using Unicorn.Predicates;
@@ -13,16 +12,16 @@ namespace Unicorn.ControlPanel
 	public class ConfigurationDetails : IControlPanelControl
 	{
 		private readonly IPredicate _predicate;
-		private readonly IDataStore _serializationStore;
-		private readonly ISourceDataStore _sourceDataProvider;
+		private readonly ITargetDataStore _serializationStore;
+		private readonly ISourceDataStore _sourceDataStore;
 		private readonly ISerializationFormatter _formatter;
 		private readonly IEvaluator _evaluator;
 
-		public ConfigurationDetails(IPredicate predicate, IDataStore serializationStore, ISourceDataStore sourceDataProvider, IEvaluator evaluator, ISerializationFormatter formatter)
+		public ConfigurationDetails(IPredicate predicate, ITargetDataStore serializationStore, ISourceDataStore sourceDataStore, IEvaluator evaluator, ISerializationFormatter formatter)
 		{
 			_predicate = predicate;
 			_serializationStore = serializationStore;
-			_sourceDataProvider = sourceDataProvider;
+			_sourceDataStore = sourceDataStore;
 			_evaluator = evaluator;
 			_formatter = formatter;
 		}
@@ -60,7 +59,7 @@ namespace Unicorn.ControlPanel
 
 			RenderType("Source Data Provider",
 				"Defines how source data is read to compare with serialized data. Normally this is a Sitecore database.",
-				_sourceDataProvider,
+				_sourceDataStore,
 				writer);
 
 			RenderType("Evaluator",

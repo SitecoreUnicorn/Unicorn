@@ -40,10 +40,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\packages\Kamsar.WebConsole.1.2.2.0\lib\net40\Kamsar.WebConsole.dll</HintPath>
     </Reference>
-    <Reference Include="Ninject, Version=3.2.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\packages\Ninject.3.2.2.0\lib\net45-full\Ninject.dll</HintPath>
-    </Reference>
     <Reference Include="Sitecore.Kernel, Version=7.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\lib\Sitecore\v7\Sitecore.Kernel.dll</HintPath>
@@ -57,6 +53,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConfigurationUtility.cs" />
+    <Compile Include="Configuration\MicroConfiguration.cs" />
+    <Compile Include="Configuration\MicroResolutionException.cs" />
+    <Compile Include="Configuration\XmlConfigurationTypeActivator.cs" />
     <Compile Include="ControlPanel\AccessDenied.cs" />
     <Compile Include="ControlPanel\CheckIfFilterDisablerIsActive.cs" />
     <Compile Include="ControlPanel\ConfigurationDetails.cs" />
@@ -74,12 +73,13 @@
     <Compile Include="ControlPanel\ReserializeConsole.cs" />
     <Compile Include="ControlPanel\ControlPanelConsole.cs" />
     <Compile Include="ControlPanel\SyncConsole.cs" />
+    <Compile Include="Data\ConfigurationSourceDataStore.cs" />
     <Compile Include="Data\ISerializableFieldValueExtensions.cs" />
     <Compile Include="Data\ISerializableItemExtensions.cs" />
-    <Compile Include="Data\ISourceDataStore.cs" />
-    <Compile Include="Data\SitecoreSourceDataStore.cs" />
     <Compile Include="Configuration\XmlConfigurationProvider.cs" />
     <Compile Include="Configuration\IConfigurationProvider.cs" />
+    <Compile Include="Data\ISourceDataStore.cs" />
+    <Compile Include="Data\ITargetDataStore.cs" />
     <Compile Include="Deserialization\DefaultDeserializerLogger.cs" />
     <Compile Include="Loader\DebugSerializationLoaderLogger.cs" />
     <Compile Include="Logging\ExceptionFormatter.cs" />
@@ -87,10 +87,9 @@
     <Compile Include="Logging\WebConsoleLogger.cs" />
     <Compile Include="Logging\PubSubLogger.cs" />
     <Compile Include="Logging\DeferredLogWriter.cs" />
-    <Compile Include="Configuration\NinjectConfiguration.cs" />
     <Compile Include="Configuration\IConfiguration.cs" />
     <Compile Include="Configuration\UnicornConfigurationManager.cs" />
-    <Compile Include="Configuration\ReadOnlyDependencyRegistry.cs" />
+    <Compile Include="Configuration\ReadOnlyConfiguration.cs" />
     <Compile Include="DeserializationAggregateException.cs" />
     <Compile Include="Evaluators\DefaultSerializedAsMasterEvaluatorLogger.cs" />
     <Compile Include="Evaluators\SerializedAsMasterEvaluator.cs" />
@@ -121,6 +120,7 @@
     <Compile Include="Pipelines\UnicornSyncComplete\SyncCompleteLogger.cs" />
     <Compile Include="Pipelines\UnicornSyncComplete\UnicornSyncCompletePipelineArgs.cs" />
     <Compile Include="Pipelines\UnicornSyncEnd\IUnicornSyncEndProcessor.cs" />
+    <Compile Include="Pipelines\UnicornSyncEnd\SendSerializationCompleteEvent.cs" />
     <Compile Include="Pipelines\UnicornSyncEnd\TriggerAutoPublishSyncedItems.cs" />
     <Compile Include="Pipelines\UnicornSyncEnd\UnicornSyncEndPipelineArgs.cs" />
     <Compile Include="Predicates\ConfigurationFieldPredicate.cs" />

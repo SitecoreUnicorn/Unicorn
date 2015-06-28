@@ -61,7 +61,7 @@ namespace Unicorn.Configuration
 
 			Assert.IsNotNullOrEmpty(name, "Configuration node had empty or missing name attribute.");
 
-			var registry = new NinjectConfiguration(name);
+			var registry = new MicroConfiguration(name);
 
 			// these are config types we absolutely must have instances of to use Unicorn - an exception will throw if they don't exist
 			var configMapping = new Dictionary<string, Action<XmlElement, XmlElement, string, IConfiguration>>
@@ -69,7 +69,7 @@ namespace Unicorn.Configuration
 				{"sourceDataStore", RegisterExpectedConfigType<ISourceDataStore>},
 				{"evaluator", RegisterExpectedConfigType<IEvaluator>},
 				{"predicate", RegisterExpectedConfigType<IPredicate>},
-				{"serializationStore", RegisterExpectedConfigType<IDataStore>},
+				{"targetDataStore", RegisterExpectedConfigType<ITargetDataStore>},
 				{"logger", RegisterExpectedConfigType<ILogger>},
 				{"loaderLogger", RegisterExpectedConfigType<ISerializationLoaderLogger>},
 				{"loaderConsistencyChecker", RegisterExpectedConfigType<IConsistencyChecker>},
@@ -94,7 +94,7 @@ namespace Unicorn.Configuration
 				RegisterGenericConfigTypeByInterfaces(configuration, defaults, adHocElement.Name, registry);
 			}
 
-			return new ReadOnlyDependencyRegistry(registry);
+			return new ReadOnlyConfiguration(registry);
 		}
 
 		/// <summary>
@@ -110,7 +110,7 @@ namespace Unicorn.Configuration
 
 			foreach (var @interface in interfaces)
 			{
-				registry.Register(@interface, type.Type, type.SingleInstance, attributes);
+				registry.Register(@interface, () => CreateTypeActivator(registry).Activate(type.Type, attributes), type.SingleInstance);
 			}
 		}
 
@@ -121,11 +121,30 @@ namespace Unicorn.Configuration
 			where TResultType : class
 		{
 			var type = GetConfigType(configuration, defaults, elementName);
+			var attributes = GetUnmappedAttributes(configuration, defaults, elementName);
+
+			if (type.Type == typeof (ISourceDataStore))
+			{
+				Func<IDataStore> factory = () => (IDataStore)CreateTypeActivator(registry).Activate(type.Type, attributes);
+				Func<object> wrapperFactory = () => new ConfigurationDataStore(new Lazy<IDataStore>(factory));
+
+				registry.Register(type.Type, wrapperFactory, type.SingleInstance);
+				return;
+			}
+
+			if (type.Type == typeof (ITargetDataStore))
+			{
+				Func<IDataStore> factory = () => (IDataStore)CreateTypeActivator(registry).Activate(type.Type, attributes);
+				Func<object> wrapperFactory = () => new ConfigurationDataStore(new Lazy<IDataStore>(factory));
+
+				registry.Register(type.Type, wrapperFactory, type.SingleInstance);
+				return;
+			}
 
 			if (!typeof(TResultType).IsAssignableFrom(type.Type))
 				throw new InvalidOperationException("Invalid type for Unicorn config node {0} (expected {1} implementation)".FormatWith(elementName, typeof(TResultType).FullName));
 
-			registry.Register(typeof(TResultType), type.Type, type.SingleInstance, GetUnmappedAttributes(configuration, defaults, elementName));
+			registry.Register(typeof(TResultType), () => CreateTypeActivator(registry).Activate(type.Type, attributes), type.SingleInstance);
 		}
 
 		/// <summary>
@@ -188,6 +207,11 @@ namespace Unicorn.Configuration
 		{
 			public Type Type { get; set; }
 			public bool SingleInstance { get; set; }
+		}
+
+		protected virtual XmlConfigurationTypeActivator CreateTypeActivator(IConfiguration configuration)
+		{
+			return new XmlConfigurationTypeActivator(configuration);
 		}
 	}
 }

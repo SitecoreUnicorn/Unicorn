@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Rainbow.Model;
+using Rainbow.Storage;
 using Rainbow.Storage.Sc.Deserialization;
 using Sitecore.Diagnostics;
 using Unicorn.Data;
@@ -80,7 +81,7 @@ namespace Unicorn.Loader
 					foreach (var failure in originalItemFailures)
 					{
 						// retry loading a single item failure
-						var item = failure.Reference as ISerializableItem;
+						var item = failure.Reference;
 						if (item != null)
 						{
 							try

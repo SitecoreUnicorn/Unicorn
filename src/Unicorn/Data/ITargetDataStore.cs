@@ -2,7 +2,7 @@
 
 namespace Unicorn.Data
 {
-	public interface ISourceDataStore : IDataStore
+	public interface ITargetDataStore : IDataStore
 	{
 	}
 }

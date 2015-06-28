@@ -62,6 +62,7 @@
   <ItemGroup>
     <Compile Include="Configuration\MicroConfigurationTests.cs" />
     <None Include="Evaluator\SerializedAsMasterEvaluatorTests.dis" />
+    <Compile Include="Configuration\XmlConfigurationTypeActivatorTests.cs" />
     <Compile Include="Loader\DuplicateIdConsistencyCheckerTests.cs" />
     <None Include="Loader\LoaderTests.dis" />
     <Compile Include="Properties\AssemblyInfo.cs" />

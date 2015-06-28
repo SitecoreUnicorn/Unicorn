@@ -43,7 +43,7 @@ namespace Unicorn.ControlPanel
 						logger.Info("Control Panel Reserialize: Processing Unicorn configuration " + configuration.Name);
 
 						var predicate = configuration.Resolve<IPredicate>();
-						var serializationStore = configuration.Resolve<IDataStore>();
+						var serializationStore = configuration.Resolve<ITargetDataStore>();
 						var sourceStore = configuration.Resolve<ISourceDataStore>();
 
 						var roots = configuration.Resolve<PredicateRootPathResolver>().GetRootSourceItems();
@@ -77,14 +77,14 @@ namespace Unicorn.ControlPanel
 			}
 		}
 
-		private void Serialize(ISerializableItem root, IPredicate predicate, IDataStore serializationStore, ISourceDataStore sourceDataStore, ILogger logger)
+		private void Serialize(ISerializableItem root, IPredicate predicate, ITargetDataStore serializationStore, ISourceDataStore sourceDataStore, ILogger logger)
 		{
 			var predicateResult = predicate.Includes(root);
 			if (predicateResult.IsIncluded)
 			{
 				serializationStore.Save(root);
 
-				foreach (var child in sourceDataStore.GetChildren(root))
+				foreach (var child in sourceDataStore.GetChildren(root.Id, root.DatabaseName))
 				{
 					Serialize(child, predicate, serializationStore, sourceDataStore, logger);
 				}

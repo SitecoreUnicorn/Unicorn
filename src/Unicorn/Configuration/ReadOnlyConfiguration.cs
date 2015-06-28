@@ -7,11 +7,11 @@ namespace Unicorn.Configuration
 	/// <summary>
 	/// This wrapper class prevents performing dependency reconfiguration on configurations after the setup phase is complete.
 	/// </summary>
-	internal class ReadOnlyDependencyRegistry : IConfiguration
+	internal class ReadOnlyConfiguration : IConfiguration
 	{
 		private readonly IConfiguration _innerRegistry;
 
-		public ReadOnlyDependencyRegistry(IConfiguration innerRegistry)
+		public ReadOnlyConfiguration(IConfiguration innerRegistry)
 		{
 			Assert.ArgumentNotNull(innerRegistry, "innerRegistry");
 
@@ -25,9 +25,14 @@ namespace Unicorn.Configuration
 			return _innerRegistry.Resolve<T>();
 		}
 
-		public void Register(Type type, Type implementation, bool singleInstance, KeyValuePair<string, object>[] unmappedConstructorParameters)
+		public object Resolve(Type type)
 		{
-			throw new InvalidOperationException("You cannot register new dependencies on a read-only dependency registry.");
+			return _innerRegistry.Resolve(type);
+		}
+
+		public void Register(Type type, Func<object> factory, bool singleInstance)
+		{
+			throw new InvalidOperationException("You cannot register new dependencies on a read-only configuration.");
 		}
 	}
 }
