@@ -1,12 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml;
+using Rainbow.Filtering;
+using Rainbow.Formatting.FieldFormatters;
 using Rainbow.Model;
 using Rainbow.Predicates;
 using Rainbow.Storage.Sc.Deserialization;
+using Sitecore.Configuration;
 using Sitecore.Diagnostics;
 using Unicorn.ControlPanel;
 using Unicorn.Data;
+using Unicorn.Evaluators.Comparison;
 using Unicorn.Logging;
 
 namespace Unicorn.Evaluators
@@ -17,18 +22,37 @@ namespace Unicorn.Evaluators
 	public class SerializedAsMasterEvaluator : IEvaluator, IDocumentable
 	{
 		private readonly ISerializedAsMasterEvaluatorLogger _logger;
-		private readonly IFieldPredicate _fieldPredicate;
+		private readonly IFieldFilter _fieldFilter;
 		private readonly ISourceDataStore _sourceDataStore;
 		private readonly IDeserializer _deserializer;
 		protected static readonly Guid RootId = new Guid("{11111111-1111-1111-1111-111111111111}");
+		protected readonly List<IFieldComparer> FieldComparers = new List<IFieldComparer>(); 
 
-		public SerializedAsMasterEvaluator(ISerializedAsMasterEvaluatorLogger logger, IFieldPredicate fieldPredicate, ISourceDataStore sourceDataStore, IDeserializer deserializer)
+		public SerializedAsMasterEvaluator(XmlNode configNode, ISerializedAsMasterEvaluatorLogger logger, IFieldFilter fieldFilter, ISourceDataStore sourceDataStore, IDeserializer deserializer) :  this(logger, fieldFilter, sourceDataStore, deserializer)
+		{
+			Assert.ArgumentNotNull(configNode, "configNode");
+
+			_fieldFilter = fieldFilter;
+
+			var comparers = configNode.ChildNodes;
+
+			foreach (XmlNode comparer in comparers)
+			{
+				if (comparer.NodeType == XmlNodeType.Element && comparer.Name.Equals("fieldComparer")) 
+					FieldComparers.Add(Factory.CreateObject<IFieldComparer>(comparer));
+			}
+
+			FieldComparers.Add(new DefaultComparison());
+		}
+
+		protected SerializedAsMasterEvaluator(ISerializedAsMasterEvaluatorLogger logger, IFieldFilter fieldFilter, ISourceDataStore sourceDataStore, IDeserializer deserializer)
 		{
 			Assert.ArgumentNotNull(logger, "logger");
-			Assert.ArgumentNotNull(fieldPredicate, "fieldPredicate");
+			Assert.ArgumentNotNull(fieldFilter, "fieldFilter");
+			Assert.ArgumentNotNull(fieldFilter, "fieldPredicate");
 
 			_logger = logger;
-			_fieldPredicate = fieldPredicate;
+			_fieldFilter = fieldFilter;
 			_sourceDataStore = sourceDataStore;
 			_deserializer = deserializer;
 		}
@@ -146,37 +170,41 @@ namespace Unicorn.Evaluators
 			if (sourceFields == null) return false;
 			var targetFieldIndex = targetFields.ToDictionary(x => x.FieldId);
 
-			return sourceFields.Any(x =>
+			return sourceFields.Any(sourceField =>
 			{
-				if (!_fieldPredicate.Includes(x.FieldId).IsIncluded) return false;
+				if (!_fieldFilter.Includes(sourceField.FieldId)) return false;
 
-				if (!x.IsFieldComparable()) return false;
+				if (!sourceField.IsFieldComparable()) return false;
 
-				bool isMatch = IsFieldMatch(x.Value, targetFieldIndex, x.FieldId);
+				bool isMatch = IsFieldMatch(sourceField, targetFieldIndex, sourceField.FieldId);
 				if(isMatch) deferredUpdateLog.AddEntry(logger =>
 				{
 					ISerializableFieldValue sourceFieldValue;
-					if (targetFieldIndex.TryGetValue(x.FieldId, out sourceFieldValue))
+					if (targetFieldIndex.TryGetValue(sourceField.FieldId, out sourceFieldValue))
 					{
-						if (version == null) logger.IsSharedFieldMatch(serializedItem, x.FieldId, x.Value, sourceFieldValue.Value);
-						else logger.IsVersionedFieldMatch(serializedItem, version, x.FieldId, x.Value, sourceFieldValue.Value);
+						if (version == null) logger.IsSharedFieldMatch(serializedItem, sourceField.FieldId, sourceField.Value, sourceFieldValue.Value);
+						else logger.IsVersionedFieldMatch(serializedItem, version, sourceField.FieldId, sourceField.Value, sourceFieldValue.Value);
 					}
 				});
 				return isMatch;
 			});
 		}
 
-		protected virtual bool IsFieldMatch(string sourceFieldValue, Dictionary<Guid, ISerializableFieldValue> targetFields, Guid fieldId)
+		protected virtual bool IsFieldMatch(ISerializableFieldValue sourceField, Dictionary<Guid, ISerializableFieldValue> targetFields, Guid fieldId)
 		{
 			// note that returning "true" means the values DO NOT MATCH EACH OTHER.
 
-			if (sourceFieldValue == null) return false;
+			if (sourceField == null) return false;
 
 			// it's a "match" if the target item does not contain the source field
-			ISerializableFieldValue targetFieldValue;
-			if (!targetFields.TryGetValue(fieldId, out targetFieldValue)) return true;
+			ISerializableFieldValue targetField;
+			if (!targetFields.TryGetValue(fieldId, out targetField)) return true;
 
-			return !sourceFieldValue.Equals(targetFieldValue.Value);
+			var fieldComparer = FieldComparers.FirstOrDefault(comparer => comparer.CanCompare(sourceField, targetField));
+
+			if(fieldComparer == null) throw new InvalidOperationException("Unable to find a field comparison for " + sourceField.NameHint);
+
+			return !fieldComparer.AreEqual(sourceField, targetField);
 		}
 
 		protected virtual ISerializableItem DoDeserialization(ISerializableItem serializedItem)
