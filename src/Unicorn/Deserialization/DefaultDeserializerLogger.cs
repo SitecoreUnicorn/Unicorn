@@ -74,5 +74,10 @@ namespace Unicorn.Deserialization
 		{
 
 		}
+
+		public void SkippedPastingIgnoredField(Item item, ISerializableFieldValue field)
+		{
+			
+		}
 	}
 }

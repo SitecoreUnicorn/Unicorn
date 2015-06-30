@@ -13,15 +13,9 @@ namespace Unicorn.Logging
 	/// </summary>
 	public class PubSubLogger : ILogger
 	{
-		public PubSubLogger() : this(true)
+		public PubSubLogger()
 		{
-			
-		}
-
-		public PubSubLogger(bool registerSitecoreLogger)
-		{
-			if(registerSitecoreLogger)
-				RegisterSubscriber(new SitecoreLogger());
+			RegisterSubscriber(new SitecoreLogger());
 		}
 
 		private readonly Collection<ILogger> _loggers = new Collection<ILogger>();

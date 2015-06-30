@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Linq;
+using Rainbow.Filtering;
 using Rainbow.Model;
-using Rainbow.Predicates;
-using Rainbow.Storage;
 using Rainbow.Storage.Sc;
 using Sitecore;
 using Sitecore.Data;
@@ -24,20 +23,20 @@ namespace Unicorn
 	{
 		private readonly ITargetDataStore _targetDataStore;
 		private readonly IPredicate _predicate;
-		private readonly IFieldPredicate _fieldPredicate;
+		private readonly IFieldFilter _fieldFilter;
 		private readonly IUnicornDataProviderLogger _logger;
 		private static bool _disableSerialization;
 
-		public UnicornDataProvider(ITargetDataStore targetDataStore, IPredicate predicate, IFieldPredicate fieldPredicate, IUnicornDataProviderLogger logger)
+		public UnicornDataProvider(ITargetDataStore targetDataStore, IPredicate predicate, IFieldFilter fieldFilter, IUnicornDataProviderLogger logger)
 		{
 			Assert.ArgumentNotNull(targetDataStore, "serializationProvider");
 			Assert.ArgumentNotNull(predicate, "predicate");
-			Assert.ArgumentNotNull(fieldPredicate, "fieldPredicate");
+			Assert.ArgumentNotNull(fieldFilter, "fieldPredicate");
 			Assert.ArgumentNotNull(logger, "logger");
 
 			_logger = logger;
 			_predicate = predicate;
-			_fieldPredicate = fieldPredicate;
+			_fieldFilter = fieldFilter;
 			_targetDataStore = targetDataStore;
 		}
 
@@ -212,7 +211,7 @@ namespace Unicorn
 				if (change.FieldID == FieldIDs.Updated) continue;
 				if (change.FieldID == FieldIDs.UpdatedBy) continue;
 				if (change.FieldID == FieldIDs.Originator) continue;
-				if (!_fieldPredicate.Includes(change.FieldID.Guid).IsIncluded) continue;
+				if (!_fieldFilter.Includes(change.FieldID.Guid)) continue;
 
 				return true;
 			}

@@ -10,11 +10,10 @@ namespace Unicorn.Tests.Configuration
 		public void Activator_ResolvesType_WithDependency()
 		{
 			var micro = new MicroConfiguration("Test");
-			var activator = new XmlConfigurationTypeActivator(micro);
 
 			micro.Register(typeof(ITest), () => new Test(), true);
 
-			var instance = (IDependency)activator.Activate(typeof(TestDependencyParameter), new KeyValuePair<string, object>[] { });
+			var instance = (IDependency)micro.Activate(typeof(TestDependencyParameter), new KeyValuePair<string, object>[] { });
 
 			Assert.IsNotNull(instance);
 
@@ -25,11 +24,10 @@ namespace Unicorn.Tests.Configuration
 		public void Activator_ResolvesType_WithDependency_AndParameter()
 		{
 			var micro = new MicroConfiguration("Test");
-			var activator = new XmlConfigurationTypeActivator(micro);
 
 			micro.Register(typeof(ITest), () => new Test(), true);
 
-			var instance = (IDependency)activator.Activate(typeof(TestDependencyParameterStatic), new[] { new KeyValuePair<string, object>("value", "hello") });
+			var instance = (IDependency)micro.Activate(typeof(TestDependencyParameterStatic), new[] { new KeyValuePair<string, object>("value", "hello") });
 
 			Assert.IsNotNull(instance);
 

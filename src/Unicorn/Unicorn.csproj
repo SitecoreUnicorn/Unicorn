@@ -50,12 +50,12 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Web" />
     <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConfigurationUtility.cs" />
     <Compile Include="Configuration\MicroConfiguration.cs" />
     <Compile Include="Configuration\MicroResolutionException.cs" />
-    <Compile Include="Configuration\XmlConfigurationTypeActivator.cs" />
     <Compile Include="ControlPanel\AccessDenied.cs" />
     <Compile Include="ControlPanel\CheckIfFilterDisablerIsActive.cs" />
     <Compile Include="ControlPanel\ConfigurationDetails.cs" />
@@ -81,6 +81,9 @@
     <Compile Include="Data\ISourceDataStore.cs" />
     <Compile Include="Data\ITargetDataStore.cs" />
     <Compile Include="Deserialization\DefaultDeserializerLogger.cs" />
+    <Compile Include="Evaluators\Comparison\DefaultComparison.cs" />
+    <Compile Include="Evaluators\Comparison\IFieldComparer.cs" />
+    <Compile Include="Evaluators\Comparison\XmlComparison.cs" />
     <Compile Include="Loader\DebugSerializationLoaderLogger.cs" />
     <Compile Include="Logging\ExceptionFormatter.cs" />
     <Compile Include="Logging\LoggingContext.cs" />
@@ -123,8 +126,6 @@
     <Compile Include="Pipelines\UnicornSyncEnd\SendSerializationCompleteEvent.cs" />
     <Compile Include="Pipelines\UnicornSyncEnd\TriggerAutoPublishSyncedItems.cs" />
     <Compile Include="Pipelines\UnicornSyncEnd\UnicornSyncEndPipelineArgs.cs" />
-    <Compile Include="Predicates\ConfigurationFieldPredicate.cs" />
-    <Compile Include="Predicates\IFieldPredicate.cs" />
     <Compile Include="Predicates\IPredicate.cs" />
     <Compile Include="Predicates\PredicateResult.cs" />
     <Compile Include="Predicates\PredicateRootPath.cs" />

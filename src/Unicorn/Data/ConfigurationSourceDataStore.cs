@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Rainbow.Model;
 using Rainbow.Storage;
+using Unicorn.ControlPanel;
 
 namespace Unicorn.Data
 {
@@ -9,7 +10,7 @@ namespace Unicorn.Data
 	/// Facade that enables mapping arbitrary IDataStore implementations onto ISourceDataStore/ITargetDataStore,
 	/// so that Unicorn can disambiguate which dependency it's after.
 	/// </summary>
-	public class ConfigurationDataStore : ISourceDataStore, ITargetDataStore
+	public class ConfigurationDataStore : ISourceDataStore, ITargetDataStore, IDocumentable
 	{
 		private readonly Lazy<IDataStore> _innerDataStore;
 
@@ -66,6 +67,13 @@ namespace Unicorn.Data
 		public bool Remove(Guid itemId, string database)
 		{
 			return _innerDataStore.Value.Remove(itemId, database);
+		}
+
+		public string FriendlyName { get { return _innerDataStore.Value.GetType().Name; } }
+		public string Description { get { return _innerDataStore.Value.GetType().AssemblyQualifiedName; } }
+		public KeyValuePair<string, string>[] GetConfigurationDetails()
+		{
+			return null;
 		}
 	}
 }

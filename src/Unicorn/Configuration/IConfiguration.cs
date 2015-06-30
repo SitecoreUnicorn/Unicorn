@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Unicorn.Configuration
 {
@@ -31,5 +32,10 @@ namespace Unicorn.Configuration
 		/// <param name="factory">Factory method to create the instance when it is needed</param>
 		/// <param name="singleInstance">If true, it's a singleton. If false, new instance is created each time. Singleton is preferable for performance.</param>
 		void Register(Type type, Func<object> factory, bool singleInstance);
+
+		/// <summary>
+		/// Activates a type, using constructor injection for any registered dependencies
+		/// </summary>
+		object Activate(Type type, KeyValuePair<string, object>[] unmappedConstructorParameters);
 	}
 }

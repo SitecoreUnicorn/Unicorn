@@ -110,7 +110,7 @@ namespace Unicorn.Configuration
 
 			foreach (var @interface in interfaces)
 			{
-				registry.Register(@interface, () => CreateTypeActivator(registry).Activate(type.Type, attributes), type.SingleInstance);
+				registry.Register(@interface, () => registry.Activate(type.Type, attributes), type.SingleInstance);
 			}
 		}
 
@@ -122,29 +122,30 @@ namespace Unicorn.Configuration
 		{
 			var type = GetConfigType(configuration, defaults, elementName);
 			var attributes = GetUnmappedAttributes(configuration, defaults, elementName);
+			var resultType = typeof (TResultType);
 
-			if (type.Type == typeof (ISourceDataStore))
+			if (resultType == typeof (ISourceDataStore))
 			{
-				Func<IDataStore> factory = () => (IDataStore)CreateTypeActivator(registry).Activate(type.Type, attributes);
+				Func<IDataStore> factory = () => (IDataStore)registry.Activate(type.Type, attributes);
 				Func<object> wrapperFactory = () => new ConfigurationDataStore(new Lazy<IDataStore>(factory));
 
-				registry.Register(type.Type, wrapperFactory, type.SingleInstance);
+				registry.Register(resultType, wrapperFactory, type.SingleInstance);
 				return;
 			}
 
-			if (type.Type == typeof (ITargetDataStore))
+			if (resultType == typeof (ITargetDataStore))
 			{
-				Func<IDataStore> factory = () => (IDataStore)CreateTypeActivator(registry).Activate(type.Type, attributes);
+				Func<IDataStore> factory = () => (IDataStore)registry.Activate(type.Type, attributes);
 				Func<object> wrapperFactory = () => new ConfigurationDataStore(new Lazy<IDataStore>(factory));
 
-				registry.Register(type.Type, wrapperFactory, type.SingleInstance);
+				registry.Register(resultType, wrapperFactory, type.SingleInstance);
 				return;
 			}
 
-			if (!typeof(TResultType).IsAssignableFrom(type.Type))
+			if (!resultType.IsAssignableFrom(type.Type))
 				throw new InvalidOperationException("Invalid type for Unicorn config node {0} (expected {1} implementation)".FormatWith(elementName, typeof(TResultType).FullName));
 
-			registry.Register(typeof(TResultType), () => CreateTypeActivator(registry).Activate(type.Type, attributes), type.SingleInstance);
+			registry.Register(resultType, () => registry.Activate(type.Type, attributes), type.SingleInstance);
 		}
 
 		/// <summary>
@@ -207,11 +208,6 @@ namespace Unicorn.Configuration
 		{
 			public Type Type { get; set; }
 			public bool SingleInstance { get; set; }
-		}
-
-		protected virtual XmlConfigurationTypeActivator CreateTypeActivator(IConfiguration configuration)
-		{
-			return new XmlConfigurationTypeActivator(configuration);
 		}
 	}
 }

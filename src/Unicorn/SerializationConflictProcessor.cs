@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Rainbow.Filtering;
 using Rainbow.Model;
 using Rainbow.Predicates;
 using Rainbow.Storage.Sc;
@@ -97,7 +98,7 @@ namespace Unicorn
 						// not having an existing serialized version means no possibility of conflict here
 						if (serializedItem == null) continue;
 
-						var fieldPredicate = configuration.Resolve<IFieldPredicate>();
+						var fieldPredicate = configuration.Resolve<IFieldFilter>();
 
 						var fieldIssues = GetFieldSyncStatus(existingItem, serializedItem, fieldPredicate);
 
@@ -134,7 +135,7 @@ namespace Unicorn
 			}
 		}
 
-		private IList<FieldDesynchronization> GetFieldSyncStatus(Item item, ISerializableItem serializedItem, IFieldPredicate fieldPredicate)
+		private IList<FieldDesynchronization> GetFieldSyncStatus(Item item, ISerializableItem serializedItem, IFieldFilter fieldFilter)
 		{
 			var desyncs = new List<FieldDesynchronization>();
 
@@ -153,13 +154,14 @@ namespace Unicorn
 
 			foreach (Field field in item.Fields)
 			{
+				// TODO: compare with evaluator from the config so we respect comparers and such, also move the ignored fields to the ignore list FPs
 				if (field.ID == FieldIDs.Revision || 
 					field.ID == FieldIDs.Updated || 
 					field.ID == FieldIDs.Created || 
 					field.ID == FieldIDs.CreatedBy || 
 					field.ID == FieldIDs.UpdatedBy ||
 					field.Type.Equals("attachment", StringComparison.OrdinalIgnoreCase) ||
-					!fieldPredicate.Includes(field.ID.Guid).IsIncluded) continue; 
+					!fieldFilter.Includes(field.ID.Guid)) continue; 
 				// we're doing a data comparison here - revision, created (by), updated (by) don't matter
 				// skipping these fields allows us to ignore spurious saves the template builder makes to unchanged items being conflicts
 			

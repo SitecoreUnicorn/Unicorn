@@ -29,7 +29,7 @@ namespace Unicorn.Predicates
 
 			foreach (var include in _predicate.GetRootPaths())
 			{
-				var item = _sourceDataStore.GetByPath(include.Database, include.Path).FirstOrDefault();
+				var item = _sourceDataStore.GetByPath(include.Path, include.Database).FirstOrDefault();
 
 				if (item != null) items.Add(item);
 				else _logger.Error("Unable to resolve root source item for predicate root path {0}:{1}. It has been skipped.".FormatWith(include.Database, include.Path));

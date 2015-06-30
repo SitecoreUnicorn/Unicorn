@@ -34,5 +34,10 @@ namespace Unicorn.Configuration
 		{
 			throw new InvalidOperationException("You cannot register new dependencies on a read-only configuration.");
 		}
+
+		public object Activate(Type type, KeyValuePair<string, object>[] unmappedConstructorParameters)
+		{
+			return _innerRegistry.Activate(type, unmappedConstructorParameters);
+		}
 	}
 }
