@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using Rainbow.Filtering;
 using Rainbow.Model;
-using Rainbow.Predicates;
 using Rainbow.Storage.Sc;
 using Sitecore;
 using Sitecore.Data.Fields;
@@ -42,7 +41,7 @@ namespace Unicorn
 		public SerializationConflictProcessor()
 			: this(UnicornConfigurationManager.Configurations)
 		{
-			
+			// TODO: implement this against IItemComparer
 		}
 
 		protected SerializationConflictProcessor(IConfiguration[] configurations)
@@ -98,9 +97,9 @@ namespace Unicorn
 						// not having an existing serialized version means no possibility of conflict here
 						if (serializedItem == null) continue;
 
-						var fieldPredicate = configuration.Resolve<IFieldFilter>();
+						var fieldFilter = configuration.Resolve<IFieldFilter>();
 
-						var fieldIssues = GetFieldSyncStatus(existingItem, serializedItem, fieldPredicate);
+						var fieldIssues = GetFieldSyncStatus(existingSitecoreItem, serializedItem, fieldFilter);
 
 						if (fieldIssues.Count == 0) continue;
 
@@ -135,7 +134,7 @@ namespace Unicorn
 			}
 		}
 
-		private IList<FieldDesynchronization> GetFieldSyncStatus(Item item, ISerializableItem serializedItem, IFieldFilter fieldFilter)
+		private IList<FieldDesynchronization> GetFieldSyncStatus(ISerializableItem item, ISerializableItem serializedItem, IFieldFilter fieldFilter)
 		{
 			var desyncs = new List<FieldDesynchronization>();
 
