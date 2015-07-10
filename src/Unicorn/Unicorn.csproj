@@ -81,9 +81,6 @@
     <Compile Include="Data\ISourceDataStore.cs" />
     <Compile Include="Data\ITargetDataStore.cs" />
     <Compile Include="Deserialization\DefaultDeserializerLogger.cs" />
-    <Compile Include="Evaluators\Comparison\DefaultComparison.cs" />
-    <Compile Include="Evaluators\Comparison\IFieldComparer.cs" />
-    <Compile Include="Evaluators\Comparison\XmlComparison.cs" />
     <Compile Include="Loader\DebugSerializationLoaderLogger.cs" />
     <Compile Include="Logging\ExceptionFormatter.cs" />
     <Compile Include="Logging\LoggingContext.cs" />
@@ -149,10 +146,6 @@
     <None Include="Unicorn.nuspec" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Rainbow\src\Rainbow.Diff\Rainbow.Diff.csproj">
-      <Project>{a2259642-5e6b-4e80-8f48-269693a4dbe5}</Project>
-      <Name>Rainbow.Diff</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\..\Rainbow\src\Rainbow.Storage.Sc\Rainbow.Storage.Sc.csproj">
       <Project>{956afe8b-51cd-4d61-b8c1-bffdc749fd82}</Project>
       <Name>Rainbow.Storage.Sc</Name>
