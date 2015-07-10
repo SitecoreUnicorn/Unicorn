@@ -2,16 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
+using Rainbow.Diff;
+using Rainbow.Diff.Fields;
 using Rainbow.Filtering;
-using Rainbow.Formatting.FieldFormatters;
 using Rainbow.Model;
-using Rainbow.Predicates;
 using Rainbow.Storage.Sc.Deserialization;
 using Sitecore.Configuration;
 using Sitecore.Diagnostics;
 using Unicorn.ControlPanel;
 using Unicorn.Data;
-using Unicorn.Evaluators.Comparison;
 using Unicorn.Logging;
 
 namespace Unicorn.Evaluators
@@ -22,37 +21,19 @@ namespace Unicorn.Evaluators
 	public class SerializedAsMasterEvaluator : IEvaluator, IDocumentable
 	{
 		private readonly ISerializedAsMasterEvaluatorLogger _logger;
-		private readonly IFieldFilter _fieldFilter;
+		private readonly IItemComparer _itemComparer;
 		private readonly ISourceDataStore _sourceDataStore;
 		private readonly IDeserializer _deserializer;
 		protected static readonly Guid RootId = new Guid("{11111111-1111-1111-1111-111111111111}");
-		protected readonly List<IFieldComparer> FieldComparers = new List<IFieldComparer>(); 
 
-		public SerializedAsMasterEvaluator(XmlNode configNode, ISerializedAsMasterEvaluatorLogger logger, IFieldFilter fieldFilter, ISourceDataStore sourceDataStore, IDeserializer deserializer) :  this(logger, fieldFilter, sourceDataStore, deserializer)
-		{
-			Assert.ArgumentNotNull(configNode, "configNode");
-
-			_fieldFilter = fieldFilter;
-
-			var comparers = configNode.ChildNodes;
-
-			foreach (XmlNode comparer in comparers)
-			{
-				if (comparer.NodeType == XmlNodeType.Element && comparer.Name.Equals("fieldComparer")) 
-					FieldComparers.Add(Factory.CreateObject<IFieldComparer>(comparer));
-			}
-
-			FieldComparers.Add(new DefaultComparison());
-		}
-
-		protected SerializedAsMasterEvaluator(ISerializedAsMasterEvaluatorLogger logger, IFieldFilter fieldFilter, ISourceDataStore sourceDataStore, IDeserializer deserializer)
+		public SerializedAsMasterEvaluator(ISerializedAsMasterEvaluatorLogger logger, IItemComparer itemComparer, ISourceDataStore sourceDataStore, IDeserializer deserializer)
 		{
 			Assert.ArgumentNotNull(logger, "logger");
-			Assert.ArgumentNotNull(fieldFilter, "fieldFilter");
-			Assert.ArgumentNotNull(fieldFilter, "fieldPredicate");
+			Assert.ArgumentNotNull(itemComparer, "fieldFilter");
+			Assert.ArgumentNotNull(itemComparer, "fieldPredicate");
 
 			_logger = logger;
-			_fieldFilter = fieldFilter;
+			_itemComparer = itemComparer;
 			_sourceDataStore = sourceDataStore;
 			_deserializer = deserializer;
 		}
@@ -122,19 +103,19 @@ namespace Unicorn.Evaluators
 				return true;
 
 			// see if the serialized versions have any mismatching values in the source data
-			return serializedItem.Versions.Any(serializedeVersion =>
+			return serializedItem.Versions.Any(serializedVersion =>
 			{
-				var sourceISerializableVersion = existingItem.GetVersion(serializedeVersion.Language.Name, serializedeVersion.VersionNumber);
+				var sourceISerializableVersion = existingItem.GetVersion(serializedVersion.Language.Name, serializedVersion.VersionNumber);
 
 				// version exists in serialized item but does not in source version
 				if (sourceISerializableVersion == null)
 				{
-					deferredUpdateLog.AddEntry(x => x.NewSerializedVersionMatch(serializedeVersion, serializedItem, existingItem));
+					deferredUpdateLog.AddEntry(x => x.NewSerializedVersionMatch(serializedVersion, serializedItem, existingItem));
 					return true;
 				}
 
 				// field values mismatch
-				var fieldMatch = AnyFieldMatch(serializedeVersion.Fields, sourceISerializableVersion.Fields, existingItem, serializedItem, deferredUpdateLog, serializedeVersion);
+				var fieldMatch = AnyFieldMatch(serializedVersion.Fields, sourceISerializableVersion.Fields, existingItem, serializedItem, deferredUpdateLog, serializedVersion);
 				if (fieldMatch) return true;
 
 				// if we get here everything matches to the best of our knowledge, so we return false (e.g. "do not update this item")
@@ -172,7 +153,7 @@ namespace Unicorn.Evaluators
 
 			return sourceFields.Any(sourceField =>
 			{
-				if (!_fieldFilter.Includes(sourceField.FieldId)) return false;
+				if (!_itemComparer.Includes(sourceField.FieldId)) return false;
 
 				if (!sourceField.IsFieldComparable()) return false;
 
