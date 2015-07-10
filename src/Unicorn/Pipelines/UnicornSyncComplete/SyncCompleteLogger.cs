@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Sitecore.StringExtensions;
 using Unicorn.Logging;
 
@@ -15,12 +16,15 @@ namespace Unicorn.Pipelines.UnicornSyncComplete
 			
 			if(logger == null) return;
 
-			logger.Info("{0}: {1} item{5} modified ({2} added, {3} updated, {4} deleted)".FormatWith(args.Configuration.Name,
+			var durationInMs = (DateTime.Now - args.SyncStartedTimestamp).TotalMilliseconds;
+
+			logger.Info("{0}: {1} item{5} modified ({2} added, {3} updated, {4} deleted) in {6}ms".FormatWith(args.Configuration.Name,
 				args.Changes.Count,
 				args.Changes.Count(x => x.ChangeType == ChangeType.Created),
 				args.Changes.Count(x => x.ChangeType == ChangeType.Modified),
 				args.Changes.Count(x => x.ChangeType == ChangeType.Deleted),
-				args.Changes.Count != 1 ? "s" : string.Empty));
+				args.Changes.Count != 1 ? "s" : string.Empty,
+				(int)durationInMs));
 		}
 	}
 }

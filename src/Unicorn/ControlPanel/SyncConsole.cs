@@ -60,6 +60,8 @@ namespace Unicorn.ControlPanel
 							continue;
 						}
 
+						var syncStartTimestamp = DateTime.Now;
+
 						var pathResolver = configuration.Resolve<PredicateRootPathResolver>();
 						var retryer = configuration.Resolve<IDeserializeFailureRetryer>();
 						var consistencyChecker = configuration.Resolve<IConsistencyChecker>();
@@ -75,7 +77,7 @@ namespace Unicorn.ControlPanel
 							index++;
 						});
 
-						CorePipeline.Run("unicornSyncComplete", new UnicornSyncCompletePipelineArgs(configuration));
+						CorePipeline.Run("unicornSyncComplete", new UnicornSyncCompletePipelineArgs(configuration, syncStartTimestamp));
 
 						logger.Info("Control Panel Sync: Completed syncing Unicorn configuration " + configuration.Name);
 					}
