@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Rainbow.Diff;
+using Rainbow.Filtering;
 using Rainbow.Model;
 using Rainbow.Storage.Sc.Deserialization;
 using Sitecore.Diagnostics;
@@ -17,18 +18,22 @@ namespace Unicorn.Evaluators
 	{
 		private readonly ISerializedAsMasterEvaluatorLogger _logger;
 		private readonly IItemComparer _itemComparer;
+		private readonly IFieldFilter _fieldFilter;
 		private readonly ISourceDataStore _sourceDataStore;
 		private readonly IDeserializer _deserializer;
 		protected static readonly Guid RootId = new Guid("{11111111-1111-1111-1111-111111111111}");
 
-		public SerializedAsMasterEvaluator(ISerializedAsMasterEvaluatorLogger logger, IItemComparer itemComparer, ISourceDataStore sourceDataStore, IDeserializer deserializer)
+		public SerializedAsMasterEvaluator(ISerializedAsMasterEvaluatorLogger logger, IItemComparer itemComparer, IFieldFilter fieldFilter, ISourceDataStore sourceDataStore, IDeserializer deserializer)
 		{
 			Assert.ArgumentNotNull(logger, "logger");
-			Assert.ArgumentNotNull(itemComparer, "fieldFilter");
-			Assert.ArgumentNotNull(itemComparer, "fieldPredicate");
+			Assert.ArgumentNotNull(itemComparer, "itemComparer");
+			Assert.ArgumentNotNull(fieldFilter, "fieldFilter");
+			Assert.ArgumentNotNull(sourceDataStore, "sourceDataStore");
+			Assert.ArgumentNotNull(deserializer, "deserializer");
 
 			_logger = logger;
 			_itemComparer = itemComparer;
+			_fieldFilter = fieldFilter;
 			_sourceDataStore = sourceDataStore;
 			_deserializer = deserializer;
 		}
@@ -79,9 +84,11 @@ namespace Unicorn.Evaluators
 
 			if (existingItem.Id == RootId) return false; // we never want to update the Sitecore root item
 
-			var comparisonResult = _itemComparer.Compare(serializedItem, existingItem);
+			// filter out ignored fields before we do the comparison
+			var filteredTargetItem = new FilteredItem(serializedItem, _fieldFilter);
+			var filteredSourceItem = new FilteredItem(existingItem, _fieldFilter);
 
-			return !comparisonResult.AreEqual;
+			return !_itemComparer.SimpleCompare(filteredTargetItem, filteredSourceItem);
 		}
 
 		protected virtual ISerializableItem DoDeserialization(ISerializableItem serializedItem)

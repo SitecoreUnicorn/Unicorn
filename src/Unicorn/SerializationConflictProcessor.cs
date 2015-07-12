@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Rainbow.Diff;
 using Rainbow.Filtering;
 using Rainbow.Model;
 using Rainbow.Storage.Sc;
 using Sitecore;
-using Sitecore.Data.Fields;
+using Sitecore.Configuration;
+using Sitecore.Data;
 using Sitecore.Data.Items;
 using Sitecore.Diagnostics;
 using Sitecore.Pipelines.Save;
@@ -41,7 +43,6 @@ namespace Unicorn
 		public SerializationConflictProcessor()
 			: this(UnicornConfigurationManager.Configurations)
 		{
-			// TODO: implement this against IItemComparer
 		}
 
 		protected SerializationConflictProcessor(IConfiguration[] configurations)
@@ -75,7 +76,7 @@ namespace Unicorn
 
 		private string GetErrorValue(SaveArgs args)
 		{
-			var results = new Dictionary<Item, IList<FieldDesynchronization>>();
+			var results = new Dictionary<Item, IList<string>>();
 
 			try
 			{
@@ -98,8 +99,9 @@ namespace Unicorn
 						if (serializedItem == null) continue;
 
 						var fieldFilter = configuration.Resolve<IFieldFilter>();
+						var itemComparer = configuration.Resolve<IItemComparer>();
 
-						var fieldIssues = GetFieldSyncStatus(existingSitecoreItem, serializedItem, fieldFilter);
+						var fieldIssues = GetFieldSyncStatus(existingSitecoreItem, serializedItem, fieldFilter, itemComparer);
 
 						if (fieldIssues.Count == 0) continue;
 
@@ -118,9 +120,9 @@ namespace Unicorn
 				foreach (var item in results)
 				{
 					if(results.Count > 1)
-						sb.AppendFormat("\n{0}: {1}", item.Key.DisplayName, string.Join(", ", item.Value.Select(x => x.FieldName)));
+						sb.AppendFormat("\n{0}: {1}", item.Key.DisplayName, string.Join(", ", item.Value));
 					else
-						sb.AppendFormat("\n{0}", string.Join(", ", item.Value.Select(x => x.FieldName)));
+						sb.AppendFormat("\n{0}", string.Join(", ", item.Value));
 				}
 
 				sb.Append("\n\nDo you want to overwrite anyway?\nTHIS MAY CAUSE LOST WORK.");
@@ -134,63 +136,25 @@ namespace Unicorn
 			}
 		}
 
-		private IList<FieldDesynchronization> GetFieldSyncStatus(ISerializableItem item, ISerializableItem serializedItem, IFieldFilter fieldFilter)
+		private IList<string> GetFieldSyncStatus(ISerializableItem item, ISerializableItem serializedItem, IFieldFilter fieldFilter, IItemComparer itemComparer)
 		{
-			var desyncs = new List<FieldDesynchronization>();
+			var comparison = itemComparer.Compare(new FilteredItem(serializedItem, fieldFilter), new FilteredItem(item, fieldFilter));
 
-			var serializedVersion = serializedItem.Versions.FirstOrDefault(x => x.VersionNumber == item.Version.Number && x.Language.Name == item.Language.Name);
-			
-			if (serializedVersion == null)
-			{
-				desyncs.Add(new FieldDesynchronization("Version"));
-				return desyncs;
-			}
+			var db = Factory.GetDatabase(item.DatabaseName);
 
-			item.Fields.ReadAll();
+			var changedFields = comparison.ChangedSharedFields
+				.Concat(comparison.ChangedVersions.SelectMany(version => version.ChangedFields))
+				.Select(field => db.GetItem(new ID((field.SourceField ?? field.TargetField).FieldId)))
+				.Where(field => field != null)
+				.Select(field => field.DisplayName)
+				.ToList();
 
-			var serializedSharedFields = serializedItem.SharedFields.ToDictionary(x => x.FieldId);
-			var serializedFields = serializedVersion.Fields.ToDictionary(x => x.FieldId);
+			if(comparison.IsMoved) changedFields.Add("Item has been moved");
+			if(comparison.IsRenamed) changedFields.Add("Item has been renamed");
+			if(comparison.IsTemplateChanged) changedFields.Add("Item's template has changed");
+			if(comparison.ChangedVersions.Any(version => version.SourceVersion == null || version.TargetVersion == null)) changedFields.Add("Item versions do not match");
 
-			foreach (Field field in item.Fields)
-			{
-				// TODO: compare with evaluator from the config so we respect comparers and such, also move the ignored fields to the ignore list FPs
-				if (field.ID == FieldIDs.Revision || 
-					field.ID == FieldIDs.Updated || 
-					field.ID == FieldIDs.Created || 
-					field.ID == FieldIDs.CreatedBy || 
-					field.ID == FieldIDs.UpdatedBy ||
-					field.Type.Equals("attachment", StringComparison.OrdinalIgnoreCase) ||
-					!fieldFilter.Includes(field.ID.Guid)) continue; 
-				// we're doing a data comparison here - revision, created (by), updated (by) don't matter
-				// skipping these fields allows us to ignore spurious saves the template builder makes to unchanged items being conflicts
-			
-				// find the field in the serialized item in either versioned or shared fields
-				ISerializableFieldValue serializedField;
-
-				if (!serializedFields.TryGetValue(field.ID.Guid, out serializedField))
-					serializedSharedFields.TryGetValue(field.ID.Guid, out serializedField);
-
-				// we ignore if the field doesn't exist in the serialized item. This is because if you added a field to a template,
-				// that does not immediately re-serialize all items based on that template so it's likely innocuous - we're not overwriting anything.
-				if (serializedField == null) continue;
-
-				if (!serializedField.Value.Equals(field.Value, StringComparison.Ordinal))
-				{
-					desyncs.Add(new FieldDesynchronization(field.Name));
-				}
-			}
-
-			return desyncs;
-		}
-
-		private class FieldDesynchronization
-		{
-			public FieldDesynchronization(string fieldName)
-			{
-				FieldName = fieldName;
-			}
-
-			public string FieldName { get; private set; }
+			return changedFields;
 		}
 	}
 }
