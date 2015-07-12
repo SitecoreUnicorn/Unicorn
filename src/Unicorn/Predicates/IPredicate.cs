@@ -9,7 +9,7 @@ namespace Unicorn.Predicates
 	public interface IPredicate
 	{
 		string Name { get; }
-		PredicateResult Includes(ISerializableItem item);
+		PredicateResult Includes(IItemData itemData);
 
 		PredicateRootPath[] GetRootPaths();
 	}

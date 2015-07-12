@@ -8,48 +8,48 @@ namespace Unicorn.Evaluators
 		/// <summary>
 		/// Called when an item is evaluated for deletion
 		/// </summary>
-		void DeletedItem(ISerializableItem deletedItem);
+		void DeletedItem(IItemData deletedItemData);
 		
 		/// <summary>
 		/// Fired when an item's name is different between serialized and source
 		/// </summary>
-		void IsNameMatch(ISerializableItem serializedItem, ISerializableItem existingItem);
+		void IsNameMatch(IItemData serializedItemData, IItemData existingItemData);
 
 		/// <summary>
 		/// Fired when an item's template is different between serialized and source
 		/// </summary>
-		void IsTemplateMatch(ISerializableItem serializedItem, ISerializableItem existingItem);
+		void IsTemplateMatch(IItemData serializedItemData, IItemData existingItemData);
 
 		/// <summary>
 		/// Fired when a shared field value is different between serialized and source
 		/// </summary>
 		/// <remarks>Note that the sourceValue may be null</remarks>
-		void IsSharedFieldMatch(ISerializableItem serializedItem, Guid fieldId, string serializedValue, string sourceValue);
+		void IsSharedFieldMatch(IItemData serializedItemData, Guid fieldId, string serializedValue, string sourceValue);
 
 		/// <summary>
 		/// Fired when a version's field value is different between serialized and source
 		/// </summary>
 		/// <remarks>Note that the sourceValue may be null</remarks>
-		void IsVersionedFieldMatch(ISerializableItem serializedItem, ISerializableVersion version, Guid fieldId, string serializedValue, string sourceValue);
+		void IsVersionedFieldMatch(IItemData serializedItemData, IItemVersion version, Guid fieldId, string serializedValue, string sourceValue);
 
 		/// <summary>
 		/// Fired when a later version is found in the serialized version of an item
 		/// </summary>
-		void NewSerializedVersionMatch(ISerializableVersion newSerializedVersion, ISerializableItem serializedItem, ISerializableItem existingItem);
+		void NewSerializedVersionMatch(IItemVersion newSerializedVersion, IItemData serializedItemData, IItemData existingItemData);
 
 		/// <summary>
 		/// Called when you serialize an item that does not yet exist in the provider
 		/// </summary>
-		void DeserializedNewItem(ISerializableItem serializedItem);
+		void DeserializedNewItem(IItemData serializedItemData);
 
 		/// <summary>
 		/// Called when you serialize an updated item that already existed in the provider
 		/// </summary>
-		void SerializedUpdatedItem(ISerializableItem serializedItem);
+		void SerializedUpdatedItem(IItemData serializedItemData);
 
 		/// <summary>
 		/// Called when extra versions exist in a source item compared to the serialized version
 		/// </summary>
-		void OrphanSourceVersion(ISerializableItem existingItem, ISerializableItem serializedItem, ISerializableVersion[] orphanSourceVersions);
+		void OrphanSourceVersion(IItemData existingItemData, IItemData serializedItemData, IItemVersion[] orphanSourceVersions);
 	}
 }

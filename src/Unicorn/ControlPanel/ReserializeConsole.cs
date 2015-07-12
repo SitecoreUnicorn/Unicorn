@@ -77,7 +77,7 @@ namespace Unicorn.ControlPanel
 			}
 		}
 
-		private void Serialize(ISerializableItem root, IPredicate predicate, ITargetDataStore serializationStore, ISourceDataStore sourceDataStore, ILogger logger)
+		private void Serialize(IItemData root, IPredicate predicate, ITargetDataStore serializationStore, ISourceDataStore sourceDataStore, ILogger logger)
 		{
 			var predicateResult = predicate.Includes(root);
 			if (predicateResult.IsIncluded)

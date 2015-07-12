@@ -6,7 +6,7 @@ namespace Unicorn.Pipelines.UnicornSyncComplete
 	// Note: class can expect to be a singleton instance within a configuration
 	public interface ISyncCompleteDataCollector
 	{
-		void PushChangedItem(ISerializableItem item, ChangeType type);
+		void PushChangedItem(IItemData itemData, ChangeType type);
 
 		ReadOnlyCollection<ChangeEntry> GetChanges();
 		void Reset();

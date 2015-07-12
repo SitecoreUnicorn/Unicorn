@@ -12,9 +12,9 @@ namespace Unicorn.Pipelines.UnicornSyncComplete
 	{
 		private readonly Queue<ChangeEntry> _entries = new Queue<ChangeEntry>();
  
-		public void PushChangedItem(ISerializableItem serializedItem, ChangeType type)
+		public void PushChangedItem(IItemData serializedItemData, ChangeType type)
 		{
-			_entries.Enqueue(new ChangeEntry(serializedItem, type));
+			_entries.Enqueue(new ChangeEntry(serializedItemData, type));
 		}
 
 		public ReadOnlyCollection<ChangeEntry> GetChanges()

@@ -18,33 +18,33 @@ namespace Unicorn
 			_logger = logger;
 		}
 
-		public virtual void RenamedItem(string providerName, ISerializableItem sourceItem, string oldName)
+		public virtual void RenamedItem(string providerName, IItemData sourceItemData, string oldName)
 		{
-			_logger.Info(string.Format("{0}: Renamed serialized item to {1} from {2}", providerName, sourceItem.Path, oldName));
+			_logger.Info(string.Format("{0}: Renamed serialized item to {1} from {2}", providerName, sourceItemData.Path, oldName));
 		}
 
-		public virtual void SavedItem(string providerName, ISerializableItem sourceItem, string triggerReason)
+		public virtual void SavedItem(string providerName, IItemData sourceItemData, string triggerReason)
 		{
-			_logger.Info(string.Format("{0}: Serialized {1} ({2}) to disk ({3}).", providerName, sourceItem.Path, sourceItem.Id, triggerReason));
+			_logger.Info(string.Format("{0}: Serialized {1} ({2}) to disk ({3}).", providerName, sourceItemData.Path, sourceItemData.Id, triggerReason));
 		}
 
-		public virtual void MovedItemToNonIncludedLocation(string providerName, ISerializableItem existingItem)
+		public virtual void MovedItemToNonIncludedLocation(string providerName, IItemData existingItemData)
 		{
-			_logger.Debug(string.Format("{0}: Moved item {1} was moved to a path that was not included in serialization, and the existing serialized item was deleted.", providerName, existingItem.Path));
+			_logger.Debug(string.Format("{0}: Moved item {1} was moved to a path that was not included in serialization, and the existing serialized item was deleted.", providerName, existingItemData.Path));
 		}
 
-		public virtual void MovedItem(string providerName, ISerializableItem sourceItem, ISerializableItem destinationItem)
+		public virtual void MovedItem(string providerName, IItemData sourceItemData, IItemData destinationItemData)
 		{
-			_logger.Info(string.Format("{0}: Moved serialized item {1} ({2}) to {3}", providerName, sourceItem.Path, sourceItem.Id, destinationItem.Path));
+			_logger.Info(string.Format("{0}: Moved serialized item {1} ({2}) to {3}", providerName, sourceItemData.Path, sourceItemData.Id, destinationItemData.Path));
 		}
 
-		public virtual void CopiedItem(string providerName, Func<ISerializableItem> sourceItem, ISerializableItem copiedItem)
+		public virtual void CopiedItem(string providerName, Func<IItemData> sourceItem, IItemData copiedItemData)
 		{
 		}
 
-		public virtual void DeletedItem(string providerName, ISerializableItem existingItem)
+		public virtual void DeletedItem(string providerName, IItemData existingItemData)
 		{
-			_logger.Info(string.Format("{0}: Serialized item {1} was deleted due to the source item being deleted.", providerName, existingItem.GetDisplayIdentifier()));
+			_logger.Info(string.Format("{0}: Serialized item {1} was deleted due to the source item being deleted.", providerName, existingItemData.GetDisplayIdentifier()));
 		}
 
 		public virtual void SaveRejectedAsInconsequential(string providerName, ItemChanges changes)

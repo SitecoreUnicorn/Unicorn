@@ -12,6 +12,7 @@ using Sitecore.Diagnostics;
 using Sitecore.Globalization;
 using Unicorn.Data;
 using Unicorn.Predicates;
+using ItemData = Rainbow.Storage.Sc.ItemData;
 
 namespace Unicorn
 {
@@ -126,7 +127,7 @@ namespace Unicorn
 			if (DisableSerialization) return;
 
 			// copying is easy - all we have to do is serialize the copyID. Copied children will all result in multiple calls to CopyItem so we don't even need to worry about them.
-			var copiedItem = new SerializableItem(Database.GetItem(copyId));
+			var copiedItem = new ItemData(Database.GetItem(copyId));
 
 			if (!_predicate.Includes(copiedItem).IsIncluded) return; // destination parent is not in a path that we are serializing, so skip out
 
@@ -189,7 +190,7 @@ namespace Unicorn
 			return true;
 		}
 
-		protected virtual ISerializableItem GetExistingSerializedItem(Guid id)
+		protected virtual IItemData GetExistingSerializedItem(Guid id)
 		{
 			var item = Database.GetItem(new ID(id));
 
@@ -221,27 +222,27 @@ namespace Unicorn
 			return false;
 		}
 
-		protected ISerializableItem GetSourceFromDefinition(ItemDefinition definition)
+		protected IItemData GetSourceFromDefinition(ItemDefinition definition)
 		{
 			return GetSourceFromDefinition(definition, false);
 		}
 
-		protected virtual ISerializableItem GetSourceFromDefinition(ItemDefinition definition, bool useCache)
+		protected virtual IItemData GetSourceFromDefinition(ItemDefinition definition, bool useCache)
 		{
 			if (!useCache) RemoveItemFromCache(definition.ID);
-			return new SerializableItem(Database.GetItem(definition.ID));
+			return new ItemData(Database.GetItem(definition.ID));
 		}
 
 		/// <summary>
 		/// When items are acquired from the data provider they can be stale in cache, which fouls up serializing them.
 		/// Renames and template changes are particularly vulnerable to this.
 		/// </summary>
-		protected virtual ISerializableItem GetItemWithoutCache(Item item)
+		protected virtual IItemData GetItemWithoutCache(Item item)
 		{
 			RemoveItemFromCache(item.ID);
 
 			// reacquire the source item after cleaning the cache
-			return new SerializableItem(item.Database.GetItem(item.ID, item.Language, item.Version));
+			return new ItemData(item.Database.GetItem(item.ID, item.Language, item.Version));
 		}
 
 		protected virtual void RemoveItemFromCache(ID id)

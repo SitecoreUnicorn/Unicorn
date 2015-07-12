@@ -14,7 +14,7 @@ namespace Unicorn.Loader
 		private readonly List<Failure> _itemFailures = new List<Failure>();
 		private readonly List<Failure> _treeFailures = new List<Failure>(); 
 
-		public void AddItemRetry(ISerializableItem reference, Exception exception)
+		public void AddItemRetry(IItemData reference, Exception exception)
 		{
 			Assert.ArgumentNotNull(reference, "reference");
 			Assert.ArgumentNotNull(exception, "exception");
@@ -22,7 +22,7 @@ namespace Unicorn.Loader
 			_itemFailures.Add(new Failure(reference, exception));
 		}
 
-		public void AddTreeRetry(ISerializableItem reference, Exception exception)
+		public void AddTreeRetry(IItemData reference, Exception exception)
 		{
 			Assert.ArgumentNotNull(reference, "reference");
 			Assert.ArgumentNotNull(exception, "exception");
@@ -30,7 +30,7 @@ namespace Unicorn.Loader
 			_treeFailures.Add(new Failure(reference, exception));
 		}
 
-		public void RetryStandardValuesFailures(Action<ISerializableItem> retryAction)
+		public void RetryStandardValuesFailures(Action<IItemData> retryAction)
 		{
 			Assert.ArgumentNotNull(retryAction, "retryAction");
 
@@ -42,7 +42,7 @@ namespace Unicorn.Loader
 
 			foreach (Failure failure in standardValuesFailures)
 			{
-				var item = failure.Reference as ISerializableItem;
+				var item = failure.Reference as IItemData;
 				if (item != null)
 				{
 					try
@@ -57,7 +57,7 @@ namespace Unicorn.Loader
 			}
 		}
 
-		public void RetryAll(ISourceDataStore sourceDataProvider, Action<ISerializableItem> retrySingleItemAction, Action<ISerializableItem> retryTreeAction)
+		public void RetryAll(ISourceDataStore sourceDataProvider, Action<IItemData> retrySingleItemAction, Action<IItemData> retryTreeAction)
 		{
 			Assert.ArgumentNotNull(sourceDataProvider, "sourceDataProvider");
 			Assert.ArgumentNotNull(retrySingleItemAction, "retrySingleItemAction");
@@ -145,10 +145,10 @@ namespace Unicorn.Loader
 		/// </summary>
 		private class Failure
 		{
-			public ISerializableItem Reference { get; private set; }
+			public IItemData Reference { get; private set; }
 			public Exception Reason { get; private set; }
 
-			public Failure(ISerializableItem reference, Exception reason)
+			public Failure(IItemData reference, Exception reason)
 			{
 				Reference = reference;
 				Reason = reason;

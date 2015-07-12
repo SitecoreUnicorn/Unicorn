@@ -23,9 +23,9 @@ namespace Unicorn.Predicates
 			_logger = logger;
 		}
 
-		public ISerializableItem[] GetRootSourceItems()
+		public IItemData[] GetRootSourceItems()
 		{
-			var items = new List<ISerializableItem>();
+			var items = new List<IItemData>();
 
 			foreach (var include in _predicate.GetRootPaths())
 			{
@@ -38,9 +38,9 @@ namespace Unicorn.Predicates
 			return items.ToArray();
 		}
 
-		public ISerializableItem[] GetRootSerializedItems()
+		public IItemData[] GetRootSerializedItems()
 		{
-			var items = new List<ISerializableItem>();
+			var items = new List<IItemData>();
 
 			foreach (var include in _predicate.GetRootPaths())
 			{

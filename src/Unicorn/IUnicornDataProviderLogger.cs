@@ -9,16 +9,16 @@ namespace Unicorn
 	/// </summary>
 	public interface IUnicornDataProviderLogger
 	{
-		void RenamedItem(string providerName, ISerializableItem sourceItem, string oldName);
+		void RenamedItem(string providerName, IItemData sourceItemData, string oldName);
 
-		void SavedItem(string providerName, ISerializableItem sourceItem, string triggerReason);
+		void SavedItem(string providerName, IItemData sourceItemData, string triggerReason);
 
-		void MovedItemToNonIncludedLocation(string providerName, ISerializableItem existingItem);
+		void MovedItemToNonIncludedLocation(string providerName, IItemData existingItemData);
 
-		void MovedItem(string providerName, ISerializableItem sourceItem, ISerializableItem destinationItem);
-		void CopiedItem(string providerName, Func<ISerializableItem> sourceItem, ISerializableItem copiedItem);
+		void MovedItem(string providerName, IItemData sourceItemData, IItemData destinationItemData);
+		void CopiedItem(string providerName, Func<IItemData> sourceItem, IItemData copiedItemData);
 
-		void DeletedItem(string providerName, ISerializableItem existingItem);
+		void DeletedItem(string providerName, IItemData existingItemData);
 
 		void SaveRejectedAsInconsequential(string providerName, ItemChanges changes);
 	}

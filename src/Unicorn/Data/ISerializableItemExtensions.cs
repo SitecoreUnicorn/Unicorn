@@ -6,12 +6,12 @@ namespace Unicorn.Data
 {
 	public static class SerializableItemExtensions
 	{
-		public static string GetDisplayIdentifier(this ISerializableItem item)
+		public static string GetDisplayIdentifier(this IItemData item)
 		{
 			return string.Format("{0}:{1} ({2})", item.DatabaseName, item.Path, item.Id);
 		}
 
-		public static bool IsStandardValuesItem(this ISerializableItem item)
+		public static bool IsStandardValuesItem(this IItemData item)
 		{
 			string[] array = item.Path.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
 			if (array.Length > 0)

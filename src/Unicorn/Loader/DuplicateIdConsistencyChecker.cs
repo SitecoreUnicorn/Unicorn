@@ -6,31 +6,31 @@ namespace Unicorn.Loader
 	public class DuplicateIdConsistencyChecker : IConsistencyChecker
 	{
 		private readonly IDuplicateIdConsistencyCheckerLogger _logger;
-		private readonly Dictionary<string, ISerializableItem> _duplicateChecks = new Dictionary<string, ISerializableItem>();
+		private readonly Dictionary<string, IItemData> _duplicateChecks = new Dictionary<string, IItemData>();
 
 		public DuplicateIdConsistencyChecker(IDuplicateIdConsistencyCheckerLogger logger)
 		{
 			_logger = logger;
 		}
 
-		public bool IsConsistent(ISerializableItem item)
+		public bool IsConsistent(IItemData itemData)
 		{
-			ISerializableItem duplicateItem;
-			if(!_duplicateChecks.TryGetValue(CreateKey(item), out duplicateItem)) return true;
+			IItemData duplicateItemData;
+			if(!_duplicateChecks.TryGetValue(CreateKey(itemData), out duplicateItemData)) return true;
 
-			_logger.DuplicateFound(duplicateItem, item);
+			_logger.DuplicateFound(duplicateItemData, itemData);
 
 			return false;
 		}
 
-		public void AddProcessedItem(ISerializableItem item)
+		public void AddProcessedItem(IItemData itemData)
 		{
-			_duplicateChecks.Add(CreateKey(item), item);
+			_duplicateChecks.Add(CreateKey(itemData), itemData);
 		}
 
-		protected virtual string CreateKey(ISerializableItem item)
+		protected virtual string CreateKey(IItemData itemData)
 		{
-			return item.Id + item.DatabaseName;
+			return itemData.Id + itemData.DatabaseName;
 		}
 	}
 }

@@ -51,17 +51,17 @@ namespace Unicorn.Deserialization
 			_logger.Debug("* [A] version {0}#{1}".FormatWith(newVersion.Language.Name, newVersion.Version.Number));
 		}
 
-		public virtual void SkippedMissingTemplateField(Item item, ISerializableFieldValue field)
+		public virtual void SkippedMissingTemplateField(Item item, IItemFieldValue field)
 		{
 			_logger.Warn("* Skipped field {0} because it did not exist on template {1}.".FormatWith(field.FieldId, item.TemplateName));
 		}
 
-		public virtual void WroteBlobStream(Item item, ISerializableFieldValue field)
+		public virtual void WroteBlobStream(Item item, IItemFieldValue field)
 		{
 
 		}
 
-		public virtual void UpdatedChangedFieldValue(Item item, ISerializableFieldValue field, string oldValue)
+		public virtual void UpdatedChangedFieldValue(Item item, IItemFieldValue field, string oldValue)
 		{
 			var itemField = item.Fields[new ID(field.FieldId)];
 			if (itemField.Shared)
@@ -75,7 +75,7 @@ namespace Unicorn.Deserialization
 
 		}
 
-		public void SkippedPastingIgnoredField(Item item, ISerializableFieldValue field)
+		public void SkippedPastingIgnoredField(Item item, IItemFieldValue field)
 		{
 			
 		}

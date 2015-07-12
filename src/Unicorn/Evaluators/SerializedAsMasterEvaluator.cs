@@ -38,38 +38,38 @@ namespace Unicorn.Evaluators
 			_deserializer = deserializer;
 		}
 
-		public void EvaluateOrphans(ISerializableItem[] orphanItems)
+		public void EvaluateOrphans(IItemData[] orphanItems)
 		{
 			Assert.ArgumentNotNull(orphanItems, "orphanItems");
 
 			EvaluatorUtility.RecycleItems(orphanItems, _sourceDataStore, item => _logger.DeletedItem(item));
 		}
 
-		public ISerializableItem EvaluateNewSerializedItem(ISerializableItem newItem)
+		public IItemData EvaluateNewSerializedItem(IItemData newItemData)
 		{
-			Assert.ArgumentNotNull(newItem, "newItem");
+			Assert.ArgumentNotNull(newItemData, "newItem");
 
-			_logger.DeserializedNewItem(newItem);
+			_logger.DeserializedNewItem(newItemData);
 
-			var updatedItem = DoDeserialization(newItem);
+			var updatedItem = DoDeserialization(newItemData);
 
 			return updatedItem;
 		}
 
-		public ISerializableItem EvaluateUpdate(ISerializableItem serializedItem, ISerializableItem existingItem)
+		public IItemData EvaluateUpdate(IItemData targetItem, IItemData sourceItem)
 		{
-			Assert.ArgumentNotNull(serializedItem, "serializedItem");
-			Assert.ArgumentNotNull(existingItem, "existingItem");
+			Assert.ArgumentNotNull(targetItem, "targetItemData");
+			Assert.ArgumentNotNull(sourceItem, "sourceItemData");
 
 			var deferredUpdateLog = new DeferredLogWriter<ISerializedAsMasterEvaluatorLogger>();
 
-			if (ShouldUpdateExisting(serializedItem, existingItem, deferredUpdateLog))
+			if (ShouldUpdateExisting(targetItem, sourceItem, deferredUpdateLog))
 			{
-				_logger.SerializedUpdatedItem(serializedItem);
+				_logger.SerializedUpdatedItem(targetItem);
 
 				deferredUpdateLog.ExecuteDeferredActions(_logger);
 
-				var updatedItem = DoDeserialization(serializedItem);
+				var updatedItem = DoDeserialization(targetItem);
 
 				return updatedItem;
 			}
@@ -77,27 +77,27 @@ namespace Unicorn.Evaluators
 			return null;
 		}
 
-		protected virtual bool ShouldUpdateExisting(ISerializableItem serializedItem, ISerializableItem existingItem, DeferredLogWriter<ISerializedAsMasterEvaluatorLogger> deferredUpdateLog)
+		protected virtual bool ShouldUpdateExisting(IItemData targetItem, IItemData sourceItem, DeferredLogWriter<ISerializedAsMasterEvaluatorLogger> deferredUpdateLog)
 		{
-			Assert.ArgumentNotNull(serializedItem, "serializedItem");
-			Assert.ArgumentNotNull(existingItem, "existingItem");
+			Assert.ArgumentNotNull(targetItem, "targetItem");
+			Assert.ArgumentNotNull(sourceItem, "sourceItem");
 
-			if (existingItem.Id == RootId) return false; // we never want to update the Sitecore root item
+			if (sourceItem.Id == RootId) return false; // we never want to update the Sitecore root item
 
 			// filter out ignored fields before we do the comparison
-			var filteredTargetItem = new FilteredItem(serializedItem, _fieldFilter);
-			var filteredSourceItem = new FilteredItem(existingItem, _fieldFilter);
+			var filteredTargetItem = new FilteredItemData(targetItem, _fieldFilter);
+			var filteredSourceItem = new FilteredItemData(sourceItem, _fieldFilter);
 
 			return !_itemComparer.SimpleCompare(filteredTargetItem, filteredSourceItem);
 		}
 
-		protected virtual ISerializableItem DoDeserialization(ISerializableItem serializedItem)
+		protected virtual IItemData DoDeserialization(IItemData targetItem)
 		{
-			ISerializableItem updatedItem = _deserializer.Deserialize(serializedItem, false);
+			IItemData updatedItemData = _deserializer.Deserialize(targetItem, false);
 
-			Assert.IsNotNull(updatedItem, "Do not return null from DeserializeItem() - throw an exception if an error occurs.");
+			Assert.IsNotNull(updatedItemData, "Do not return null from DeserializeItem() - throw an exception if an error occurs.");
 
-			return updatedItem;
+			return updatedItemData;
 		}
 
 		public string FriendlyName

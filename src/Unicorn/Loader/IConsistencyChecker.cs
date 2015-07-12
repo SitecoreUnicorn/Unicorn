@@ -8,7 +8,7 @@ namespace Unicorn.Loader
 	/// </summary>
 	public interface IConsistencyChecker
 	{
-		bool IsConsistent(ISerializableItem item);
-		void AddProcessedItem(ISerializableItem item);
+		bool IsConsistent(IItemData itemData);
+		void AddProcessedItem(IItemData itemData);
 	}
 }

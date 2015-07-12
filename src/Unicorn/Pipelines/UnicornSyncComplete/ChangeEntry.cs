@@ -4,13 +4,13 @@ namespace Unicorn.Pipelines.UnicornSyncComplete
 {
 	public class ChangeEntry
 	{
-		public ChangeEntry(ISerializableItem item, ChangeType type)
+		public ChangeEntry(IItemData itemData, ChangeType type)
 		{
-			Item = item;
+			ItemData = itemData;
 			ChangeType = type;
 		}
 
-		public ISerializableItem Item { get; private set; }
+		public IItemData ItemData { get; private set; }
 		public ChangeType ChangeType { get; private set; }
 	}
 }

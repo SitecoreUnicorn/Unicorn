@@ -53,14 +53,14 @@ namespace Unicorn.Loader
 			LoadAll(roots, retryer, consistencyChecker);
 		}
 
-		public virtual void LoadAll(ISerializableItem[] rootItems, IDeserializeFailureRetryer retryer, IConsistencyChecker consistencyChecker, Action<ISerializableItem> rootLoadedCallback = null)
+		public virtual void LoadAll(IItemData[] rootItemsData, IDeserializeFailureRetryer retryer, IConsistencyChecker consistencyChecker, Action<IItemData> rootLoadedCallback = null)
 		{
-			Assert.ArgumentNotNull(rootItems, "rootItems");
-			Assert.IsTrue(rootItems.Length > 0, "No root items were passed!");
+			Assert.ArgumentNotNull(rootItemsData, "rootItems");
+			Assert.IsTrue(rootItemsData.Length > 0, "No root items were passed!");
 
 			using (new EventDisabler())
 			{
-				foreach (var rootItem in rootItems)
+				foreach (var rootItem in rootItemsData)
 				{
 					LoadTree(rootItem, retryer, consistencyChecker);
 					if (rootLoadedCallback != null) rootLoadedCallback(rootItem);
@@ -73,9 +73,9 @@ namespace Unicorn.Loader
 		/// <summary>
 		/// Loads a tree from serialized items on disk.
 		/// </summary>
-		protected internal virtual void LoadTree(ISerializableItem rootItem, IDeserializeFailureRetryer retryer, IConsistencyChecker consistencyChecker)
+		protected internal virtual void LoadTree(IItemData rootItemData, IDeserializeFailureRetryer retryer, IConsistencyChecker consistencyChecker)
 		{
-			Assert.ArgumentNotNull(rootItem, "rootItem");
+			Assert.ArgumentNotNull(rootItemData, "rootItem");
 			Assert.ArgumentNotNull(retryer, "retryer");
 			Assert.ArgumentNotNull(consistencyChecker, "consistencyChecker");
 
@@ -83,16 +83,16 @@ namespace Unicorn.Loader
 			var timer = new Stopwatch();
 			timer.Start();
 
-			Logger.BeginLoadingTree(rootItem);
+			Logger.BeginLoadingTree(rootItemData);
 
 
 			// load the root item (LoadTreeRecursive only evaluates children)
-			DoLoadItem(rootItem, consistencyChecker);
+			DoLoadItem(rootItemData, consistencyChecker);
 
 			// load children of the root
-			LoadTreeRecursive(rootItem, retryer, consistencyChecker);
+			LoadTreeRecursive(rootItemData, retryer, consistencyChecker);
 
-			Logger.EndLoadingTree(rootItem, _itemsProcessed, timer.ElapsedMilliseconds);
+			Logger.EndLoadingTree(rootItemData, _itemsProcessed, timer.ElapsedMilliseconds);
 
 			timer.Stop();
 		}
@@ -100,7 +100,7 @@ namespace Unicorn.Loader
 		/// <summary>
 		/// Recursive method that loads a given tree and retries failures already present if any
 		/// </summary>
-		protected virtual void LoadTreeRecursive(ISerializableItem root, IDeserializeFailureRetryer retryer, IConsistencyChecker consistencyChecker)
+		protected virtual void LoadTreeRecursive(IItemData root, IDeserializeFailureRetryer retryer, IConsistencyChecker consistencyChecker)
 		{
 			Assert.ArgumentNotNull(root, "root");
 			Assert.ArgumentNotNull(retryer, "retryer");
@@ -158,21 +158,21 @@ namespace Unicorn.Loader
 		/// <summary>
 		/// Loads a set of children from a serialized path
 		/// </summary>
-		protected virtual void LoadOneLevel(ISerializableItem rootSerializedItem, IDeserializeFailureRetryer retryer, IConsistencyChecker consistencyChecker)
+		protected virtual void LoadOneLevel(IItemData rootSerializedItemData, IDeserializeFailureRetryer retryer, IConsistencyChecker consistencyChecker)
 		{
-			Assert.ArgumentNotNull(rootSerializedItem, "root");
+			Assert.ArgumentNotNull(rootSerializedItemData, "root");
 			Assert.ArgumentNotNull(retryer, "retryer");
 
-			var orphanCandidates = new Dictionary<Guid, ISerializableItem>();
+			var orphanCandidates = new Dictionary<Guid, IItemData>();
 
 			// get the corresponding item from Sitecore
-			ISerializableItem rootSourceItem = SourceDataStore.GetById(rootSerializedItem.Id, rootSerializedItem.DatabaseName);
+			IItemData rootSourceItemData = SourceDataStore.GetById(rootSerializedItemData.Id, rootSerializedItemData.DatabaseName);
 
 			// we add all of the root item's direct children to the "maybe orphan" list (we'll remove them as we find matching serialized children)
-			if (rootSourceItem != null)
+			if (rootSourceItemData != null)
 			{
-				var rootSourceChildren = SourceDataStore.GetChildren(rootSourceItem.Id, rootSourceItem.DatabaseName);
-				foreach (ISerializableItem child in rootSourceChildren)
+				var rootSourceChildren = SourceDataStore.GetChildren(rootSourceItemData.Id, rootSourceItemData.DatabaseName);
+				foreach (IItemData child in rootSourceChildren)
 				{
 					// if the preset includes the child add it to the orphan-candidate list (if we don't deserialize it below, it will be marked orphan)
 					var included = Predicate.Includes(child);
@@ -186,7 +186,7 @@ namespace Unicorn.Loader
 			}
 
 			// check for direct children of the target path
-			var serializedChildren = TargetDataStore.GetChildren(rootSerializedItem.Id, rootSerializedItem.DatabaseName);
+			var serializedChildren = TargetDataStore.GetChildren(rootSerializedItemData.Id, rootSerializedItemData.DatabaseName);
 			foreach (var serializedChild in serializedChildren)
 			{
 				try
@@ -200,9 +200,9 @@ namespace Unicorn.Loader
 					{
 						// load a child item
 						var loadedSourceItem = DoLoadItem(serializedChild, consistencyChecker);
-						if (loadedSourceItem.Item != null)
+						if (loadedSourceItem.ItemData != null)
 						{
-							orphanCandidates.Remove(loadedSourceItem.Item.Id);
+							orphanCandidates.Remove(loadedSourceItem.ItemData.Id);
 
 							// check if we have any child serialized items under this loaded child item (existing children) -
 							// if we do not, we can orphan any included children of the loaded item as well
@@ -210,8 +210,8 @@ namespace Unicorn.Loader
 
 							if (!loadedItemSerializedChildren.Any()) // no children were serialized on disk
 							{
-								var loadedSourceChildren = SourceDataStore.GetChildren(loadedSourceItem.Item.Id, loadedSourceItem.Item.DatabaseName);
-								foreach (ISerializableItem loadedSourceChild in loadedSourceChildren)
+								var loadedSourceChildren = SourceDataStore.GetChildren(loadedSourceItem.ItemData.Id, loadedSourceItem.ItemData.DatabaseName);
+								foreach (IItemData loadedSourceChild in loadedSourceChildren)
 								{
 									// place any included source children on the orphan list for deletion, as no serialized children existed
 									if(Predicate.Includes(loadedSourceChild).IsIncluded)
@@ -256,14 +256,14 @@ namespace Unicorn.Loader
 		/// <summary>
 		/// Loads a specific item from disk
 		/// </summary>
-		protected virtual ItemLoadResult DoLoadItem(ISerializableItem serializedItem, IConsistencyChecker consistencyChecker)
+		protected virtual ItemLoadResult DoLoadItem(IItemData serializedItemData, IConsistencyChecker consistencyChecker)
 		{
-			Assert.ArgumentNotNull(serializedItem, "serializedItem");
+			Assert.ArgumentNotNull(serializedItemData, "serializedItem");
 
 			if (consistencyChecker != null)
 			{
-				if (!consistencyChecker.IsConsistent(serializedItem)) throw new ConsistencyException("Consistency check failed - aborting loading.");
-				consistencyChecker.AddProcessedItem(serializedItem);
+				if (!consistencyChecker.IsConsistent(serializedItemData)) throw new ConsistencyException("Consistency check failed - aborting loading.");
+				consistencyChecker.AddProcessedItem(serializedItemData);
 			}
 
 			bool disableNewSerialization = UnicornDataProvider.DisableSerialization;
@@ -273,26 +273,26 @@ namespace Unicorn.Loader
 
 				_itemsProcessed++;
 
-				var included = Predicate.Includes(serializedItem);
+				var included = Predicate.Includes(serializedItemData);
 
 				if (!included.IsIncluded)
 				{
-					Logger.SkippedItemPresentInSerializationProvider(serializedItem, Predicate.GetType().Name, TargetDataStore.GetType().Name, included.Justification ?? string.Empty);
+					Logger.SkippedItemPresentInSerializationProvider(serializedItemData, Predicate.GetType().Name, TargetDataStore.GetType().Name, included.Justification ?? string.Empty);
 					return new ItemLoadResult(ItemLoadStatus.Skipped);
 				}
 
 				// detect if we should run an update for the item or if it's already up to date
-				var existingItem = SourceDataStore.GetById(serializedItem.Id, serializedItem.DatabaseName);
-				ISerializableItem updatedItem;
+				var existingItem = SourceDataStore.GetById(serializedItemData.Id, serializedItemData.DatabaseName);
+				IItemData updatedItemData;
 
 				// note that the evaluator is responsible for actual action being taken here
 				// as well as logging what it does
 				if (existingItem == null)
-					updatedItem = Evaluator.EvaluateNewSerializedItem(serializedItem);
+					updatedItemData = Evaluator.EvaluateNewSerializedItem(serializedItemData);
 				else
-					updatedItem = Evaluator.EvaluateUpdate(serializedItem, existingItem);
+					updatedItemData = Evaluator.EvaluateUpdate(serializedItemData, existingItem);
 
-				return new ItemLoadResult(ItemLoadStatus.Success, updatedItem ?? existingItem);
+				return new ItemLoadResult(ItemLoadStatus.Success, updatedItemData ?? existingItem);
 			}
 			finally
 			{
@@ -304,17 +304,17 @@ namespace Unicorn.Loader
 		{
 			public ItemLoadResult(ItemLoadStatus status)
 			{
-				Item = null;
+				ItemData = null;
 				Status = status;
 			}
 
-			public ItemLoadResult(ItemLoadStatus status, ISerializableItem item)
+			public ItemLoadResult(ItemLoadStatus status, IItemData itemData)
 			{
-				Item = item;
+				ItemData = itemData;
 				Status = status;
 			}
 
-			public ISerializableItem Item { get; private set; }
+			public IItemData ItemData { get; private set; }
 			public ItemLoadStatus Status { get; private set; }
 		}
 

@@ -4,6 +4,6 @@ namespace Unicorn.Loader
 {
 	public interface IDuplicateIdConsistencyCheckerLogger
 	{
-		void DuplicateFound(ISerializableItem existingItem, ISerializableItem duplicateItem);
+		void DuplicateFound(IItemData existingItemData, IItemData duplicateItemData);
 	}
 }

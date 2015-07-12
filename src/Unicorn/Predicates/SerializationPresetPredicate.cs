@@ -25,7 +25,7 @@ namespace Unicorn.Predicates
 
 		public string Name { get { return "Serialization Preset"; } }
 
-		public PredicateResult Includes(ISerializableItem item)
+		public PredicateResult Includes(IItemData itemData)
 		{
 			// no entries = include everything
 			if (_preset.FirstOrDefault() == null) return new PredicateResult(true);
@@ -34,7 +34,7 @@ namespace Unicorn.Predicates
 			PredicateResult priorityResult = null;
 			foreach (var entry in _preset)
 			{
-				result = Includes(entry, item);
+				result = Includes(entry, itemData);
 
 				if (result.IsIncluded) return result; // it's definitely included if anything includes it
 				if (!string.IsNullOrEmpty(result.Justification)) priorityResult = result; // a justification means this is probably a more 'important' fail than others
@@ -53,29 +53,29 @@ namespace Unicorn.Predicates
 		/// <summary>
 		/// Checks if a preset includes a given item
 		/// </summary>
-		protected PredicateResult Includes(IncludeEntry entry, ISerializableItem item)
+		protected PredicateResult Includes(IncludeEntry entry, IItemData itemData)
 		{
 			// check for db match
-			if (item.DatabaseName != entry.Database) return new PredicateResult(false);
+			if (itemData.DatabaseName != entry.Database) return new PredicateResult(false);
 
 			// check for path match
-			if (!item.Path.StartsWith(entry.Path, StringComparison.OrdinalIgnoreCase)) return new PredicateResult(false);
+			if (!itemData.Path.StartsWith(entry.Path, StringComparison.OrdinalIgnoreCase)) return new PredicateResult(false);
 
 			// check excludes
-			return ExcludeMatches(entry, item);
+			return ExcludeMatches(entry, itemData);
 		}
 
-		protected virtual PredicateResult ExcludeMatches(IncludeEntry entry, ISerializableItem item)
+		protected virtual PredicateResult ExcludeMatches(IncludeEntry entry, IItemData itemData)
 		{
-			PredicateResult result = ExcludeMatchesTemplateId(entry.Exclude, item.TemplateId);
+			PredicateResult result = ExcludeMatchesTemplateId(entry.Exclude, itemData.TemplateId);
 
 			if (!result.IsIncluded) return result;
 
-			result = ExcludeMatchesPath(entry.Exclude, item.Path);
+			result = ExcludeMatchesPath(entry.Exclude, itemData.Path);
 
 			if (!result.IsIncluded) return result;
 
-			result = ExcludeMatchesId(entry.Exclude, item.Id);
+			result = ExcludeMatchesId(entry.Exclude, itemData.Id);
 
 			return result;
 		}

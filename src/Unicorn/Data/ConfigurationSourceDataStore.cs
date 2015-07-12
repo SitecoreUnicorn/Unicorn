@@ -24,32 +24,32 @@ namespace Unicorn.Data
 			return _innerDataStore.Value.GetDatabaseNames();
 		}
 
-		public void Save(ISerializableItem item)
+		public void Save(IItemData item)
 		{
 			_innerDataStore.Value.Save(item);
 		}
 
-		public ISerializableItem GetById(Guid itemId, string database)
+		public IItemData GetById(Guid itemId, string database)
 		{
 			return _innerDataStore.Value.GetById(itemId, database);
 		}
 
-		public IEnumerable<ISerializableItem> GetByPath(string path, string database)
+		public IEnumerable<IItemData> GetByPath(string path, string database)
 		{
 			return _innerDataStore.Value.GetByPath(path, database);
 		}
 
-		public IEnumerable<ISerializableItem> GetByTemplate(Guid templateId, string database)
+		public IEnumerable<IItemData> GetByTemplate(Guid templateId, string database)
 		{
 			return _innerDataStore.Value.GetByTemplate(templateId, database);
 		}
 
-		public IEnumerable<ISerializableItem> GetChildren(Guid parentId, string database)
+		public IEnumerable<IItemData> GetChildren(Guid parentId, string database)
 		{
 			return _innerDataStore.Value.GetChildren(parentId, database);
 		}
 
-		public IEnumerable<ISerializableItem> GetDescendants(Guid parentId, string database)
+		public IEnumerable<IItemData> GetDescendants(Guid parentId, string database)
 		{
 			return _innerDataStore.Value.GetDescendants(parentId, database);
 		}

@@ -16,6 +16,7 @@ using Sitecore.Web.UI.Sheer;
 using Unicorn.Configuration;
 using Unicorn.Data;
 using Unicorn.Predicates;
+using ItemData = Rainbow.Storage.Sc.ItemData;
 
 namespace Unicorn
 {
@@ -86,22 +87,22 @@ namespace Unicorn
 
 					Assert.IsNotNull(existingItem, "Existing item {0} did not exist! This should never occur.", item.ID);
 
-					var existingSitecoreItem = new SerializableItem(existingItem);
+					var existingSitecoreItem = new ItemData(existingItem);
 
 					foreach (var configuration in _configurations)
 					{
 						// ignore conflicts on items that Unicorn is not managing
 						if (!configuration.Resolve<IPredicate>().Includes(existingSitecoreItem).IsIncluded) continue;
 
-						ISerializableItem serializedItem = configuration.Resolve<ITargetDataStore>().GetById(existingSitecoreItem.Id, existingSitecoreItem.DatabaseName);
+						IItemData serializedItemData = configuration.Resolve<ITargetDataStore>().GetById(existingSitecoreItem.Id, existingSitecoreItem.DatabaseName);
 					
 						// not having an existing serialized version means no possibility of conflict here
-						if (serializedItem == null) continue;
+						if (serializedItemData == null) continue;
 
 						var fieldFilter = configuration.Resolve<IFieldFilter>();
 						var itemComparer = configuration.Resolve<IItemComparer>();
 
-						var fieldIssues = GetFieldSyncStatus(existingSitecoreItem, serializedItem, fieldFilter, itemComparer);
+						var fieldIssues = GetFieldSyncStatus(existingSitecoreItem, serializedItemData, fieldFilter, itemComparer);
 
 						if (fieldIssues.Count == 0) continue;
 
@@ -136,11 +137,11 @@ namespace Unicorn
 			}
 		}
 
-		private IList<string> GetFieldSyncStatus(ISerializableItem item, ISerializableItem serializedItem, IFieldFilter fieldFilter, IItemComparer itemComparer)
+		private IList<string> GetFieldSyncStatus(IItemData itemData, IItemData serializedItemData, IFieldFilter fieldFilter, IItemComparer itemComparer)
 		{
-			var comparison = itemComparer.Compare(new FilteredItem(serializedItem, fieldFilter), new FilteredItem(item, fieldFilter));
+			var comparison = itemComparer.Compare(new FilteredItemData(serializedItemData, fieldFilter), new FilteredItemData(itemData, fieldFilter));
 
-			var db = Factory.GetDatabase(item.DatabaseName);
+			var db = Factory.GetDatabase(itemData.DatabaseName);
 
 			var changedFields = comparison.ChangedSharedFields
 				.Concat(comparison.ChangedVersions.SelectMany(version => version.ChangedFields))
