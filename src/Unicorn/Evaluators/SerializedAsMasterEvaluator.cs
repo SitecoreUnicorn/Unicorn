@@ -86,8 +86,8 @@ namespace Unicorn.Evaluators
 			if (sourceItem.Id == RootId) return false; // we never want to update the Sitecore root item
 
 			// filter out ignored fields before we do the comparison
-			var filteredTargetItem = new FilteredItemData(targetItem, _fieldFilter);
-			var filteredSourceItem = new FilteredItemData(sourceItem, _fieldFilter);
+			var filteredTargetItem = new FilteredItem(targetItem, _fieldFilter);
+			var filteredSourceItem = new FilteredItem(sourceItem, _fieldFilter);
 
 			return !_itemComparer.SimpleCompare(filteredSourceItem, filteredTargetItem);
 		}
