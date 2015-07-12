@@ -26,9 +26,9 @@ namespace Unicorn.Evaluators
 		/// If a serialized item is found that has a corresponding item in source data, this method is invoked to perform any updates that are needed to the source data.
 		/// Updating is pretty slow so it's much faster to skip unnecessary updates. Normally this would probably compare timestamps etc and if changed, trigger a deserialization.
 		/// </summary>
-		/// <param name="targetItem">The serialized item to evaluate</param>
 		/// <param name="sourceItem">The existing item in Sitecore</param>
+		/// <param name="targetItem">The serialized item to evaluate</param>
 		/// <returns>If an update is performed, return the updated source item. If no update occurs, return null.</returns>
-		IItemData EvaluateUpdate(IItemData targetItem, IItemData sourceItem);
+		IItemData EvaluateUpdate(IItemData sourceItem, IItemData targetItem);
 	}
 }

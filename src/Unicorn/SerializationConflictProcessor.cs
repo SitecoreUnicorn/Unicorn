@@ -139,7 +139,7 @@ namespace Unicorn
 
 		private IList<string> GetFieldSyncStatus(IItemData itemData, IItemData serializedItemData, IFieldFilter fieldFilter, IItemComparer itemComparer)
 		{
-			var comparison = itemComparer.Compare(new FilteredItemData(serializedItemData, fieldFilter), new FilteredItemData(itemData, fieldFilter));
+			var comparison = itemComparer.Compare(new FilteredItemData(itemData, fieldFilter), new FilteredItemData(serializedItemData, fieldFilter));
 
 			var db = Factory.GetDatabase(itemData.DatabaseName);
 

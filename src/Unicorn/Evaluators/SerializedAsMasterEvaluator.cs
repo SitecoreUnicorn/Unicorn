@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Rainbow.Diff;
 using Rainbow.Filtering;
 using Rainbow.Model;
@@ -56,7 +57,7 @@ namespace Unicorn.Evaluators
 			return updatedItem;
 		}
 
-		public IItemData EvaluateUpdate(IItemData targetItem, IItemData sourceItem)
+		public IItemData EvaluateUpdate(IItemData sourceItem, IItemData targetItem)
 		{
 			Assert.ArgumentNotNull(targetItem, "targetItemData");
 			Assert.ArgumentNotNull(sourceItem, "sourceItemData");
@@ -88,7 +89,7 @@ namespace Unicorn.Evaluators
 			var filteredTargetItem = new FilteredItemData(targetItem, _fieldFilter);
 			var filteredSourceItem = new FilteredItemData(sourceItem, _fieldFilter);
 
-			return !_itemComparer.SimpleCompare(filteredTargetItem, filteredSourceItem);
+			return !_itemComparer.SimpleCompare(filteredSourceItem, filteredTargetItem);
 		}
 
 		protected virtual IItemData DoDeserialization(IItemData targetItem)

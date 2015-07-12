@@ -290,7 +290,7 @@ namespace Unicorn.Loader
 				if (existingItem == null)
 					updatedItemData = Evaluator.EvaluateNewSerializedItem(serializedItemData);
 				else
-					updatedItemData = Evaluator.EvaluateUpdate(serializedItemData, existingItem);
+					updatedItemData = Evaluator.EvaluateUpdate(existingItem, serializedItemData);
 
 				return new ItemLoadResult(ItemLoadStatus.Success, updatedItemData ?? existingItem);
 			}
