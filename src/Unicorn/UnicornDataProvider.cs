@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Rainbow.Filtering;
+using Rainbow.Indexing;
 using Rainbow.Model;
 using Rainbow.Storage.Sc;
 using Sitecore;
@@ -118,7 +121,13 @@ namespace Unicorn
 				return;
 			}
 
-			_targetDataStore.Save(sourceItem);
+			var newPath = destinationItem.Path + "/" + sourceItem.Name;
+
+			// the path of sourceItem here is the OLD path. But in order to make the index happy, we need to pass it
+			// the new destination path. This item data decorator lets us inject the path value as the new path.
+			var pathedMovedItem = new PathOverridingItemData(sourceItem, newPath);
+
+			_targetDataStore.Save(pathedMovedItem);
 			_logger.MovedItem(_targetDataStore.GetType().Name, sourceItem, destinationItem);
 		}
 
@@ -252,6 +261,37 @@ namespace Unicorn
 			// to invalid serialized values, we first nuke the item from the cache before we serialize it to make sure we get the freshest data
 			Database.Caches.ItemCache.RemoveItem(id);
 			Database.Caches.DataCache.RemoveItemInformation(id);
+		}
+
+		protected class PathOverridingItemData : IItemData
+		{
+			private readonly IItemData _itemData;
+
+			public PathOverridingItemData(IItemData itemData, string overriddenPath)
+			{
+				Assert.ArgumentNotNull(itemData, "item");
+				Assert.ArgumentNotNullOrEmpty(overriddenPath, "overriddenPath");
+
+				_itemData = itemData;
+				Path = overriddenPath;
+			}
+
+			public Guid Id { get { return _itemData.Id; } }
+			public string DatabaseName { get { return _itemData.DatabaseName; } set { _itemData.DatabaseName = value; } }
+			public Guid ParentId { get { return _itemData.ParentId; } }
+			public string Path { get; private set; }
+			public string Name { get { return _itemData.Name; } }
+			public Guid BranchId { get { return _itemData.BranchId; } }
+			public Guid TemplateId { get { return _itemData.TemplateId; } }
+			public IEnumerable<IItemFieldValue> SharedFields { get { return _itemData.SharedFields; } }
+
+			public IEnumerable<IItemVersion> Versions { get { return _itemData.Versions; } }
+
+			public string SerializedItemId { get { return _itemData.SerializedItemId; } }
+			public void AddIndexData(IndexEntry indexEntry)
+			{
+				_itemData.AddIndexData(indexEntry);
+			}
 		}
 	}
 }
