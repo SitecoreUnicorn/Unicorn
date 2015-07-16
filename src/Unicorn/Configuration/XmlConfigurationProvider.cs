@@ -182,7 +182,12 @@ namespace Unicorn.Configuration
 			// ReSharper disable once PossibleNullReferenceException
 			var attributes = typeNode.Attributes.Cast<XmlAttribute>()
 				.Where(x => x.Name != "type" && x.Name != "singleInstance")
-				.Select(x => new KeyValuePair<string, object>(x.Name, x.InnerText));
+				.Select(x =>
+				{
+					bool boolean;
+					if(bool.TryParse(x.InnerText, out boolean)) return new KeyValuePair<string, object>(x.Name, boolean);
+					return new KeyValuePair<string, object>(x.Name, x.InnerText);
+				});
 
 			// we pass it the XML element as 'configNode'
 			attributes = attributes.Concat(new[] { new KeyValuePair<string, object>("configNode", typeNode) });
