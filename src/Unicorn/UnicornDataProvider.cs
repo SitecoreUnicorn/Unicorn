@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using Rainbow.Filtering;
 using Rainbow.Indexing;
 using Rainbow.Model;
-using Rainbow.Storage.Sc;
 using Sitecore;
 using Sitecore.Data;
 using Sitecore.Data.DataProviders;
@@ -64,8 +62,6 @@ namespace Unicorn
 
 		public void CreateItem(ItemDefinition newItem, ID templateId, ItemDefinition parent, CallContext context)
 		{
-			if (DisableSerialization) return;
-
 			if (DisableSerialization) return;
 
 			Assert.ArgumentNotNull(newItem, "itemDefinition");

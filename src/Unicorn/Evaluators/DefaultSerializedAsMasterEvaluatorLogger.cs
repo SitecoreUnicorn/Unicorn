@@ -22,21 +22,21 @@ namespace Unicorn.Evaluators
 			_sourceDataStore = sourceDataStore;
 		}
 
-		public virtual void DeletedItem(IItemData deletedItemData)
+		public virtual void DeletedItem(IItemData deletedItem)
 		{
-			_logger.Warn("[D] {0} because it did not exist in the serialization provider.".FormatWith(deletedItemData.GetDisplayIdentifier()));
-			_pipelineDataCollector.PushChangedItem(deletedItemData, ChangeType.Deleted);
+			_logger.Warn("[D] {0} because it did not exist in the serialization provider.".FormatWith(deletedItem.GetDisplayIdentifier()));
+			_pipelineDataCollector.PushChangedItem(deletedItem, ChangeType.Deleted);
 		}
 
-		public virtual void IsSharedFieldMatch(IItemData serializedItemData, Guid fieldId, string serializedValue, string sourceValue)
+		public virtual void SharedFieldIsChanged(IItemData targetItem, Guid fieldId, string serializedValue, string sourceValue)
 		{
 			if (serializedValue.Length < MaxFieldLenthToDisplayValue && (sourceValue == null || sourceValue.Length < MaxFieldLenthToDisplayValue))
 			{
-				_logger.Debug("> Field {0} - Serialized {1}, Source {2}".FormatWith(TryResolveItemName(serializedItemData.DatabaseName, fieldId), serializedValue, sourceValue));
+				_logger.Debug("> Field {0} - Serialized {1}, Source {2}".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId), serializedValue, sourceValue));
 			}
 			else
 			{
-				_logger.Debug("> Field {0} - Value mismatch (values too long to display)".FormatWith(TryResolveItemName(serializedItemData.DatabaseName, fieldId)));
+				_logger.Debug("> Field {0} - Value mismatch (values too long to display)".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId)));
 			}
 		}
 
@@ -52,14 +52,14 @@ namespace Unicorn.Evaluators
 			}
 		}
 
-		public virtual void IsTemplateMatch(IItemData serializedItemData, IItemData existingItemData)
+		public virtual void TemplateChanged(IItemData sourceItem, IItemData targetItem)
 		{
-			_logger.Debug("> Template: Serialized \"{0}\", Source \"{1}\"".FormatWith(TryResolveItemName(serializedItemData.DatabaseName, serializedItemData.TemplateId), TryResolveItemName(existingItemData.DatabaseName, existingItemData.TemplateId)));
+			_logger.Debug("> Template: Serialized \"{0}\", Source \"{1}\"".FormatWith(TryResolveItemName(targetItem.DatabaseName, targetItem.TemplateId), TryResolveItemName(sourceItem.DatabaseName, sourceItem.TemplateId)));
 		}
 
-		public virtual void IsNameMatch(IItemData serializedItemData, IItemData existingItemData)
+		public virtual void Renamed(IItemData sourceItem, IItemData targetItem)
 		{
-			_logger.Debug("> Name: Serialized \"{0}\", Source \"{1}\"".FormatWith(serializedItemData.Name, existingItemData.Name));
+			_logger.Debug("> Name: Serialized \"{0}\", Source \"{1}\"".FormatWith(targetItem.Name, sourceItem.Name));
 		}
 
 

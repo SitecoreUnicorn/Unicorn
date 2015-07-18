@@ -19,19 +19,14 @@ namespace Unicorn.Data
 			_innerDataStore = innerDataStore;
 		}
 
-		public IEnumerable<string> GetDatabaseNames()
-		{
-			return _innerDataStore.Value.GetDatabaseNames();
-		}
-
 		public void Save(IItemData item)
 		{
 			_innerDataStore.Value.Save(item);
 		}
 
-		public IItemData GetById(Guid itemId, string database)
+		public void MoveOrRenameItem(IItemData itemWithFinalPath, string oldPath)
 		{
-			return _innerDataStore.Value.GetById(itemId, database);
+			_innerDataStore.Value.MoveOrRenameItem(itemWithFinalPath, oldPath);
 		}
 
 		public IEnumerable<IItemData> GetByPath(string path, string database)
@@ -39,19 +34,9 @@ namespace Unicorn.Data
 			return _innerDataStore.Value.GetByPath(path, database);
 		}
 
-		public IEnumerable<IItemData> GetByTemplate(Guid templateId, string database)
+		public IEnumerable<IItemData> GetChildren(IItemData parentItem)
 		{
-			return _innerDataStore.Value.GetByTemplate(templateId, database);
-		}
-
-		public IEnumerable<IItemData> GetChildren(Guid parentId, string database)
-		{
-			return _innerDataStore.Value.GetChildren(parentId, database);
-		}
-
-		public IEnumerable<IItemData> GetDescendants(Guid parentId, string database)
-		{
-			return _innerDataStore.Value.GetDescendants(parentId, database);
+			return _innerDataStore.Value.GetChildren(parentItem);
 		}
 
 		public void CheckConsistency(string database, bool fixErrors, Action<string> logMessageReceiver)
@@ -64,9 +49,9 @@ namespace Unicorn.Data
 			_innerDataStore.Value.ResetTemplateEngine();
 		}
 
-		public bool Remove(Guid itemId, string database)
+		public bool Remove(IItemData item)
 		{
-			return _innerDataStore.Value.Remove(itemId, database);
+			return _innerDataStore.Value.Remove(item);
 		}
 
 		public string FriendlyName { get { return _innerDataStore.Value.GetType().Name; } }
