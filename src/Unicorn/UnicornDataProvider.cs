@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Rainbow.Filtering;
-using Rainbow.Indexing;
 using Rainbow.Model;
 using Sitecore;
 using Sitecore.Data;
@@ -106,11 +105,11 @@ namespace Unicorn
 
 			if (!_predicate.Includes(destinationItem).IsIncluded) // if the destination we are moving to is NOT included for serialization, we delete the existing item
 			{
-				var existingItem = GetExistingSerializedItem(sourceItem.Id);
+				var existingItem = GetExistingSerializedItem(sourceItem.Path, sourceItem.DatabaseName, sourceItem.Id);
 
 				if (existingItem != null)
 				{
-					_targetDataStore.Remove(existingItem.Id, existingItem.DatabaseName);
+					_targetDataStore.Remove(existingItem);
 					_logger.MovedItemToNonIncludedLocation(_targetDataStore.GetType().Name, existingItem);
 				}
 
@@ -123,7 +122,7 @@ namespace Unicorn
 			// the new destination path. This item data decorator lets us inject the path value as the new path.
 			var pathedMovedItem = new PathOverridingItemData(sourceItem, newPath);
 
-			_targetDataStore.Save(pathedMovedItem);
+			_targetDataStore.MoveOrRenameItem(pathedMovedItem, sourceItem.Path);
 			_logger.MovedItem(_targetDataStore.GetType().Name, sourceItem, destinationItem);
 		}
 
@@ -132,7 +131,7 @@ namespace Unicorn
 			if (DisableSerialization) return;
 
 			// copying is easy - all we have to do is serialize the copyID. Copied children will all result in multiple calls to CopyItem so we don't even need to worry about them.
-			var copiedItem = new ItemData(Database.GetItem(copyId));
+			var copiedItem = new ItemData(Database.GetItem(copyId), _targetDataStore);
 
 			if (!_predicate.Includes(copiedItem).IsIncluded) return; // destination parent is not in a path that we are serializing, so skip out
 
@@ -155,11 +154,11 @@ namespace Unicorn
 
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
 
-			var existingItem = GetExistingSerializedItem(itemDefinition.ID.Guid);
+			var existingItem = GetSourceFromDefinition(itemDefinition, true);
 
 			if (existingItem == null) return; // it was already gone or an item from a different data provider
 
-			_targetDataStore.Remove(existingItem.Id, existingItem.DatabaseName);
+			_targetDataStore.Remove(existingItem);
 			_logger.DeletedItem(_targetDataStore.GetType().Name, existingItem);
 		}
 
@@ -195,13 +194,9 @@ namespace Unicorn
 			return true;
 		}
 
-		protected virtual IItemData GetExistingSerializedItem(Guid id)
+		protected virtual IItemData GetExistingSerializedItem(string path, string database, Guid expectedId)
 		{
-			var item = Database.GetItem(new ID(id));
-
-			if (item == null) return null;
-
-			return _targetDataStore.GetById(item.ID.Guid, item.Database.Name);
+			return _targetDataStore.GetByPath(path, database).FirstOrDefault(item => item.Id == expectedId);
 		}
 
 		protected virtual bool HasConsequentialChanges(ItemChanges changes)
@@ -235,7 +230,7 @@ namespace Unicorn
 		protected virtual IItemData GetSourceFromDefinition(ItemDefinition definition, bool useCache)
 		{
 			if (!useCache) RemoveItemFromCache(definition.ID);
-			return new ItemData(Database.GetItem(definition.ID));
+			return new ItemData(Database.GetItem(definition.ID), _targetDataStore);
 		}
 
 		/// <summary>
@@ -247,7 +242,7 @@ namespace Unicorn
 			RemoveItemFromCache(item.ID);
 
 			// reacquire the source item after cleaning the cache
-			return new ItemData(item.Database.GetItem(item.ID, item.Language, item.Version));
+			return new ItemData(item.Database.GetItem(item.ID, item.Language, item.Version), _targetDataStore);
 		}
 
 		protected virtual void RemoveItemFromCache(ID id)
@@ -284,9 +279,9 @@ namespace Unicorn
 			public IEnumerable<IItemVersion> Versions { get { return _itemData.Versions; } }
 
 			public string SerializedItemId { get { return _itemData.SerializedItemId; } }
-			public void AddIndexData(IndexEntry indexEntry)
+			public IEnumerable<IItemData> GetChildren()
 			{
-				_itemData.AddIndexData(indexEntry);
+				return _itemData.GetChildren();
 			}
 		}
 	}

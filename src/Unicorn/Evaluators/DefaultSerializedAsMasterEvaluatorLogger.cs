@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
 using Rainbow.Model;
+using Sitecore.Configuration;
+using Sitecore.Data;
 using Sitecore.StringExtensions;
 using Unicorn.Data;
 using Unicorn.Logging;
@@ -12,14 +14,12 @@ namespace Unicorn.Evaluators
 	{
 		private readonly ILogger _logger;
 		private readonly ISyncCompleteDataCollector _pipelineDataCollector;
-		private readonly ISourceDataStore _sourceDataStore;
 		private const int MaxFieldLenthToDisplayValue = 40;
 
-		public DefaultSerializedAsMasterEvaluatorLogger(ILogger logger, ISyncCompleteDataCollector pipelineDataCollector, ISourceDataStore sourceDataStore)
+		public DefaultSerializedAsMasterEvaluatorLogger(ILogger logger, ISyncCompleteDataCollector pipelineDataCollector)
 		{
 			_logger = logger;
 			_pipelineDataCollector = pipelineDataCollector;
-			_sourceDataStore = sourceDataStore;
 		}
 
 		public virtual void DeletedItem(IItemData deletedItem)
@@ -87,8 +87,14 @@ namespace Unicorn.Evaluators
 
 		protected virtual string TryResolveItemName(string database, Guid fieldId)
 		{
-			var fieldItem = _sourceDataStore.GetById(fieldId, database);
-			if (fieldItem != null) return fieldItem.Name;
+			var db = Factory.GetDatabase(database);
+
+			if (db != null)
+			{
+				var fieldItem = db.GetItem(new ID(fieldId));
+
+				if (fieldItem != null) return fieldItem.Name;
+			}
 
 			return fieldId.ToString();
 		}

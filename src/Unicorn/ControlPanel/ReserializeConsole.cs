@@ -51,13 +51,13 @@ namespace Unicorn.ControlPanel
 						int index = 1;
 						foreach (var root in roots)
 						{
-							var rootReference = serializationStore.GetById(root.Id, root.DatabaseName);
+							var rootReference = serializationStore.GetByPath(root.Path, root.DatabaseName).FirstOrDefault(reference => reference.Id == root.Id);
 							if (rootReference != null)
 							{
 								logger.Warn("[D] existing serialized items under {0}".FormatWith(rootReference.GetDisplayIdentifier()));
 								// this doesn't really account for excluded children - it just nukes everything.
 								// ideally it would leave excluded serialized items alone.
-								serializationStore.Remove(rootReference.Id, rootReference.DatabaseName);
+								serializationStore.Remove(rootReference);
 							}
 
 							logger.Info("[U] Serializing included items under root {0}".FormatWith(root.GetDisplayIdentifier()));
@@ -84,7 +84,7 @@ namespace Unicorn.ControlPanel
 			{
 				serializationStore.Save(root);
 
-				foreach (var child in sourceDataStore.GetChildren(root.Id, root.DatabaseName))
+				foreach (var child in sourceDataStore.GetChildren(root))
 				{
 					Serialize(child, predicate, serializationStore, sourceDataStore, logger);
 				}

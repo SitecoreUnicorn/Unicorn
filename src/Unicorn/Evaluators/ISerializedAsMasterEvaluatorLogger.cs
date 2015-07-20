@@ -8,23 +8,23 @@ namespace Unicorn.Evaluators
 		/// <summary>
 		/// Called when an item is evaluated for deletion
 		/// </summary>
-		void DeletedItem(IItemData deletedItemData);
+		void DeletedItem(IItemData deletedItem);
 		
 		/// <summary>
 		/// Fired when an item's name is different between serialized and source
 		/// </summary>
-		void IsNameMatch(IItemData serializedItemData, IItemData existingItemData);
+		void Renamed(IItemData sourceItem, IItemData targetItem);
 
 		/// <summary>
 		/// Fired when an item's template is different between serialized and source
 		/// </summary>
-		void IsTemplateMatch(IItemData serializedItemData, IItemData existingItemData);
+		void TemplateChanged(IItemData sourceItem, IItemData targetItem);
 
 		/// <summary>
 		/// Fired when a shared field value is different between serialized and source
 		/// </summary>
 		/// <remarks>Note that the sourceValue may be null</remarks>
-		void IsSharedFieldMatch(IItemData serializedItemData, Guid fieldId, string serializedValue, string sourceValue);
+		void SharedFieldIsChanged(IItemData targetItem, Guid fieldId, string serializedValue, string sourceValue);
 
 		/// <summary>
 		/// Fired when a version's field value is different between serialized and source

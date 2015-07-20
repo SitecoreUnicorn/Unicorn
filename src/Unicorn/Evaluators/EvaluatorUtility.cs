@@ -27,13 +27,13 @@ namespace Unicorn.Evaluators
 		/// </summary>
 		private static void RecycleItem(IItemData itemData, ISourceDataStore sourceStore, Action<IItemData> deleteMessage)
 		{
-			var children = sourceStore.GetChildren(itemData.Id, itemData.DatabaseName);
+			var children = sourceStore.GetChildren(itemData);
 
 			RecycleItems(children, sourceStore, deleteMessage);
 
 			deleteMessage(itemData);
 
-			sourceStore.Remove(itemData.Id, itemData.DatabaseName);
+			sourceStore.Remove(itemData);
 		}
 	}
 }

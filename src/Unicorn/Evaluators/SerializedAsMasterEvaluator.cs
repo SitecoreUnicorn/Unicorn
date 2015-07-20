@@ -64,7 +64,7 @@ namespace Unicorn.Evaluators
 
 			var deferredUpdateLog = new DeferredLogWriter<ISerializedAsMasterEvaluatorLogger>();
 
-			if (ShouldUpdateExisting(targetItem, sourceItem, deferredUpdateLog))
+			if (ShouldUpdateExisting(sourceItem, targetItem, deferredUpdateLog))
 			{
 				_logger.SerializedUpdatedItem(targetItem);
 
@@ -78,7 +78,7 @@ namespace Unicorn.Evaluators
 			return null;
 		}
 
-		protected virtual bool ShouldUpdateExisting(IItemData targetItem, IItemData sourceItem, DeferredLogWriter<ISerializedAsMasterEvaluatorLogger> deferredUpdateLog)
+		protected virtual bool ShouldUpdateExisting(IItemData sourceItem, IItemData targetItem, DeferredLogWriter<ISerializedAsMasterEvaluatorLogger> deferredUpdateLog)
 		{
 			Assert.ArgumentNotNull(targetItem, "targetItem");
 			Assert.ArgumentNotNull(sourceItem, "sourceItem");

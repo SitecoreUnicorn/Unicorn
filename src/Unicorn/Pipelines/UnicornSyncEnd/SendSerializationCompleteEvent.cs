@@ -13,7 +13,7 @@ namespace Unicorn.Pipelines.UnicornSyncEnd
 		public void Process(UnicornSyncEndPipelineArgs args)
 		{
 			var databases =	args.SyncedConfigurations.SelectMany(config => config.Resolve<IPredicate>().GetRootPaths())
-					.Select(path => path.Database)
+					.Select(path => path.DatabaseName)
 					.Distinct();
 
 			foreach (var database in databases)

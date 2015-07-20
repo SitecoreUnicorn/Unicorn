@@ -118,7 +118,7 @@ namespace Unicorn.Loader
 				LoadOneLevel(root, retryer, consistencyChecker);
 
 				// check if we have child paths to recurse down
-				var children = TargetDataStore.GetChildren(root.Id, root.DatabaseName).ToArray();
+				var children = TargetDataStore.GetChildren(root).ToArray();
 
 				if (children.Length > 0)
 				{
@@ -166,12 +166,12 @@ namespace Unicorn.Loader
 			var orphanCandidates = new Dictionary<Guid, IItemData>();
 
 			// get the corresponding item from Sitecore
-			IItemData rootSourceItemData = SourceDataStore.GetById(rootSerializedItemData.Id, rootSerializedItemData.DatabaseName);
+			IItemData rootSourceItemData = SourceDataStore.GetByPath(rootSerializedItemData.Path, rootSerializedItemData.DatabaseName).FirstOrDefault(item => item.Id == rootSerializedItemData.Id);
 
 			// we add all of the root item's direct children to the "maybe orphan" list (we'll remove them as we find matching serialized children)
 			if (rootSourceItemData != null)
 			{
-				var rootSourceChildren = SourceDataStore.GetChildren(rootSourceItemData.Id, rootSourceItemData.DatabaseName);
+				var rootSourceChildren = SourceDataStore.GetChildren(rootSourceItemData);
 				foreach (IItemData child in rootSourceChildren)
 				{
 					// if the preset includes the child add it to the orphan-candidate list (if we don't deserialize it below, it will be marked orphan)
@@ -186,7 +186,7 @@ namespace Unicorn.Loader
 			}
 
 			// check for direct children of the target path
-			var serializedChildren = TargetDataStore.GetChildren(rootSerializedItemData.Id, rootSerializedItemData.DatabaseName);
+			var serializedChildren = TargetDataStore.GetChildren(rootSerializedItemData);
 			foreach (var serializedChild in serializedChildren)
 			{
 				try
@@ -206,11 +206,11 @@ namespace Unicorn.Loader
 
 							// check if we have any child serialized items under this loaded child item (existing children) -
 							// if we do not, we can orphan any included children of the loaded item as well
-							var loadedItemSerializedChildren = TargetDataStore.GetChildren(serializedChild.Id, serializedChild.DatabaseName);
+							var loadedItemSerializedChildren = TargetDataStore.GetChildren(serializedChild);
 
 							if (!loadedItemSerializedChildren.Any()) // no children were serialized on disk
 							{
-								var loadedSourceChildren = SourceDataStore.GetChildren(loadedSourceItem.ItemData.Id, loadedSourceItem.ItemData.DatabaseName);
+								var loadedSourceChildren = SourceDataStore.GetChildren(loadedSourceItem.ItemData);
 								foreach (IItemData loadedSourceChild in loadedSourceChildren)
 								{
 									// place any included source children on the orphan list for deletion, as no serialized children existed
@@ -282,7 +282,7 @@ namespace Unicorn.Loader
 				}
 
 				// detect if we should run an update for the item or if it's already up to date
-				var existingItem = SourceDataStore.GetById(serializedItemData.Id, serializedItemData.DatabaseName);
+				var existingItem = SourceDataStore.GetByPath(serializedItemData.Path, serializedItemData.DatabaseName).FirstOrDefault(item => item.Id == serializedItemData.Id);
 				IItemData updatedItemData;
 
 				// note that the evaluator is responsible for actual action being taken here
