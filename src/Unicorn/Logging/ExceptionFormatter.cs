@@ -51,13 +51,33 @@ namespace Unicorn.Logging
 		{
 			var sb = new StringBuilder();
 
-			sb.AppendFormat("ERROR: {0} unrecoverable errors occurred during deserialization. Note that due to error retrying, some of these items may have appeared to 'load' earlier, but they have not.<br />", exception.InnerExceptions.Length);
-			sb.Append(string.Join("<br />", exception.InnerExceptions.Select(x =>
-			{
-				if (x.InnerException != null && x.InnerException is DeserializationException)
-					return x.InnerException.Message;
+			var dedupedExceptions = exception.InnerExceptions
+				.GroupBy(ex => ex.Message)
+				.Select(group => group.First())
+				.ToArray();
 
-				return x.Message;
+			sb.AppendFormat("ERROR: {0} unrecoverable error{1} occurred during deserialization. Note that due to error retrying, some of these items may have appeared to 'load' earlier, but they have not.", dedupedExceptions.Length, dedupedExceptions.Length == 1 ? string.Empty : "s");
+
+			sb.Append(string.Join("", dedupedExceptions.Select(x =>
+			{
+				var result = new StringBuilder();
+
+				result.AppendFormat("<p style=\"margin-bottom: 0; font-size: 1.1em; color: orange;\">{0}</p>", x.Message);
+
+				if (x.SerializedItemId != null)
+				{
+					result.AppendFormat("<p style=\"margin: 0; font-size: 0.7em; color: grey;\">{0}</p>", x.SerializedItemId);
+				}
+
+				Exception inner = x.InnerException;
+
+				while (inner != null)
+				{
+					result.AppendFormat("<p style=\"margin-top: 0.2em; font-size: 1.1em;\" class=\"stacktrace\">&gt; {0}: {1}</p>", inner.GetType().Name, inner.Message);
+					inner = inner.InnerException;
+				}
+
+				return result.ToString();
 			})));
 			sb.Append("<br />For full stack traces of each exception, see the Sitecore logs.");
 

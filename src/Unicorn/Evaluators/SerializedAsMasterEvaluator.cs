@@ -89,7 +89,34 @@ namespace Unicorn.Evaluators
 			var filteredTargetItem = new FilteredItem(targetItem, _fieldFilter);
 			var filteredSourceItem = new FilteredItem(sourceItem, _fieldFilter);
 
-			return !_itemComparer.SimpleCompare(filteredSourceItem, filteredTargetItem);
+			var comparison = _itemComparer.FastCompare(filteredSourceItem, filteredTargetItem);
+
+			if (comparison.IsRenamed || comparison.IsMoved)
+			{
+				deferredUpdateLog.AddEntry(log => log.Renamed(sourceItem, targetItem));
+			}
+			if (comparison.IsTemplateChanged)
+			{
+				deferredUpdateLog.AddEntry(log=>log.TemplateChanged(sourceItem, targetItem));
+			}
+			foreach (var sharedChange in comparison.ChangedSharedFields)
+			{
+				deferredUpdateLog.AddEntry(log => log.SharedFieldIsChanged(targetItem, sharedChange.TargetField.FieldId, sharedChange.TargetField.Value, ((sharedChange.SourceField != null) ? sharedChange.SourceField.Value : null)));
+			}
+			foreach (var versionChange in comparison.ChangedVersions)
+			{
+				if(versionChange.SourceVersion == null) deferredUpdateLog.AddEntry(log => log.NewTargetVersion(versionChange.TargetVersion, targetItem, sourceItem));
+				else if (versionChange.TargetVersion == null) deferredUpdateLog.AddEntry(log => log.OrphanSourceVersion(sourceItem, targetItem, new[] {versionChange.SourceVersion}));
+				else
+				{
+					foreach (var field in versionChange.ChangedFields)
+					{
+						deferredUpdateLog.AddEntry(log => log.VersionedFieldIsChanged(targetItem, versionChange.SourceVersion, field.SourceField.FieldId, field.TargetField.Value, field.SourceField.Value));
+					}
+				}
+			}
+
+			return !comparison.AreEqual;
 		}
 
 		protected virtual IItemData DoDeserialization(IItemData targetItem)

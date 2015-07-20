@@ -30,12 +30,12 @@ namespace Unicorn.Evaluators
 		/// Fired when a version's field value is different between serialized and source
 		/// </summary>
 		/// <remarks>Note that the sourceValue may be null</remarks>
-		void IsVersionedFieldMatch(IItemData serializedItemData, IItemVersion version, Guid fieldId, string serializedValue, string sourceValue);
+		void VersionedFieldIsChanged(IItemData serializedItemData, IItemVersion version, Guid fieldId, string serializedValue, string sourceValue);
 
 		/// <summary>
 		/// Fired when a later version is found in the serialized version of an item
 		/// </summary>
-		void NewSerializedVersionMatch(IItemVersion newSerializedVersion, IItemData serializedItemData, IItemData existingItemData);
+		void NewTargetVersion(IItemVersion newSerializedVersion, IItemData serializedItemData, IItemData existingItemData);
 
 		/// <summary>
 		/// Called when you serialize an item that does not yet exist in the provider

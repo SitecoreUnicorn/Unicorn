@@ -40,7 +40,7 @@ namespace Unicorn.Evaluators
 			}
 		}
 
-		public virtual void IsVersionedFieldMatch(IItemData serializedItemData, IItemVersion version, Guid fieldId, string serializedValue, string sourceValue)
+		public virtual void VersionedFieldIsChanged(IItemData serializedItemData, IItemVersion version, Guid fieldId, string serializedValue, string sourceValue)
 		{
 			if (serializedValue.Length < MaxFieldLenthToDisplayValue && (sourceValue == null || sourceValue.Length < MaxFieldLenthToDisplayValue))
 			{
@@ -63,7 +63,7 @@ namespace Unicorn.Evaluators
 		}
 
 
-		public virtual void NewSerializedVersionMatch(IItemVersion newSerializedVersion, IItemData serializedItemData, IItemData existingItemData)
+		public virtual void NewTargetVersion(IItemVersion newSerializedVersion, IItemData serializedItemData, IItemData existingItemData)
 		{
 			_logger.Debug("> New version {0}#{1} (serialized)".FormatWith(newSerializedVersion.Language, newSerializedVersion.VersionNumber));
 		}

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Rainbow.Model;
-using Rainbow.Storage;
 using Rainbow.Storage.Sc.Deserialization;
 using Sitecore.Diagnostics;
 using Unicorn.Data;
@@ -42,7 +41,7 @@ namespace Unicorn.Loader
 
 			foreach (Failure failure in standardValuesFailures)
 			{
-				var item = failure.Reference as IItemData;
+				var item = failure.Reference;
 				if (item != null)
 				{
 					try
@@ -128,12 +127,12 @@ namespace Unicorn.Loader
 
 				foreach (var failure in _itemFailures)
 				{
-					exceptions.Add(new DeserializationException(string.Format("Failed to load {0} permanently because {1}", failure.Reference.GetDisplayIdentifier(), failure.Reason), failure.Reason));
+					exceptions.Add(new DeserializationException(failure.Reference.GetDisplayIdentifier(), failure.Reference, failure.Reason));
 				}
 
 				foreach (var failure in _treeFailures)
 				{
-					exceptions.Add(new DeserializationException(string.Format("Failed to load {0} (tree) permanently because {1}", failure.Reference.GetDisplayIdentifier(), failure.Reason), failure.Reason));
+					exceptions.Add(new DeserializationException(string.Format("{0} (tree)", failure.Reference.GetDisplayIdentifier()), failure.Reference, failure.Reason));
 				}
 
 				throw new DeserializationAggregateException("Some directories could not be loaded.") { InnerExceptions = exceptions.ToArray() };
