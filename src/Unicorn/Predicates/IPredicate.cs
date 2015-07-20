@@ -1,5 +1,6 @@
 ﻿using Rainbow.Model;
 using Rainbow.Predicates;
+using Rainbow.Storage;
 
 namespace Unicorn.Predicates
 {
@@ -11,6 +12,6 @@ namespace Unicorn.Predicates
 		string Name { get; }
 		PredicateResult Includes(IItemData itemData);
 
-		PredicateRootPath[] GetRootPaths();
+		TreeRoot[] GetRootPaths();
 	}
 }

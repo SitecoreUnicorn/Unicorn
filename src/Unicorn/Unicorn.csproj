@@ -125,8 +125,8 @@
     <Compile Include="Pipelines\UnicornSyncEnd\UnicornSyncEndPipelineArgs.cs" />
     <Compile Include="Predicates\IPredicate.cs" />
     <Compile Include="Predicates\PredicateResult.cs" />
-    <Compile Include="Predicates\PredicateRootPath.cs" />
     <Compile Include="Predicates\PredicateRootPathResolver.cs" />
+    <Compile Include="Predicates\PresetTreeRoot.cs" />
     <Compile Include="Predicates\SerializationPresetPredicate.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Publishing\ManualPublishQueueHandler.cs" />

@@ -29,10 +29,10 @@ namespace Unicorn.Predicates
 
 			foreach (var include in _predicate.GetRootPaths())
 			{
-				var item = _sourceDataStore.GetByPath(include.Path, include.Database).FirstOrDefault();
+				var item = _sourceDataStore.GetByPath(include.Path, include.DatabaseName).FirstOrDefault();
 
 				if (item != null) items.Add(item);
-				else _logger.Error("Unable to resolve root source item for predicate root path {0}:{1}. It has been skipped.".FormatWith(include.Database, include.Path));
+				else _logger.Error("Unable to resolve root source item for predicate root path {0}:{1}. It has been skipped.".FormatWith(include.DatabaseName, include.Path));
 			}
 
 			return items.ToArray();
@@ -44,13 +44,13 @@ namespace Unicorn.Predicates
 
 			foreach (var include in _predicate.GetRootPaths())
 			{
-				var item = _targetDataStore.GetByPath(include.Path, include.Database).ToArray();
+				var item = _targetDataStore.GetByPath(include.Path, include.DatabaseName).ToArray();
 
 				if (item.Length == 1)
 				{
 					items.Add(item[0]);
 				}
-				else _logger.Error("Unable to resolve root serialized item for predicate root path {0}:{1}. Either the path did not exist, or multiple items matched the path. It has been skipped.".FormatWith(include.Database, include.Path));
+				else _logger.Error("Unable to resolve root serialized item for predicate root path {0}:{1}. Either the path did not exist, or multiple items matched the path. It has been skipped.".FormatWith(include.DatabaseName, include.Path));
 			}
 
 			return items.ToArray();
