@@ -145,7 +145,7 @@ namespace Unicorn.Configuration
 			if (!resultType.IsAssignableFrom(type.Type))
 				throw new InvalidOperationException("Invalid type for Unicorn config node {0} (expected {1} implementation)".FormatWith(elementName, typeof(TResultType).FullName));
 
-			registry.Register(resultType, () => registry.Activate(type.Type, attributes), type.SingleInstance);
+			RegisterGenericConfigTypeByInterfaces(configuration, defaults, elementName, registry);
 		}
 
 		/// <summary>
