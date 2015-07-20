@@ -125,7 +125,7 @@ namespace Unicorn.ControlPanel
 			public override void RenderResources()
 			{
 				base.RenderResources();
-				_response.Write(@"<style>.wrapper { width: auto; max-width: 960px; } a, a:visited { color: lightblue; }</style>");
+				_response.Write(@"<style>.wrapper { width: auto; max-width: 1850px; } a, a:visited { color: lightblue; }</style>");
 			}
 		}
 	}
