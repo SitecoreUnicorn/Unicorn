@@ -11,7 +11,7 @@ namespace Unicorn.ControlPanel
 			<html>
 			<head>
 				<title>Unicorn Control Panel</title>
-				<link href='http://fonts.googleapis.com/css?family=Lobster|Open+Sans:400italic,400,800' rel='stylesheet' type='text/css'>
+				<link href='https://fonts.googleapis.com/css?family=Lobster|Open+Sans:400italic,400,800' rel='stylesheet' type='text/css'>
 				<style>
 					* { font-family: 'Open Sans', sans-serif; }
 					body { max-width: 960px; margin: 0 auto;padding: 1em; }

@@ -113,7 +113,7 @@ namespace Unicorn.ControlPanel
 			public override void RenderResources()
 			{
 				base.RenderResources();
-				_response.Write("<link href='http://fonts.googleapis.com/css?family=Lobster' rel='stylesheet' type='text/css'>");
+				_response.Write("<link href='https://fonts.googleapis.com/css?family=Lobster' rel='stylesheet' type='text/css'>");
 				_response.Write(@"<style>.wrapper { width: auto; max-width: 1850px; } a, a:visited { color: lightblue; } #console{ height: 50em; } h1 { font-family: Lobster; font-size: 3em; font-weight: normal; }</style>");
 			}
 		}
