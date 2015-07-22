@@ -11,12 +11,14 @@ namespace Unicorn.ControlPanel
 			<html>
 			<head>
 				<title>Unicorn Control Panel</title>
+				<link href='http://fonts.googleapis.com/css?family=Lobster' rel='stylesheet' type='text/css'>
 				<style>
 					* { font-family: sans-serif; }
 					body { max-width: 960px; margin: 0 auto;padding: 1em; }
 					h1 { margin: 0; }
 					small { font-style: italic; }
-					h2 { border-bottom: 4px solid gray; }
+					svg { margin: 1em 0 2em 0; height: 200px; display: block; }
+					h2 { border-bottom: 4px solid gray; font-family: Lobster, sans-serif; font-size: 2.2em; line-height: 90%; font-weight: normal; }
 					h4 { margin: .5em 0; }
 					p { margin-top: 0.2em; font-size: 0.8em; }
 					code { font-family: monospace; }

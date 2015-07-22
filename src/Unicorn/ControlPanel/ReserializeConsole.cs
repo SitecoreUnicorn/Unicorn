@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Linq;
 using System.Web;
-using Rainbow.Model;
-using Rainbow.Storage;
 using Kamsar.WebConsole;
+using Rainbow.Model;
 using Sitecore.StringExtensions;
 using Unicorn.Configuration;
+using Unicorn.ControlPanel.Headings;
 using Unicorn.Data;
 using Unicorn.Logging;
 using Unicorn.Predicates;
@@ -20,7 +20,7 @@ namespace Unicorn.ControlPanel
 		private readonly IConfiguration[] _configurations;
 
 		public ReserializeConsole(bool isAutomatedTool, IConfiguration[] configurations)
-			: base(isAutomatedTool)
+			: base(isAutomatedTool, new HeadingService())
 		{
 			_configurations = configurations;
 		}

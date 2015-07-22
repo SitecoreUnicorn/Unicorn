@@ -4,6 +4,7 @@ using System.Web;
 using Kamsar.WebConsole;
 using Sitecore.Pipelines;
 using Unicorn.Configuration;
+using Unicorn.ControlPanel.Headings;
 using Unicorn.Loader;
 using Unicorn.Logging;
 using Unicorn.Pipelines.UnicornSyncBegin;
@@ -21,7 +22,7 @@ namespace Unicorn.ControlPanel
 		private readonly IConfiguration[] _configurations;
 
 		public SyncConsole(bool isAutomatedTool, IConfiguration[] configurations)
-			: base(isAutomatedTool)
+			: base(isAutomatedTool, new HeadingService())
 		{
 			_configurations = configurations;
 		}

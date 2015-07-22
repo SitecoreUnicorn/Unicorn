@@ -60,6 +60,7 @@
     <Compile Include="ControlPanel\CheckIfFilterDisablerIsActive.cs" />
     <Compile Include="ControlPanel\ConfigurationDetails.cs" />
     <Compile Include="ControlPanel\ControlOptions.cs" />
+    <Compile Include="ControlPanel\Headings\HeadingService.cs" />
     <Compile Include="ControlPanel\ItemFilterDisabler.cs" />
     <Compile Include="ControlPanel\UnicornControlPanelPipelineProcessor.cs" />
     <Compile Include="ControlPanel\ControlPanelUtility.cs" />
@@ -160,6 +161,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="ControlPanel\Headings\Unicorn.html" />
+    <EmbeddedResource Include="ControlPanel\Headings\Unicorn.svg.html" />
+    <EmbeddedResource Include="ControlPanel\Headings\ControlPanel.svg.html" />
     <Content Include="Pipelines\README.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
