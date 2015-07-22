@@ -18,9 +18,9 @@ namespace Unicorn.ControlPanel
 					h1 { margin: 0; }
 					small { font-style: italic; }
 					svg { margin: 1em 0 2em 0; height: 200px; display: block; }
-					h2 { border-bottom: 4px solid gray; font-family: Lobster, sans-serif; font-size: 2.2em; line-height: 90%; font-weight: normal; }
-					h4 { margin: .5em 0; }
-					p { margin-top: 0.2em; font-size: 0.8em; }
+					h2 { border-bottom: 4px solid gray; font-family: Lobster, sans-serif; font-size: 2.2em; line-height: 90%; font-weight: normal; margin: .5em 0; }
+					h4 { margin: .5em 0 0 0; }
+					p { margin-top: 0.2em; font-size: 0.8rem; }
 					code { font-family: monospace; }
 					a[href='#'] { font-size: 0.7em; }
 					ul { margin: 0; padding: 0; }
@@ -51,12 +51,12 @@ namespace Unicorn.ControlPanel
 						margin-top: -10px;
 					}
 					.details ul > li {
-						font-size: 0.7em;
+						font-size: 0.9em;
 					}
 					.details h5 {
 						display: inline-block;
 						margin: 0 0 0 -5px;
-						font-size: 14px;
+						font-size: 1em;
 						position: relative;
 						background: white;
 						padding: 0 5px;
