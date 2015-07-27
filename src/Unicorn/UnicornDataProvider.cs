@@ -264,36 +264,5 @@ namespace Unicorn
 				return new ItemData(item.Database.GetItem(item.ID, item.Language, item.Version), _sourceDataStore);
 			}
 		}
-
-		protected class PathOverridingItemData : IItemData
-		{
-			private readonly IItemData _itemData;
-
-			public PathOverridingItemData(IItemData itemData, string overriddenPath)
-			{
-				Assert.ArgumentNotNull(itemData, "item");
-				Assert.ArgumentNotNullOrEmpty(overriddenPath, "overriddenPath");
-
-				_itemData = itemData;
-				Path = overriddenPath;
-			}
-
-			public Guid Id { get { return _itemData.Id; } }
-			public string DatabaseName { get { return _itemData.DatabaseName; } set { _itemData.DatabaseName = value; } }
-			public Guid ParentId { get { return _itemData.ParentId; } }
-			public string Path { get; private set; }
-			public string Name { get { return _itemData.Name; } }
-			public Guid BranchId { get { return _itemData.BranchId; } }
-			public Guid TemplateId { get { return _itemData.TemplateId; } }
-			public IEnumerable<IItemFieldValue> SharedFields { get { return _itemData.SharedFields; } }
-
-			public IEnumerable<IItemVersion> Versions { get { return _itemData.Versions; } }
-
-			public string SerializedItemId { get { return _itemData.SerializedItemId; } }
-			public IEnumerable<IItemData> GetChildren()
-			{
-				return _itemData.GetChildren();
-			}
-		}
 	}
 }
