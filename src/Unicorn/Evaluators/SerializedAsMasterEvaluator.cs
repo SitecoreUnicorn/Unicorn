@@ -101,7 +101,7 @@ namespace Unicorn.Evaluators
 			}
 			foreach (var sharedChange in comparison.ChangedSharedFields)
 			{
-				deferredUpdateLog.AddEntry(log => log.SharedFieldIsChanged(targetItem, sharedChange.TargetField.FieldId, sharedChange.TargetField.Value, ((sharedChange.SourceField != null) ? sharedChange.SourceField.Value : null)));
+				deferredUpdateLog.AddEntry(log => log.SharedFieldIsChanged(targetItem, (sharedChange.TargetField ?? sharedChange.SourceField).FieldId, ((sharedChange.TargetField != null) ? sharedChange.TargetField.Value : null), ((sharedChange.SourceField != null) ? sharedChange.SourceField.Value : null)));
 			}
 			foreach (var versionChange in comparison.ChangedVersions)
 			{

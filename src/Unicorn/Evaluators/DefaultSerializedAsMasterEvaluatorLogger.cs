@@ -30,7 +30,11 @@ namespace Unicorn.Evaluators
 
 		public virtual void SharedFieldIsChanged(IItemData targetItem, Guid fieldId, string serializedValue, string sourceValue)
 		{
-			if (serializedValue.Length < MaxFieldLenthToDisplayValue && (sourceValue == null || sourceValue.Length < MaxFieldLenthToDisplayValue))
+			if (serializedValue == null)
+			{
+				_logger.Debug("> Field {0} - Reset to standard value".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId)));
+			}
+			else if (serializedValue.Length < MaxFieldLenthToDisplayValue && (sourceValue == null || sourceValue.Length < MaxFieldLenthToDisplayValue))
 			{
 				_logger.Debug("> Field {0} - Serialized {1}, Source {2}".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId), serializedValue, sourceValue));
 			}
