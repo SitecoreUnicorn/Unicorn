@@ -44,6 +44,13 @@ namespace Unicorn.Logging
 
 			WriteInnerExceptionAsText(exception.InnerException, exMessage);
 
+			var aggregate = exception as DeserializationAggregateException;
+
+			if (aggregate != null)
+			{
+				foreach(var inner in aggregate.InnerExceptions) WriteInnerExceptionAsText(inner, exMessage);
+			}
+
 			return exMessage.ToString();
 		}
 
@@ -88,6 +95,7 @@ namespace Unicorn.Logging
 		{
 			if (innerException == null) return;
 
+			exMessage.AppendLine();
 			exMessage.AppendLine("INNER EXCEPTION");
 			exMessage.AppendFormat("{0} ({1})", innerException.Message, innerException.GetType().FullName);
 			exMessage.AppendLine();

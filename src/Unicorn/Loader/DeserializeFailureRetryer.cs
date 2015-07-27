@@ -132,7 +132,7 @@ namespace Unicorn.Loader
 
 				foreach (var failure in _treeFailures)
 				{
-					exceptions.Add(new DeserializationException(string.Format("{0} (tree)", failure.Reference.GetDisplayIdentifier()), failure.Reference, failure.Reason));
+					exceptions.Add(new DeserializationException(string.Format("This tree failed to load: {0} (the error may not be on this item, see the details below)", failure.Reference.GetDisplayIdentifier()), failure.Reference, failure.Reason));
 				}
 
 				throw new DeserializationAggregateException("Some directories could not be loaded.") { InnerExceptions = exceptions.ToArray() };
