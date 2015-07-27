@@ -23,22 +23,25 @@ namespace Unicorn
 	public class UnicornDataProvider
 	{
 		private readonly ITargetDataStore _targetDataStore;
+		private readonly ISourceDataStore _sourceDataStore;
 		private readonly IPredicate _predicate;
 		private readonly IFieldFilter _fieldFilter;
 		private readonly IUnicornDataProviderLogger _logger;
 		private static bool _disableSerialization;
 
-		public UnicornDataProvider(ITargetDataStore targetDataStore, IPredicate predicate, IFieldFilter fieldFilter, IUnicornDataProviderLogger logger)
+		public UnicornDataProvider(ITargetDataStore targetDataStore, ISourceDataStore sourceDataStore, IPredicate predicate, IFieldFilter fieldFilter, IUnicornDataProviderLogger logger)
 		{
 			Assert.ArgumentNotNull(targetDataStore, "serializationProvider");
 			Assert.ArgumentNotNull(predicate, "predicate");
 			Assert.ArgumentNotNull(fieldFilter, "fieldPredicate");
 			Assert.ArgumentNotNull(logger, "logger");
+			Assert.ArgumentNotNull(sourceDataStore, "sourceDataStore");
 
 			_logger = logger;
 			_predicate = predicate;
 			_fieldFilter = fieldFilter;
 			_targetDataStore = targetDataStore;
+			_sourceDataStore = sourceDataStore;
 		}
 
 		/// <summary>
@@ -82,7 +85,12 @@ namespace Unicorn
 			string oldName = changes.Renamed ? changes.Properties["name"].OriginalValue.ToString() : string.Empty;
 			if (changes.Renamed && !oldName.Equals(sourceItem.Name, StringComparison.Ordinal)) // it's a rename, in which the name actually changed (template builder will cause 'renames' for the same name!!!)
 			{
-				_targetDataStore.Save(sourceItem);
+				using (new DatabaseCacheDisabler())
+				{
+					// disabling the DB caches while running this ensures that any children of the renamed item are retrieved with their proper post-rename paths and thus are not saved at their old location
+					_targetDataStore.MoveOrRenameItem(sourceItem, changes.Item.Paths.ParentPath + "/" + oldName);
+				}
+
 				_logger.RenamedItem(_targetDataStore.GetType().Name, sourceItem, oldName);
 			}
 			else if (HasConsequentialChanges(changes)) // it's a simple update - but we reject it if only inconsequential fields (last updated, revision) were changed - again, template builder FTW
@@ -100,30 +108,34 @@ namespace Unicorn
 
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
 
-			var sourceItem = GetSourceFromDefinition(itemDefinition); // we don't use cache here because we want the post-move path
-			var destinationItem = GetSourceFromDefinition(destination);
+			var oldSourceItem = GetSourceFromDefinition(itemDefinition, true); // we use cache here because we want the old path
 
-			if (!_predicate.Includes(destinationItem).IsIncluded) // if the destination we are moving to is NOT included for serialization, we delete the existing item
+			var oldPath = oldSourceItem.Path; // NOTE: we cap the path here, because once we enter the cache-disabled section - to get the new paths for parent and children - the path cache updates and the old path is lost in oldSourceItem because it is reevaluated each time.
+
+			using (new DatabaseCacheDisabler())
 			{
-				var existingItem = GetExistingSerializedItem(sourceItem.Path, sourceItem.DatabaseName, sourceItem.Id);
+				// disabling the DB caches while running this ensures that any children of the moved item are retrieved with their proper post-rename paths and thus are not saved at their old location
 
-				if (existingItem != null)
+				var sourceItem = GetSourceFromDefinition(itemDefinition); // re-get the item with cache disabled
+
+				var destinationItem = GetSourceFromDefinition(destination);
+
+				if (!_predicate.Includes(destinationItem).IsIncluded) // if the destination we are moving to is NOT included for serialization, we delete the existing item
 				{
-					_targetDataStore.Remove(existingItem);
-					_logger.MovedItemToNonIncludedLocation(_targetDataStore.GetType().Name, existingItem);
+					var existingItem = GetExistingSerializedItem(sourceItem.Path, sourceItem.DatabaseName, sourceItem.Id);
+
+					if (existingItem != null)
+					{
+						_targetDataStore.Remove(existingItem);
+						_logger.MovedItemToNonIncludedLocation(_targetDataStore.GetType().Name, existingItem);
+					}
+
+					return;
 				}
 
-				return;
+				_targetDataStore.MoveOrRenameItem(sourceItem, oldPath);
+				_logger.MovedItem(_targetDataStore.GetType().Name, sourceItem, destinationItem);
 			}
-
-			var newPath = destinationItem.Path + "/" + sourceItem.Name;
-
-			// the path of sourceItem here is the OLD path. But in order to make the index happy, we need to pass it
-			// the new destination path. This item data decorator lets us inject the path value as the new path.
-			var pathedMovedItem = new PathOverridingItemData(sourceItem, newPath);
-
-			_targetDataStore.MoveOrRenameItem(pathedMovedItem, sourceItem.Path);
-			_logger.MovedItem(_targetDataStore.GetType().Name, sourceItem, destinationItem);
 		}
 
 		public void CopyItem(ItemDefinition source, ItemDefinition destination, string copyName, ID copyId, CallContext context)
@@ -131,7 +143,7 @@ namespace Unicorn
 			if (DisableSerialization) return;
 
 			// copying is easy - all we have to do is serialize the copyID. Copied children will all result in multiple calls to CopyItem so we don't even need to worry about them.
-			var copiedItem = new ItemData(Database.GetItem(copyId), _targetDataStore);
+			var copiedItem = new ItemData(Database.GetItem(copyId), _sourceDataStore);
 
 			if (!_predicate.Includes(copiedItem).IsIncluded) return; // destination parent is not in a path that we are serializing, so skip out
 
@@ -229,8 +241,15 @@ namespace Unicorn
 
 		protected virtual IItemData GetSourceFromDefinition(ItemDefinition definition, bool useCache)
 		{
-			if (!useCache) RemoveItemFromCache(definition.ID);
-			return new ItemData(Database.GetItem(definition.ID), _targetDataStore);
+			if (!useCache)
+			{
+				using (new DatabaseCacheDisabler())
+				{
+					return new ItemData(Database.GetItem(definition.ID), _sourceDataStore);
+				}
+			}
+
+			return new ItemData(Database.GetItem(definition.ID), _sourceDataStore);
 		}
 
 		/// <summary>
@@ -239,19 +258,11 @@ namespace Unicorn
 		/// </summary>
 		protected virtual IItemData GetItemWithoutCache(Item item)
 		{
-			RemoveItemFromCache(item.ID);
-
-			// reacquire the source item after cleaning the cache
-			return new ItemData(item.Database.GetItem(item.ID, item.Language, item.Version), _targetDataStore);
-		}
-
-		protected virtual void RemoveItemFromCache(ID id)
-		{
-			// in some cases, such as template changes, we can have outdated information in the itemChanges.Item
-			// for example invalid field IDs in language versions that are not the current item version. To mitigate this threat
-			// to invalid serialized values, we first nuke the item from the cache before we serialize it to make sure we get the freshest data
-			Database.Caches.ItemCache.RemoveItem(id);
-			Database.Caches.DataCache.RemoveItemInformation(id);
+			using (new DatabaseCacheDisabler())
+			{
+				// reacquire the source item after cleaning the cache
+				return new ItemData(item.Database.GetItem(item.ID, item.Language, item.Version), _sourceDataStore);
+			}
 		}
 
 		protected class PathOverridingItemData : IItemData
