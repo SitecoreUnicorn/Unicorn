@@ -125,6 +125,7 @@
     <Compile Include="Pipelines\UnicornSyncEnd\TriggerAutoPublishSyncedItems.cs" />
     <Compile Include="Pipelines\UnicornSyncEnd\UnicornSyncEndPipelineArgs.cs" />
     <Compile Include="Predicates\IPredicate.cs" />
+    <Compile Include="Predicates\PredicateFilteredItemData.cs" />
     <Compile Include="Predicates\PredicateResult.cs" />
     <Compile Include="Predicates\PredicateRootPathResolver.cs" />
     <Compile Include="Predicates\PresetTreeRoot.cs" />

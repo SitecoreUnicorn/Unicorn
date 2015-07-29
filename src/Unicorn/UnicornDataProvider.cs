@@ -88,7 +88,11 @@ namespace Unicorn
 				using (new DatabaseCacheDisabler())
 				{
 					// disabling the DB caches while running this ensures that any children of the renamed item are retrieved with their proper post-rename paths and thus are not saved at their old location
-					_targetDataStore.MoveOrRenameItem(sourceItem, changes.Item.Paths.ParentPath + "/" + oldName);
+
+					// this allows us to filter out any excluded children by predicate when the data store moves children
+					var predicatedItem = new PredicateFilteredItemData(sourceItem, _predicate);
+
+					_targetDataStore.MoveOrRenameItem(predicatedItem, changes.Item.Paths.ParentPath + "/" + oldName);
 				}
 
 				_logger.RenamedItem(_targetDataStore.GetType().Name, sourceItem, oldName);
@@ -112,28 +116,33 @@ namespace Unicorn
 
 			var oldPath = oldSourceItem.Path; // NOTE: we cap the path here, because once we enter the cache-disabled section - to get the new paths for parent and children - the path cache updates and the old path is lost in oldSourceItem because it is reevaluated each time.
 
+			var destinationItem = GetSourceFromDefinition(destination);
+
+			if (!_predicate.Includes(destinationItem).IsIncluded) // if the destination we are moving to is NOT included for serialization, we delete the existing item
+			{
+				var existingItem = GetExistingSerializedItem(oldSourceItem.Path, oldSourceItem.DatabaseName, oldSourceItem.Id);
+
+				if (existingItem != null)
+				{
+					_targetDataStore.Remove(existingItem);
+					_logger.MovedItemToNonIncludedLocation(_targetDataStore.GetType().Name, existingItem);
+				}
+
+				return;
+			}
+
 			using (new DatabaseCacheDisabler())
 			{
 				// disabling the DB caches while running this ensures that any children of the moved item are retrieved with their proper post-rename paths and thus are not saved at their old location
 
 				var sourceItem = GetSourceFromDefinition(itemDefinition); // re-get the item with cache disabled
 
-				var destinationItem = GetSourceFromDefinition(destination);
+				
 
-				if (!_predicate.Includes(destinationItem).IsIncluded) // if the destination we are moving to is NOT included for serialization, we delete the existing item
-				{
-					var existingItem = GetExistingSerializedItem(sourceItem.Path, sourceItem.DatabaseName, sourceItem.Id);
+				// this allows us to filter out any excluded children by predicate when the data store moves children
+				var predicatedItem = new PredicateFilteredItemData(sourceItem, _predicate);
 
-					if (existingItem != null)
-					{
-						_targetDataStore.Remove(existingItem);
-						_logger.MovedItemToNonIncludedLocation(_targetDataStore.GetType().Name, existingItem);
-					}
-
-					return;
-				}
-
-				_targetDataStore.MoveOrRenameItem(sourceItem, oldPath);
+				_targetDataStore.MoveOrRenameItem(predicatedItem, oldPath);
 				_logger.MovedItem(_targetDataStore.GetType().Name, sourceItem, destinationItem);
 			}
 		}

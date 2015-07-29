@@ -6,7 +6,6 @@ using System.Xml;
 using Rainbow.Model;
 using Rainbow.Predicates;
 using Rainbow.Storage;
-using Sitecore.Data;
 using Sitecore.Data.Serialization.Presets;
 using Sitecore.Diagnostics;
 using Sitecore.StringExtensions;
@@ -67,15 +66,9 @@ namespace Unicorn.Predicates
 
 		protected virtual PredicateResult ExcludeMatches(PresetTreeRoot entry, IItemData itemData)
 		{
-			PredicateResult result = ExcludeMatchesTemplateId(entry.Exclude, itemData.TemplateId);
+			PredicateResult result = ExcludeMatchesPath(entry.Exclude, itemData.Path);
 
 			if (!result.IsIncluded) return result;
-
-			result = ExcludeMatchesPath(entry.Exclude, itemData.Path);
-
-			if (!result.IsIncluded) return result;
-
-			result = ExcludeMatchesId(entry.Exclude, itemData.Id);
 
 			return result;
 		}
@@ -89,30 +82,6 @@ namespace Unicorn.Predicates
 
 			return match
 						? new PredicateResult("Item path exclusion rule")
-						: new PredicateResult(true);
-		}
-
-		/// <summary>
-		/// Checks if a given list of excludes matches a specific item ID. Use ID.ToString() format eg {A9F4...}
-		/// </summary>
-		protected virtual PredicateResult ExcludeMatchesId(IEnumerable<ExcludeEntry> entries, Guid id)
-		{
-			bool match = entries.Any(entry => entry.Type.Equals("id", StringComparison.Ordinal) && entry.Value.Equals(new ID(id).ToString(), StringComparison.OrdinalIgnoreCase));
-
-			return match
-						? new PredicateResult("Item ID exclusion rule")
-						: new PredicateResult(true);
-		}
-
-		/// <summary>
-		/// Checks if a given list of excludes matches a specific template ID
-		/// </summary>
-		protected virtual PredicateResult ExcludeMatchesTemplateId(IEnumerable<ExcludeEntry> entries, Guid templateId)
-		{
-			bool match = entries.Any(entry => entry.Type.Equals("templateid", StringComparison.Ordinal) && entry.Value.Equals(new ID(templateId).ToString(), StringComparison.OrdinalIgnoreCase));
-
-			return match
-						? new PredicateResult("Item template ID exclusion rule")
 						: new PredicateResult(true);
 		}
 
