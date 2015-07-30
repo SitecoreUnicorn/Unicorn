@@ -19,9 +19,11 @@ namespace Unicorn.Pipelines.UnicornSyncComplete
 			Changes = dataCollector.GetChanges();
 			Configuration = configuration;
 			SyncStartedTimestamp = syncStartedTimestamp;
+			ProcessedItemCount = dataCollector.ProcessedItemCount;
 		}
 
-		public ReadOnlyCollection<ChangeEntry> Changes { get; private set; } 
+		public ReadOnlyCollection<ChangeEntry> Changes { get; private set; }
+		public int ProcessedItemCount { get; private set; }
 		public IConfiguration Configuration { get; private set; }
 		public DateTime SyncStartedTimestamp { get; private set; }
 	}

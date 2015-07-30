@@ -39,6 +39,8 @@ namespace Unicorn.Evaluators
 			Assert.ArgumentNotNull(orphanItems, "orphanItems");
 
 			EvaluatorUtility.RecycleItems(orphanItems, _sourceDataStore, item => _logger.DeletedItem(item));
+
+			foreach(var orphan in orphanItems) _logger.Evaluated(orphan);
 		}
 
 		public IItemData EvaluateNewSerializedItem(IItemData newItemData)
@@ -49,6 +51,8 @@ namespace Unicorn.Evaluators
 
 			DoDeserialization(newItemData);
 
+			_logger.Evaluated(newItemData);
+
 			return newItemData;
 		}
 
@@ -58,6 +62,8 @@ namespace Unicorn.Evaluators
 			Assert.ArgumentNotNull(sourceItem, "sourceItemData");
 
 			var deferredUpdateLog = new DeferredLogWriter<ISerializedAsMasterEvaluatorLogger>();
+
+			_logger.Evaluated(sourceItem ?? targetItem);
 
 			if (ShouldUpdateExisting(sourceItem, targetItem, deferredUpdateLog))
 			{

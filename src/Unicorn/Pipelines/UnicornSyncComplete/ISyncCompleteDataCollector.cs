@@ -9,6 +9,8 @@ namespace Unicorn.Pipelines.UnicornSyncComplete
 		void PushChangedItem(IItemData itemData, ChangeType type);
 
 		ReadOnlyCollection<ChangeEntry> GetChanges();
+		void AddProcessedItem();
+		int ProcessedItemCount { get; }
 		void Reset();
 	}
 }

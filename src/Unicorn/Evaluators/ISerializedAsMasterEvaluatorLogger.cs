@@ -51,5 +51,10 @@ namespace Unicorn.Evaluators
 		/// Called when extra versions exist in a source item compared to the serialized version
 		/// </summary>
 		void OrphanSourceVersion(IItemData existingItemData, IItemData serializedItemData, IItemVersion[] orphanSourceVersions);
+
+		/// <summary>
+		/// Called when an item is evaluated regardless of the result (deleted, added, same, changed, etc)
+		/// </summary>
+		void Evaluated(IItemData item);
 	}
 }

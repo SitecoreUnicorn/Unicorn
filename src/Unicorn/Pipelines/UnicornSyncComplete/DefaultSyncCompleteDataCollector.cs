@@ -22,9 +22,17 @@ namespace Unicorn.Pipelines.UnicornSyncComplete
 			return _entries.ToList().AsReadOnly();
 		}
 
+		public void AddProcessedItem()
+		{
+			ProcessedItemCount++;
+		}
+
+		public int ProcessedItemCount { get; private set; }
+
 		public void Reset()
 		{
 			_entries.Clear();
+			ProcessedItemCount = 0;
 		}
 	}
 }

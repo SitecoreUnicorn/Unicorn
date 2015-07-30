@@ -17,14 +17,19 @@ namespace Unicorn.Pipelines.UnicornSyncComplete
 			if(logger == null) return;
 
 			var durationInMs = (DateTime.Now - args.SyncStartedTimestamp).TotalMilliseconds;
+			var msPerItem = (durationInMs/(args.ProcessedItemCount == 0 ? 1 : args.ProcessedItemCount)).ToString("N1");
 
-			logger.Info("{0}: {1} item{5} modified ({2} added, {3} updated, {4} deleted) in {6}ms".FormatWith(args.Configuration.Name,
+			logger.Info("{0}: {1} item{2} evaluated, {3} item{4} modified ({5} added, {6} updated, {7} deleted) in {8}ms (~{9}ms/item)".FormatWith(
+				args.Configuration.Name,
+				args.ProcessedItemCount,
+				args.ProcessedItemCount != 1 ? "s": string.Empty,
 				args.Changes.Count,
+				args.Changes.Count != 1 ? "s" : string.Empty,
 				args.Changes.Count(x => x.ChangeType == ChangeType.Created),
 				args.Changes.Count(x => x.ChangeType == ChangeType.Modified),
 				args.Changes.Count(x => x.ChangeType == ChangeType.Deleted),
-				args.Changes.Count != 1 ? "s" : string.Empty,
-				(int)durationInMs));
+				(int)durationInMs,
+				msPerItem));
 		}
 	}
 }

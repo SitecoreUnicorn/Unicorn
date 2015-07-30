@@ -26,6 +26,7 @@ namespace Unicorn.Evaluators
 		{
 			_logger.Warn("[D] {0} because it did not exist in the serialization provider.".FormatWith(deletedItem.GetDisplayIdentifier()));
 			_pipelineDataCollector.PushChangedItem(deletedItem, ChangeType.Deleted);
+			_pipelineDataCollector.AddProcessedItem();
 		}
 
 		public virtual void SharedFieldIsChanged(IItemData targetItem, Guid fieldId, string serializedValue, string sourceValue)
@@ -77,16 +78,23 @@ namespace Unicorn.Evaluators
 			_logger.Debug("> Orphaned version{0} {1} (source)".FormatWith(orphanSourceVersions.Length > 1 ? "s" : string.Empty, string.Join(", ", orphanSourceVersions.Select(x => x.Language + "#" + x.VersionNumber))));
 		}
 
+		public void Evaluated(IItemData item)
+		{
+			_pipelineDataCollector.AddProcessedItem();
+		}
+
 		public virtual void DeserializedNewItem(IItemData serializedItemData)
 		{
 			_logger.Info("[A] {0}".FormatWith(serializedItemData.GetDisplayIdentifier()));
 			_pipelineDataCollector.PushChangedItem(serializedItemData, ChangeType.Created);
+			_pipelineDataCollector.AddProcessedItem();
 		}
 
 		public virtual void SerializedUpdatedItem(IItemData serializedItemData)
 		{
 			_logger.Info("[U] {0}".FormatWith(serializedItemData.GetDisplayIdentifier()));
 			_pipelineDataCollector.PushChangedItem(serializedItemData, ChangeType.Modified);
+			_pipelineDataCollector.AddProcessedItem();
 		}
 
 		protected virtual string TryResolveItemName(string database, Guid fieldId)
