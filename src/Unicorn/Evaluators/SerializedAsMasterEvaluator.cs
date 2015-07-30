@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Rainbow.Diff;
 using Rainbow.Filtering;
 using Rainbow.Model;
-using Rainbow.Storage.Sc.Deserialization;
 using Sitecore.Diagnostics;
 using Unicorn.ControlPanel;
 using Unicorn.Data;
@@ -21,22 +19,19 @@ namespace Unicorn.Evaluators
 		private readonly IItemComparer _itemComparer;
 		private readonly IFieldFilter _fieldFilter;
 		private readonly ISourceDataStore _sourceDataStore;
-		private readonly IDeserializer _deserializer;
 		protected static readonly Guid RootId = new Guid("{11111111-1111-1111-1111-111111111111}");
 
-		public SerializedAsMasterEvaluator(ISerializedAsMasterEvaluatorLogger logger, IItemComparer itemComparer, IFieldFilter fieldFilter, ISourceDataStore sourceDataStore, IDeserializer deserializer)
+		public SerializedAsMasterEvaluator(ISerializedAsMasterEvaluatorLogger logger, IItemComparer itemComparer, IFieldFilter fieldFilter, ISourceDataStore sourceDataStore)
 		{
 			Assert.ArgumentNotNull(logger, "logger");
 			Assert.ArgumentNotNull(itemComparer, "itemComparer");
 			Assert.ArgumentNotNull(fieldFilter, "fieldFilter");
 			Assert.ArgumentNotNull(sourceDataStore, "sourceDataStore");
-			Assert.ArgumentNotNull(deserializer, "deserializer");
 
 			_logger = logger;
 			_itemComparer = itemComparer;
 			_fieldFilter = fieldFilter;
 			_sourceDataStore = sourceDataStore;
-			_deserializer = deserializer;
 		}
 
 		public void EvaluateOrphans(IItemData[] orphanItems)
@@ -52,9 +47,9 @@ namespace Unicorn.Evaluators
 
 			_logger.DeserializedNewItem(newItemData);
 
-			var updatedItem = DoDeserialization(newItemData);
+			DoDeserialization(newItemData);
 
-			return updatedItem;
+			return newItemData;
 		}
 
 		public IItemData EvaluateUpdate(IItemData sourceItem, IItemData targetItem)
@@ -70,9 +65,9 @@ namespace Unicorn.Evaluators
 
 				deferredUpdateLog.ExecuteDeferredActions(_logger);
 
-				var updatedItem = DoDeserialization(targetItem);
+				DoDeserialization(targetItem);
 
-				return updatedItem;
+				return targetItem;
 			}
 
 			return null;
@@ -111,7 +106,11 @@ namespace Unicorn.Evaluators
 				{
 					foreach (var field in versionChange.ChangedFields)
 					{
-						deferredUpdateLog.AddEntry(log => log.VersionedFieldIsChanged(targetItem, versionChange.SourceVersion, field.SourceField.FieldId, field.TargetField.Value, field.SourceField.Value));
+						var sourceFieldValue = field.SourceField == null ? null : field.SourceField.Value;
+						var targetFieldValue = field.TargetField == null ? null : field.TargetField.Value;
+						var fieldId = (field.SourceField ?? field.TargetField).FieldId;
+
+						deferredUpdateLog.AddEntry(log => log.VersionedFieldIsChanged(targetItem, versionChange.SourceVersion ?? versionChange.TargetVersion, fieldId, targetFieldValue, sourceFieldValue));
 					}
 				}
 			}
@@ -119,13 +118,9 @@ namespace Unicorn.Evaluators
 			return !comparison.AreEqual;
 		}
 
-		protected virtual IItemData DoDeserialization(IItemData targetItem)
+		protected virtual void DoDeserialization(IItemData targetItem)
 		{
-			IItemData updatedItemData = _deserializer.Deserialize(targetItem, false);
-
-			Assert.IsNotNull(updatedItemData, "Do not return null from DeserializeItem() - throw an exception if an error occurs.");
-
-			return updatedItemData;
+			_sourceDataStore.Save(targetItem);
 		}
 
 		public string FriendlyName

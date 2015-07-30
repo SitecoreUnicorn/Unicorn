@@ -283,16 +283,15 @@ namespace Unicorn.Loader
 
 				// detect if we should run an update for the item or if it's already up to date
 				var existingItem = SourceDataStore.GetByPath(serializedItemData.Path, serializedItemData.DatabaseName).FirstOrDefault(item => item.Id == serializedItemData.Id);
-				IItemData updatedItemData;
 
 				// note that the evaluator is responsible for actual action being taken here
 				// as well as logging what it does
 				if (existingItem == null)
-					updatedItemData = Evaluator.EvaluateNewSerializedItem(serializedItemData);
+					Evaluator.EvaluateNewSerializedItem(serializedItemData);
 				else
-					updatedItemData = Evaluator.EvaluateUpdate(existingItem, serializedItemData);
+					Evaluator.EvaluateUpdate(existingItem, serializedItemData);
 
-				return new ItemLoadResult(ItemLoadStatus.Success, updatedItemData ?? existingItem);
+				return new ItemLoadResult(ItemLoadStatus.Success, existingItem);
 			}
 			finally
 			{
