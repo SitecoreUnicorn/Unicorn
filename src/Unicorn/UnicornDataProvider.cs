@@ -179,8 +179,8 @@ namespace Unicorn
 
 			if (existingItem == null) return; // it was already gone or an item from a different data provider
 
-			_targetDataStore.Remove(existingItem);
-			_logger.DeletedItem(_targetDataStore.GetType().Name, existingItem);
+			if(_targetDataStore.Remove(existingItem))
+				_logger.DeletedItem(_targetDataStore.GetType().Name, existingItem);
 		}
 
 		public void RemoveVersion(ItemDefinition itemDefinition, VersionUri version, CallContext context)
@@ -250,15 +250,24 @@ namespace Unicorn
 
 		protected virtual IItemData GetSourceFromDefinition(ItemDefinition definition, bool useCache)
 		{
+			var item = GetItemFromDefinition(definition, useCache);
+
+			if (item == null) return null;
+
+			return new ItemData(item);
+		}
+
+		protected virtual Item GetItemFromDefinition(ItemDefinition definition, bool useCache)
+		{
 			if (!useCache)
 			{
 				using (new DatabaseCacheDisabler())
 				{
-					return new ItemData(Database.GetItem(definition.ID), _sourceDataStore);
+					return Database.GetItem(definition.ID);
 				}
 			}
 
-			return new ItemData(Database.GetItem(definition.ID), _sourceDataStore);
+			return Database.GetItem(definition.ID);
 		}
 
 		/// <summary>
