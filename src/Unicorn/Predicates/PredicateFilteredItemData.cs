@@ -18,7 +18,7 @@ namespace Unicorn.Predicates
 
 		public override IEnumerable<IItemData> GetChildren()
 		{
-			return base.GetChildren().Where(child => _predicate.Includes(child).IsIncluded);
+			return base.GetChildren().Where(child => _predicate.Includes(child).IsIncluded).Select(child => new PredicateFilteredItemData(child, _predicate));
 		}
 	}
 }
