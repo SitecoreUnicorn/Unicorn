@@ -34,6 +34,11 @@ namespace Unicorn.Data
 			return _innerDataStore.Value.GetByPath(path, database);
 		}
 
+		public IItemData GetByMetadata(IItemMetadata metadata, string database)
+		{
+			return _innerDataStore.Value.GetByMetadata(metadata, database);
+		}
+
 		public IEnumerable<IItemData> GetChildren(IItemData parentItem)
 		{
 			return _innerDataStore.Value.GetChildren(parentItem);

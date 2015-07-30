@@ -120,7 +120,7 @@ namespace Unicorn
 
 			if (!_predicate.Includes(destinationItem).IsIncluded) // if the destination we are moving to is NOT included for serialization, we delete the existing item
 			{
-				var existingItem = GetExistingSerializedItem(oldSourceItem.Path, oldSourceItem.DatabaseName, oldSourceItem.Id);
+				var existingItem = _targetDataStore.GetByMetadata(oldSourceItem, oldSourceItem.DatabaseName);
 
 				if (existingItem != null)
 				{
@@ -213,11 +213,6 @@ namespace Unicorn
 			_logger.SavedItem(_targetDataStore.GetType().Name, sourceItem, triggerReason);
 
 			return true;
-		}
-
-		protected virtual IItemData GetExistingSerializedItem(string path, string database, Guid expectedId)
-		{
-			return _targetDataStore.GetByPath(path, database).FirstOrDefault(item => item.Id == expectedId);
 		}
 
 		protected virtual bool HasConsequentialChanges(ItemChanges changes)

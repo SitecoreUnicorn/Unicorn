@@ -166,7 +166,7 @@ namespace Unicorn.Loader
 			var orphanCandidates = new Dictionary<Guid, IItemData>();
 
 			// get the corresponding item from Sitecore
-			IItemData rootSourceItemData = SourceDataStore.GetByPath(rootSerializedItemData.Path, rootSerializedItemData.DatabaseName).FirstOrDefault(item => item.Id == rootSerializedItemData.Id);
+			IItemData rootSourceItemData = SourceDataStore.GetByMetadata(rootSerializedItemData, rootSerializedItemData.DatabaseName);
 
 			// we add all of the root item's direct children to the "maybe orphan" list (we'll remove them as we find matching serialized children)
 			if (rootSourceItemData != null)
@@ -282,12 +282,12 @@ namespace Unicorn.Loader
 				}
 
 				// detect if we should run an update for the item or if it's already up to date
-				var existingItem = SourceDataStore.GetByPath(serializedItemData.Path, serializedItemData.DatabaseName).FirstOrDefault(item => item.Id == serializedItemData.Id);
+				var existingItem = SourceDataStore.GetByMetadata(serializedItemData, serializedItemData.DatabaseName);
 
 				// note that the evaluator is responsible for actual action being taken here
 				// as well as logging what it does
 				if (existingItem == null)
-					Evaluator.EvaluateNewSerializedItem(serializedItemData);
+					existingItem = Evaluator.EvaluateNewSerializedItem(serializedItemData);
 				else
 					Evaluator.EvaluateUpdate(existingItem, serializedItemData);
 

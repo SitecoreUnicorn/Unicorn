@@ -51,7 +51,7 @@ namespace Unicorn.ControlPanel
 						int index = 1;
 						foreach (var root in roots)
 						{
-							var rootReference = serializationStore.GetByPath(root.Path, root.DatabaseName).FirstOrDefault(reference => reference.Id == root.Id);
+							var rootReference = serializationStore.GetByMetadata(root, root.DatabaseName);
 							if (rootReference != null)
 							{
 								logger.Warn("[D] existing serialized items under {0}".FormatWith(rootReference.GetDisplayIdentifier()));
