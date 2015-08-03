@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using Rainbow.Filtering;
 using Rainbow.Model;
@@ -95,12 +94,12 @@ namespace Unicorn
 					_targetDataStore.MoveOrRenameItem(predicatedItem, changes.Item.Paths.ParentPath + "/" + oldName);
 				}
 
-				_logger.RenamedItem(_targetDataStore.GetType().Name, sourceItem, oldName);
+				_logger.RenamedItem(_targetDataStore.FriendlyName, sourceItem, oldName);
 			}
 			else if (HasConsequentialChanges(changes)) // it's a simple update - but we reject it if only inconsequential fields (last updated, revision) were changed - again, template builder FTW
 			{
 				_targetDataStore.Save(sourceItem);
-				_logger.SavedItem(_targetDataStore.GetType().Name, sourceItem, "Saved");
+				_logger.SavedItem(_targetDataStore.FriendlyName, sourceItem, "Saved");
 			}
 		}
 
@@ -125,7 +124,7 @@ namespace Unicorn
 				if (existingItem != null)
 				{
 					_targetDataStore.Remove(existingItem);
-					_logger.MovedItemToNonIncludedLocation(_targetDataStore.GetType().Name, existingItem);
+					_logger.MovedItemToNonIncludedLocation(_targetDataStore.FriendlyName, existingItem);
 				}
 
 				return;
@@ -143,7 +142,7 @@ namespace Unicorn
 				var predicatedItem = new PredicateFilteredItemData(sourceItem, _predicate);
 
 				_targetDataStore.MoveOrRenameItem(predicatedItem, oldPath);
-				_logger.MovedItem(_targetDataStore.GetType().Name, sourceItem, destinationItem);
+				_logger.MovedItem(_targetDataStore.FriendlyName, sourceItem, destinationItem);
 			}
 		}
 
@@ -157,7 +156,7 @@ namespace Unicorn
 			if (!_predicate.Includes(copiedItem).IsIncluded) return; // destination parent is not in a path that we are serializing, so skip out
 
 			_targetDataStore.Save(copiedItem);
-			_logger.CopiedItem(_targetDataStore.GetType().Name, () => GetSourceFromDefinition(source), copiedItem);
+			_logger.CopiedItem(_targetDataStore.FriendlyName, () => GetSourceFromDefinition(source), copiedItem);
 		}
 
 		public void AddVersion(ItemDefinition itemDefinition, VersionUri baseVersion, CallContext context)
@@ -180,7 +179,7 @@ namespace Unicorn
 			if (existingItem == null) return; // it was already gone or an item from a different data provider
 
 			if(_targetDataStore.Remove(existingItem))
-				_logger.DeletedItem(_targetDataStore.GetType().Name, existingItem);
+				_logger.DeletedItem(_targetDataStore.FriendlyName, existingItem);
 		}
 
 		public void RemoveVersion(ItemDefinition itemDefinition, VersionUri version, CallContext context)
@@ -210,7 +209,7 @@ namespace Unicorn
 			if (!_predicate.Includes(sourceItem).IsIncluded) return false; // item was not included so we get out
 
 			_targetDataStore.Save(sourceItem);
-			_logger.SavedItem(_targetDataStore.GetType().Name, sourceItem, triggerReason);
+			_logger.SavedItem(_targetDataStore.FriendlyName, sourceItem, triggerReason);
 
 			return true;
 		}
@@ -233,7 +232,7 @@ namespace Unicorn
 				return true;
 			}
 
-			_logger.SaveRejectedAsInconsequential(_targetDataStore.GetType().Name, changes);
+			_logger.SaveRejectedAsInconsequential(_targetDataStore.FriendlyName, changes);
 
 			return false;
 		}

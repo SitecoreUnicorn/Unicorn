@@ -108,7 +108,7 @@ namespace Unicorn.Loader
 			var included = Predicate.Includes(root);
 			if (!included.IsIncluded)
 			{
-				Logger.SkippedItemPresentInSerializationProvider(root, Predicate.GetType().Name, TargetDataStore.GetType().Name, included.Justification ?? string.Empty);
+				Logger.SkippedItemPresentInSerializationProvider(root, Predicate.FriendlyName, TargetDataStore.GetType().Name, included.Justification ?? string.Empty);
 				return;
 			}
 
@@ -180,7 +180,7 @@ namespace Unicorn.Loader
 						orphanCandidates[child.Id] = child;
 					else
 					{
-						Logger.SkippedItem(child, Predicate.GetType().Name, included.Justification ?? string.Empty);
+						Logger.SkippedItem(child, Predicate.FriendlyName, included.Justification ?? string.Empty);
 					}
 				}
 			}
@@ -277,7 +277,7 @@ namespace Unicorn.Loader
 
 				if (!included.IsIncluded)
 				{
-					Logger.SkippedItemPresentInSerializationProvider(serializedItemData, Predicate.GetType().Name, TargetDataStore.GetType().Name, included.Justification ?? string.Empty);
+					Logger.SkippedItemPresentInSerializationProvider(serializedItemData, Predicate.FriendlyName, TargetDataStore.FriendlyName, included.Justification ?? string.Empty);
 					return new ItemLoadResult(ItemLoadStatus.Skipped);
 				}
 

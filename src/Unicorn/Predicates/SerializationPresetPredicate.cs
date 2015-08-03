@@ -9,11 +9,10 @@ using Rainbow.Storage;
 using Sitecore.Data.Serialization.Presets;
 using Sitecore.Diagnostics;
 using Sitecore.StringExtensions;
-using Unicorn.ControlPanel;
 
 namespace Unicorn.Predicates
 {
-	public class SerializationPresetPredicate : IPredicate, IDocumentable, ITreeRootFactory
+	public class SerializationPresetPredicate : IPredicate, ITreeRootFactory
 	{
 		private readonly IList<PresetTreeRoot> _preset;
 
@@ -23,8 +22,6 @@ namespace Unicorn.Predicates
 
 			_preset = ParsePreset(configNode);
 		}
-
-		public string Name { get { return "Serialization Preset"; } }
 
 		public PredicateResult Includes(IItemData itemData)
 		{

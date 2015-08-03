@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using Rainbow.Model;
 using Rainbow.Storage;
-using Unicorn.ControlPanel;
 
 namespace Unicorn.Data
 {
@@ -10,7 +9,7 @@ namespace Unicorn.Data
 	/// Facade that enables mapping arbitrary IDataStore implementations onto ISourceDataStore/ITargetDataStore,
 	/// so that Unicorn can disambiguate which dependency it's after.
 	/// </summary>
-	public class ConfigurationDataStore : ISourceDataStore, ITargetDataStore, IDocumentable
+	public class ConfigurationDataStore : ISourceDataStore, ITargetDataStore
 	{
 		private readonly Lazy<IDataStore> _innerDataStore;
 
