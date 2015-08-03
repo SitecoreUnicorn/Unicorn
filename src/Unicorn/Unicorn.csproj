@@ -167,7 +167,7 @@
     <EmbeddedResource Include="ControlPanel\Headings\Unicorn.html" />
     <EmbeddedResource Include="ControlPanel\Headings\Unicorn.svg.html" />
     <EmbeddedResource Include="ControlPanel\Headings\ControlPanel.svg.html" />
-    <Content Include="Pipelines\README.txt" />
+    <None Include="Pipelines\README.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
