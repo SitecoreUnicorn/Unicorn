@@ -51,7 +51,7 @@ namespace Unicorn.ControlPanel
 						margin-top: -10px;
 					}
 					.details ul > li {
-						font-size: 0.9em;
+						font-size: 0.7em;
 					}
 					.details h5 {
 						display: inline-block;

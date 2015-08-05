@@ -1,4 +1,5 @@
-﻿using Rainbow.Storage;
+﻿using Rainbow;
+using Rainbow.Storage;
 using Unicorn.ControlPanel;
 
 namespace Unicorn.Data

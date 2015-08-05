@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Rainbow;
 using Rainbow.Model;
 using Rainbow.Storage;
 
@@ -58,11 +59,11 @@ namespace Unicorn.Data
 			return _innerDataStore.Value.Remove(item);
 		}
 
-		public string FriendlyName { get { return _innerDataStore.Value.GetType().Name; } }
-		public string Description { get { return _innerDataStore.Value.GetType().AssemblyQualifiedName; } }
+		public string FriendlyName { get { return DocumentationUtility.GetFriendlyName(_innerDataStore.Value); } }
+		public string Description { get { return DocumentationUtility.GetDescription(_innerDataStore.Value); } }
 		public KeyValuePair<string, string>[] GetConfigurationDetails()
 		{
-			return null;
+			return DocumentationUtility.GetConfigurationDetails(_innerDataStore.Value);
 		}
 	}
 }

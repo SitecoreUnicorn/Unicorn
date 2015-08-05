@@ -1,4 +1,5 @@
-﻿using Rainbow.Model;
+﻿using Rainbow;
+using Rainbow.Model;
 using Rainbow.Predicates;
 using Rainbow.Storage;
 using Unicorn.ControlPanel;

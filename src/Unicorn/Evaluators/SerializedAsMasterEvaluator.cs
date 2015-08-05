@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using Rainbow;
 using Rainbow.Diff;
 using Rainbow.Filtering;
 using Rainbow.Model;
 using Sitecore.Diagnostics;
-using Unicorn.ControlPanel;
 using Unicorn.Data;
 using Unicorn.Logging;
 
@@ -40,7 +40,7 @@ namespace Unicorn.Evaluators
 
 			EvaluatorUtility.RecycleItems(orphanItems, _sourceDataStore, item => _logger.DeletedItem(item));
 
-			foreach(var orphan in orphanItems) _logger.Evaluated(orphan);
+			foreach (var orphan in orphanItems) _logger.Evaluated(orphan);
 		}
 
 		public IItemData EvaluateNewSerializedItem(IItemData newItemData)
@@ -98,7 +98,7 @@ namespace Unicorn.Evaluators
 			}
 			if (comparison.IsTemplateChanged)
 			{
-				deferredUpdateLog.AddEntry(log=>log.TemplateChanged(sourceItem, targetItem));
+				deferredUpdateLog.AddEntry(log => log.TemplateChanged(sourceItem, targetItem));
 			}
 			foreach (var sharedChange in comparison.ChangedSharedFields)
 			{
@@ -106,8 +106,8 @@ namespace Unicorn.Evaluators
 			}
 			foreach (var versionChange in comparison.ChangedVersions)
 			{
-				if(versionChange.SourceVersion == null) deferredUpdateLog.AddEntry(log => log.NewTargetVersion(versionChange.TargetVersion, targetItem, sourceItem));
-				else if (versionChange.TargetVersion == null) deferredUpdateLog.AddEntry(log => log.OrphanSourceVersion(sourceItem, targetItem, new[] {versionChange.SourceVersion}));
+				if (versionChange.SourceVersion == null) deferredUpdateLog.AddEntry(log => log.NewTargetVersion(versionChange.TargetVersion, targetItem, sourceItem));
+				else if (versionChange.TargetVersion == null) deferredUpdateLog.AddEntry(log => log.OrphanSourceVersion(sourceItem, targetItem, new[] { versionChange.SourceVersion }));
 				else
 				{
 					foreach (var field in versionChange.ChangedFields)
@@ -141,7 +141,7 @@ namespace Unicorn.Evaluators
 
 		public KeyValuePair<string, string>[] GetConfigurationDetails()
 		{
-			return null;
+			return new[] { new KeyValuePair<string, string>("Item comparer", DocumentationUtility.GetFriendlyName(_itemComparer)) };
 		}
 	}
 }

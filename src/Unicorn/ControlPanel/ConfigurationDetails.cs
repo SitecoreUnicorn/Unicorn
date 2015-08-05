@@ -1,4 +1,5 @@
 ﻿using System.Web.UI;
+using Rainbow;
 using Rainbow.Formatting;
 using Unicorn.Data;
 using Unicorn.Evaluators;
@@ -49,14 +50,6 @@ namespace Unicorn.ControlPanel
 				_serializationStore,
 				writer);
 
-			if (_formatter != null)
-			{
-				RenderType("Serialization Formatter",
-					"Defines the format the serialization provider writes serialized items with.",
-					_formatter,
-					writer);
-			}
-
 			RenderType("Source Data Provider",
 				"Defines how source data is read to compare with serialized data. Normally this is a Sitecore database.",
 				_sourceDataStore,
@@ -82,23 +75,17 @@ namespace Unicorn.ControlPanel
 
 				writer.RenderBeginTag("p");
 					writer.RenderBeginTag("strong");
-						if (documentable == null)
-						{
-							writer.Write(type.GetType().Name + " (does not implement IDocumentable)");
-							writer.RenderEndTag();
-							return;
-						}
-
-						writer.Write(documentable.FriendlyName);
+						writer.WriteEncodedText(DocumentationUtility.GetFriendlyName(type));
 					writer.RenderEndTag();
 
 					writer.Write(" <code>({0})</code>", type.GetType().FullName);
 				writer.RenderEndTag();
 
-				if (!string.IsNullOrWhiteSpace(documentable.Description))
-					writer.Write("<p>{0}</p>", documentable.Description);
+				var description = DocumentationUtility.GetDescription(type);
+				if (!string.IsNullOrWhiteSpace(description))
+					writer.Write("<p>{0}</p>", description);
 
-				var configuration = documentable.GetConfigurationDetails();
+				var configuration = DocumentationUtility.GetConfigurationDetails(type);
 
 				if (configuration == null || configuration.Length == 0)
 				{
