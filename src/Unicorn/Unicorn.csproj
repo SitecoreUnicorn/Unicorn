@@ -153,7 +153,9 @@
       <SubType>Designer</SubType>
     </None>
     <None Include="Standard Config Files\Unicorn.Deployed.config.disabled" />
-    <None Include="Standard Config Files\Unicorn.ControlPanel.config" />
+    <None Include="Standard Config Files\Unicorn.ControlPanel.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Standard Config Files\Unicorn.DataProvider.config" />
     <None Include="Unicorn.nuspec" />
   </ItemGroup>
