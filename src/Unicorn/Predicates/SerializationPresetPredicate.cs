@@ -100,7 +100,7 @@ namespace Unicorn.Predicates
 				string basePath = entry.DatabaseName + ":" + entry.Path;
 				string excludes = GetExcludeDescription(entry);
 
-				configs.Add(new KeyValuePair<string, string>("Included path", basePath + excludes));
+				configs.Add(new KeyValuePair<string, string>(entry.Name, basePath + excludes));
 			}
 
 			return configs.ToArray();
