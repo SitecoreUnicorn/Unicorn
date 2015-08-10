@@ -53,7 +53,11 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commands\UnicornDumpTreeCommand.cs" />
+    <Compile Include="Commands\UnicornLoadTreeCommand.cs" />
+    <Compile Include="Commands\UnicornLoadItemCommand.cs" />
     <Compile Include="SerializationHelper.cs" />
+    <Compile Include="Commands\UnicornDumpItemCommand.cs" />
     <Compile Include="ConfigurationUtility.cs" />
     <Compile Include="Configuration\MicroConfiguration.cs" />
     <Compile Include="Configuration\MicroResolutionException.cs" />
