@@ -11,13 +11,12 @@ using Sitecore.Data;
 using Sitecore.Data.Items;
 using Sitecore.Diagnostics;
 using Sitecore.Pipelines.Save;
-using Sitecore.Web.UI.Sheer;
 using Unicorn.Configuration;
 using Unicorn.Data;
 using Unicorn.Predicates;
 using ItemData = Rainbow.Storage.Sc.ItemData;
 
-namespace Unicorn
+namespace Unicorn.UI.Pipelines.SaveUi
 {
 	/// <summary>
 	/// Provides a saveUI pipeline implementation to prevent unintentionally overwriting a changed serialized item on disk.
@@ -36,7 +35,7 @@ namespace Unicorn
 	/// 
 	/// This handler is here to attempt to keep you from shooting yourself in the foot, but you really need to sync Unicorn after every update pulled from SCM.
 	/// </remarks>
-	public class SerializationConflictProcessor
+	public class SerializationConflictProcessor : SaveUiConfirmProcessor
 	{
 		private readonly IConfiguration[] _configurations;
 
@@ -50,31 +49,7 @@ namespace Unicorn
 			_configurations = configurations;
 		}
 
-		public void Process(SaveArgs args)
-		{
-			Assert.ArgumentNotNull(args, "args");
-
-			// we had errors, and we got a post-back result of no, don't overwrite
-			if (args.Result == "no" || args.Result == "undefined")
-			{
-				args.SaveAnimation = false;
-				args.AbortPipeline();
-				return;
-			}
-
-			// we had errors, and we got a post-back result of yes, allow overwrite
-			if (args.IsPostBack) return;
-
-			string error = GetErrorValue(args);
-
-			// no errors detected, we're good
-			if (string.IsNullOrEmpty(error)) return;
-
-			SheerResponse.Confirm(error);
-			args.WaitForPostBack();
-		}
-
-		private string GetErrorValue(SaveArgs args)
+		protected override string GetDialogText(SaveArgs args)
 		{
 			var results = new Dictionary<Item, IList<string>>();
 

@@ -131,7 +131,10 @@
     <Compile Include="Predicates\SerializationPresetPredicate.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Publishing\ManualPublishQueueHandler.cs" />
-    <Compile Include="SerializationConflictProcessor.cs" />
+    <Compile Include="UI\Pipelines\GetContentEditorWarnings\SerializedWarning.cs" />
+    <Compile Include="UI\Pipelines\SaveUi\SaveUiConfirmProcessor.cs" />
+    <Compile Include="UI\Pipelines\SaveUi\SerializationChangeBlocker.cs" />
+    <Compile Include="UI\Pipelines\SaveUi\SerializationConflictProcessor.cs" />
     <Compile Include="Loader\SerializationLoader.cs" />
     <Compile Include="DefaultUnicornDataProviderLogger.cs" />
     <Compile Include="StandardValuesException.cs" />
@@ -144,6 +147,7 @@
     <None Include="Standard Config Files\Unicorn.config">
       <SubType>Designer</SubType>
     </None>
+    <None Include="Standard Config Files\Unicorn.Deployed.config.disabled" />
     <None Include="Standard Config Files\Unicorn.ControlPanel.config" />
     <None Include="Standard Config Files\Unicorn.DataProvider.config" />
     <None Include="Unicorn.nuspec" />

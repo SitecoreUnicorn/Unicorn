@@ -22,6 +22,7 @@
 		<file src="..\..\src\Unicorn\Standard Config Files\Unicorn.AutoPublish.config" target="content\App_Config\Include\Unicorn" />
 		<file src="..\..\src\Unicorn\Standard Config Files\Unicorn.ControlPanel.config" target="content\App_Config\Include\Unicorn" />
 		<file src="..\..\src\Unicorn\Standard Config Files\Unicorn.DataProvider.config" target="content\App_Config\Include\Unicorn" />
+		<file src="..\..\src\Unicorn\Standard Config Files\Unicorn.Deployed.config.disabled" target="content\App_Config\Include\Unicorn" />
 		<file src="readme.txt" target="" />
 	</files>
 </package>
