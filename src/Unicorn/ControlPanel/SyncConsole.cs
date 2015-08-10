@@ -39,6 +39,7 @@ namespace Unicorn.ControlPanel
 			foreach (var configuration in configurations)
 			{
 				var logger = configuration.Resolve<ILogger>();
+				var helper = configuration.Resolve<SerializationHelper>();
 
 				using (new LoggingContext(new WebConsoleLogger(progress), configuration))
 				{
@@ -46,40 +47,18 @@ namespace Unicorn.ControlPanel
 					{
 						logger.Info("Control Panel Sync: Processing Unicorn configuration " + configuration.Name);
 
-						var beginArgs = new UnicornSyncBeginPipelineArgs(configuration);
-						CorePipeline.Run("unicornSyncBegin", beginArgs);
-
-						if (beginArgs.Aborted)
-						{
-							logger.Error("Unicorn Sync Begin pipeline was aborted. Not executing sync for this configuration.");
-							continue;
-						}
-
-						if (beginArgs.SyncIsHandled)
-						{
-							logger.Info("Unicorn Sync Begin pipeline signalled that it handled the sync for this configuration.");
-							continue;
-						}
-
-						var syncStartTimestamp = DateTime.Now;
-
 						var pathResolver = configuration.Resolve<PredicateRootPathResolver>();
-						var retryer = configuration.Resolve<IDeserializeFailureRetryer>();
-						var consistencyChecker = configuration.Resolve<IConsistencyChecker>();
-						var loader = configuration.Resolve<SerializationLoader>();
 
 						var roots = pathResolver.GetRootSerializedItems();
 
 						var index = 0;
 
-						loader.LoadAll(roots, retryer, consistencyChecker, item =>
+						helper.SyncTree(configuration, item =>
 						{
-							progress.Report((int)(((index + 1) / (double)roots.Length) * 100));
+							progress.Report((int) (((index + 1)/(double) roots.Length)*100));
 							index++;
-						});
-
-						CorePipeline.Run("unicornSyncComplete", new UnicornSyncCompletePipelineArgs(configuration, syncStartTimestamp));
-
+						}, roots);
+						
 						logger.Info("Control Panel Sync: Completed syncing Unicorn configuration " + configuration.Name);
 					}
 					catch (Exception ex)

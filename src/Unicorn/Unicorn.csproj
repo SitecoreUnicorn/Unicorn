@@ -53,6 +53,7 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="SerializationHelper.cs" />
     <Compile Include="ConfigurationUtility.cs" />
     <Compile Include="Configuration\MicroConfiguration.cs" />
     <Compile Include="Configuration\MicroResolutionException.cs" />
