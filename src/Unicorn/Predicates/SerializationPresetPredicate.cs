@@ -25,6 +25,8 @@ namespace Unicorn.Predicates
 
 		public PredicateResult Includes(IItemData itemData)
 		{
+			Assert.ArgumentNotNull(itemData, "itemData");
+
 			// no entries = include everything
 			if (_preset.FirstOrDefault() == null) return new PredicateResult(true);
 

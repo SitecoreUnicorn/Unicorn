@@ -43,7 +43,7 @@ namespace Unicorn.Commands
 			var helper = configuration.Resolve<SerializationHelper>();
 			var targetDataStore = configuration.Resolve<ITargetDataStore>();
 
-			itemData = targetDataStore.GetByMetadata(itemData, itemData.DatabaseName);
+			itemData = targetDataStore.GetByPathAndId(itemData.Path, itemData.Id, itemData.DatabaseName);
 
 			if (itemData == null)
 			{

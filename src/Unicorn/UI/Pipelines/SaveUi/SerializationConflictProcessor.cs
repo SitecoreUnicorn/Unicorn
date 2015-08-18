@@ -68,7 +68,7 @@ namespace Unicorn.UI.Pipelines.SaveUi
 						// ignore conflicts on items that Unicorn is not managing
 						if (!configuration.Resolve<IPredicate>().Includes(existingSitecoreItem).IsIncluded) continue;
 
-						IItemData serializedItemData = configuration.Resolve<ITargetDataStore>().GetByMetadata(existingSitecoreItem, existingSitecoreItem.DatabaseName);
+						IItemData serializedItemData = configuration.Resolve<ITargetDataStore>().GetByPathAndId(existingSitecoreItem.Path, existingSitecoreItem.Id, existingSitecoreItem.DatabaseName);
 					
 						// not having an existing serialized version means no possibility of conflict here
 						if (serializedItemData == null) continue;

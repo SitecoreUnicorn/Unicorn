@@ -34,7 +34,7 @@ namespace Unicorn
 			var serializationStore = configuration.Resolve<ITargetDataStore>();
 			var sourceStore = configuration.Resolve<ISourceDataStore>();
 
-			var rootReference = serializationStore.GetByMetadata(item, item.DatabaseName);
+			var rootReference = serializationStore.GetByPathAndId(item.Path, item.Id, item.DatabaseName);
 			if (rootReference != null)
 			{
 				logger.Warn("[D] existing serialized items under {0}".FormatWith(rootReference.GetDisplayIdentifier()));

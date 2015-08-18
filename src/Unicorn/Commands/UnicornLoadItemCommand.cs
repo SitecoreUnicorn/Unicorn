@@ -35,7 +35,7 @@ namespace Unicorn.Commands
 			var sourceStore = configuration.Resolve<ISourceDataStore>();
 			var targetStore = configuration.Resolve<ITargetDataStore>();
 
-			var targetItem = targetStore.GetByMetadata(itemData, itemData.DatabaseName);
+			var targetItem = targetStore.GetByPathAndId(itemData.Path, itemData.Id, itemData.DatabaseName);
 
 			if (targetItem == null)
 			{
