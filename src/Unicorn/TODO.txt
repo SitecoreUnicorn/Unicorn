@@ -1,0 +1,8 @@
+﻿* Verify that core DP read fields behavior is compatible with SFS DS - e.g. item's fields only no std vals - and what about modified etc when from SFS only items
+* Check behaviour of items that are SFS only with DP
+* Need to check DP read behavior with syncing - esp around that whole orange color thing, but otherwise as well
+* Need to srsly optimize the perf of the tree with DP read enabled. Ideas:
+	- Cache paths into a dictionary in the predicate (since DP calls make a lot of predication, if we cache the result maybe minor help)
+	- Need to trace through what SFS is doing. I suspect there's a lot of duplication there even with the pathcache. 
+		Consider a single preload of the meta cache at startup/first hit? Easy to test.
+* Orange color thing is not working correctly

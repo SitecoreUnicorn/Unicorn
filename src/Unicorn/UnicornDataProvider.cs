@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Rainbow.Filtering;
 using Rainbow.Model;
 using Sitecore;
+using Sitecore.Collections;
 using Sitecore.Data;
 using Sitecore.Data.DataProviders;
 using Sitecore.Data.Items;
@@ -200,6 +202,128 @@ namespace Unicorn
 			SerializeItemIfIncluded(itemDefinition, "Versions Removed");
 		}
 
+		public virtual IEnumerable<ID> GetChildIds(ItemDefinition itemDefinition, CallContext context)
+		{
+			if (DisableSerialization) return Enumerable.Empty<ID>();
+
+			// expectation: do not return null, return empty enumerable for not included etc
+			var parentItem = _targetDataStore.GetById(itemDefinition.ID.Guid, context.DataManager.Database.Name);
+
+			if (parentItem == null || !_predicate.Includes(parentItem).IsIncluded) return Enumerable.Empty<ID>();
+
+			return _targetDataStore.GetChildren(parentItem).Select(item => new ID(item.Id));
+		}
+
+		public virtual ItemDefinition GetItemDefinition(ID itemId, CallContext context)
+		{
+			if (DisableSerialization) return null;
+
+			// return null if not present
+			var item = _targetDataStore.GetById(itemId.Guid, context.DataManager.Database.Name);
+
+			if (item == null || item is ItemData || !_predicate.Includes(item).IsIncluded) return null;
+
+			return new ItemDefinition(new ID(item.Id), item.Name, new ID(item.TemplateId), new ID(item.BranchId));
+		}
+
+		public virtual FieldList GetItemFields(ItemDefinition itemDefinition, VersionUri versionUri, CallContext context)
+		{
+			// return null if not present, should return all shared fields as well as all fields in the version
+			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
+			Assert.ArgumentNotNull(versionUri, "versionUri");
+			Log.Info("UVX GetFields" + itemDefinition.ID, this);
+			if (DisableSerialization || itemDefinition == ItemDefinition.Empty) return null;
+
+			var item = _targetDataStore.GetById(itemDefinition.ID.Guid, context.DataManager.Database.Name);
+
+			if (item == null || item is ItemData || !_predicate.Includes(item).IsIncluded) return null;
+
+			var fields = new FieldList();
+
+			foreach (var sharedField in item.SharedFields)
+			{
+				fields.Add(new ID(sharedField.FieldId), sharedField.Value);
+			}
+
+			var version = item.Versions.FirstOrDefault(v => v.VersionNumber == versionUri.Version.Number && v.Language.Name == versionUri.Language.Name);
+
+			if (version == null) return fields;
+
+			foreach (var versionedField in version.Fields)
+			{
+				fields.Add(new ID(versionedField.FieldId), versionedField.Value);
+			}
+
+			fields.Add(FieldIDs.Style, "color: orange");
+
+			return fields;
+		}
+
+		public virtual VersionUriList GetItemVersions(ItemDefinition itemDefinition, CallContext context)
+		{
+			// return null if not present
+			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
+			Log.Info("UVX GetItemVersions" + itemDefinition.ID, this);
+			if (DisableSerialization || itemDefinition == ItemDefinition.Empty) return null;
+
+			var versions = new VersionUriList();
+
+			var item = _targetDataStore.GetById(itemDefinition.ID.Guid, context.DataManager.Database.Name);
+
+			if (item == null || item is ItemData || !_predicate.Includes(item).IsIncluded) return null;
+
+			foreach (var version in item.Versions)
+			{
+				versions.Add(Language.Parse(version.Language.Name), Sitecore.Data.Version.Parse(version.VersionNumber));
+			}
+
+			return versions;
+		}
+
+		public virtual ID GetParentId(ItemDefinition itemDefinition, CallContext context)
+		{
+			// return null if not present
+			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
+			Log.Info("UVX GetParentId" + itemDefinition.ID, this);
+			if (DisableSerialization || itemDefinition == ItemDefinition.Empty) return null;
+
+			var item = _targetDataStore.GetById(itemDefinition.ID.Guid, context.DataManager.Database.Name);
+
+			return item != null && !(item is ItemData) ? new ID(item.ParentId) : null;
+		}
+
+		public virtual ID ResolvePath(string itemPath, CallContext context)
+		{
+			Log.Info("UVX ResolvePath" + itemPath, this);
+			if (DisableSerialization) return null;
+
+			// return null if not present
+			var item = _targetDataStore.GetByPath(itemPath, context.DataManager.Database.Name).FirstOrDefault();
+
+			if (item == null || item is ItemData || !_predicate.Includes(item).IsIncluded) return null;
+
+			return new ID(item.Id);
+		}
+
+		public virtual bool? HasChildren(ItemDefinition itemDefinition, CallContext context)
+		{
+			Log.Info("UVX HasChildren" + itemDefinition.ID, this);
+			// return null if not present
+			if (DisableSerialization) return null;
+
+			return GetChildIds(itemDefinition, context).Any();
+		}
+
+		public virtual IEnumerable<ID> GetTemplateItemIds(CallContext context)
+		{
+			Log.Info("UVX GetTemplateItemIds", this);
+			if (DisableSerialization) return Enumerable.Empty<ID>();
+
+			// expectation: do not return null, return empty enumerable for not included etc
+			return _targetDataStore.GetMetadataByTemplateId(TemplateIDs.Template.Guid, context.DataManager.Database.Name)
+				.Select(template => new ID(template.Id));
+		}
+
 		protected virtual bool SerializeItemIfIncluded(ItemDefinition itemDefinition, string triggerReason)
 		{
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
@@ -275,6 +399,22 @@ namespace Unicorn
 				// reacquire the source item after cleaning the cache
 				return new ItemData(item.Database.GetItem(item.ID, item.Language, item.Version), _sourceDataStore);
 			}
+		}
+
+		protected class DefinitionItemMetadata : IItemMetadata
+		{
+			private readonly ItemDefinition _definition;
+
+			public DefinitionItemMetadata(ItemDefinition definition)
+			{
+				_definition = definition;
+			}
+
+			public Guid Id { get { return _definition.ID.Guid; } }
+			public Guid ParentId { get { return default(Guid); } }
+			public Guid TemplateId { get { return _definition.TemplateID.Guid; } }
+			public string Path { get { return null; } }
+			public string SerializedItemId { get { return string.Format("{0} (from ItemDefinition)", Id); } }
 		}
 	}
 }

@@ -6,6 +6,7 @@ using Sitecore.Data.Items;
 using Sitecore.Data.SqlServer;
 using Sitecore.Globalization;
 using System.Collections.ObjectModel;
+using Sitecore.Collections;
 using Unicorn.Configuration;
 
 namespace Unicorn
@@ -133,6 +134,117 @@ namespace Unicorn
 				provider.RemoveVersions(itemDefinition, language, removeSharedData, context);
 
 			return true;
+		}
+
+		public override IDList GetChildIDs(ItemDefinition itemDefinition, CallContext context)
+		{
+			var results = new HashSet<ID>();
+			foreach (var provider in UnicornDataProviders)
+			{
+				var providerResult = provider.GetChildIds(itemDefinition, context);
+				foreach (var result in providerResult)
+				{
+					if (!results.Contains(result)) results.Add(result);
+				}
+			}
+
+			var baseResult = base.GetChildIDs(itemDefinition, context);
+			foreach (ID result in baseResult)
+			{
+				if (!results.Contains(result)) results.Add(result);
+			}
+
+			return IDList.Build(results.ToArray());
+		}
+
+		public override ItemDefinition GetItemDefinition(ID itemId, CallContext context)
+		{
+			foreach (var provider in UnicornDataProviders)
+			{
+				var providerResult = provider.GetItemDefinition(itemId, context);
+				if (providerResult != null) return providerResult;
+			}
+
+			return base.GetItemDefinition(itemId, context);
+		}
+
+		public override FieldList GetItemFields(ItemDefinition itemDefinition, VersionUri versionUri, CallContext context)
+		{
+			foreach (var provider in UnicornDataProviders)
+			{
+				var providerResult = provider.GetItemFields(itemDefinition, versionUri, context);
+				if (providerResult != null) return providerResult;
+			}
+
+			return base.GetItemFields(itemDefinition, versionUri, context);
+		}
+
+		public override VersionUriList GetItemVersions(ItemDefinition itemDefinition, CallContext context)
+		{
+			foreach (var provider in UnicornDataProviders)
+			{
+				var providerResult = provider.GetItemVersions(itemDefinition, context);
+				if (providerResult != null) return providerResult;
+			}
+
+			return base.GetItemVersions(itemDefinition, context);
+		}
+
+		public override ID GetParentID(ItemDefinition itemDefinition, CallContext context)
+		{
+			foreach (var provider in UnicornDataProviders)
+			{
+				var providerResult = provider.GetParentId(itemDefinition, context);
+				if (providerResult != (ID)null) return providerResult;
+			}
+
+			return base.GetParentID(itemDefinition, context);
+		}
+
+		public override ID ResolvePath(string itemPath, CallContext context)
+		{
+			foreach (var provider in UnicornDataProviders)
+			{
+				var providerResult = provider.ResolvePath(itemPath, context);
+				if (providerResult != (ID)null) return providerResult;
+			}
+
+			return base.ResolvePath(itemPath, context);
+		}
+
+		public override IdCollection GetTemplateItemIds(CallContext context)
+		{
+			var results = new HashSet<ID>();
+			foreach (var provider in UnicornDataProviders)
+			{
+				var providerResult = provider.GetTemplateItemIds(context);
+				foreach (var result in providerResult)
+				{
+					if (!results.Contains(result)) results.Add(result);
+				}
+			}
+
+			var baseResult = base.GetTemplateItemIds(context);
+			foreach (ID result in baseResult)
+			{
+				if (!results.Contains(result)) results.Add(result);
+			}
+
+			var collection = new IdCollection();
+			collection.Add(results.ToArray());
+
+			return collection;
+		}
+
+		public override bool HasChildren(ItemDefinition itemDefinition, CallContext context)
+		{
+			foreach (var provider in UnicornDataProviders)
+			{
+				var providerResult = provider.HasChildren(itemDefinition, context);
+				if (providerResult != null) return providerResult.Value;
+			}
+
+			return base.HasChildren(itemDefinition, context);
 		}
 	}
 }
