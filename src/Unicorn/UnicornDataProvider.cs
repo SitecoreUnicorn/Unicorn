@@ -119,7 +119,7 @@ namespace Unicorn
 
 			if (!_predicate.Includes(destinationItem).IsIncluded) // if the destination we are moving to is NOT included for serialization, we delete the existing item
 			{
-				var existingItem = _targetDataStore.GetByMetadata(oldSourceItem, oldSourceItem.DatabaseName);
+				var existingItem = _targetDataStore.GetByPathAndId(oldSourceItem.Path, oldSourceItem.Id, oldSourceItem.DatabaseName);
 
 				if (existingItem != null)
 				{
@@ -136,7 +136,7 @@ namespace Unicorn
 
 				var sourceItem = GetSourceFromDefinition(itemDefinition); // re-get the item with cache disabled
 
-				
+
 
 				// this allows us to filter out any excluded children by predicate when the data store moves children
 				var predicatedItem = new PredicateFilteredItemData(sourceItem, _predicate);
@@ -178,7 +178,7 @@ namespace Unicorn
 
 			if (existingItem == null) return; // it was already gone or an item from a different data provider
 
-			if(_targetDataStore.Remove(existingItem))
+			if (_targetDataStore.Remove(existingItem))
 				_logger.DeletedItem(_targetDataStore.FriendlyName, existingItem);
 		}
 
