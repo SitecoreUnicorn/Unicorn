@@ -221,7 +221,7 @@ namespace Unicorn
 			// return null if not present
 			var item = _targetDataStore.GetById(itemId.Guid, context.DataManager.Database.Name);
 
-			if (item == null || item is ItemData || !_predicate.Includes(item).IsIncluded) return null;
+			if (item == null || !_predicate.Includes(item).IsIncluded) return null;
 
 			return new ItemDefinition(new ID(item.Id), item.Name, new ID(item.TemplateId), new ID(item.BranchId));
 		}
@@ -236,7 +236,7 @@ namespace Unicorn
 
 			var item = _targetDataStore.GetById(itemDefinition.ID.Guid, context.DataManager.Database.Name);
 
-			if (item == null || item is ItemData || !_predicate.Includes(item).IsIncluded) return null;
+			if (item == null || !_predicate.Includes(item).IsIncluded) return null;
 
 			var fields = new FieldList();
 
@@ -270,7 +270,7 @@ namespace Unicorn
 
 			var item = _targetDataStore.GetById(itemDefinition.ID.Guid, context.DataManager.Database.Name);
 
-			if (item == null || item is ItemData || !_predicate.Includes(item).IsIncluded) return null;
+			if (item == null || !_predicate.Includes(item).IsIncluded) return null;
 
 			foreach (var version in item.Versions)
 			{
@@ -289,7 +289,7 @@ namespace Unicorn
 
 			var item = _targetDataStore.GetById(itemDefinition.ID.Guid, context.DataManager.Database.Name);
 
-			return item != null && !(item is ItemData) ? new ID(item.ParentId) : null;
+			return item != null ? new ID(item.ParentId) : null;
 		}
 
 		public virtual ID ResolvePath(string itemPath, CallContext context)
@@ -300,7 +300,7 @@ namespace Unicorn
 			// return null if not present
 			var item = _targetDataStore.GetByPath(itemPath, context.DataManager.Database.Name).FirstOrDefault();
 
-			if (item == null || item is ItemData || !_predicate.Includes(item).IsIncluded) return null;
+			if (item == null || !_predicate.Includes(item).IsIncluded) return null;
 
 			return new ID(item.Id);
 		}
