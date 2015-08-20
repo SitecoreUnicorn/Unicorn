@@ -84,7 +84,8 @@ namespace Unicorn
 			if (!_predicate.Includes(sourceItem).IsIncluded) return;
 
 			string oldName = changes.Renamed ? changes.Properties["name"].OriginalValue.ToString() : string.Empty;
-			if (changes.Renamed && !oldName.Equals(sourceItem.Name, StringComparison.Ordinal)) // it's a rename, in which the name actually changed (template builder will cause 'renames' for the same name!!!)
+			if (changes.Renamed && !oldName.Equals(sourceItem.Name, StringComparison.Ordinal))
+			// it's a rename, in which the name actually changed (template builder will cause 'renames' for the same name!!!)
 			{
 				using (new DatabaseCacheDisabler())
 				{
@@ -98,7 +99,8 @@ namespace Unicorn
 
 				_logger.RenamedItem(_targetDataStore.FriendlyName, sourceItem, oldName);
 			}
-			else if (HasConsequentialChanges(changes)) // it's a simple update - but we reject it if only inconsequential fields (last updated, revision) were changed - again, template builder FTW
+			else if (HasConsequentialChanges(changes))
+			// it's a simple update - but we reject it if only inconsequential fields (last updated, revision) were changed - again, template builder FTW
 			{
 				_targetDataStore.Save(sourceItem);
 				_logger.SavedItem(_targetDataStore.FriendlyName, sourceItem, "Saved");
@@ -204,10 +206,10 @@ namespace Unicorn
 
 		public virtual IEnumerable<ID> GetChildIds(ItemDefinition itemDefinition, CallContext context)
 		{
-			if (DisableSerialization) return Enumerable.Empty<ID>();
+			if (DisableSerialization || TransparentSyncDisabler.CurrentValue) return Enumerable.Empty<ID>();
 
 			// expectation: do not return null, return empty enumerable for not included etc
-			var parentItem = _targetDataStore.GetById(itemDefinition.ID.Guid, context.DataManager.Database.Name);
+			var parentItem = GetTargetFromDefinition(itemDefinition);
 
 			if (parentItem == null || !_predicate.Includes(parentItem).IsIncluded) return Enumerable.Empty<ID>();
 
@@ -216,10 +218,10 @@ namespace Unicorn
 
 		public virtual ItemDefinition GetItemDefinition(ID itemId, CallContext context)
 		{
-			if (DisableSerialization) return null;
+			if (DisableSerialization || TransparentSyncDisabler.CurrentValue) return null;
 
 			// return null if not present
-			var item = _targetDataStore.GetById(itemId.Guid, context.DataManager.Database.Name);
+			var item = _targetDataStore.GetById(itemId.Guid, Database.Name);
 
 			if (item == null || !_predicate.Includes(item).IsIncluded) return null;
 
@@ -231,10 +233,10 @@ namespace Unicorn
 			// return null if not present, should return all shared fields as well as all fields in the version
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
 			Assert.ArgumentNotNull(versionUri, "versionUri");
-			Log.Info("UVX GetFields" + itemDefinition.ID, this);
-			if (DisableSerialization || itemDefinition == ItemDefinition.Empty) return null;
 
-			var item = _targetDataStore.GetById(itemDefinition.ID.Guid, context.DataManager.Database.Name);
+			if (DisableSerialization || TransparentSyncDisabler.CurrentValue || itemDefinition == ItemDefinition.Empty) return null;
+
+			var item = GetTargetFromDefinition(itemDefinition);
 
 			if (item == null || !_predicate.Includes(item).IsIncluded) return null;
 
@@ -263,12 +265,12 @@ namespace Unicorn
 		{
 			// return null if not present
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
-			Log.Info("UVX GetItemVersions" + itemDefinition.ID, this);
-			if (DisableSerialization || itemDefinition == ItemDefinition.Empty) return null;
+
+			if (DisableSerialization || TransparentSyncDisabler.CurrentValue || itemDefinition == ItemDefinition.Empty) return null;
 
 			var versions = new VersionUriList();
 
-			var item = _targetDataStore.GetById(itemDefinition.ID.Guid, context.DataManager.Database.Name);
+			var item = GetTargetFromDefinition(itemDefinition);
 
 			if (item == null || !_predicate.Includes(item).IsIncluded) return null;
 
@@ -284,21 +286,20 @@ namespace Unicorn
 		{
 			// return null if not present
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
-			Log.Info("UVX GetParentId" + itemDefinition.ID, this);
-			if (DisableSerialization || itemDefinition == ItemDefinition.Empty) return null;
 
-			var item = _targetDataStore.GetById(itemDefinition.ID.Guid, context.DataManager.Database.Name);
+			if (DisableSerialization || TransparentSyncDisabler.CurrentValue || itemDefinition == ItemDefinition.Empty) return null;
+
+			var item = GetTargetFromDefinition(itemDefinition);
 
 			return item != null ? new ID(item.ParentId) : null;
 		}
 
 		public virtual ID ResolvePath(string itemPath, CallContext context)
 		{
-			Log.Info("UVX ResolvePath" + itemPath, this);
-			if (DisableSerialization) return null;
+			if (DisableSerialization || TransparentSyncDisabler.CurrentValue) return null;
 
 			// return null if not present
-			var item = _targetDataStore.GetByPath(itemPath, context.DataManager.Database.Name).FirstOrDefault();
+			var item = _targetDataStore.GetByPath(itemPath, Database.Name).FirstOrDefault();
 
 			if (item == null || !_predicate.Includes(item).IsIncluded) return null;
 
@@ -307,20 +308,18 @@ namespace Unicorn
 
 		public virtual bool? HasChildren(ItemDefinition itemDefinition, CallContext context)
 		{
-			Log.Info("UVX HasChildren" + itemDefinition.ID, this);
 			// return null if not present
-			if (DisableSerialization) return null;
+			if (DisableSerialization || TransparentSyncDisabler.CurrentValue) return null;
 
 			return GetChildIds(itemDefinition, context).Any();
 		}
 
 		public virtual IEnumerable<ID> GetTemplateItemIds(CallContext context)
 		{
-			Log.Info("UVX GetTemplateItemIds", this);
-			if (DisableSerialization) return Enumerable.Empty<ID>();
+			if (DisableSerialization || TransparentSyncDisabler.CurrentValue) return Enumerable.Empty<ID>();
 
 			// expectation: do not return null, return empty enumerable for not included etc
-			return _targetDataStore.GetMetadataByTemplateId(TemplateIDs.Template.Guid, context.DataManager.Database.Name)
+			return _targetDataStore.GetMetadataByTemplateId(TemplateIDs.Template.Guid, Database.Name)
 				.Select(template => new ID(template.Id));
 		}
 
@@ -379,9 +378,12 @@ namespace Unicorn
 		{
 			if (!useCache)
 			{
-				using (new DatabaseCacheDisabler())
+				using (new TransparentSyncDisabler())
 				{
-					return Database.GetItem(definition.ID);
+					using (new DatabaseCacheDisabler())
+					{
+						return Database.GetItem(definition.ID);
+					}
 				}
 			}
 
@@ -394,27 +396,38 @@ namespace Unicorn
 		/// </summary>
 		protected virtual IItemData GetItemWithoutCache(Item item)
 		{
-			using (new DatabaseCacheDisabler())
+			using (new TransparentSyncDisabler())
 			{
-				// reacquire the source item after cleaning the cache
-				return new ItemData(item.Database.GetItem(item.ID, item.Language, item.Version), _sourceDataStore);
+				using (new DatabaseCacheDisabler())
+				{
+					// reacquire the source item after cleaning the cache
+					return new ItemData(item.Database.GetItem(item.ID, item.Language, item.Version), _sourceDataStore);
+				}
 			}
 		}
 
-		protected class DefinitionItemMetadata : IItemMetadata
+		/// <summary>
+		/// Given an item definition, resolve it in the target data store
+		/// This involves seeing if we can use the Sitecore db to resolve its path
+		/// (as definition does not include the path) so we can efficiently look it up
+		/// in path based data stores. If we cannot resolve a path, or the path is incorrect,
+		/// we fall back to using GetById on the target data store.
+		/// </summary>
+		protected virtual IItemData GetTargetFromDefinition(ItemDefinition itemDefinition)
 		{
-			private readonly ItemDefinition _definition;
-
-			public DefinitionItemMetadata(ItemDefinition definition)
+			using (new TransparentSyncDisabler())
 			{
-				_definition = definition;
+				var dbItem = GetItemFromDefinition(itemDefinition, true);
+
+				if (dbItem != null)
+				{
+					var targetItem = _targetDataStore.GetByPathAndId(dbItem.Paths.Path, dbItem.ID.Guid, Database.Name);
+
+					if (targetItem != null) return targetItem;
+				}
 			}
 
-			public Guid Id { get { return _definition.ID.Guid; } }
-			public Guid ParentId { get { return default(Guid); } }
-			public Guid TemplateId { get { return _definition.TemplateID.Guid; } }
-			public string Path { get { return null; } }
-			public string SerializedItemId { get { return string.Format("{0} (from ItemDefinition)", Id); } }
+			return _targetDataStore.GetById(itemDefinition.ID.Guid, Database.Name);
 		}
 	}
 }

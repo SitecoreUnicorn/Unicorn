@@ -135,6 +135,7 @@
     <Compile Include="Predicates\SerializationPresetPredicate.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Publishing\ManualPublishQueueHandler.cs" />
+    <Compile Include="TransparentSyncDisabler.cs" />
     <Compile Include="UI\Pipelines\GetContentEditorWarnings\SerializedWarning.cs" />
     <Compile Include="UI\Pipelines\SaveUi\SaveUiConfirmProcessor.cs" />
     <Compile Include="UI\Pipelines\SaveUi\SerializationChangeBlocker.cs" />

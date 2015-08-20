@@ -1,8 +1,15 @@
-﻿* Verify that core DP read fields behavior is compatible with SFS DS - e.g. item's fields only no std vals - and what about modified etc when from SFS only items
-* Check behaviour of items that are SFS only with DP
+﻿* Check behaviour of items that are SFS only with DP
 * Need to check DP read behavior with syncing - esp around that whole orange color thing, but otherwise as well
 * Need to srsly optimize the perf of the tree with DP read enabled. Ideas:
+	- Every ID is being passed to the providers, because we don't know if an ID is under predicate until we retrieve an item for it
+		This causes worst case full table scans in all providers for every item that is not included under the provider
+		We could potentially mitigate by looking up path in the Sitecore DB - if it exists - and predicating that. 
+		Could get us in trouble if a provider contained a moved item that had not been synced to the DB, but if no hit on that path we just go back to table scan
+		We can't really trust that an ID has not been added to the provider, though - so if not in DB we'd need to table scan. Helps for non-included items though.
+		Edge case: item is in DB with older path, not included. Since has been moved to included path in serialized, but not synced.
+		ISSUE: still awful slow even with db path lookup stuff. see if we can fix what's busted w/debug + profile
+
 	- Cache paths into a dictionary in the predicate (since DP calls make a lot of predication, if we cache the result maybe minor help)
 	- Need to trace through what SFS is doing. I suspect there's a lot of duplication there even with the pathcache. 
-		Consider a single preload of the meta cache at startup/first hit? Easy to test.
-* Orange color thing is not working correctly
+		perhaps cache iitemdata for item ids using last mod as a cache break
+- Blob read support
