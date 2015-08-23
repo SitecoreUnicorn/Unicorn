@@ -24,42 +24,48 @@ namespace Unicorn
 		/// <returns>True if the tree was dumped, false if the root item was not included</returns>
 		public virtual bool DumpTree(IItemData item)
 		{
-			var configuration = GetConfigurationForItem(item);
-
-			if (configuration == null) return false;
-
-			var logger = configuration.Resolve<ILogger>();
-
-			var predicate = configuration.Resolve<IPredicate>();
-			var serializationStore = configuration.Resolve<ITargetDataStore>();
-			var sourceStore = configuration.Resolve<ISourceDataStore>();
-
-			var rootReference = serializationStore.GetByPathAndId(item.Path, item.Id, item.DatabaseName);
-			if (rootReference != null)
+			using (new TransparentSyncDisabler())
 			{
-				logger.Warn("[D] existing serialized items under {0}".FormatWith(rootReference.GetDisplayIdentifier()));
-				serializationStore.Remove(rootReference);
+				var configuration = GetConfigurationForItem(item);
+
+				if (configuration == null) return false;
+
+				var logger = configuration.Resolve<ILogger>();
+
+				var predicate = configuration.Resolve<IPredicate>();
+				var serializationStore = configuration.Resolve<ITargetDataStore>();
+				var sourceStore = configuration.Resolve<ISourceDataStore>();
+
+				var rootReference = serializationStore.GetByPathAndId(item.Path, item.Id, item.DatabaseName);
+				if (rootReference != null)
+				{
+					logger.Warn("[D] existing serialized items under {0}".FormatWith(rootReference.GetDisplayIdentifier()));
+					serializationStore.Remove(rootReference);
+				}
+
+				logger.Info("[U] Serializing included items under root {0}".FormatWith(item.GetDisplayIdentifier()));
+
+				if (!predicate.Includes(item).IsIncluded) return false;
+
+				DumpTreeRecursive(item, predicate, serializationStore, sourceStore, logger);
 			}
-
-			logger.Info("[U] Serializing included items under root {0}".FormatWith(item.GetDisplayIdentifier()));
-
-			if (!predicate.Includes(item).IsIncluded) return false;
-
-			DumpTreeRecursive(item, predicate, serializationStore, sourceStore, logger);
 			return true;
 		}
 
 		/// <returns>True if the item was dumped, false if it was not included</returns>
 		public virtual bool DumpItem(IItemData item)
 		{
-			var configuration = GetConfigurationForItem(item);
+			using (new TransparentSyncDisabler())
+			{
+				var configuration = GetConfigurationForItem(item);
 
-			if (configuration == null) return false;
+				if (configuration == null) return false;
 
-			var predicate = configuration.Resolve<IPredicate>();
-			var serializationStore = configuration.Resolve<ITargetDataStore>();
+				var predicate = configuration.Resolve<IPredicate>();
+				var serializationStore = configuration.Resolve<ITargetDataStore>();
 
-			return DumpItemInternal(item, predicate, serializationStore).IsIncluded;
+				return DumpItemInternal(item, predicate, serializationStore).IsIncluded;
+			}
 		}
 
 		/// <remarks>All roots must live within the same configuration! Make sure that the roots are from the target data store.</remarks>
@@ -83,12 +89,15 @@ namespace Unicorn
 			}
 
 			var syncStartTimestamp = DateTime.Now;
-			
-			var retryer = configuration.Resolve<IDeserializeFailureRetryer>();
-			var consistencyChecker = configuration.Resolve<IConsistencyChecker>();
-			var loader = configuration.Resolve<SerializationLoader>();
 
-			loader.LoadAll(roots, retryer, consistencyChecker, rootLoadedCallback);
+			using (new TransparentSyncDisabler())
+			{
+				var retryer = configuration.Resolve<IDeserializeFailureRetryer>();
+				var consistencyChecker = configuration.Resolve<IConsistencyChecker>();
+				var loader = configuration.Resolve<SerializationLoader>();
+
+				loader.LoadAll(roots, retryer, consistencyChecker, rootLoadedCallback);
+			}
 
 			CorePipeline.Run("unicornSyncComplete", new UnicornSyncCompletePipelineArgs(configuration, syncStartTimestamp));
 

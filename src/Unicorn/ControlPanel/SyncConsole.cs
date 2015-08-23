@@ -5,10 +5,7 @@ using Kamsar.WebConsole;
 using Sitecore.Pipelines;
 using Unicorn.Configuration;
 using Unicorn.ControlPanel.Headings;
-using Unicorn.Loader;
 using Unicorn.Logging;
-using Unicorn.Pipelines.UnicornSyncBegin;
-using Unicorn.Pipelines.UnicornSyncComplete;
 using Unicorn.Pipelines.UnicornSyncEnd;
 using Unicorn.Predicates;
 
@@ -47,18 +44,21 @@ namespace Unicorn.ControlPanel
 					{
 						logger.Info("Control Panel Sync: Processing Unicorn configuration " + configuration.Name);
 
-						var pathResolver = configuration.Resolve<PredicateRootPathResolver>();
-
-						var roots = pathResolver.GetRootSerializedItems();
-
-						var index = 0;
-
-						helper.SyncTree(configuration, item =>
+						using (new TransparentSyncDisabler())
 						{
-							progress.Report((int) (((index + 1)/(double) roots.Length)*100));
-							index++;
-						}, roots);
-						
+							var pathResolver = configuration.Resolve<PredicateRootPathResolver>();
+
+							var roots = pathResolver.GetRootSerializedItems();
+
+							var index = 0;
+
+							helper.SyncTree(configuration, item =>
+							{
+								progress.Report((int) (((index + 1)/(double) roots.Length)*100));
+								index++;
+							}, roots);
+						}
+
 						logger.Info("Control Panel Sync: Completed syncing Unicorn configuration " + configuration.Name);
 					}
 					catch (Exception ex)

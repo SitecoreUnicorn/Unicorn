@@ -1,14 +1,8 @@
-﻿* Check behaviour of items that are SFS only with DP
-* Need to check DP read behavior with syncing - esp around that whole orange color thing, but otherwise as well
-* Need to srsly optimize the perf of the tree with DP read enabled. Ideas:
-	- Every ID is being passed to the providers, because we don't know if an ID is under predicate until we retrieve an item for it
-	- We've tried pulling paths from the DB and predicating on those, but that's pretty expensive too to do all that path resolution
-	- We've tried extensive data caching in the data store, but the gains seem not as large as expected (e.g. lots of descendants scans)
-		We need to trace the cache paths in getbyid in the tree, and make sure that the cache is actually being hit
-		Perhaps also check speed wise if it's faster to get all paths under the root to get descendants, then loop over the whole thing instead of being iterative
-		Not seeing expected gains from caching when the DP does multiple calls in succession (e.g. getdefinition, getlatestversion, getfields),
-			suspect the cache is broken somewheres
-	- Cache paths into a dictionary in the predicate (since DP calls make a lot of predication, if we cache the result maybe minor help)
-	- Need to trace through what SFS is doing. I suspect there's a lot of duplication there even with the pathcache. 
-		perhaps cache iitemdata for item ids using last mod as a cache break
+﻿- Allow disabling transparent on a per-configuration basis - off by default
 - Blob read support
+- SFS metadata cache updating when disk items are added or removed
+- Data cache auto-clearing when disk items are added, removed, or updated
+- Multithreaded syncing of multiple configurations
+- Fix same path in different db bug with predicate on GitHub
+- General code review
+- Tests?
