@@ -149,9 +149,13 @@ namespace Unicorn
 			}
 
 			var baseResult = base.GetChildIDs(itemDefinition, context);
-			foreach (ID result in baseResult)
+
+			if (baseResult != null)
 			{
-				if (!results.Contains(result)) results.Add(result);
+				foreach (ID result in baseResult)
+				{
+					if (!results.Contains(result)) results.Add(result);
+				}
 			}
 
 			return IDList.Build(results.ToArray());
@@ -225,9 +229,12 @@ namespace Unicorn
 			}
 
 			var baseResult = base.GetTemplateItemIds(context);
-			foreach (ID result in baseResult)
+			if (baseResult != null)
 			{
-				if (!results.Contains(result)) results.Add(result);
+				foreach (ID result in baseResult)
+				{
+					if (!results.Contains(result)) results.Add(result);
+				}
 			}
 
 			var collection = new IdCollection();

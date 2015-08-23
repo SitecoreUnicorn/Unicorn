@@ -29,6 +29,7 @@ namespace Unicorn
 		private readonly IFieldFilter _fieldFilter;
 		private readonly IUnicornDataProviderLogger _logger;
 		private static bool _disableSerialization;
+		private static bool _disableTransparentSync;
 
 		public UnicornDataProvider(ITargetDataStore targetDataStore, ISourceDataStore sourceDataStore, IPredicate predicate, IFieldFilter fieldFilter, IUnicornDataProviderLogger logger)
 		{
@@ -58,6 +59,20 @@ namespace Unicorn
 				return _disableSerialization;
 			}
 			set { _disableSerialization = value; }
+		}
+
+		/// <summary>
+		/// Disables transparent sync (reading from the target data store)
+		/// This is appropriate for large data sets, or slower data providers.
+		/// </summary>
+		public static bool DisableTransparentSync
+		{
+			get
+			{
+				if (TransparentSyncDisabler.CurrentValue) return true;
+				return _disableTransparentSync;
+			}
+			set { _disableTransparentSync = value; }
 		}
 
 		public DataProvider DataProvider { get; set; }
@@ -206,7 +221,7 @@ namespace Unicorn
 
 		public virtual IEnumerable<ID> GetChildIds(ItemDefinition itemDefinition, CallContext context)
 		{
-			if (DisableSerialization || TransparentSyncDisabler.CurrentValue) return Enumerable.Empty<ID>();
+			if (DisableSerialization || DisableTransparentSync) return Enumerable.Empty<ID>();
 
 			// expectation: do not return null, return empty enumerable for not included etc
 			var parentItem = GetTargetFromId(itemDefinition.ID);
@@ -218,7 +233,7 @@ namespace Unicorn
 
 		public virtual ItemDefinition GetItemDefinition(ID itemId, CallContext context)
 		{
-			if (DisableSerialization || TransparentSyncDisabler.CurrentValue) return null;
+			if (DisableSerialization || DisableTransparentSync) return null;
 
 			// return null if not present
 			var item = GetTargetFromId(itemId);
@@ -234,7 +249,7 @@ namespace Unicorn
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
 			Assert.ArgumentNotNull(versionUri, "versionUri");
 
-			if (DisableSerialization || TransparentSyncDisabler.CurrentValue || itemDefinition == ItemDefinition.Empty) return null;
+			if (DisableSerialization || DisableTransparentSync || itemDefinition == ItemDefinition.Empty) return null;
 
 			var item = GetTargetFromId(itemDefinition.ID);
 
@@ -256,7 +271,7 @@ namespace Unicorn
 				fields.Add(new ID(versionedField.FieldId), versionedField.Value);
 			}
 
-			fields.Add(FieldIDs.Style, "color: orange");
+			fields.Add(FieldIDs.UpdatedBy, "serialization\\UnicornDataProvider");
 
 			return fields;
 		}
@@ -266,7 +281,7 @@ namespace Unicorn
 			// return null if not present
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
 
-			if (DisableSerialization || TransparentSyncDisabler.CurrentValue || itemDefinition == ItemDefinition.Empty) return null;
+			if (DisableSerialization || DisableTransparentSync || itemDefinition == ItemDefinition.Empty) return null;
 
 			var versions = new VersionUriList();
 
@@ -287,7 +302,7 @@ namespace Unicorn
 			// return null if not present
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
 
-			if (DisableSerialization || TransparentSyncDisabler.CurrentValue || itemDefinition == ItemDefinition.Empty) return null;
+			if (DisableSerialization || DisableTransparentSync || itemDefinition == ItemDefinition.Empty) return null;
 
 			var item = GetTargetFromId(itemDefinition.ID);
 
@@ -296,7 +311,7 @@ namespace Unicorn
 
 		public virtual ID ResolvePath(string itemPath, CallContext context)
 		{
-			if (DisableSerialization || TransparentSyncDisabler.CurrentValue) return null;
+			if (DisableSerialization || DisableTransparentSync) return null;
 
 			// return null if not present
 			var item = _targetDataStore.GetByPath(itemPath, Database.Name).FirstOrDefault();
@@ -309,14 +324,14 @@ namespace Unicorn
 		public virtual bool? HasChildren(ItemDefinition itemDefinition, CallContext context)
 		{
 			// return null if not present
-			if (DisableSerialization || TransparentSyncDisabler.CurrentValue) return null;
+			if (DisableSerialization || DisableTransparentSync) return null;
 
 			return GetChildIds(itemDefinition, context).Any();
 		}
 
 		public virtual IEnumerable<ID> GetTemplateItemIds(CallContext context)
 		{
-			if (DisableSerialization || TransparentSyncDisabler.CurrentValue) return Enumerable.Empty<ID>();
+			if (DisableSerialization || DisableTransparentSync) return Enumerable.Empty<ID>();
 
 			// expectation: do not return null, return empty enumerable for not included etc
 			return _targetDataStore.GetMetadataByTemplateId(TemplateIDs.Template.Guid, Database.Name)
@@ -410,20 +425,6 @@ namespace Unicorn
 		/// </summary>
 		protected virtual IItemData GetTargetFromId(ID id)
 		{
-			using (new TransparentSyncDisabler())
-			{
-				IItemData dbItem = GetSourceFromId(id, true);
-
-				if (dbItem != null)
-				{
-					if (!_predicate.Includes(dbItem).IsIncluded) return null;
-
-					var targetItem = _targetDataStore.GetByPathAndId(dbItem.Path, dbItem.Id, Database.Name);
-
-					if (targetItem != null) return targetItem;
-				}
-			}
-
 			return _targetDataStore.GetById(id.Guid, Database.Name);
 		}
 	}
