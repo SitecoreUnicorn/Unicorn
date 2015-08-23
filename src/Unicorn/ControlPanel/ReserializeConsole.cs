@@ -39,16 +39,19 @@ namespace Unicorn.ControlPanel
 					{
 						logger.Info("Control Panel Reserialize: Processing Unicorn configuration " + configuration.Name);
 
-						var helper = configuration.Resolve<SerializationHelper>();
-
-						var roots = configuration.Resolve<PredicateRootPathResolver>().GetRootSourceItems();
-
-						int index = 1;
-						foreach (var root in roots)
+						using (new TransparentSyncDisabler())
 						{
-							helper.DumpTree(root);
-							progress.Report((int) ((index/(double) roots.Length)*100));
-							index++;
+							var helper = configuration.Resolve<SerializationHelper>();
+
+							var roots = configuration.Resolve<PredicateRootPathResolver>().GetRootSourceItems();
+
+							int index = 1;
+							foreach (var root in roots)
+							{
+								helper.DumpTree(root);
+								progress.Report((int) ((index/(double) roots.Length)*100));
+								index++;
+							}
 						}
 
 						logger.Info("Control Panel Reserialize: Finished reserializing Unicorn configuration " + configuration.Name);
