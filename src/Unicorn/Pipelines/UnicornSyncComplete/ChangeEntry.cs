@@ -1,4 +1,5 @@
-﻿using Rainbow.Model;
+﻿using System;
+using Rainbow.Model;
 
 namespace Unicorn.Pipelines.UnicornSyncComplete
 {
@@ -6,11 +7,17 @@ namespace Unicorn.Pipelines.UnicornSyncComplete
 	{
 		public ChangeEntry(IItemData itemData, ChangeType type)
 		{
-			ItemData = itemData;
+			if (itemData != null)
+			{
+				Id = itemData.Id;
+				DatabaseName = itemData.DatabaseName;
+			}
+			
 			ChangeType = type;
 		}
 
-		public IItemData ItemData { get; private set; }
+		public Guid? Id { get; private set; }
+		public string DatabaseName { get; private set; }
 		public ChangeType ChangeType { get; private set; }
 	}
 }

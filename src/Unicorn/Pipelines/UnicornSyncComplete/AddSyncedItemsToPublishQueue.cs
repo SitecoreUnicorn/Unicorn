@@ -11,7 +11,7 @@ namespace Unicorn.Pipelines.UnicornSyncComplete
 		{
 			foreach (var item in args.Changes)
 			{
-				if(item.ItemData != null) ManualPublishQueueHandler.AddItemToPublish(item.ItemData.Id);
+				if(item.Id != null) ManualPublishQueueHandler.AddItemToPublish(item.Id.Value);
 			}
 		}
 	}
