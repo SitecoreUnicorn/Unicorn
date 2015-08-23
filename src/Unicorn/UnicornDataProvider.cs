@@ -115,11 +115,11 @@ namespace Unicorn
 
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
 
-			var oldSourceItem = GetSourceFromDefinition(itemDefinition, true); // we use cache here because we want the old path
+			var oldSourceItem = GetSourceFromId(itemDefinition.ID, true); // we use cache here because we want the old path
 
 			var oldPath = oldSourceItem.Path; // NOTE: we cap the path here, because once we enter the cache-disabled section - to get the new paths for parent and children - the path cache updates and the old path is lost in oldSourceItem because it is reevaluated each time.
 
-			var destinationItem = GetSourceFromDefinition(destination);
+			var destinationItem = GetSourceFromId(destination.ID);
 
 			if (!_predicate.Includes(destinationItem).IsIncluded) // if the destination we are moving to is NOT included for serialization, we delete the existing item
 			{
@@ -138,7 +138,7 @@ namespace Unicorn
 			{
 				// disabling the DB caches while running this ensures that any children of the moved item are retrieved with their proper post-rename paths and thus are not saved at their old location
 
-				var sourceItem = GetSourceFromDefinition(itemDefinition); // re-get the item with cache disabled
+				var sourceItem = GetSourceFromId(itemDefinition.ID); // re-get the item with cache disabled
 
 
 
@@ -160,7 +160,7 @@ namespace Unicorn
 			if (!_predicate.Includes(copiedItem).IsIncluded) return; // destination parent is not in a path that we are serializing, so skip out
 
 			_targetDataStore.Save(copiedItem);
-			_logger.CopiedItem(_targetDataStore.FriendlyName, () => GetSourceFromDefinition(source), copiedItem);
+			_logger.CopiedItem(_targetDataStore.FriendlyName, () => GetSourceFromId(source.ID), copiedItem);
 		}
 
 		public void AddVersion(ItemDefinition itemDefinition, VersionUri baseVersion, CallContext context)
@@ -178,7 +178,7 @@ namespace Unicorn
 
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
 
-			var existingItem = GetSourceFromDefinition(itemDefinition, true);
+			var existingItem = GetSourceFromId(itemDefinition.ID, true);
 
 			if (existingItem == null) return; // it was already gone or an item from a different data provider
 
@@ -209,9 +209,9 @@ namespace Unicorn
 			if (DisableSerialization || TransparentSyncDisabler.CurrentValue) return Enumerable.Empty<ID>();
 
 			// expectation: do not return null, return empty enumerable for not included etc
-			var parentItem = GetTargetFromDefinition(itemDefinition);
+			var parentItem = GetTargetFromId(itemDefinition.ID);
 
-			if (parentItem == null || !_predicate.Includes(parentItem).IsIncluded) return Enumerable.Empty<ID>();
+			if (parentItem == null) return Enumerable.Empty<ID>();
 
 			return _targetDataStore.GetChildren(parentItem).Select(item => new ID(item.Id));
 		}
@@ -221,9 +221,9 @@ namespace Unicorn
 			if (DisableSerialization || TransparentSyncDisabler.CurrentValue) return null;
 
 			// return null if not present
-			var item = _targetDataStore.GetById(itemId.Guid, Database.Name);
+			var item = GetTargetFromId(itemId);
 
-			if (item == null || !_predicate.Includes(item).IsIncluded) return null;
+			if (item == null) return null;
 
 			return new ItemDefinition(new ID(item.Id), item.Name, new ID(item.TemplateId), new ID(item.BranchId));
 		}
@@ -236,9 +236,9 @@ namespace Unicorn
 
 			if (DisableSerialization || TransparentSyncDisabler.CurrentValue || itemDefinition == ItemDefinition.Empty) return null;
 
-			var item = GetTargetFromDefinition(itemDefinition);
+			var item = GetTargetFromId(itemDefinition.ID);
 
-			if (item == null || !_predicate.Includes(item).IsIncluded) return null;
+			if (item == null) return null;
 
 			var fields = new FieldList();
 
@@ -270,9 +270,9 @@ namespace Unicorn
 
 			var versions = new VersionUriList();
 
-			var item = GetTargetFromDefinition(itemDefinition);
+			var item = GetTargetFromId(itemDefinition.ID);
 
-			if (item == null || !_predicate.Includes(item).IsIncluded) return null;
+			if (item == null) return null;
 
 			foreach (var version in item.Versions)
 			{
@@ -289,7 +289,7 @@ namespace Unicorn
 
 			if (DisableSerialization || TransparentSyncDisabler.CurrentValue || itemDefinition == ItemDefinition.Empty) return null;
 
-			var item = GetTargetFromDefinition(itemDefinition);
+			var item = GetTargetFromId(itemDefinition.ID);
 
 			return item != null ? new ID(item.ParentId) : null;
 		}
@@ -327,7 +327,7 @@ namespace Unicorn
 		{
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
 
-			var sourceItem = GetSourceFromDefinition(itemDefinition);
+			var sourceItem = GetSourceFromId(itemDefinition.ID);
 
 			if (!_predicate.Includes(sourceItem).IsIncluded) return false; // item was not included so we get out
 
@@ -360,21 +360,16 @@ namespace Unicorn
 			return false;
 		}
 
-		protected IItemData GetSourceFromDefinition(ItemDefinition definition)
+		protected virtual IItemData GetSourceFromId(ID id, bool useCache = false)
 		{
-			return GetSourceFromDefinition(definition, false);
-		}
-
-		protected virtual IItemData GetSourceFromDefinition(ItemDefinition definition, bool useCache)
-		{
-			var item = GetItemFromDefinition(definition, useCache);
+			var item = GetItemFromId(id, useCache);
 
 			if (item == null) return null;
 
 			return new ItemData(item);
 		}
 
-		protected virtual Item GetItemFromDefinition(ItemDefinition definition, bool useCache)
+		protected virtual Item GetItemFromId(ID id, bool useCache)
 		{
 			if (!useCache)
 			{
@@ -382,12 +377,12 @@ namespace Unicorn
 				{
 					using (new DatabaseCacheDisabler())
 					{
-						return Database.GetItem(definition.ID);
+						return Database.GetItem(id);
 					}
 				}
 			}
 
-			return Database.GetItem(definition.ID);
+			return Database.GetItem(id);
 		}
 
 		/// <summary>
@@ -413,21 +408,23 @@ namespace Unicorn
 		/// in path based data stores. If we cannot resolve a path, or the path is incorrect,
 		/// we fall back to using GetById on the target data store.
 		/// </summary>
-		protected virtual IItemData GetTargetFromDefinition(ItemDefinition itemDefinition)
+		protected virtual IItemData GetTargetFromId(ID id)
 		{
 			using (new TransparentSyncDisabler())
 			{
-				var dbItem = GetItemFromDefinition(itemDefinition, true);
+				IItemData dbItem = GetSourceFromId(id, true);
 
 				if (dbItem != null)
 				{
-					var targetItem = _targetDataStore.GetByPathAndId(dbItem.Paths.Path, dbItem.ID.Guid, Database.Name);
+					if (!_predicate.Includes(dbItem).IsIncluded) return null;
+
+					var targetItem = _targetDataStore.GetByPathAndId(dbItem.Path, dbItem.Id, Database.Name);
 
 					if (targetItem != null) return targetItem;
 				}
 			}
 
-			return _targetDataStore.GetById(itemDefinition.ID.Guid, Database.Name);
+			return _targetDataStore.GetById(id.Guid, Database.Name);
 		}
 	}
 }
