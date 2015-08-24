@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Rainbow.Filtering;
 using Rainbow.Model;
@@ -30,6 +31,7 @@ namespace Unicorn
 		private readonly IUnicornDataProviderLogger _logger;
 		private static bool _disableSerialization;
 		private static bool _disableTransparentSync;
+		private static readonly Dictionary<Guid, Tuple<string, Guid>> _blobIdLookup = new Dictionary<Guid, Tuple<string, Guid>>();
 
 		public UnicornDataProvider(ITargetDataStore targetDataStore, ISourceDataStore sourceDataStore, IPredicate predicate, IFieldFilter fieldFilter, IUnicornDataProviderLogger logger)
 		{
@@ -121,8 +123,6 @@ namespace Unicorn
 				_logger.SavedItem(_targetDataStore.FriendlyName, sourceItem, "Saved");
 			}
 		}
-
-
 
 		public void MoveItem(ItemDefinition itemDefinition, ItemDefinition destination, CallContext context)
 		{
@@ -259,7 +259,7 @@ namespace Unicorn
 
 			foreach (var sharedField in item.SharedFields)
 			{
-				fields.Add(new ID(sharedField.FieldId), sharedField.Value);
+				fields.Add(new ID(sharedField.FieldId), sharedField.BlobId.HasValue ? sharedField.BlobId.ToString() : sharedField.Value);
 			}
 
 			var version = item.Versions.FirstOrDefault(v => v.VersionNumber == versionUri.Version.Number && v.Language.Name == versionUri.Language.Name);
@@ -268,10 +268,12 @@ namespace Unicorn
 
 			foreach (var versionedField in version.Fields)
 			{
-				fields.Add(new ID(versionedField.FieldId), versionedField.Value);
+				fields.Add(new ID(versionedField.FieldId), versionedField.BlobId.HasValue ? versionedField.BlobId.ToString(): versionedField.Value);
 			}
 
 			fields.Add(FieldIDs.UpdatedBy, "serialization\\UnicornDataProvider");
+
+			AddBlobsToCache(item);
 
 			return fields;
 		}
@@ -336,6 +338,11 @@ namespace Unicorn
 			// expectation: do not return null, return empty enumerable for not included etc
 			return _targetDataStore.GetMetadataByTemplateId(TemplateIDs.Template.Guid, Database.Name)
 				.Select(template => new ID(template.Id));
+		}
+
+		public virtual Stream GetBlobStream(Guid blobId, CallContext context)
+		{
+			return GetBlobFromCache(blobId);
 		}
 
 		protected virtual bool SerializeItemIfIncluded(ItemDefinition itemDefinition, string triggerReason)
@@ -426,6 +433,34 @@ namespace Unicorn
 		protected virtual IItemData GetTargetFromId(ID id)
 		{
 			return _targetDataStore.GetById(id.Guid, Database.Name);
+		}
+
+		protected virtual void AddBlobsToCache(IItemData itemData)
+		{
+			var blobFields = itemData.SharedFields.Concat(itemData.Versions.SelectMany(version => version.Fields))
+				.Where(field => field.BlobId.HasValue)
+				.ToArray();
+
+			foreach (var field in blobFields)
+			{
+				_blobIdLookup[field.BlobId.Value] = Tuple.Create(itemData.Path, itemData.Id);
+			}
+		}
+
+		protected virtual Stream GetBlobFromCache(Guid blobId)
+		{
+			Tuple<string, Guid> blobEntry;
+
+			if (!_blobIdLookup.TryGetValue(blobId, out blobEntry)) return null;
+
+			var targetItem = _targetDataStore.GetByPathAndId(blobEntry.Item1, blobEntry.Item2, Database.Name);
+			if (targetItem == null) return null;
+			var targetFieldValue = targetItem.SharedFields.Concat(targetItem.Versions.SelectMany(version => version.Fields))
+					.FirstOrDefault(targetField => targetField.BlobId.HasValue && targetField.BlobId.Value == blobId);
+
+			if (targetFieldValue == null || targetFieldValue.Value.Length == 0) return null;
+
+			return new MemoryStream(System.Convert.FromBase64String(targetFieldValue.Value));
 		}
 	}
 }

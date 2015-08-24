@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Sitecore.Data;
 using Sitecore.Data.DataProviders;
@@ -6,6 +7,7 @@ using Sitecore.Data.Items;
 using Sitecore.Data.SqlServer;
 using Sitecore.Globalization;
 using System.Collections.ObjectModel;
+using System.IO;
 using Sitecore.Collections;
 using Unicorn.Configuration;
 
@@ -252,6 +254,18 @@ namespace Unicorn
 			}
 
 			return base.HasChildren(itemDefinition, context);
+		}
+
+		public override Stream GetBlobStream(Guid blobId, CallContext context)
+		{
+			// of note: we do not need SetBlobStream() to get overridden because we write blobs in SaveItem()
+			foreach (var provider in UnicornDataProviders)
+			{
+				var providerResult = provider.GetBlobStream(blobId, context);
+				if (providerResult != null) return providerResult;
+			}
+
+			return base.GetBlobStream(blobId, context);
 		}
 	}
 }

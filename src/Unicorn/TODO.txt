@@ -1,5 +1,4 @@
 ﻿- Allow disabling transparent on a per-configuration basis - off by default
-- Blob read support
 - SFS metadata cache updating when disk items are added or removed
 - Data cache auto-clearing when disk items are added, removed, or updated
 - Multithreaded syncing of multiple configurations
