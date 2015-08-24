@@ -5,6 +5,7 @@ using System.Linq;
 using Rainbow.Filtering;
 using Rainbow.Model;
 using Sitecore;
+using Sitecore.Caching;
 using Sitecore.Collections;
 using Sitecore.Data;
 using Sitecore.Data.DataProviders;
@@ -31,7 +32,7 @@ namespace Unicorn
 		private readonly IUnicornDataProviderLogger _logger;
 		private static bool _disableSerialization;
 		private static bool _disableTransparentSync;
-		private static readonly Dictionary<Guid, Tuple<string, Guid>> _blobIdLookup = new Dictionary<Guid, Tuple<string, Guid>>();
+		private readonly Dictionary<Guid, Tuple<string, Guid>> _blobIdLookup = new Dictionary<Guid, Tuple<string, Guid>>();
 
 		public UnicornDataProvider(ITargetDataStore targetDataStore, ISourceDataStore sourceDataStore, IPredicate predicate, IFieldFilter fieldFilter, IUnicornDataProviderLogger logger)
 		{
@@ -46,6 +47,15 @@ namespace Unicorn
 			_fieldFilter = fieldFilter;
 			_targetDataStore = targetDataStore;
 			_sourceDataStore = sourceDataStore;
+
+			try
+			{
+				_targetDataStore.RegisterForChanges(RemoveItemFromCaches);
+			}
+			catch (NotImplementedException)
+			{
+				// if the data store doesn't implement watching, cool story bruv
+			}
 		}
 
 		/// <summary>
@@ -268,7 +278,7 @@ namespace Unicorn
 
 			foreach (var versionedField in version.Fields)
 			{
-				fields.Add(new ID(versionedField.FieldId), versionedField.BlobId.HasValue ? versionedField.BlobId.ToString(): versionedField.Value);
+				fields.Add(new ID(versionedField.FieldId), versionedField.BlobId.HasValue ? versionedField.BlobId.ToString() : versionedField.Value);
 			}
 
 			fields.Add(FieldIDs.UpdatedBy, "serialization\\UnicornDataProvider");
@@ -342,6 +352,8 @@ namespace Unicorn
 
 		public virtual Stream GetBlobStream(Guid blobId, CallContext context)
 		{
+			if (DisableSerialization || DisableTransparentSync) return null;
+
 			return GetBlobFromCache(blobId);
 		}
 
@@ -461,6 +473,21 @@ namespace Unicorn
 			if (targetFieldValue == null || targetFieldValue.Value.Length == 0) return null;
 
 			return new MemoryStream(System.Convert.FromBase64String(targetFieldValue.Value));
+		}
+
+		protected virtual void RemoveItemFromCaches(IItemMetadata metadata, string databaseName)
+		{
+			if (databaseName != Database.Name) return;
+
+			// this is a bit heavy handed, sure.
+			// but the caches get interdependent stuff - like caching child IDs
+			// that make it difficult to cleanly remove a single item ID from all cases in the cache
+			// either way, this should be a relatively rare occurrence (from runtime changes on disk)
+			// and we're preserving prefetch, etc. Seems pretty zippy overall.
+			Database.Caches.DataCache.Clear();
+			Database.Caches.ItemCache.Clear();
+			Database.Caches.ItemPathsCache.Clear();
+			Database.Caches.PathCache.Clear();
 		}
 	}
 }

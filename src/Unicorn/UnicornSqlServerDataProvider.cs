@@ -150,15 +150,7 @@ namespace Unicorn
 				}
 			}
 
-			var baseResult = base.GetChildIDs(itemDefinition, context);
-
-			if (baseResult != null)
-			{
-				foreach (ID result in baseResult)
-				{
-					if (!results.Contains(result)) results.Add(result);
-				}
-			}
+			if(results.Count == 0) return base.GetChildIDs(itemDefinition, context);
 
 			return IDList.Build(results.ToArray());
 		}
