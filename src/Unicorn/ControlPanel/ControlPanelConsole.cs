@@ -73,7 +73,15 @@ namespace Unicorn.ControlPanel
 			{
 				var elapsed = Math.Round((args.SignalTime - startTime).TotalSeconds);
 
-				progress.ReportTransientStatus("Executing for {0} sec.", elapsed.ToString(CultureInfo.InvariantCulture));
+				try
+				{
+					progress.ReportTransientStatus("Executing for {0} sec.", elapsed.ToString(CultureInfo.InvariantCulture));
+				}
+				catch
+				{
+					// e.g. HTTP connection disconnected - prevent infinite looping
+					heartbeat.Stop();
+				}
 			};
 
 			heartbeat.Start();
