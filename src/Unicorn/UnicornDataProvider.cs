@@ -106,7 +106,9 @@ namespace Unicorn
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
 			Assert.ArgumentNotNull(changes, "changes");
 
-			var sourceItem = GetItemWithoutCache(changes.Item);
+			var sourceItem = GetSourceFromId(changes.Item.ID, false);
+
+			if (sourceItem == null) return;
 
 			if (!_predicate.Includes(sourceItem).IsIncluded) return;
 
@@ -130,6 +132,9 @@ namespace Unicorn
 			// it's a simple update - but we reject it if only inconsequential fields (last updated, revision) were changed - again, template builder FTW
 			{
 				_targetDataStore.Save(sourceItem);
+
+				AddBlobsToCache(sourceItem);
+
 				_logger.SavedItem(_targetDataStore.FriendlyName, sourceItem, "Saved");
 			}
 		}
@@ -357,6 +362,13 @@ namespace Unicorn
 			return GetBlobFromCache(blobId);
 		}
 
+		public virtual bool BlobStreamExists(Guid blobId, CallContext context)
+		{
+			if (DisableSerialization || DisableTransparentSync) return false;
+
+			return _blobIdLookup.ContainsKey(blobId);
+		}
+
 		protected virtual bool SerializeItemIfIncluded(ItemDefinition itemDefinition, string triggerReason)
 		{
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
@@ -403,6 +415,10 @@ namespace Unicorn
 			return new ItemData(item);
 		}
 
+		/// <summary>
+		/// When items are acquired from the data provider they can be stale in cache, which fouls up serializing them.
+		/// Renames and template changes are particularly vulnerable to this.
+		/// </summary>
 		protected virtual Item GetItemFromId(ID id, bool useCache)
 		{
 			if (!useCache)
@@ -417,22 +433,6 @@ namespace Unicorn
 			}
 
 			return Database.GetItem(id);
-		}
-
-		/// <summary>
-		/// When items are acquired from the data provider they can be stale in cache, which fouls up serializing them.
-		/// Renames and template changes are particularly vulnerable to this.
-		/// </summary>
-		protected virtual IItemData GetItemWithoutCache(Item item)
-		{
-			using (new TransparentSyncDisabler())
-			{
-				using (new DatabaseCacheDisabler())
-				{
-					// reacquire the source item after cleaning the cache
-					return new ItemData(item.Database.GetItem(item.ID, item.Language, item.Version), _sourceDataStore);
-				}
-			}
 		}
 
 		/// <summary>
@@ -489,5 +489,7 @@ namespace Unicorn
 			Database.Caches.ItemPathsCache.Clear();
 			Database.Caches.PathCache.Clear();
 		}
+
+		
 	}
 }

@@ -248,6 +248,17 @@ namespace Unicorn
 			return base.HasChildren(itemDefinition, context);
 		}
 
+		public override bool BlobStreamExists(Guid blobId, CallContext context)
+		{
+			foreach (var provider in UnicornDataProviders)
+			{
+				var providerResult = provider.BlobStreamExists(blobId, context);
+				if (providerResult) return providerResult;
+			}
+
+			return base.BlobStreamExists(blobId, context);
+		}
+
 		public override Stream GetBlobStream(Guid blobId, CallContext context)
 		{
 			// of note: we do not need SetBlobStream() to get overridden because we write blobs in SaveItem()
