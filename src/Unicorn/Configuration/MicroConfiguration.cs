@@ -32,7 +32,7 @@ namespace Unicorn.Configuration
 
 			if (result == null)
 			{
-				return (T) Activate(typeOfT, new KeyValuePair<string, object>[] {});
+				return (T)Activate(typeOfT, new KeyValuePair<string, object>[] { });
 			}
 
 			return (T)result;
@@ -76,6 +76,7 @@ namespace Unicorn.Configuration
 		{
 			var constructors = type.GetConstructors();
 			if (constructors.Length > 1) throw new MicroResolutionException("Cannot construct {0} because it has > 1 constructor.".FormatWith(type.FullName));
+			if (constructors.Length == 0) throw new MicroResolutionException("Cannot construct {0} because it has no constructor!".FormatWith(type.FullName));
 
 			var constructor = constructors.First();
 
@@ -98,12 +99,11 @@ namespace Unicorn.Configuration
 					{
 						try
 						{
-							args[parameterIndex] = Activate(currentParam.ParameterType, new KeyValuePair<string, object>[] {});
+							args[parameterIndex] = Activate(currentParam.ParameterType, new KeyValuePair<string, object>[] { });
 						}
 						catch (Exception ex)
 						{
-							throw new MicroResolutionException("Cannot activate {0} because dependency failed.".FormatWith(type.FullName,
-									currentParam.ParameterType), ex);
+							throw new MicroResolutionException("Cannot activate {0}, constructor param '{1}' because dependency failed. The type is probably not registered, or may need to be passed as an explicit unmapped parameter.".FormatWith(type.FullName, currentParam.Name), ex);
 						}
 					}
 				}
