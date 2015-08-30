@@ -1,36 +1,50 @@
-﻿using System.Collections.Generic;
-using Unicorn.Serialization;
+﻿using System;
+using System.Collections.Generic;
+using Rainbow.Model;
+using Unicorn.Data;
 
 namespace Unicorn.Loader
 {
 	public class DuplicateIdConsistencyChecker : IConsistencyChecker
 	{
 		private readonly IDuplicateIdConsistencyCheckerLogger _logger;
-		private readonly Dictionary<string, ISerializedItem> _duplicateChecks = new Dictionary<string, ISerializedItem>();
+		private readonly Dictionary<string, DuplicateIdEntry> _duplicateChecks = new Dictionary<string, DuplicateIdEntry>();
 
 		public DuplicateIdConsistencyChecker(IDuplicateIdConsistencyCheckerLogger logger)
 		{
 			_logger = logger;
 		}
 
-		public bool IsConsistent(ISerializedItem item)
+		public bool IsConsistent(IItemData itemData)
 		{
-			ISerializedItem duplicateItem;
-			if(!_duplicateChecks.TryGetValue(CreateKey(item), out duplicateItem)) return true;
+			DuplicateIdEntry duplicateItemData;
+			if(!_duplicateChecks.TryGetValue(CreateKey(itemData), out duplicateItemData)) return true;
 
-			_logger.DuplicateFound(duplicateItem, item);
+			_logger.DuplicateFound(duplicateItemData, itemData);
 
 			return false;
 		}
 
-		public void AddProcessedItem(ISerializedItem item)
+		public void AddProcessedItem(IItemData itemData)
 		{
-			_duplicateChecks.Add(CreateKey(item), item);
+			_duplicateChecks.Add(CreateKey(itemData), new DuplicateIdEntry(itemData));
 		}
 
-		protected virtual string CreateKey(ISerializedItem item)
+		protected virtual string CreateKey(IItemData itemData)
 		{
-			return item.Id + item.DatabaseName;
+			return itemData.Id + itemData.DatabaseName;
+		}
+
+		public class DuplicateIdEntry
+		{
+			public DuplicateIdEntry(IItemData item)
+			{
+				DisplayName = item.GetDisplayIdentifier();
+				SerializedItemId = item.SerializedItemId;
+			}
+
+			public string DisplayName { get; private set; }
+			public string SerializedItemId { get; private set; }
 		}
 	}
 }

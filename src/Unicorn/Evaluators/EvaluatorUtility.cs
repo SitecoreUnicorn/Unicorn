@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using Rainbow.Model;
 using Sitecore.Diagnostics;
 using Unicorn.Data;
 
@@ -10,25 +12,28 @@ namespace Unicorn.Evaluators
 		/// Recycles a whole tree of items and reports their progress
 		/// </summary>
 		/// <param name="items">The item(s) to delete. Note that their children will be deleted before them, and also be reported upon.</param>
+		/// <param name="sourceStore"></param>
 		/// <param name="deleteMessage">The status message to write for each deleted item</param>
-		public static void RecycleItems(ISourceItem[] items, Action<ISourceItem> deleteMessage)
+		public static void RecycleItems(IEnumerable<IItemData> items, ISourceDataStore sourceStore, Action<IItemData> deleteMessage)
 		{
 			Assert.ArgumentNotNull(items, "items");
 
 			foreach (var item in items)
-				RecycleItem(item, deleteMessage);
+				RecycleItem(item, sourceStore, deleteMessage);
 		}
 
 		/// <summary>
 		/// Deletes an item from the source data provider
 		/// </summary>
-		private static void RecycleItem(ISourceItem item, Action<ISourceItem> deleteMessage)
+		private static void RecycleItem(IItemData itemData, ISourceDataStore sourceStore, Action<IItemData> deleteMessage)
 		{
-			RecycleItems(item.Children, deleteMessage);
-			
-			deleteMessage(item);
-			
-			item.Recycle();
+			var children = sourceStore.GetChildren(itemData);
+
+			RecycleItems(children, sourceStore, deleteMessage);
+
+			deleteMessage(itemData);
+
+			sourceStore.Remove(itemData);
 		}
 	}
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Runtime.Serialization;
+using Rainbow.Storage.Sc.Deserialization;
 
 namespace Unicorn
 {

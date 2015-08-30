@@ -1,4 +1,4 @@
-﻿using Unicorn.Serialization;
+﻿using Rainbow.Model;
 
 namespace Unicorn.Loader
 {
@@ -8,7 +8,7 @@ namespace Unicorn.Loader
 	/// </summary>
 	public interface IConsistencyChecker
 	{
-		bool IsConsistent(ISerializedItem item);
-		void AddProcessedItem(ISerializedItem item);
+		bool IsConsistent(IItemData itemData);
+		void AddProcessedItem(IItemData itemData);
 	}
 }

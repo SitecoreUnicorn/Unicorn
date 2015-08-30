@@ -4,10 +4,8 @@ using System.Web;
 using Kamsar.WebConsole;
 using Sitecore.Pipelines;
 using Unicorn.Configuration;
-using Unicorn.Loader;
+using Unicorn.ControlPanel.Headings;
 using Unicorn.Logging;
-using Unicorn.Pipelines.UnicornSyncBegin;
-using Unicorn.Pipelines.UnicornSyncComplete;
 using Unicorn.Pipelines.UnicornSyncEnd;
 using Unicorn.Predicates;
 
@@ -21,7 +19,7 @@ namespace Unicorn.ControlPanel
 		private readonly IConfiguration[] _configurations;
 
 		public SyncConsole(bool isAutomatedTool, IConfiguration[] configurations)
-			: base(isAutomatedTool)
+			: base(isAutomatedTool, new HeadingService())
 		{
 			_configurations = configurations;
 		}
@@ -38,6 +36,7 @@ namespace Unicorn.ControlPanel
 			foreach (var configuration in configurations)
 			{
 				var logger = configuration.Resolve<ILogger>();
+				var helper = configuration.Resolve<SerializationHelper>();
 
 				using (new LoggingContext(new WebConsoleLogger(progress), configuration))
 				{
@@ -45,37 +44,20 @@ namespace Unicorn.ControlPanel
 					{
 						logger.Info("Control Panel Sync: Processing Unicorn configuration " + configuration.Name);
 
-						var beginArgs = new UnicornSyncBeginPipelineArgs(configuration);
-						CorePipeline.Run("unicornSyncBegin", beginArgs);
-
-						if (beginArgs.Aborted)
+						using (new TransparentSyncDisabler())
 						{
-							logger.Error("Unicorn Sync Begin pipeline was aborted. Not executing sync for this configuration.");
-							continue;
+							var pathResolver = configuration.Resolve<PredicateRootPathResolver>();
+
+							var roots = pathResolver.GetRootSerializedItems();
+
+							var index = 0;
+
+							helper.SyncTree(configuration, item =>
+							{
+								progress.Report((int) (((index + 1)/(double) roots.Length)*100));
+								index++;
+							}, roots);
 						}
-
-						if (beginArgs.SyncIsHandled)
-						{
-							logger.Info("Unicorn Sync Begin pipeline signalled that it handled the sync for this configuration.");
-							continue;
-						}
-
-						var pathResolver = configuration.Resolve<PredicateRootPathResolver>();
-						var retryer = configuration.Resolve<IDeserializeFailureRetryer>();
-						var consistencyChecker = configuration.Resolve<IConsistencyChecker>();
-						var loader = configuration.Resolve<SerializationLoader>();
-
-						var roots = pathResolver.GetRootSerializedItems();
-
-						var index = 0;
-
-						loader.LoadAll(roots, retryer, consistencyChecker, item =>
-						{
-							progress.Report((int)(((index + 1) / (double)roots.Length) * 100));
-							index++;
-						});
-
-						CorePipeline.Run("unicornSyncComplete", new UnicornSyncCompletePipelineArgs(configuration));
 
 						logger.Info("Control Panel Sync: Completed syncing Unicorn configuration " + configuration.Name);
 					}

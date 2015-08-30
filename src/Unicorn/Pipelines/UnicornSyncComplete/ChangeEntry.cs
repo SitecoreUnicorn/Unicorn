@@ -1,24 +1,23 @@
-﻿using Unicorn.Data;
-using Unicorn.Serialization;
+﻿using System;
+using Rainbow.Model;
 
 namespace Unicorn.Pipelines.UnicornSyncComplete
 {
 	public class ChangeEntry
 	{
-		public ChangeEntry(ISerializedItem item, ChangeType type)
+		public ChangeEntry(IItemData itemData, ChangeType type)
 		{
-			SerializedItem = item;
+			if (itemData != null)
+			{
+				Id = itemData.Id;
+				DatabaseName = itemData.DatabaseName;
+			}
+			
 			ChangeType = type;
 		}
 
-		public ChangeEntry(ISourceItem item, ChangeType type)
-		{
-			SourceItem = item;
-			ChangeType = type;
-		}
-
-		public ISerializedItem SerializedItem { get; private set; }
-		public ISourceItem SourceItem { get; private set; }
+		public Guid? Id { get; private set; }
+		public string DatabaseName { get; private set; }
 		public ChangeType ChangeType { get; private set; }
 	}
 }

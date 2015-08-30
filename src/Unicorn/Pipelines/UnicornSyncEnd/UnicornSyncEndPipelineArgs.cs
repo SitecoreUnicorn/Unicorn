@@ -5,7 +5,7 @@ namespace Unicorn.Pipelines.UnicornSyncEnd
 {
 	public class UnicornSyncEndPipelineArgs : PipelineArgs
 	{
-		public UnicornSyncEndPipelineArgs(IConfiguration[] syncedConfigurations)
+		public UnicornSyncEndPipelineArgs(params IConfiguration[] syncedConfigurations)
 		{
 			SyncedConfigurations = syncedConfigurations;
 		}

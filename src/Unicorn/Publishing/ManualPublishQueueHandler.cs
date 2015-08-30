@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Sitecore.Data;
 using Sitecore.Data.Items;
@@ -15,9 +16,9 @@ namespace Unicorn.Publishing
 	{
 		private static readonly ConcurrentQueue<ID> ManuallyAddedCandidates = new ConcurrentQueue<ID>();
 
-		public static void AddItemToPublish(ID itemId)
+		public static void AddItemToPublish(Guid itemId)
 		{
-			ManuallyAddedCandidates.Enqueue(itemId);
+			ManuallyAddedCandidates.Enqueue(new ID(itemId));
 		}
 
 		public static bool PublishQueuedItems(Item triggerItem, Database[] targets)

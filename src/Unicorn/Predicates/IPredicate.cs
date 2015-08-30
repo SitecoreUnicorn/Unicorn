@@ -1,17 +1,17 @@
-﻿using Unicorn.Data;
-using Unicorn.Serialization;
+﻿using Rainbow;
+using Rainbow.Model;
+using Rainbow.Predicates;
+using Rainbow.Storage;
 
 namespace Unicorn.Predicates
 {
 	/// <summary>
 	/// The predicate defines where loading should start (root items) and whether items should be included
 	/// </summary>
-	public interface IPredicate
+	public interface IPredicate : IDocumentable
 	{
-		string Name { get; }
-		PredicateResult Includes(ISourceItem item);
-		PredicateResult Includes(ISerializedReference item);
+		PredicateResult Includes(IItemData itemData);
 
-		PredicateRootPath[] GetRootPaths();
+		TreeRoot[] GetRootPaths();
 	}
 }

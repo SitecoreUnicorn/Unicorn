@@ -1,6 +1,6 @@
 ﻿using System;
+using Rainbow.Model;
 using Unicorn.Data;
-using Unicorn.Serialization;
 
 namespace Unicorn.Loader
 {
@@ -12,9 +12,9 @@ namespace Unicorn.Loader
 	/// </summary>
 	public interface IDeserializeFailureRetryer
 	{
-		void AddItemRetry(ISerializedReference reference, Exception exception);
-		void AddTreeRetry(ISerializedReference reference, Exception exception);
-		void RetryStandardValuesFailures(Action<ISerializedItem> retryAction);
-		void RetryAll(ISourceDataProvider sourceDataProvider, Action<ISerializedItem> retrySingleItemAction, Action<ISerializedReference> retryTreeAction);
+		void AddItemRetry(IItemData reference, Exception exception);
+		void AddTreeRetry(IItemData reference, Exception exception);
+		void RetryStandardValuesFailures(Action<IItemData> retryAction);
+		void RetryAll(ISourceDataStore sourceDataStore, Action<IItemData> retrySingleItemAction, Action<IItemData> retryTreeAction);
 	}
 }

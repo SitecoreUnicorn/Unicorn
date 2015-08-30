@@ -60,9 +60,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Evaluator\SerializedAsMasterEvaluatorTests.cs" />
+    <Compile Include="Configuration\MicroConfigurationTests.cs" />
+    <None Include="Evaluator\SerializedAsMasterEvaluatorTests.dis" />
+    <Compile Include="Configuration\XmlConfigurationTypeActivatorTests.cs" />
     <Compile Include="Loader\DuplicateIdConsistencyCheckerTests.cs" />
-    <Compile Include="Loader\LoaderTests.cs" />
+    <None Include="Loader\LoaderTests.dis" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Predicate\SerializationPresetPredicateTests.cs" />
   </ItemGroup>
@@ -74,6 +76,10 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <ProjectReference Include="..\..\..\Rainbow\src\Rainbow\Rainbow.csproj">
+      <Project>{8ff75c8b-2a9e-4d95-91ad-333071813199}</Project>
+      <Name>Rainbow</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Unicorn\Unicorn.csproj">
       <Project>{82c4441b-e11e-4601-b6b7-c5ad71b2ab70}</Project>
       <Name>Unicorn</Name>

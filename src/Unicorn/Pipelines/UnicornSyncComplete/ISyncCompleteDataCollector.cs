@@ -1,16 +1,16 @@
 ﻿using System.Collections.ObjectModel;
-using Unicorn.Data;
-using Unicorn.Serialization;
+using Rainbow.Model;
 
 namespace Unicorn.Pipelines.UnicornSyncComplete
 {
 	// Note: class can expect to be a singleton instance within a configuration
 	public interface ISyncCompleteDataCollector
 	{
-		void PushChangedItem(ISerializedItem serializedItem, ChangeType type);
-		void PushChangedItem(ISourceItem sourceItem, ChangeType type);
+		void PushChangedItem(IItemData itemData, ChangeType type);
 
 		ReadOnlyCollection<ChangeEntry> GetChanges();
+		void AddProcessedItem();
+		int ProcessedItemCount { get; }
 		void Reset();
 	}
 }

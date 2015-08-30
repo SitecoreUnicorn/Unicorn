@@ -1,9 +1,9 @@
 ﻿using System.Web.UI;
+using Rainbow;
+using Rainbow.Formatting;
 using Unicorn.Data;
 using Unicorn.Evaluators;
 using Unicorn.Predicates;
-using Unicorn.Serialization;
-using Unicorn.Serialization.Sitecore.Formatting;
 
 namespace Unicorn.ControlPanel
 {
@@ -13,16 +13,16 @@ namespace Unicorn.ControlPanel
 	public class ConfigurationDetails : IControlPanelControl
 	{
 		private readonly IPredicate _predicate;
-		private readonly ISerializationProvider _serializationProvider;
-		private readonly ISourceDataProvider _sourceDataProvider;
-		private readonly ISitecoreSerializationFormatter _formatter;
+		private readonly ITargetDataStore _serializationStore;
+		private readonly ISourceDataStore _sourceDataStore;
+		private readonly ISerializationFormatter _formatter;
 		private readonly IEvaluator _evaluator;
 
-		public ConfigurationDetails(IPredicate predicate, ISerializationProvider serializationProvider, ISourceDataProvider sourceDataProvider, IEvaluator evaluator, ISitecoreSerializationFormatter formatter)
+		public ConfigurationDetails(IPredicate predicate, ITargetDataStore serializationStore, ISourceDataStore sourceDataStore, IEvaluator evaluator, ISerializationFormatter formatter)
 		{
 			_predicate = predicate;
-			_serializationProvider = serializationProvider;
-			_sourceDataProvider = sourceDataProvider;
+			_serializationStore = serializationStore;
+			_sourceDataStore = sourceDataStore;
 			_evaluator = evaluator;
 			_formatter = formatter;
 		}
@@ -47,20 +47,12 @@ namespace Unicorn.ControlPanel
 
 			RenderType("Serialization Provider",
 				"Defines how items are serialized - for example, using standard Sitecore serialization APIs, JSON to disk, XML in SQL server, etc",
-				_serializationProvider,
+				_serializationStore,
 				writer);
-
-			if (_formatter != null)
-			{
-				RenderType("Serialization Formatter",
-					"Defines the format the serialization provider writes serialized items with.",
-					_formatter,
-					writer);
-			}
 
 			RenderType("Source Data Provider",
 				"Defines how source data is read to compare with serialized data. Normally this is a Sitecore database.",
-				_sourceDataProvider,
+				_sourceDataStore,
 				writer);
 
 			RenderType("Evaluator",
@@ -83,23 +75,17 @@ namespace Unicorn.ControlPanel
 
 				writer.RenderBeginTag("p");
 					writer.RenderBeginTag("strong");
-						if (documentable == null)
-						{
-							writer.Write(type.GetType().Name + " (does not implement IDocumentable)");
-							writer.RenderEndTag();
-							return;
-						}
-
-						writer.Write(documentable.FriendlyName);
+						writer.WriteEncodedText(DocumentationUtility.GetFriendlyName(type));
 					writer.RenderEndTag();
 
 					writer.Write(" <code>({0})</code>", type.GetType().FullName);
 				writer.RenderEndTag();
 
-				if (!string.IsNullOrWhiteSpace(documentable.Description))
-					writer.Write("<p>{0}</p>", documentable.Description);
+				var description = DocumentationUtility.GetDescription(type);
+				if (!string.IsNullOrWhiteSpace(description))
+					writer.Write("<p>{0}</p>", description);
 
-				var configuration = documentable.GetConfigurationDetails();
+				var configuration = DocumentationUtility.GetConfigurationDetails(type);
 
 				if (configuration == null || configuration.Length == 0)
 				{

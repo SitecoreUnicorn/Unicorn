@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Reflection;
 using System.Web.UI;
+using Unicorn.ControlPanel.Headings;
 
 namespace Unicorn.ControlPanel
 {
@@ -12,7 +13,7 @@ namespace Unicorn.ControlPanel
 
 		public void Render(HtmlTextWriter writer)
 		{
-			writer.Write("<h1>Unicorn Control Panel</h1>");
+			writer.Write(new HeadingService().GetControlPanelHeadingHtml());
 
 			if (IsAuthenticated)
 			{

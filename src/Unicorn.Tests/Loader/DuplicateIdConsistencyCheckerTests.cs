@@ -1,8 +1,8 @@
 ﻿using Moq;
 using NUnit.Framework;
+using Rainbow.Model;
 using Sitecore.Data;
 using Unicorn.Loader;
-using Unicorn.Serialization;
 
 namespace Unicorn.Tests.Loader
 {
@@ -16,8 +16,8 @@ namespace Unicorn.Tests.Loader
 
 			var testChecker = new DuplicateIdConsistencyChecker(testLogger.Object);
 
-			var testItem = new Mock<ISerializedItem>();
-			testItem.SetupGet(x => x.Id).Returns(() => ID.NewID);
+			var testItem = new Mock<ISerializableItem>();
+			testItem.SetupGet(x => x.Id).Returns(() => ID.NewID.Guid);
 
 			Assert.IsTrue(testChecker.IsConsistent(testItem.Object));
 		}
@@ -29,11 +29,11 @@ namespace Unicorn.Tests.Loader
 
 			var testChecker = new DuplicateIdConsistencyChecker(testLogger.Object);
 
-			var testItem1 = new Mock<ISerializedItem>();
-			testItem1.SetupGet(x => x.Id).Returns(() => ID.NewID);
+			var testItem1 = new Mock<ISerializableItem>();
+			testItem1.SetupGet(x => x.Id).Returns(() => ID.NewID.Guid);
 
-			var testItem2 = new Mock<ISerializedItem>();
-			testItem2.SetupGet(x => x.Id).Returns(() => ID.NewID);
+			var testItem2 = new Mock<ISerializableItem>();
+			testItem2.SetupGet(x => x.Id).Returns(() => ID.NewID.Guid);
 
 			testChecker.AddProcessedItem(testItem1.Object);
 			Assert.IsTrue(testChecker.IsConsistent(testItem2.Object));
@@ -46,12 +46,12 @@ namespace Unicorn.Tests.Loader
 
 			var testChecker = new DuplicateIdConsistencyChecker(testLogger.Object);
 
-			var duplicatedId = ID.NewID;
+			var duplicatedId = ID.NewID.Guid;
 
-			var testItem1 = new Mock<ISerializedItem>();
+			var testItem1 = new Mock<ISerializableItem>();
 			testItem1.SetupGet(x => x.Id).Returns(duplicatedId);
 
-			var testItem2 = new Mock<ISerializedItem>();
+			var testItem2 = new Mock<ISerializableItem>();
 			testItem2.SetupGet(x => x.Id).Returns(duplicatedId);
 
 			testChecker.AddProcessedItem(testItem1.Object);
@@ -65,13 +65,13 @@ namespace Unicorn.Tests.Loader
 
 			var testChecker = new DuplicateIdConsistencyChecker(testLogger.Object);
 
-			var duplicatedId = ID.NewID;
+			var duplicatedId = ID.NewID.Guid;
 
-			var testItem1 = new Mock<ISerializedItem>();
+			var testItem1 = new Mock<ISerializableItem>();
 			testItem1.SetupGet(x => x.Id).Returns(duplicatedId);
 			testItem1.SetupGet(x => x.DatabaseName).Returns("master");
 
-			var testItem2 = new Mock<ISerializedItem>();
+			var testItem2 = new Mock<ISerializableItem>();
 			testItem2.SetupGet(x => x.Id).Returns(duplicatedId);
 			testItem2.SetupGet(x => x.DatabaseName).Returns("core");
 
@@ -86,12 +86,12 @@ namespace Unicorn.Tests.Loader
 
 			var testChecker = new DuplicateIdConsistencyChecker(testLogger.Object);
 
-			var duplicatedId = ID.NewID;
+			var duplicatedId = ID.NewID.Guid;
 
-			var testItem1 = new Mock<ISerializedItem>();
+			var testItem1 = new Mock<ISerializableItem>();
 			testItem1.SetupGet(x => x.Id).Returns(duplicatedId);
 
-			var testItem2 = new Mock<ISerializedItem>();
+			var testItem2 = new Mock<ISerializableItem>();
 			testItem2.SetupGet(x => x.Id).Returns(duplicatedId);
 
 			testChecker.AddProcessedItem(testItem1.Object);

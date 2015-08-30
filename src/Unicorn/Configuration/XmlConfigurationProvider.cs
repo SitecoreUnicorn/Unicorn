@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Xml;
+using Rainbow.Storage;
 using Sitecore.Configuration;
 using Sitecore.Diagnostics;
 using Sitecore.StringExtensions;
@@ -11,7 +12,6 @@ using Unicorn.Evaluators;
 using Unicorn.Loader;
 using Unicorn.Logging;
 using Unicorn.Predicates;
-using Unicorn.Serialization;
 
 namespace Unicorn.Configuration
 {
@@ -61,15 +61,15 @@ namespace Unicorn.Configuration
 
 			Assert.IsNotNullOrEmpty(name, "Configuration node had empty or missing name attribute.");
 
-			var registry = new NinjectConfiguration(name);
+			var registry = new MicroConfiguration(name);
 
 			// these are config types we absolutely must have instances of to use Unicorn - an exception will throw if they don't exist
 			var configMapping = new Dictionary<string, Action<XmlElement, XmlElement, string, IConfiguration>>
 			{
-				{"sourceDataProvider", RegisterExpectedConfigType<ISourceDataProvider>},
+				{"sourceDataStore", RegisterExpectedConfigType<ISourceDataStore>},
 				{"evaluator", RegisterExpectedConfigType<IEvaluator>},
 				{"predicate", RegisterExpectedConfigType<IPredicate>},
-				{"serializationProvider", RegisterExpectedConfigType<ISerializationProvider>},
+				{"targetDataStore", RegisterExpectedConfigType<ITargetDataStore>},
 				{"logger", RegisterExpectedConfigType<ILogger>},
 				{"loaderLogger", RegisterExpectedConfigType<ISerializationLoaderLogger>},
 				{"loaderConsistencyChecker", RegisterExpectedConfigType<IConsistencyChecker>},
@@ -94,7 +94,7 @@ namespace Unicorn.Configuration
 				RegisterGenericConfigTypeByInterfaces(configuration, defaults, adHocElement.Name, registry);
 			}
 
-			return new ReadOnlyDependencyRegistry(registry);
+			return new ReadOnlyConfiguration(registry);
 		}
 
 		/// <summary>
@@ -110,7 +110,7 @@ namespace Unicorn.Configuration
 
 			foreach (var @interface in interfaces)
 			{
-				registry.Register(@interface, type.Type, type.SingleInstance, attributes);
+				registry.Register(@interface, () => registry.Activate(type.Type, attributes), type.SingleInstance);
 			}
 		}
 
@@ -121,11 +121,31 @@ namespace Unicorn.Configuration
 			where TResultType : class
 		{
 			var type = GetConfigType(configuration, defaults, elementName);
+			var attributes = GetUnmappedAttributes(configuration, defaults, elementName);
+			var resultType = typeof (TResultType);
 
-			if (!typeof(TResultType).IsAssignableFrom(type.Type))
+			if (resultType == typeof (ISourceDataStore))
+			{
+				Func<IDataStore> factory = () => (IDataStore)registry.Activate(type.Type, attributes);
+				Func<object> wrapperFactory = () => new ConfigurationDataStore(new Lazy<IDataStore>(factory));
+
+				registry.Register(resultType, wrapperFactory, type.SingleInstance);
+				return;
+			}
+
+			if (resultType == typeof (ITargetDataStore))
+			{
+				Func<IDataStore> factory = () => (IDataStore)registry.Activate(type.Type, attributes);
+				Func<object> wrapperFactory = () => new ConfigurationDataStore(new Lazy<IDataStore>(factory));
+
+				registry.Register(resultType, wrapperFactory, type.SingleInstance);
+				return;
+			}
+
+			if (!resultType.IsAssignableFrom(type.Type))
 				throw new InvalidOperationException("Invalid type for Unicorn config node {0} (expected {1} implementation)".FormatWith(elementName, typeof(TResultType).FullName));
 
-			registry.Register(typeof(TResultType), type.Type, type.SingleInstance, GetUnmappedAttributes(configuration, defaults, elementName));
+			RegisterGenericConfigTypeByInterfaces(configuration, defaults, elementName, registry);
 		}
 
 		/// <summary>
@@ -162,7 +182,12 @@ namespace Unicorn.Configuration
 			// ReSharper disable once PossibleNullReferenceException
 			var attributes = typeNode.Attributes.Cast<XmlAttribute>()
 				.Where(x => x.Name != "type" && x.Name != "singleInstance")
-				.Select(x => new KeyValuePair<string, object>(x.Name, x.InnerText));
+				.Select(x =>
+				{
+					bool boolean;
+					if(bool.TryParse(x.InnerText, out boolean)) return new KeyValuePair<string, object>(x.Name, boolean);
+					return new KeyValuePair<string, object>(x.Name, x.InnerText);
+				});
 
 			// we pass it the XML element as 'configNode'
 			attributes = attributes.Concat(new[] { new KeyValuePair<string, object>("configNode", typeNode) });

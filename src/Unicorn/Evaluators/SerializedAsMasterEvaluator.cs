@@ -1,12 +1,12 @@
-﻿using System.Linq;
-using Sitecore.Data;
+﻿using System;
+using System.Collections.Generic;
+using Rainbow;
+using Rainbow.Diff;
+using Rainbow.Filtering;
+using Rainbow.Model;
 using Sitecore.Diagnostics;
-using Unicorn.ControlPanel;
 using Unicorn.Data;
 using Unicorn.Logging;
-using Unicorn.Predicates;
-using Unicorn.Serialization;
-using System.Collections.Generic;
 
 namespace Unicorn.Evaluators
 {
@@ -16,169 +16,117 @@ namespace Unicorn.Evaluators
 	public class SerializedAsMasterEvaluator : IEvaluator, IDocumentable
 	{
 		private readonly ISerializedAsMasterEvaluatorLogger _logger;
-		private readonly IFieldPredicate _fieldPredicate;
-		protected static readonly ID RootId = new ID("{11111111-1111-1111-1111-111111111111}");
+		private readonly IItemComparer _itemComparer;
+		private readonly IFieldFilter _fieldFilter;
+		private readonly ISourceDataStore _sourceDataStore;
+		protected static readonly Guid RootId = new Guid("{11111111-1111-1111-1111-111111111111}");
 
-		public SerializedAsMasterEvaluator(ISerializedAsMasterEvaluatorLogger logger, IFieldPredicate fieldPredicate)
+		public SerializedAsMasterEvaluator(ISerializedAsMasterEvaluatorLogger logger, IItemComparer itemComparer, IFieldFilter fieldFilter, ISourceDataStore sourceDataStore)
 		{
 			Assert.ArgumentNotNull(logger, "logger");
-			Assert.ArgumentNotNull(fieldPredicate, "fieldPredicate");
+			Assert.ArgumentNotNull(itemComparer, "itemComparer");
+			Assert.ArgumentNotNull(fieldFilter, "fieldFilter");
+			Assert.ArgumentNotNull(sourceDataStore, "sourceDataStore");
 
 			_logger = logger;
-			_fieldPredicate = fieldPredicate;
+			_itemComparer = itemComparer;
+			_fieldFilter = fieldFilter;
+			_sourceDataStore = sourceDataStore;
 		}
 
-		public void EvaluateOrphans(ISourceItem[] orphanItems)
+		public void EvaluateOrphans(IItemData[] orphanItems)
 		{
 			Assert.ArgumentNotNull(orphanItems, "orphanItems");
 
-			EvaluatorUtility.RecycleItems(orphanItems, item => _logger.DeletedItem(item));
+			EvaluatorUtility.RecycleItems(orphanItems, _sourceDataStore, item => _logger.DeletedItem(item));
+
+			foreach (var orphan in orphanItems) _logger.Evaluated(orphan);
 		}
 
-		public ISourceItem EvaluateNewSerializedItem(ISerializedItem newItem)
+		public IItemData EvaluateNewSerializedItem(IItemData newItemData)
 		{
-			Assert.ArgumentNotNull(newItem, "newItem");
+			Assert.ArgumentNotNull(newItemData, "newItem");
 
-			_logger.DeserializedNewItem(newItem);
+			_logger.DeserializedNewItem(newItemData);
 
-			var updatedItem = DoDeserialization(newItem);
+			DoDeserialization(newItemData);
 
-			return updatedItem;
+			_logger.Evaluated(newItemData);
+
+			return newItemData;
 		}
 
-		public ISourceItem EvaluateUpdate(ISerializedItem serializedItem, ISourceItem existingItem)
+		public IItemData EvaluateUpdate(IItemData sourceItem, IItemData targetItem)
 		{
-			Assert.ArgumentNotNull(serializedItem, "serializedItem");
-			Assert.ArgumentNotNull(existingItem, "existingItem");
+			Assert.ArgumentNotNull(targetItem, "targetItemData");
+			Assert.ArgumentNotNull(sourceItem, "sourceItemData");
 
 			var deferredUpdateLog = new DeferredLogWriter<ISerializedAsMasterEvaluatorLogger>();
 
-			if (ShouldUpdateExisting(serializedItem, existingItem, deferredUpdateLog))
+			_logger.Evaluated(sourceItem ?? targetItem);
+
+			if (ShouldUpdateExisting(sourceItem, targetItem, deferredUpdateLog))
 			{
-				_logger.SerializedUpdatedItem(serializedItem);
+				_logger.SerializedUpdatedItem(targetItem);
 
 				deferredUpdateLog.ExecuteDeferredActions(_logger);
 
-				var updatedItem = DoDeserialization(serializedItem);
+				DoDeserialization(targetItem);
 
-				return updatedItem;
+				return targetItem;
 			}
 
 			return null;
 		}
 
-		protected virtual bool ShouldUpdateExisting(ISerializedItem serializedItem, ISourceItem existingItem, DeferredLogWriter<ISerializedAsMasterEvaluatorLogger> deferredUpdateLog)
+		protected virtual bool ShouldUpdateExisting(IItemData sourceItem, IItemData targetItem, DeferredLogWriter<ISerializedAsMasterEvaluatorLogger> deferredUpdateLog)
 		{
-			Assert.ArgumentNotNull(serializedItem, "serializedItem");
-			Assert.ArgumentNotNull(existingItem, "existingItem");
+			Assert.ArgumentNotNull(targetItem, "targetItem");
+			Assert.ArgumentNotNull(sourceItem, "sourceItem");
 
-			if (existingItem.Id == RootId) return false; // we never want to update the Sitecore root item
+			if (sourceItem.Id == RootId) return false; // we never want to update the Sitecore root item
 
-			// check if templates are different
-			if (IsTemplateMatch(existingItem, serializedItem, deferredUpdateLog)) return true;
+			// filter out ignored fields before we do the comparison
+			var filteredTargetItem = new FilteredItem(targetItem, _fieldFilter);
+			var filteredSourceItem = new FilteredItem(sourceItem, _fieldFilter);
 
-			// check if names are different
-			if (IsNameMatch(existingItem, serializedItem, deferredUpdateLog)) return true;
+			var comparison = _itemComparer.FastCompare(filteredSourceItem, filteredTargetItem);
 
-			// check if source has version(s) that serialized does not
-			var orphanVersions = existingItem.Versions.Where(sourceItemVersion => serializedItem.GetVersion(sourceItemVersion.Language, sourceItemVersion.VersionNumber) == null).ToArray();
-			if (orphanVersions.Length > 0)
+			if (comparison.IsRenamed || comparison.IsMoved)
 			{
-				deferredUpdateLog.AddEntry(x => x.OrphanSourceVersion(existingItem, serializedItem, orphanVersions));
-				return true; // source contained versions not present in the serialized version, which is a difference
+				deferredUpdateLog.AddEntry(log => log.Renamed(sourceItem, targetItem));
 			}
-
-			// check if shared fields have any mismatching values
-			if (AnyFieldMatch(serializedItem.SharedFields, existingItem.SharedFields, existingItem, serializedItem, deferredUpdateLog))
-				return true;
-
-			// see if the serialized versions have any mismatching values in the source data
-			return serializedItem.Versions.Any(serializedItemVersion =>
+			if (comparison.IsTemplateChanged)
 			{
-				var sourceItemVersion = existingItem.GetVersion(serializedItemVersion.Language, serializedItemVersion.VersionNumber);
-
-				// version exists in serialized item but does not in source version
-				if (sourceItemVersion == null)
+				deferredUpdateLog.AddEntry(log => log.TemplateChanged(sourceItem, targetItem));
+			}
+			foreach (var sharedChange in comparison.ChangedSharedFields)
+			{
+				deferredUpdateLog.AddEntry(log => log.SharedFieldIsChanged(targetItem, (sharedChange.TargetField ?? sharedChange.SourceField).FieldId, ((sharedChange.TargetField != null) ? sharedChange.TargetField.Value : null), ((sharedChange.SourceField != null) ? sharedChange.SourceField.Value : null)));
+			}
+			foreach (var versionChange in comparison.ChangedVersions)
+			{
+				if (versionChange.SourceVersion == null) deferredUpdateLog.AddEntry(log => log.NewTargetVersion(versionChange.TargetVersion, targetItem, sourceItem));
+				else if (versionChange.TargetVersion == null) deferredUpdateLog.AddEntry(log => log.OrphanSourceVersion(sourceItem, targetItem, new[] { versionChange.SourceVersion }));
+				else
 				{
-					deferredUpdateLog.AddEntry(x => x.NewSerializedVersionMatch(serializedItemVersion, serializedItem, existingItem));
-					return true;
+					foreach (var field in versionChange.ChangedFields)
+					{
+						var sourceFieldValue = field.SourceField == null ? null : field.SourceField.Value;
+						var targetFieldValue = field.TargetField == null ? null : field.TargetField.Value;
+						var fieldId = (field.SourceField ?? field.TargetField).FieldId;
+
+						deferredUpdateLog.AddEntry(log => log.VersionedFieldIsChanged(targetItem, versionChange.SourceVersion ?? versionChange.TargetVersion, fieldId, targetFieldValue, sourceFieldValue));
+					}
 				}
-
-				// field values mismatch
-				var fieldMatch = AnyFieldMatch(serializedItemVersion.Fields, sourceItemVersion.Fields, existingItem, serializedItem, deferredUpdateLog, serializedItemVersion);
-				if (fieldMatch) return true;
-
-				// if we get here everything matches to the best of our knowledge, so we return false (e.g. "do not update this item")
-				return false;
-			});
-		}
-
-		protected virtual bool IsNameMatch(ISourceItem existingItem, ISerializedItem serializedItem, DeferredLogWriter<ISerializedAsMasterEvaluatorLogger> deferredUpdateLog)
-		{
-			if (!serializedItem.Name.Equals(existingItem.Name))
-			{
-				deferredUpdateLog.AddEntry(x => x.IsNameMatch(serializedItem, existingItem));
-
-				return true;
 			}
 
-			return false;
+			return !comparison.AreEqual;
 		}
 
-		protected virtual bool IsTemplateMatch(ISourceItem existingItem, ISerializedItem serializedItem, DeferredLogWriter<ISerializedAsMasterEvaluatorLogger> deferredUpdateLog)
+		protected virtual void DoDeserialization(IItemData targetItem)
 		{
-			if (existingItem.TemplateId == (ID) null && serializedItem.TemplateId == (ID) null) return false;
-
-			bool match = !serializedItem.TemplateId.Equals(existingItem.TemplateId);
-			if(match)
-				deferredUpdateLog.AddEntry(x=>x.IsTemplateMatch(serializedItem, existingItem));
-
-			return match;
-		}
-
-		protected virtual bool AnyFieldMatch(FieldDictionary sourceFields, FieldDictionary targetFields, ISourceItem existingItem, ISerializedItem serializedItem, DeferredLogWriter<ISerializedAsMasterEvaluatorLogger> deferredUpdateLog, ItemVersion version = null)
-		{
-			if (sourceFields == null) return false;
-
-			return sourceFields.Any(x =>
-			{
-				if (!_fieldPredicate.Includes(x.Key).IsIncluded) return false;
-
-				if (!existingItem.IsFieldComparable(x.Key)) return false;
-
-				bool isMatch = IsFieldMatch(x.Value, targetFields, x.Key);
-				if(isMatch) deferredUpdateLog.AddEntry(logger =>
-				{
-					string sourceFieldValue;
-					targetFields.TryGetValue(x.Key, out sourceFieldValue);
-
-					if (version == null) logger.IsSharedFieldMatch(serializedItem, x.Key, x.Value, sourceFieldValue);
-					else logger.IsVersionedFieldMatch(serializedItem, version, x.Key, x.Value, sourceFieldValue);
-				});
-				return isMatch;
-			});
-		}
-
-		protected virtual bool IsFieldMatch(string sourceFieldValue, FieldDictionary targetFields, string fieldId)
-		{
-			// note that returning "true" means the values DO NOT MATCH EACH OTHER.
-
-			if (sourceFieldValue == null) return false;
-
-			// it's a "match" if the target item does not contain the source field
-			string targetFieldValue;
-			if (!targetFields.TryGetValue(fieldId, out targetFieldValue)) return true;
-
-			return !sourceFieldValue.Equals(targetFieldValue);
-		}
-
-		protected virtual ISourceItem DoDeserialization(ISerializedItem serializedItem)
-		{
-			ISourceItem updatedItem = serializedItem.Deserialize(false);
-
-			Assert.IsNotNull(updatedItem, "Do not return null from DeserializeItem() - throw an exception if an error occurs.");
-
-			return updatedItem;
+			_sourceDataStore.Save(targetItem);
 		}
 
 		public string FriendlyName
@@ -193,7 +141,7 @@ namespace Unicorn.Evaluators
 
 		public KeyValuePair<string, string>[] GetConfigurationDetails()
 		{
-			return null;
+			return new[] { new KeyValuePair<string, string>("Item comparer", DocumentationUtility.GetFriendlyName(_itemComparer)) };
 		}
 	}
 }

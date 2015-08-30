@@ -5,6 +5,7 @@ using System.Web;
 using System.Web.UI;
 using Kamsar.WebConsole;
 using Sitecore.SecurityModel;
+using Unicorn.ControlPanel.Headings;
 
 namespace Unicorn.ControlPanel
 {
@@ -17,10 +18,12 @@ namespace Unicorn.ControlPanel
 	public abstract class ControlPanelConsole : IControlPanelControl
 	{
 		private readonly bool _isAutomatedTool;
+		private readonly HeadingService _headingService;
 
-		protected ControlPanelConsole(bool isAutomatedTool)
+		protected ControlPanelConsole(bool isAutomatedTool, HeadingService headingService)
 		{
 			_isAutomatedTool = isAutomatedTool;
+			_headingService = headingService;
 		}
 
 		protected abstract string Title { get; }
@@ -54,28 +57,13 @@ namespace Unicorn.ControlPanel
 
 		protected virtual void ProcessInternal(IProgressStatus progress)
 		{
-			
-
-			// this bad-ass ASCII art is from http://www.ascii-art.de/ascii/uvw/unicorn.txt - original credit to 'sk'
-			const string unicorn = @"<pre>
-                        /
-                      .7
-           \       , //
-           |\.--._/|//
-          /\ ) ) ).'/
-         /(  \  // /       _   _ _   _ ___ ____ ___  ____  _   _ 
-        /(   J`((_/ \     | | | | \ | |_ _/ ___/ _ \|  _ \| \ | |
-       / ) | _\     /     | | | |  \| || | |  | | | | |_) |  \| |
-      /|)  \  eJ    L     | |_| | |\  || | |__| |_| |  _ <| |\  |
-     |  \ L \   L   L      \___/|_| \_|___\____\___/|_| \_\_| \_|
-    /  \  J  `. J   L
-    |  )   L   \/   \
-   /  \    J   (\   /
-  |  \      \   \```
-</pre>";
+			if (_headingService != null && !_isAutomatedTool)
+			{
+				progress.ReportStatus(_headingService.GetHeadingHtml());
+			}
 
 			// note: these logs are intentionally to progress and not loggingConsole as we don't need them in the Sitecore logs
-			progress.ReportStatus(unicorn, MessageType.Warning);
+
 			progress.ReportTransientStatus("Executing.");
 
 			var heartbeat = new Timer(3000);
@@ -85,7 +73,15 @@ namespace Unicorn.ControlPanel
 			{
 				var elapsed = Math.Round((args.SignalTime - startTime).TotalSeconds);
 
-				progress.ReportTransientStatus("Executing for {0} sec.", elapsed.ToString(CultureInfo.InvariantCulture));
+				try
+				{
+					progress.ReportTransientStatus("Executing for {0} sec.", elapsed.ToString(CultureInfo.InvariantCulture));
+				}
+				catch
+				{
+					// e.g. HTTP connection disconnected - prevent infinite looping
+					heartbeat.Stop();
+				}
 			};
 
 			heartbeat.Start();
@@ -125,7 +121,8 @@ namespace Unicorn.ControlPanel
 			public override void RenderResources()
 			{
 				base.RenderResources();
-				_response.Write(@"<style>.wrapper { width: auto; max-width: 960px; } a, a:visited { color: lightblue; }</style>");
+				_response.Write("<link href='https://fonts.googleapis.com/css?family=Lobster' rel='stylesheet' type='text/css'>");
+				_response.Write(@"<style>.wrapper { width: auto; max-width: 1850px; } a, a:visited { color: lightblue; } #console{ height: 50em; } h1 { font-family: Lobster; font-size: 3em; font-weight: normal; }</style>");
 			}
 		}
 	}

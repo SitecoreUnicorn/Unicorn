@@ -1,9 +1,9 @@
-﻿using Unicorn.Serialization;
+﻿using Rainbow.Model;
 
 namespace Unicorn.Loader
 {
 	public interface IDuplicateIdConsistencyCheckerLogger
 	{
-		void DuplicateFound(ISerializedItem existingItem, ISerializedItem duplicateItem);
+		void DuplicateFound(DuplicateIdConsistencyChecker.DuplicateIdEntry existingItemData, IItemData duplicateItemData);
 	}
 }

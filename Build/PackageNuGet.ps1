@@ -12,6 +12,8 @@ $solution = "$scriptRoot\..\Unicorn.sln"
 $UnicornAssembly = Get-Item "$scriptRoot\..\src\Unicorn\bin\Release\Unicorn.dll" | Select-Object -ExpandProperty VersionInfo
 $targetAssemblyVersion = $UnicornAssembly.ProductVersion
 
-& $nuGet pack "$scriptRoot\Unicorn.nuget\Unicorn.nuspec" -version $targetAssemblyVersion
+$rainbowVersion = Read-Host 'Enter Rainbow version to depend on'
 
-& $nuGet pack "$scriptRoot\..\src\Unicorn\Unicorn.csproj" -Symbols -Prop Configuration=Release
+& $nuGet pack "$scriptRoot\Unicorn.nuget\Unicorn.nuspec" -version $targetAssemblyVersion -Prop "rainbowversion=$rainbowVersion"
+
+& $nuGet pack "$scriptRoot\..\src\Unicorn\Unicorn.csproj" -Symbols -Prop "Configuration=Release;rainbowversion=$rainbowVersion"
