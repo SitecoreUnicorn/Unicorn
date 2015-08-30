@@ -5,7 +5,6 @@ using System.Linq;
 using Rainbow.Filtering;
 using Rainbow.Model;
 using Sitecore;
-using Sitecore.Caching;
 using Sitecore.Collections;
 using Sitecore.Data;
 using Sitecore.Data.DataProviders;
@@ -13,11 +12,10 @@ using Sitecore.Data.Items;
 using Sitecore.Data.Serialization;
 using Sitecore.Diagnostics;
 using Sitecore.Globalization;
-using Unicorn.Data;
 using Unicorn.Predicates;
 using ItemData = Rainbow.Storage.Sc.ItemData;
 
-namespace Unicorn
+namespace Unicorn.Data.DataProvider
 {
 	/// <summary>
 	/// This class provides event-handling services to Unicorn - reflecting actions onto the serialization provider via the predicate when
@@ -25,7 +23,9 @@ namespace Unicorn
 	/// </summary>
 	public class UnicornDataProvider
 	{
-		private readonly ITargetDataStore _targetDataStore;
+		public const string TransparentSyncUpdatedByValue = "serialization\\UnicornDataProvider";
+
+        private readonly ITargetDataStore _targetDataStore;
 		private readonly ISourceDataStore _sourceDataStore;
 		private readonly IPredicate _predicate;
 		private readonly IFieldFilter _fieldFilter;
@@ -34,15 +34,17 @@ namespace Unicorn
 		private static bool _disableTransparentSync;
 		private readonly Dictionary<Guid, Tuple<string, Guid>> _blobIdLookup = new Dictionary<Guid, Tuple<string, Guid>>();
 
-		public UnicornDataProvider(ITargetDataStore targetDataStore, ISourceDataStore sourceDataStore, IPredicate predicate, IFieldFilter fieldFilter, IUnicornDataProviderLogger logger)
+		public UnicornDataProvider(ITargetDataStore targetDataStore, ISourceDataStore sourceDataStore, IPredicate predicate, IFieldFilter fieldFilter, IUnicornDataProviderLogger logger, IUnicornDataProviderConfiguration configuration)
 		{
 			Assert.ArgumentNotNull(targetDataStore, "serializationProvider");
 			Assert.ArgumentNotNull(predicate, "predicate");
 			Assert.ArgumentNotNull(fieldFilter, "fieldPredicate");
 			Assert.ArgumentNotNull(logger, "logger");
 			Assert.ArgumentNotNull(sourceDataStore, "sourceDataStore");
+			Assert.ArgumentNotNull(configuration, "configuration");
 
 			_logger = logger;
+			_disableTransparentSync = !configuration.EnableTransparentSync;
 			_predicate = predicate;
 			_fieldFilter = fieldFilter;
 			_targetDataStore = targetDataStore;
@@ -87,7 +89,7 @@ namespace Unicorn
 			set { _disableTransparentSync = value; }
 		}
 
-		public DataProvider DataProvider { get; set; }
+		public Sitecore.Data.DataProviders.DataProvider DataProvider { get; set; }
 		protected Database Database { get { return DataProvider.Database; } }
 
 		public void CreateItem(ItemDefinition newItem, ID templateId, ItemDefinition parent, CallContext context)
@@ -286,7 +288,8 @@ namespace Unicorn
 				fields.Add(new ID(versionedField.FieldId), versionedField.BlobId.HasValue ? versionedField.BlobId.ToString() : versionedField.Value);
 			}
 
-			fields.Add(FieldIDs.UpdatedBy, "serialization\\UnicornDataProvider");
+			fields.Add(FieldIDs.UpdatedBy, TransparentSyncUpdatedByValue);
+			fields.Add(FieldIDs.Revision, Guid.NewGuid().ToString());
 
 			AddBlobsToCache(item);
 

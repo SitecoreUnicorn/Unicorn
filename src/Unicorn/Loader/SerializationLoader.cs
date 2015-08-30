@@ -7,6 +7,7 @@ using Rainbow.Storage;
 using Sitecore.Data.Events;
 using Sitecore.Diagnostics;
 using Unicorn.Data;
+using Unicorn.Data.DataProvider;
 using Unicorn.Evaluators;
 using Unicorn.Predicates;
 

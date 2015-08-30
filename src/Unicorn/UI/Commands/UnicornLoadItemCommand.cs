@@ -6,7 +6,7 @@ using Sitecore.Shell.Framework.Commands.Serialization;
 using Unicorn.Data;
 using ItemData = Rainbow.Storage.Sc.ItemData;
 
-namespace Unicorn.Commands
+namespace Unicorn.UI.Commands
 {
 	public class UnicornLoadItemCommand : LoadItemCommand
 	{

@@ -1,17 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
+using Sitecore.Collections;
 using Sitecore.Data;
 using Sitecore.Data.DataProviders;
 using Sitecore.Data.Items;
 using Sitecore.Data.SqlServer;
 using Sitecore.Globalization;
-using System.Collections.ObjectModel;
-using System.IO;
-using Sitecore.Collections;
 using Unicorn.Configuration;
 
-namespace Unicorn
+namespace Unicorn.Data.DataProvider
 {
 	/// <summary>
 	/// This is a Sitecore data provider that effectively provides reliable eventing services to one or more UnicornDataProviders,

@@ -1,5 +1,5 @@
 ﻿
-namespace Unicorn
+namespace Unicorn.Configuration
 {
 	internal static class ConfigurationUtility
 	{

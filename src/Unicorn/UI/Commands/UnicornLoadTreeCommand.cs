@@ -9,10 +9,9 @@ using Sitecore.Shell.Framework.Commands.Serialization;
 using Unicorn.Data;
 using Unicorn.Logging;
 using Unicorn.Pipelines.UnicornSyncEnd;
-using Unicorn.Predicates;
 using ItemData = Rainbow.Storage.Sc.ItemData;
 
-namespace Unicorn.Commands
+namespace Unicorn.UI.Commands
 {
 	public class UnicornLoadTreeCommand : LoadItemCommand
 	{

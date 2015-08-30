@@ -4,7 +4,7 @@ using Sitecore.Data.Items;
 using Sitecore.Diagnostics;
 using Sitecore.Shell.Framework.Commands.Serialization;
 
-namespace Unicorn.Commands
+namespace Unicorn.UI.Commands
 {
 	[Serializable]
 	public class UnicornDumpItemCommand : DumpItemCommand

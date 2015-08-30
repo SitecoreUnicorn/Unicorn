@@ -1,10 +1,9 @@
 ﻿using System;
 using Rainbow.Model;
 using Sitecore.Data.Items;
-using Unicorn.Data;
 using Unicorn.Logging;
 
-namespace Unicorn
+namespace Unicorn.Data.DataProvider
 {
 	/// <summary>
 	/// A logger implementation for the UnicornDataProvider that sends log entries to the configured ILogger

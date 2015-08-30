@@ -2,7 +2,7 @@
 using Rainbow.Model;
 using Sitecore.Data.Items;
 
-namespace Unicorn
+namespace Unicorn.Data.DataProvider
 {
 	/// <summary>
 	/// Provides log messages that can be responded to from the UnicornDataProvider.

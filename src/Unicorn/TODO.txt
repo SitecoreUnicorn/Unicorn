@@ -1,5 +1,3 @@
-﻿- Allow disabling transparent on a per-configuration basis - off by default
-- Multithreaded syncing of multiple configurations
-- Fix same path in different db bug with predicate on GitHub
+﻿- Multithreaded syncing of multiple configurations
 - General code review
 - Tests?

@@ -53,12 +53,14 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Commands\UnicornDumpTreeCommand.cs" />
-    <Compile Include="Commands\UnicornLoadTreeCommand.cs" />
-    <Compile Include="Commands\UnicornLoadItemCommand.cs" />
+    <Compile Include="Data\DataProvider\DefaultUnicornDataProviderConfiguration.cs" />
+    <Compile Include="Data\DataProvider\IUnicornDataProviderConfiguration.cs" />
+    <Compile Include="UI\Commands\UnicornDumpTreeCommand.cs" />
+    <Compile Include="UI\Commands\UnicornLoadTreeCommand.cs" />
+    <Compile Include="UI\Commands\UnicornLoadItemCommand.cs" />
     <Compile Include="SerializationHelper.cs" />
-    <Compile Include="Commands\UnicornDumpItemCommand.cs" />
-    <Compile Include="ConfigurationUtility.cs" />
+    <Compile Include="UI\Commands\UnicornDumpItemCommand.cs" />
+    <Compile Include="Configuration\ConfigurationUtility.cs" />
     <Compile Include="Configuration\MicroConfiguration.cs" />
     <Compile Include="Configuration\MicroResolutionException.cs" />
     <Compile Include="ControlPanel\AccessDenied.cs" />
@@ -100,7 +102,7 @@
     <Compile Include="Evaluators\EvaluatorUtility.cs" />
     <Compile Include="Evaluators\IEvaluator.cs" />
     <Compile Include="Evaluators\ISerializedAsMasterEvaluatorLogger.cs" />
-    <Compile Include="IUnicornDataProviderLogger.cs" />
+    <Compile Include="Data\DataProvider\IUnicornDataProviderLogger.cs" />
     <Compile Include="Loader\ConsistencyException.cs" />
     <Compile Include="Loader\DefaultDuplicateIdConsistencyCheckerLogger.cs" />
     <Compile Include="Loader\DefaultSerializationLoaderLogger.cs" />
@@ -141,10 +143,10 @@
     <Compile Include="UI\Pipelines\SaveUi\SerializationChangeBlocker.cs" />
     <Compile Include="UI\Pipelines\SaveUi\SerializationConflictProcessor.cs" />
     <Compile Include="Loader\SerializationLoader.cs" />
-    <Compile Include="DefaultUnicornDataProviderLogger.cs" />
+    <Compile Include="Data\DataProvider\DefaultUnicornDataProviderLogger.cs" />
     <Compile Include="StandardValuesException.cs" />
-    <Compile Include="UnicornDataProvider.cs" />
-    <Compile Include="UnicornSqlServerDataProvider.cs" />
+    <Compile Include="Data\DataProvider\UnicornDataProvider.cs" />
+    <Compile Include="Data\DataProvider\UnicornSqlServerDataProvider.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -153,7 +155,7 @@
       <SubType>Designer</SubType>
     </None>
     <None Include="Standard Config Files\Unicorn.Deployed.config.disabled" />
-    <None Include="Standard Config Files\Unicorn.ControlPanel.config">
+    <None Include="Standard Config Files\Unicorn.UI.config">
       <SubType>Designer</SubType>
     </None>
     <None Include="Standard Config Files\Unicorn.DataProvider.config" />
