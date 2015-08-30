@@ -5,6 +5,7 @@ using Sitecore.Configuration;
 using Sitecore.Data.Items;
 using Sitecore.Pipelines.GetContentEditorWarnings;
 using Unicorn.Configuration;
+using Unicorn.Data.DataProvider;
 using Unicorn.Predicates;
 
 namespace Unicorn.UI.Pipelines.GetContentEditorWarnings
@@ -36,18 +37,21 @@ namespace Unicorn.UI.Pipelines.GetContentEditorWarnings
 			if (_configurations.Any(configuration => configuration.Resolve<IPredicate>().Includes(existingSitecoreItem).IsIncluded))
 			{
 				GetContentEditorWarningsArgs.ContentEditorWarning warning = args.Add();
-				warning.Title = RenderTitle(existingSitecoreItem);
-				warning.Text = RenderWarning(existingSitecoreItem);
+				warning.Title = RenderTitle(item);
+				warning.Text = RenderWarning(item);
 			}
 		}
 
 
-		protected virtual string RenderTitle(IItemData item)
+		protected virtual string RenderTitle(Item item)
 		{
+			if (item.Statistics.UpdatedBy == UnicornDataProvider.TransparentSyncUpdatedByValue)
+				return "This item is transparently synced by Unicorn";
+
 			return "This item is controlled by Unicorn";
 		}
 
-		protected virtual string RenderWarning(IItemData item)
+		protected virtual string RenderWarning(Item item)
 		{
 			if (Settings.GetBoolSetting("Unicorn.DevMode", true))
 				return "Changes to this item will be written to disk so they can be committed to source control and shared with others.";
