@@ -40,12 +40,12 @@ namespace Unicorn.Evaluators
 		/// <summary>
 		/// Called when you serialize an item that does not yet exist in the provider
 		/// </summary>
-		void DeserializedNewItem(IItemData serializedItemData);
+		void DeserializedNewItem(IItemData targetItem);
 
 		/// <summary>
 		/// Called when you serialize an updated item that already existed in the provider
 		/// </summary>
-		void SerializedUpdatedItem(IItemData serializedItemData);
+		void SerializedUpdatedItem(IItemData targetItem);
 
 		/// <summary>
 		/// Called when extra versions exist in a source item compared to the serialized version
