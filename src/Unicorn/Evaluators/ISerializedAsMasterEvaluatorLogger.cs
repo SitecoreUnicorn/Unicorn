@@ -24,13 +24,13 @@ namespace Unicorn.Evaluators
 		/// Fired when a shared field value is different between serialized and source
 		/// </summary>
 		/// <remarks>Note that the sourceValue may be null</remarks>
-		void SharedFieldIsChanged(IItemData targetItem, Guid fieldId, string serializedValue, string sourceValue);
+		void SharedFieldIsChanged(IItemData targetItem, Guid fieldId, string targetValue, string sourceValue);
 
 		/// <summary>
 		/// Fired when a version's field value is different between serialized and source
 		/// </summary>
 		/// <remarks>Note that the sourceValue may be null</remarks>
-		void VersionedFieldIsChanged(IItemData serializedItemData, IItemVersion version, Guid fieldId, string serializedValue, string sourceValue);
+		void VersionedFieldIsChanged(IItemData targetItem, IItemVersion version, Guid fieldId, string targetValue, string sourceValue);
 
 		/// <summary>
 		/// Fired when a later version is found in the serialized version of an item

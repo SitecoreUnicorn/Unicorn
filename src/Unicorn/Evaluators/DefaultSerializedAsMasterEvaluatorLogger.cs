@@ -3,6 +3,7 @@ using System.Linq;
 using Rainbow.Model;
 using Sitecore.Configuration;
 using Sitecore.Data;
+using Sitecore.Diagnostics;
 using Sitecore.StringExtensions;
 using Unicorn.Data;
 using Unicorn.Logging;
@@ -29,15 +30,17 @@ namespace Unicorn.Evaluators
 			_pipelineDataCollector.AddProcessedItem();
 		}
 
-		public virtual void SharedFieldIsChanged(IItemData targetItem, Guid fieldId, string serializedValue, string sourceValue)
+		public virtual void SharedFieldIsChanged(IItemData targetItem, Guid fieldId, string targetValue, string sourceValue)
 		{
-			if (serializedValue == null)
+			Assert.ArgumentNotNull(targetItem, "targetItem");
+
+			if (targetValue == null)
 			{
 				_logger.Debug("> Field {0} - Reset to standard value".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId)));
 			}
-			else if (serializedValue.Length < MaxFieldLenthToDisplayValue && (sourceValue == null || sourceValue.Length < MaxFieldLenthToDisplayValue))
+			else if (targetValue.Length < MaxFieldLenthToDisplayValue && (sourceValue == null || sourceValue.Length < MaxFieldLenthToDisplayValue))
 			{
-				_logger.Debug("> Field {0} - Serialized {1}, Source {2}".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId), serializedValue, sourceValue));
+				_logger.Debug("> Field {0} - Serialized {1}, Source {2}".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId), targetValue, sourceValue));
 			}
 			else
 			{
@@ -45,55 +48,78 @@ namespace Unicorn.Evaluators
 			}
 		}
 
-		public virtual void VersionedFieldIsChanged(IItemData serializedItemData, IItemVersion version, Guid fieldId, string serializedValue, string sourceValue)
+		public virtual void VersionedFieldIsChanged(IItemData targetItem, IItemVersion version, Guid fieldId, string targetValue, string sourceValue)
 		{
-			if (serializedValue.Length < MaxFieldLenthToDisplayValue && (sourceValue == null || sourceValue.Length < MaxFieldLenthToDisplayValue))
+			Assert.ArgumentNotNull(targetItem, "targetItem");
+			Assert.ArgumentNotNull(version, "version");
+
+			if (targetValue == null)
 			{
-				_logger.Debug("> Field {0} - {1}#{2}: Serialized {3}, Source {4}".FormatWith(TryResolveItemName(serializedItemData.DatabaseName, fieldId), version.Language, version.VersionNumber, serializedValue, sourceValue));
+				_logger.Debug("> Field {0} - {1}#{2} - Reset to standard value".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId), version.Language, version.VersionNumber));
+			}
+			else if (targetValue.Length < MaxFieldLenthToDisplayValue && (sourceValue == null || sourceValue.Length < MaxFieldLenthToDisplayValue))
+			{
+				_logger.Debug("> Field {0} - {1}#{2}: Serialized {3}, Source {4}".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId), version.Language, version.VersionNumber, targetValue, sourceValue));
 			}
 			else
 			{
-				_logger.Debug("> Field {0} - {1}#{2}: Value mismatch (values too long to display)".FormatWith(TryResolveItemName(serializedItemData.DatabaseName, fieldId), version.Language, version.VersionNumber));
+				_logger.Debug("> Field {0} - {1}#{2}: Value mismatch (values too long to display)".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId), version.Language, version.VersionNumber));
 			}
 		}
 
 		public virtual void TemplateChanged(IItemData sourceItem, IItemData targetItem)
 		{
+			Assert.ArgumentNotNull(sourceItem, "sourceItem");
+			Assert.ArgumentNotNull(targetItem, "targetItem");
+
 			_logger.Debug("> Template: Serialized \"{0}\", Source \"{1}\"".FormatWith(TryResolveItemName(targetItem.DatabaseName, targetItem.TemplateId), TryResolveItemName(sourceItem.DatabaseName, sourceItem.TemplateId)));
 		}
 
 		public virtual void Renamed(IItemData sourceItem, IItemData targetItem)
 		{
+			Assert.ArgumentNotNull(sourceItem, "sourceItem");
+			Assert.ArgumentNotNull(targetItem, "targetItem");
+
 			_logger.Debug("> Name: Serialized \"{0}\", Source \"{1}\"".FormatWith(targetItem.Name, sourceItem.Name));
 		}
 
 
 		public virtual void NewTargetVersion(IItemVersion newSerializedVersion, IItemData serializedItemData, IItemData existingItemData)
 		{
+			Assert.ArgumentNotNull(newSerializedVersion, "newSerializedVersion");
+
 			_logger.Debug("> New version {0}#{1} (serialized)".FormatWith(newSerializedVersion.Language, newSerializedVersion.VersionNumber));
 		}
 
 		public virtual void OrphanSourceVersion(IItemData existingItemData, IItemData serializedItemData, IItemVersion[] orphanSourceVersions)
 		{
+			Assert.ArgumentNotNull(orphanSourceVersions, "orphanSourceVersions");
+
 			_logger.Debug("> Orphaned version{0} {1} (source)".FormatWith(orphanSourceVersions.Length > 1 ? "s" : string.Empty, string.Join(", ", orphanSourceVersions.Select(x => x.Language + "#" + x.VersionNumber))));
 		}
 
 		public void Evaluated(IItemData item)
 		{
+			Assert.ArgumentNotNull(item, "item");
+
 			_pipelineDataCollector.AddProcessedItem();
 		}
 
-		public virtual void DeserializedNewItem(IItemData serializedItemData)
+		public virtual void DeserializedNewItem(IItemData targetItem)
 		{
-			_logger.Info("[A] {0}".FormatWith(serializedItemData.GetDisplayIdentifier()));
-			_pipelineDataCollector.PushChangedItem(serializedItemData, ChangeType.Created);
+			Assert.ArgumentNotNull(targetItem, "targetItem");
+
+			_logger.Info("[A] {0}".FormatWith(targetItem.GetDisplayIdentifier()));
+			_pipelineDataCollector.PushChangedItem(targetItem, ChangeType.Created);
 			_pipelineDataCollector.AddProcessedItem();
 		}
 
-		public virtual void SerializedUpdatedItem(IItemData serializedItemData)
+		public virtual void SerializedUpdatedItem(IItemData targetItem)
 		{
-			_logger.Info("[U] {0}".FormatWith(serializedItemData.GetDisplayIdentifier()));
-			_pipelineDataCollector.PushChangedItem(serializedItemData, ChangeType.Modified);
+			Assert.ArgumentNotNull(targetItem, "targetItem");
+
+			_logger.Info("[U] {0}".FormatWith(targetItem.GetDisplayIdentifier()));
+			_pipelineDataCollector.PushChangedItem(targetItem, ChangeType.Modified);
 			_pipelineDataCollector.AddProcessedItem();
 		}
 
