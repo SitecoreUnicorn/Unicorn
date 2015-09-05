@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Linq;
+using System.Threading;
 using Rainbow.Model;
 using Rainbow.Predicates;
+using Sitecore.Configuration;
 using Sitecore.Pipelines;
 using Sitecore.StringExtensions;
 using Unicorn.Configuration;
@@ -16,6 +19,14 @@ namespace Unicorn
 {
 	public class SerializationHelper
 	{
+		private int _threads = Settings.GetIntSetting("Unicorn.MaximumConcurrency", 16);
+
+		public int ThreadCount
+		{
+			get { return _threads; }
+			set { _threads = value; }
+		}
+
 		public virtual IConfiguration GetConfigurationForItem(IItemData item)
 		{
 			return UnicornConfigurationManager.Configurations.FirstOrDefault(configuration => configuration.Resolve<IPredicate>().Includes(item).IsIncluded);
@@ -106,18 +117,62 @@ namespace Unicorn
 
 		protected virtual void DumpTreeRecursive(IItemData root, IPredicate predicate, ITargetDataStore serializationStore, ISourceDataStore sourceDataStore, ILogger logger)
 		{
-			var dump = DumpItemInternal(root, predicate, serializationStore);
-			if (dump.IsIncluded)
+			// we throw items into this queue, and let a thread pool pick up anything available to process in parallel. only the children of queued items are processed, not the item itself
+			ConcurrentQueue<IItemData> processQueue = new ConcurrentQueue<IItemData>();
+
+			// we keep track of how many threads are actively processing something so we know when to end the threads
+			// (e.g. a thread could have nothing in the queue right now, but that's because a different thread is about
+			// to add 8 things to the queue - so it shouldn't quit till all is done)
+			int activeThreads = 0;
+
+			var rootResult = DumpItemInternal(root, predicate, serializationStore);
+			if (!rootResult.IsIncluded) return;
+
+			processQueue.Enqueue(root);
+
+			Thread[] pool = Enumerable.Range(0, ThreadCount).Select(i => new Thread(() =>
 			{
-				foreach (var child in sourceDataStore.GetChildren(root))
+				Process:
+				Interlocked.Increment(ref activeThreads);
+				IItemData parentItem;
+
+				while (processQueue.TryDequeue(out parentItem))
 				{
-					DumpTreeRecursive(child, predicate, serializationStore, sourceDataStore, logger);
+					foreach (var item in sourceDataStore.GetChildren(parentItem))
+					{
+						// we dump each item in the queue item
+						// we do a whole array of children at a time because this makes the serialization of all children of a given item single threaded
+						// this gives us a deterministic result of naming when name collisions occur, which means trees will not contain random differences
+						// when reserialized (oh joy, that)
+						var dump = DumpItemInternal(item, predicate, serializationStore);
+						if (dump.IsIncluded)
+						{
+							// if the item is included, then we add its children as a queued work item
+							processQueue.Enqueue(item);
+						}
+						else
+						{
+							logger.Warn("[S] {0} because {1}".FormatWith(root.GetDisplayIdentifier(), dump.Justification));
+						}
+					}
 				}
-			}
-			else
-			{
-				logger.Warn("[S] {0} because {1}".FormatWith(root.GetDisplayIdentifier(), dump.Justification));
-			}
+
+				// if we get here, the queue was empty. let's make ourselves inactive.
+				Interlocked.Decrement(ref activeThreads);
+
+				// if some other thread in our pool was doing stuff, sleep for a sec to see if we can pick up their work
+				if (activeThreads > 0)
+				{
+					Thread.Sleep(10);
+					goto Process; // OH MY GOD :)
+				}
+			})).ToArray();
+
+			// start the thread pool
+			foreach (var thread in pool) thread.Start();
+
+			// ...and then wait for all the threads to finish
+			foreach (var thread in pool) thread.Join();
 		}
 
 		protected virtual PredicateResult DumpItemInternal(IItemData item, IPredicate predicate, ITargetDataStore targetDataStore)
