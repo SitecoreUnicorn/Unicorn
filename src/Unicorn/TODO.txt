@@ -1,3 +1,2 @@
-﻿- Multithreaded syncing of multiple configurations
-- General code review
+﻿- General code review
 - Tests?
