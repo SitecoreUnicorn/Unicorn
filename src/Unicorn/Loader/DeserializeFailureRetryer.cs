@@ -11,14 +11,18 @@ namespace Unicorn.Loader
 	public class DeserializeFailureRetryer : IDeserializeFailureRetryer
 	{
 		private readonly List<Failure> _itemFailures = new List<Failure>();
-		private readonly List<Failure> _treeFailures = new List<Failure>(); 
+		private readonly List<Failure> _treeFailures = new List<Failure>();
+		private readonly object _collectionLock = new object();
 
 		public void AddItemRetry(IItemData reference, Exception exception)
 		{
 			Assert.ArgumentNotNull(reference, "reference");
 			Assert.ArgumentNotNull(exception, "exception");
 
-			_itemFailures.Add(new Failure(reference, exception));
+			lock (_collectionLock)
+			{
+				_itemFailures.Add(new Failure(reference, exception));
+			}
 		}
 
 		public void AddTreeRetry(IItemData reference, Exception exception)
@@ -26,18 +30,26 @@ namespace Unicorn.Loader
 			Assert.ArgumentNotNull(reference, "reference");
 			Assert.ArgumentNotNull(exception, "exception");
 
-			_treeFailures.Add(new Failure(reference, exception));
+			lock (_collectionLock)
+			{
+				_treeFailures.Add(new Failure(reference, exception));
+			}
 		}
 
 		public void RetryStandardValuesFailures(Action<IItemData> retryAction)
 		{
 			Assert.ArgumentNotNull(retryAction, "retryAction");
 
-			// find all failures caused by a StandardValuesException
-			var standardValuesFailures = _itemFailures.Where(x => x.Reason is StandardValuesException).ToArray();
+			Failure[] standardValuesFailures;
 
-			// remove those failures from the main list - we're about to retry them again
-			_itemFailures.RemoveAll(x => x.Reason is StandardValuesException);
+			lock (_collectionLock)
+			{
+				// find all failures caused by a StandardValuesException
+				standardValuesFailures = _itemFailures.Where(x => x.Reason is StandardValuesException).ToArray();
+
+				// remove those failures from the main list - we're about to retry them again
+				_itemFailures.RemoveAll(x => x.Reason is StandardValuesException);
+			}
 
 			foreach (Failure failure in standardValuesFailures)
 			{
@@ -50,7 +62,10 @@ namespace Unicorn.Loader
 					}
 					catch (Exception reason)
 					{
-						_itemFailures.Add(new Failure(failure.Reference, reason));
+						lock (_collectionLock)
+						{
+							_itemFailures.Add(new Failure(failure.Reference, reason));
+						}
 					}
 				}
 			}

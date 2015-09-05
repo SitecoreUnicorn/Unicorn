@@ -58,7 +58,7 @@ namespace Unicorn
 
 				if (!predicate.Includes(item).IsIncluded) return false;
 
-				DumpTreeRecursive(item, predicate, serializationStore, sourceStore, logger);
+				DumpTreeInternal(item, predicate, serializationStore, sourceStore, logger);
 			}
 			return true;
 		}
@@ -115,7 +115,7 @@ namespace Unicorn
 			return true;
 		}
 
-		protected virtual void DumpTreeRecursive(IItemData root, IPredicate predicate, ITargetDataStore serializationStore, ISourceDataStore sourceDataStore, ILogger logger)
+		protected virtual void DumpTreeInternal(IItemData root, IPredicate predicate, ITargetDataStore serializationStore, ISourceDataStore sourceDataStore, ILogger logger)
 		{
 			// we throw items into this queue, and let a thread pool pick up anything available to process in parallel. only the children of queued items are processed, not the item itself
 			ConcurrentQueue<IItemData> processQueue = new ConcurrentQueue<IItemData>();

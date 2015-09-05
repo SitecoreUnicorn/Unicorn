@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using Rainbow.Model;
-using Rainbow.Storage;
+using Sitecore.Configuration;
 using Sitecore.Data.Events;
 using Sitecore.Diagnostics;
 using Unicorn.Data;
@@ -25,6 +27,14 @@ namespace Unicorn.Loader
 		protected readonly ISourceDataStore SourceDataStore;
 		protected readonly ISerializationLoaderLogger Logger;
 		protected readonly PredicateRootPathResolver PredicateRootPathResolver;
+
+		private int _threads = Settings.GetIntSetting("Unicorn.MaximumConcurrency", 16);
+
+		public int ThreadCount
+		{
+			get { return _threads; }
+			set { _threads = value; }
+		}
 
 		public SerializationLoader(ITargetDataStore targetDataStore, ISourceDataStore sourceDataStore, IPredicate predicate, IEvaluator evaluator, ISerializationLoaderLogger logger, PredicateRootPathResolver predicateRootPathResolver)
 		{
@@ -68,7 +78,7 @@ namespace Unicorn.Loader
 				}
 			}
 			
-			retryer.RetryAll(SourceDataStore, item => DoLoadItem(item, null), item => LoadTreeRecursive(item, retryer, null));
+			retryer.RetryAll(SourceDataStore, item => DoLoadItem(item, null), item => LoadTreeInternal(item, retryer, null));
 		}
 
 		/// <summary>
@@ -91,7 +101,7 @@ namespace Unicorn.Loader
 			DoLoadItem(rootItemData, consistencyChecker);
 
 			// load children of the root
-			LoadTreeRecursive(rootItemData, retryer, consistencyChecker);
+			LoadTreeInternal(rootItemData, retryer, consistencyChecker);
 
 			Logger.EndLoadingTree(rootItemData, _itemsProcessed, timer.ElapsedMilliseconds);
 
@@ -101,7 +111,7 @@ namespace Unicorn.Loader
 		/// <summary>
 		/// Recursive method that loads a given tree and retries failures already present if any
 		/// </summary>
-		protected virtual void LoadTreeRecursive(IItemData root, IDeserializeFailureRetryer retryer, IConsistencyChecker consistencyChecker)
+		protected virtual void LoadTreeInternal(IItemData root, IDeserializeFailureRetryer retryer, IConsistencyChecker consistencyChecker)
 		{
 			Assert.ArgumentNotNull(root, "root");
 			Assert.ArgumentNotNull(retryer, "retryer");
@@ -113,47 +123,84 @@ namespace Unicorn.Loader
 				return;
 			}
 
-			try
+			// we throw items into this queue, and let a thread pool pick up anything available to process in parallel. only the children of queued items are processed, not the item itself
+			ConcurrentQueue<IItemData> processQueue = new ConcurrentQueue<IItemData>();
+
+			// we keep track of how many threads are actively processing something so we know when to end the threads
+			// (e.g. a thread could have nothing in the queue right now, but that's because a different thread is about
+			// to add 8 things to the queue - so it shouldn't quit till all is done)
+			int activeThreads = 0;
+
+			// put the root in the queue
+			processQueue.Enqueue(root);
+
+			Thread[] pool = Enumerable.Range(0, ThreadCount).Select(i => new Thread(() =>
 			{
-				// load the current level
-				LoadOneLevel(root, retryer, consistencyChecker);
+				Process:
+				Interlocked.Increment(ref activeThreads);
+				IItemData parentItem;
 
-				// check if we have child paths to recurse down
-				var children = TargetDataStore.GetChildren(root).ToArray();
-
-				if (children.Length > 0)
+				while (processQueue.TryDequeue(out parentItem))
 				{
-					// make sure if a "templates" item exists in the current set, it goes first
-					if (children.Length > 1)
+					try
 					{
-						int templateIndex = Array.FindIndex(children, x => x.Path.EndsWith("templates", StringComparison.OrdinalIgnoreCase));
+						// load the current level
+						LoadOneLevel(parentItem, retryer, consistencyChecker);
 
-						if (templateIndex > 0)
+						// check if we have child paths to process down
+						var children = TargetDataStore.GetChildren(parentItem).ToArray();
+
+						if (children.Length > 0)
 						{
-							var zero = children[0];
-							children[0] = children[templateIndex];
-							children[templateIndex] = zero;
-						}
-					}
+							// make sure if a "templates" item exists in the current set, it goes first
+							if (children.Length > 1)
+							{
+								int templateIndex = Array.FindIndex(children, x => x.Path.EndsWith("templates", StringComparison.OrdinalIgnoreCase));
 
-					// load each child path recursively
-					foreach (var child in children)
+								if (templateIndex > 0)
+								{
+									var zero = children[0];
+									children[0] = children[templateIndex];
+									children[templateIndex] = zero;
+								}
+							}
+
+							// load each child path
+							foreach (var child in children)
+							{
+								processQueue.Enqueue(child);
+							}
+
+							// pull out any standard values failures for immediate retrying
+							retryer.RetryStandardValuesFailures(item => DoLoadItem(item, null));
+						} // children.length > 0
+					}
+					catch (ConsistencyException)
 					{
-						LoadTreeRecursive(child, retryer, consistencyChecker);
+						throw;
 					}
+					catch (Exception ex)
+					{
+						retryer.AddTreeRetry(root, ex);
+					}
+				}
 
-					// pull out any standard values failures for immediate retrying
-					retryer.RetryStandardValuesFailures(item => DoLoadItem(item, null));
-				} // children.length > 0
-			}
-			catch (ConsistencyException)
-			{
-				throw;
-			}
-			catch (Exception ex)
-			{
-				retryer.AddTreeRetry(root, ex);
-			}
+				// if we get here, the queue was empty. let's make ourselves inactive.
+				Interlocked.Decrement(ref activeThreads);
+
+				// if some other thread in our pool was doing stuff, sleep for a sec to see if we can pick up their work
+				if (activeThreads > 0)
+				{
+					Thread.Sleep(10);
+					goto Process; // OH MY GOD :)
+				}
+			})).ToArray();
+
+			// start the thread pool
+			foreach (var thread in pool) thread.Start();
+
+			// ...and then wait for all the threads to finish
+			foreach (var thread in pool) thread.Join();
 		}
 
 		/// <summary>
