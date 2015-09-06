@@ -152,7 +152,7 @@ namespace Unicorn
 						}
 						else
 						{
-							logger.Warn("[S] {0} because {1}".FormatWith(root.GetDisplayIdentifier(), dump.Justification));
+							logger.Warn("[S] {0} because {1}".FormatWith(item.GetDisplayIdentifier(), dump.Justification));
 						}
 					}
 				}
