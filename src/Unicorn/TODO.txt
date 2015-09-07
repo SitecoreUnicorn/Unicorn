@@ -5,5 +5,4 @@
 	- Data seems corrupt in the db, turning off transparent does not fix things
 	- Templates were not included in the transparent configuration
 	- Appears to occur as long as UDP is attached to the web database, and anything at all has transparent on. If transparent always off, no issue.
-- Add notes to config about when to use data cache
 - Enabling transparent sync seems to enable it for all configurations, not just the local one
