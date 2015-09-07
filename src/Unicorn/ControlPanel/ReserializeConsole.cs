@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Web;
 using Kamsar.WebConsole;
+using Sitecore.StringExtensions;
 using Unicorn.Configuration;
 using Unicorn.ControlPanel.Headings;
+using Unicorn.Data;
 using Unicorn.Logging;
 using Unicorn.Predicates;
 
@@ -37,11 +40,20 @@ namespace Unicorn.ControlPanel
 				{
 					try
 					{
-						logger.Info("Control Panel Reserialize: Processing Unicorn configuration " + configuration.Name);
+						var timer = new Stopwatch();
+						timer.Start();
+
+						logger.Info(configuration.Name + " is being reserialized");
 
 						using (new TransparentSyncDisabler())
 						{
+							var targetDataStore = configuration.Resolve<ITargetDataStore>();
 							var helper = configuration.Resolve<SerializationHelper>();
+
+							// nuke any existing items in the store before we begin. This is a full reserialize so we want to
+							// get rid of any existing stuff even if it's not part of existing configs
+							logger.Warn("[D] Clearing existing items from {0}".FormatWith(targetDataStore.FriendlyName));
+							targetDataStore.Clear();
 
 							var roots = configuration.Resolve<PredicateRootPathResolver>().GetRootSourceItems();
 
@@ -54,7 +66,9 @@ namespace Unicorn.ControlPanel
 							}
 						}
 
-						logger.Info("Control Panel Reserialize: Finished reserializing Unicorn configuration " + configuration.Name);
+						timer.Stop();
+
+						logger.Info("{0} reserialization complete in {1}ms".FormatWith(configuration.Name, timer.ElapsedMilliseconds));
 					}
 					catch (Exception ex)
 					{

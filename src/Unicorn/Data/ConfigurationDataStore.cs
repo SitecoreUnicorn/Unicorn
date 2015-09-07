@@ -74,6 +74,11 @@ namespace Unicorn.Data
 			_innerDataStore.Value.RegisterForChanges(actionOnChange);
 		}
 
+		public void Clear()
+		{
+			_innerDataStore.Value.Clear();
+		}
+
 		public string FriendlyName { get { return DocumentationUtility.GetFriendlyName(_innerDataStore.Value); } }
 		public string Description { get { return DocumentationUtility.GetDescription(_innerDataStore.Value); } }
 		public KeyValuePair<string, string>[] GetConfigurationDetails()
