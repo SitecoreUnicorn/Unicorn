@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using Rainbow.Filtering;
 using Rainbow.Model;
 using Sitecore;
@@ -30,8 +31,9 @@ namespace Unicorn.Data.DataProvider
 		private readonly IPredicate _predicate;
 		private readonly IFieldFilter _fieldFilter;
 		private readonly IUnicornDataProviderLogger _logger;
+		private readonly IUnicornDataProviderConfiguration _configuration;
 		private static bool _disableSerialization;
-		private static bool _disableTransparentSync;
+		private bool _disableTransparentSync;
 		private readonly Dictionary<Guid, Tuple<string, Guid>> _blobIdLookup = new Dictionary<Guid, Tuple<string, Guid>>();
 
 		public UnicornDataProvider(ITargetDataStore targetDataStore, ISourceDataStore sourceDataStore, IPredicate predicate, IFieldFilter fieldFilter, IUnicornDataProviderLogger logger, IUnicornDataProviderConfiguration configuration)
@@ -44,7 +46,7 @@ namespace Unicorn.Data.DataProvider
 			Assert.ArgumentNotNull(configuration, "configuration");
 
 			_logger = logger;
-			_disableTransparentSync = !configuration.EnableTransparentSync;
+			_configuration = configuration;
 			_predicate = predicate;
 			_fieldFilter = fieldFilter;
 			_targetDataStore = targetDataStore;
@@ -79,11 +81,12 @@ namespace Unicorn.Data.DataProvider
 		/// Disables transparent sync (reading from the target data store)
 		/// This is appropriate for large data sets, or slower data providers.
 		/// </summary>
-		public static bool DisableTransparentSync
+		public bool DisableTransparentSync
 		{
 			get
 			{
 				if (TransparentSyncDisabler.CurrentValue) return true;
+				if (!_configuration.EnableTransparentSync) return true;
 				return _disableTransparentSync;
 			}
 			set { _disableTransparentSync = value; }
