@@ -151,7 +151,7 @@ namespace Unicorn.Configuration
 		/// <summary>
 		/// Resolves an attribute of an XML element into a C# Type, using the Assembly Qualified Name
 		/// </summary>
-		protected TypeRegistration GetConfigType(XmlElement configuration, XmlElement defaults, string elementName)
+		protected virtual TypeRegistration GetConfigType(XmlElement configuration, XmlElement defaults, string elementName)
 		{
 			var typeNode = configuration[elementName] ?? defaults[elementName];
 
@@ -173,7 +173,7 @@ namespace Unicorn.Configuration
 		/// <summary>
 		/// Gets unmapped (i.e. not 'type') attributes or body of a dependency declaration. These are passed as possible constructor parameters to the object.
 		/// </summary>
-		protected KeyValuePair<string, object>[] GetUnmappedAttributes(XmlElement configuration, XmlElement defaults, string elementName)
+		protected virtual KeyValuePair<string, object>[] GetUnmappedAttributes(XmlElement configuration, XmlElement defaults, string elementName)
 		{
 			var typeNode = configuration[elementName] ?? defaults[elementName];
 
@@ -198,7 +198,7 @@ namespace Unicorn.Configuration
 		/// <summary>
 		/// Gets an XML attribute value, returning null if it does not exist and its inner text otherwise.
 		/// </summary>
-		protected string GetAttributeValue(XmlNode node, string attribute)
+		protected virtual string GetAttributeValue(XmlNode node, string attribute)
 		{
 			if (node == null || node.Attributes == null) return null;
 

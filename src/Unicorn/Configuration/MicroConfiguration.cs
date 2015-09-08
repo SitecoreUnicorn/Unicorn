@@ -55,7 +55,7 @@ namespace Unicorn.Configuration
 			return null;
 		}
 
-		public void Register(Type type, Func<object> factory, bool singleInstance)
+		public virtual void Register(Type type, Func<object> factory, bool singleInstance)
 		{
 			if (singleInstance)
 			{

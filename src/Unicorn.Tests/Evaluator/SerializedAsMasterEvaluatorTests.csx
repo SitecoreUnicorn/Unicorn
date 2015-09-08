@@ -2,7 +2,11 @@
 using System.Linq;
 using Moq;
 using NUnit.Framework;
+using Rainbow.Diff;
+using Rainbow.Filtering;
 using Rainbow.Model;
+using Rainbow.Predicates;
+using Rainbow.Tests;
 using Sitecore;
 using Sitecore.Data;
 using Unicorn.Evaluators;
@@ -23,7 +27,7 @@ namespace Unicorn.Tests.Evaluator
 		[Test]
 		public void EvaluateOrphans_RecyclesSingleOrphanItem()
 		{
-			var item = new Mock<ISerializableItem>();
+			var item = new Mock<IItemData>();
 			item.Setup(x => x.Recycle());
 
 			var evaluator = CreateTestEvaluator();
@@ -66,12 +70,11 @@ namespace Unicorn.Tests.Evaluator
 			var logger = new Mock<ISerializedAsMasterEvaluatorLogger>();
 			var evaluator = new SerializedAsMasterEvaluator(logger.Object, CreateTestFieldPredicate());
 
-			var newItem = new Mock<ISerializedItem>();
-			newItem.Setup(x => x.Deserialize(It.IsAny<bool>())).Returns(new Mock<ISourceItem>().Object);
+			var newItem = new FakeItem();
 
-			evaluator.EvaluateNewSerializedItem(newItem.Object);
+			evaluator.EvaluateNewSerializedItem(newItem);
 
-			logger.Verify(x => x.DeserializedNewItem(newItem.Object));
+			logger.Verify(x => x.DeserializedNewItem(newItem));
 		}
 
 		[Test]
@@ -79,10 +82,9 @@ namespace Unicorn.Tests.Evaluator
 		{
 			var evaluator = CreateTestEvaluator();
 
-			var newItem = new Mock<ISerializedItem>();
-			newItem.Setup(x => x.Deserialize(It.IsAny<bool>())).Returns(new Mock<ISourceItem>().Object);
+			var newItem = new FakeItem();
 
-			evaluator.EvaluateNewSerializedItem(newItem.Object);
+			evaluator.EvaluateNewSerializedItem(newItem);
 
 			newItem.Verify(x => x.Deserialize(false));
 		}
@@ -289,21 +291,20 @@ namespace Unicorn.Tests.Evaluator
 		{
 			var logger = new Mock<ISerializedAsMasterEvaluatorLogger>();
 
-			return new SerializedAsMasterEvaluator(logger.Object, CreateTestFieldPredicate());
+			return new SerializedAsMasterEvaluator(logger.Object, new ItemComparer(null), CreateTestFieldPredicate());
 		}
 
-		private IFieldPredicate CreateTestFieldPredicate()
+		private IFieldFilter CreateTestFieldPredicate()
 		{
-			var predicate = new Mock<IFieldPredicate>();
-			predicate.Setup(x => x.Includes(It.IsAny<string>())).Returns(new PredicateResult(true));
-			predicate.Setup(x => x.Includes(It.IsAny<ID>())).Returns(new PredicateResult(true));
+			var predicate = new Mock<IFieldFilter>();
+			predicate.Setup(x => x.Includes(It.IsAny<Guid>())).Returns(true);
 
 			return predicate.Object;
 		}
 
-		internal static ItemVersion CreateTestVersion(string language, int version, DateTime modified, string revision)
+		internal static IItemVersion CreateTestVersion(string language, int version, DateTime modified, string revision)
 		{
-			var serializedVersion = new ItemVersion(language, version);
+			var serializedVersion = new TestIt(language, version);
 			if (modified != default(DateTime))
 				serializedVersion.Fields[FieldIDs.Updated.ToString()] = DateUtil.ToIsoDate(modified);
 

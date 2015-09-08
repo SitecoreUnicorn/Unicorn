@@ -38,9 +38,9 @@
     <Reference Include="Kamsar.WebConsole">
       <HintPath>..\..\packages\Kamsar.WebConsole.1.2.2.0\lib\net40\Kamsar.WebConsole.dll</HintPath>
     </Reference>
-    <Reference Include="Moq, Version=4.2.1502.911, Culture=neutral, PublicKeyToken=69f491c39445e920, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\packages\Moq.4.2.1502.0911\lib\net40\Moq.dll</HintPath>
+    <Reference Include="NSubstitute, Version=1.8.2.0, Culture=neutral, PublicKeyToken=92dd2e9066daa5ca, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\NSubstitute.1.8.2.0\lib\net45\NSubstitute.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="nunit.framework, Version=2.6.4.14350, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -61,7 +61,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Configuration\MicroConfigurationTests.cs" />
-    <None Include="Evaluator\SerializedAsMasterEvaluatorTests.dis" />
+    <None Include="Evaluator\SerializedAsMasterEvaluatorTests.csx" />
     <Compile Include="Configuration\XmlConfigurationTypeActivatorTests.cs" />
     <Compile Include="Loader\DuplicateIdConsistencyCheckerTests.cs" />
     <None Include="Loader\LoaderTests.dis" />
@@ -76,6 +76,10 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <ProjectReference Include="..\..\..\Rainbow\src\Rainbow.Tests\Rainbow.Tests.csproj">
+      <Project>{3a8495ae-e286-44a2-8bbb-ee9911f5ba43}</Project>
+      <Name>Rainbow.Tests</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\Rainbow\src\Rainbow\Rainbow.csproj">
       <Project>{8ff75c8b-2a9e-4d95-91ad-333071813199}</Project>
       <Name>Rainbow</Name>

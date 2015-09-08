@@ -9,25 +9,25 @@ namespace Unicorn.Configuration
 	/// </summary>
 	internal class ReadOnlyConfiguration : IConfiguration
 	{
-		private readonly IConfiguration _innerRegistry;
+		private readonly IConfiguration _innerConfiguration;
 
-		public ReadOnlyConfiguration(IConfiguration innerRegistry)
+		public ReadOnlyConfiguration(IConfiguration innerConfiguration)
 		{
-			Assert.ArgumentNotNull(innerRegistry, "innerRegistry");
+			Assert.ArgumentNotNull(innerConfiguration, "innerConfiguration");
 
-			_innerRegistry = innerRegistry;
+			_innerConfiguration = innerConfiguration;
 		}
 
-		public string Name { get { return _innerRegistry.Name; }}
+		public string Name { get { return _innerConfiguration.Name; }}
 
 		public T Resolve<T>() where T : class
 		{
-			return _innerRegistry.Resolve<T>();
+			return _innerConfiguration.Resolve<T>();
 		}
 
 		public object Resolve(Type type)
 		{
-			return _innerRegistry.Resolve(type);
+			return _innerConfiguration.Resolve(type);
 		}
 
 		public void Register(Type type, Func<object> factory, bool singleInstance)
@@ -37,7 +37,7 @@ namespace Unicorn.Configuration
 
 		public object Activate(Type type, KeyValuePair<string, object>[] unmappedConstructorParameters)
 		{
-			return _innerRegistry.Activate(type, unmappedConstructorParameters);
+			return _innerConfiguration.Activate(type, unmappedConstructorParameters);
 		}
 	}
 }

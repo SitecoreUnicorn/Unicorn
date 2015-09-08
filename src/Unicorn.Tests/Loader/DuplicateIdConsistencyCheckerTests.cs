@@ -1,6 +1,6 @@
-﻿using Moq;
+﻿using NSubstitute;
 using NUnit.Framework;
-using Rainbow.Model;
+using Rainbow.Tests;
 using Sitecore.Data;
 using Unicorn.Loader;
 
@@ -12,92 +12,81 @@ namespace Unicorn.Tests.Loader
 		[Test]
 		public void IsConsistent_ReturnsTrue_WhenEmpty()
 		{
-			var testLogger = new Mock<IDuplicateIdConsistencyCheckerLogger>();
+			var testLogger = Substitute.For<IDuplicateIdConsistencyCheckerLogger>();
 
-			var testChecker = new DuplicateIdConsistencyChecker(testLogger.Object);
+			var testChecker = new DuplicateIdConsistencyChecker(testLogger);
 
-			var testItem = new Mock<ISerializableItem>();
-			testItem.SetupGet(x => x.Id).Returns(() => ID.NewID.Guid);
+			var testItem = new FakeItem(ID.NewID.Guid);
 
-			Assert.IsTrue(testChecker.IsConsistent(testItem.Object));
+			Assert.IsTrue(testChecker.IsConsistent(testItem));
 		}
 
 		[Test]
 		public void IsConsistent_ReturnsTrue_WhenNotDuplicated()
 		{
-			var testLogger = new Mock<IDuplicateIdConsistencyCheckerLogger>();
+			var testLogger = Substitute.For<IDuplicateIdConsistencyCheckerLogger>();
 
-			var testChecker = new DuplicateIdConsistencyChecker(testLogger.Object);
+			var testChecker = new DuplicateIdConsistencyChecker(testLogger);
 
-			var testItem1 = new Mock<ISerializableItem>();
-			testItem1.SetupGet(x => x.Id).Returns(() => ID.NewID.Guid);
+			var testItem1 = new FakeItem(ID.NewID.Guid);
 
-			var testItem2 = new Mock<ISerializableItem>();
-			testItem2.SetupGet(x => x.Id).Returns(() => ID.NewID.Guid);
+			var testItem2 = new FakeItem(ID.NewID.Guid);
 
-			testChecker.AddProcessedItem(testItem1.Object);
-			Assert.IsTrue(testChecker.IsConsistent(testItem2.Object));
+			testChecker.AddProcessedItem(testItem1);
+			Assert.IsTrue(testChecker.IsConsistent(testItem2));
 		}
 
 		[Test]
 		public void IsConsistent_ReturnsFalse_WhenDuplicated()
 		{
-			var testLogger = new Mock<IDuplicateIdConsistencyCheckerLogger>();
+			var testLogger = Substitute.For<IDuplicateIdConsistencyCheckerLogger>();
 
-			var testChecker = new DuplicateIdConsistencyChecker(testLogger.Object);
+			var testChecker = new DuplicateIdConsistencyChecker(testLogger);
 
 			var duplicatedId = ID.NewID.Guid;
 
-			var testItem1 = new Mock<ISerializableItem>();
-			testItem1.SetupGet(x => x.Id).Returns(duplicatedId);
+			var testItem1 = new FakeItem(duplicatedId);
 
-			var testItem2 = new Mock<ISerializableItem>();
-			testItem2.SetupGet(x => x.Id).Returns(duplicatedId);
+			var testItem2 = new FakeItem(duplicatedId);
 
-			testChecker.AddProcessedItem(testItem1.Object);
-			Assert.IsFalse(testChecker.IsConsistent(testItem2.Object));
+			testChecker.AddProcessedItem(testItem1);
+			Assert.IsFalse(testChecker.IsConsistent(testItem2));
 		}
 
 		[Test]
 		public void IsConsistent_ReturnsTrue_WhenDuplicatedIdsAreInDifferentDatabases()
 		{
-			var testLogger = new Mock<IDuplicateIdConsistencyCheckerLogger>();
+			var testLogger = Substitute.For<IDuplicateIdConsistencyCheckerLogger>();
 
-			var testChecker = new DuplicateIdConsistencyChecker(testLogger.Object);
+			var testChecker = new DuplicateIdConsistencyChecker(testLogger);
 
 			var duplicatedId = ID.NewID.Guid;
 
-			var testItem1 = new Mock<ISerializableItem>();
-			testItem1.SetupGet(x => x.Id).Returns(duplicatedId);
-			testItem1.SetupGet(x => x.DatabaseName).Returns("master");
+			var testItem1 = new FakeItem(duplicatedId, "master");
 
-			var testItem2 = new Mock<ISerializableItem>();
-			testItem2.SetupGet(x => x.Id).Returns(duplicatedId);
-			testItem2.SetupGet(x => x.DatabaseName).Returns("core");
+			var testItem2  = new FakeItem(duplicatedId, "core");
 
-			testChecker.AddProcessedItem(testItem1.Object);
-			Assert.IsTrue(testChecker.IsConsistent(testItem2.Object));
+			testChecker.AddProcessedItem(testItem1);
+			Assert.IsTrue(testChecker.IsConsistent(testItem2));
 		}
 
 		[Test]
 		public void IsConsistent_LogsError_WhenDuplicated()
 		{
-			var testLogger = new Mock<IDuplicateIdConsistencyCheckerLogger>();
+			var testLogger = Substitute.For<IDuplicateIdConsistencyCheckerLogger>();
 
-			var testChecker = new DuplicateIdConsistencyChecker(testLogger.Object);
+			var testChecker = new DuplicateIdConsistencyChecker(testLogger);
 
 			var duplicatedId = ID.NewID.Guid;
 
-			var testItem1 = new Mock<ISerializableItem>();
-			testItem1.SetupGet(x => x.Id).Returns(duplicatedId);
+			var testItem1 = new FakeItem(duplicatedId);
 
-			var testItem2 = new Mock<ISerializableItem>();
-			testItem2.SetupGet(x => x.Id).Returns(duplicatedId);
+			var testItem2 = new FakeItem(duplicatedId);
 
-			testChecker.AddProcessedItem(testItem1.Object);
-			testChecker.IsConsistent(testItem2.Object);
+			testChecker.AddProcessedItem(testItem1);
+			testChecker.IsConsistent(testItem2);
 
-			testLogger.Verify(x => x.DuplicateFound(testItem1.Object, testItem2.Object), Times.Once());
+			testLogger.Received().DuplicateFound(Arg.Any<DuplicateIdConsistencyChecker.DuplicateIdEntry>(), testItem2);
 		}
 	}
 }
