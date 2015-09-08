@@ -57,6 +57,9 @@ namespace Unicorn.UI.Pipelines.SaveUi
 			{
 				foreach (var item in args.Items)
 				{
+					// we grab the existing item from the database. This will NOT include the changed values we're saving.
+					// this is because we want to verify that the base state of the item matches serialized, NOT the state we're saving.
+					// if the base state and the serialized state match we can be pretty sure that the changes we are writing won't clobber anything serialized but not synced
 					Item existingItem = Client.ContentDatabase.GetItem(item.ID, item.Language, item.Version);
 
 					Assert.IsNotNull(existingItem, "Existing item {0} did not exist! This should never occur.", item.ID);
