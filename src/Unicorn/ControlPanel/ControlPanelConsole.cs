@@ -112,13 +112,17 @@ namespace Unicorn.ControlPanel
 		private class CustomStyledHtml5WebConsole : Html5WebConsole
 		{
 			private readonly HttpResponse _response;
-			private object _writeLock = new object();
+			private readonly object _writeLock = new object();
 
 			public CustomStyledHtml5WebConsole(HttpResponse response) : base(response)
 			{
 				_response = response;
 			}
 
+			protected override void RenderPageHead()
+			{
+				_response.Write(new HeadingService().GetControlPanelHeadingHtml());
+			}
 
 			public override void WriteScript(string script)
 			{
@@ -131,8 +135,8 @@ namespace Unicorn.ControlPanel
 			public override void RenderResources()
 			{
 				base.RenderResources();
-				_response.Write("<link href='https://fonts.googleapis.com/css?family=Lobster' rel='stylesheet' type='text/css'>");
-				_response.Write(@"<style>.wrapper { width: auto; max-width: 1850px; } a, a:visited { color: lightblue; } #console{ height: 50em; } h1 { font-family: Lobster; font-size: 3em; font-weight: normal; }</style>");
+				_response.Write("<link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic' rel='stylesheet' type='text/css'>");
+				_response.Write(@"<style>.wrapper { width: auto; max-width: 1850px; } a, a:visited { color: lightblue; } #console{ height: 50em; } h1 { font-size: 3em; } h1, p { font-family: 'Source Sans Pro'; }</style>");
 			}
 		}
 	}

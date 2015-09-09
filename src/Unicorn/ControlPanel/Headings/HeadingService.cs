@@ -10,7 +10,9 @@ namespace Unicorn.ControlPanel.Headings
 
 		private static readonly string[] HtmlChoices = {
 			"Unicorn.ControlPanel.Headings.Unicorn.html",
-			"Unicorn.ControlPanel.Headings.Unicorn.svg.html"
+			"Unicorn.ControlPanel.Headings.Unicorn.svg.html",
+			"Unicorn.ControlPanel.Headings.Unicorn2.svg.html",
+			"Unicorn.ControlPanel.Headings.Unicorn3.svg.html"
 		};
 
 		public string GetHeadingHtml()

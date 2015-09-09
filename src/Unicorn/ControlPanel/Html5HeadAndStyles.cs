@@ -11,14 +11,14 @@ namespace Unicorn.ControlPanel
 			<html>
 			<head>
 				<title>Unicorn Control Panel</title>
-				<link href='https://fonts.googleapis.com/css?family=Lobster|Open+Sans:400italic,400,800' rel='stylesheet' type='text/css'>
+				<link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic' rel='stylesheet' type='text/css'>
 				<style>
-					* { font-family: 'Open Sans', sans-serif; }
+					* { font-family: 'Source Sans Pro', sans-serif; }
 					body { max-width: 960px; margin: 0 auto;padding: 1em; }
 					h1 { margin: 0; }
 					small { font-style: italic; }
 					svg { margin: 1em 0 2em 0; height: 200px; display: block; }
-					h2 { border-bottom: 4px solid gray; font-family: Lobster, sans-serif; font-size: 2.2em; line-height: 90%; font-weight: normal; margin: .5em 0; }
+					h2 { border-bottom: 4px solid black; font-size: 2.2em; line-height: 80%; margin: .5em 0; }
 					h4 { margin: .5em 0 0 0; }
 					p { margin-top: 0.2em; font-size: 0.8rem; }
 					code { font-family: monospace; }
