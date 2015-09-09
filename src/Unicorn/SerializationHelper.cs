@@ -6,6 +6,7 @@ using Rainbow.Model;
 using Rainbow.Predicates;
 using Sitecore.Configuration;
 using Sitecore.Pipelines;
+using Sitecore.SecurityModel;
 using Sitecore.StringExtensions;
 using Unicorn.Configuration;
 using Unicorn.Data;
@@ -120,6 +121,9 @@ namespace Unicorn
 			// we throw items into this queue, and let a thread pool pick up anything available to process in parallel. only the children of queued items are processed, not the item itself
 			ConcurrentQueue<IItemData> processQueue = new ConcurrentQueue<IItemData>();
 
+			// exceptions thrown on background threads are left in here
+			ConcurrentQueue<Exception> errors = new ConcurrentQueue<Exception>();
+
 			// we keep track of how many threads are actively processing something so we know when to end the threads
 			// (e.g. a thread could have nothing in the queue right now, but that's because a different thread is about
 			// to add 8 things to the queue - so it shouldn't quit till all is done)
@@ -136,23 +140,36 @@ namespace Unicorn
 				Interlocked.Increment(ref activeThreads);
 				IItemData parentItem;
 
-				while (processQueue.TryDequeue(out parentItem))
+				while (processQueue.TryDequeue(out parentItem) && errors.Count == 0)
 				{
-					foreach (var item in sourceDataStore.GetChildren(parentItem))
+					using (new SecurityDisabler())
 					{
-						// we dump each item in the queue item
-						// we do a whole array of children at a time because this makes the serialization of all children of a given item single threaded
-						// this gives us a deterministic result of naming when name collisions occur, which means trees will not contain random differences
-						// when reserialized (oh joy, that)
-						var dump = DumpItemInternal(item, predicate, serializationStore);
-						if (dump.IsIncluded)
+						var children = sourceDataStore.GetChildren(parentItem);
+
+						foreach (var item in children)
 						{
-							// if the item is included, then we add its children as a queued work item
-							processQueue.Enqueue(item);
-						}
-						else
-						{
-							logger.Warn("[S] {0} because {1}".FormatWith(item.GetDisplayIdentifier(), dump.Justification));
+							try
+							{
+								// we dump each item in the queue item
+								// we do a whole array of children at a time because this makes the serialization of all children of a given item single threaded
+								// this gives us a deterministic result of naming when name collisions occur, which means trees will not contain random differences
+								// when reserialized (oh joy, that)
+								var dump = DumpItemInternal(item, predicate, serializationStore);
+								if (dump.IsIncluded)
+								{
+									// if the item is included, then we add its children as a queued work item
+									processQueue.Enqueue(item);
+								}
+								else
+								{
+									logger.Warn("[S] {0} because {1}".FormatWith(item.GetDisplayIdentifier(), dump.Justification));
+								}
+							}
+							catch (Exception ex)
+							{
+								errors.Enqueue(ex);
+								break;
+							}
 						}
 					}
 				}
@@ -173,6 +190,8 @@ namespace Unicorn
 
 			// ...and then wait for all the threads to finish
 			foreach (var thread in pool) thread.Join();
+
+			if (errors.Count > 0) throw new AggregateException(errors);
 		}
 
 		protected virtual PredicateResult DumpItemInternal(IItemData item, IPredicate predicate, ITargetDataStore targetDataStore)

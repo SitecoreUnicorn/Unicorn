@@ -8,6 +8,7 @@ using Rainbow.Model;
 using Sitecore.Configuration;
 using Sitecore.Data.Events;
 using Sitecore.Diagnostics;
+using Sitecore.SecurityModel;
 using Unicorn.Data;
 using Unicorn.Data.DataProvider;
 using Unicorn.Evaluators;
@@ -126,6 +127,9 @@ namespace Unicorn.Loader
 			// we throw items into this queue, and let a thread pool pick up anything available to process in parallel. only the children of queued items are processed, not the item itself
 			ConcurrentQueue<IItemData> processQueue = new ConcurrentQueue<IItemData>();
 
+			// exceptions thrown on background threads are left in here
+			ConcurrentQueue<Exception> errors = new ConcurrentQueue<Exception>();
+
 			// we keep track of how many threads are actively processing something so we know when to end the threads
 			// (e.g. a thread could have nothing in the queue right now, but that's because a different thread is about
 			// to add 8 things to the queue - so it shouldn't quit till all is done)
@@ -139,45 +143,51 @@ namespace Unicorn.Loader
 				Process:
 				Interlocked.Increment(ref activeThreads);
 				IItemData parentItem;
+				
 
-				while (processQueue.TryDequeue(out parentItem))
+				while (processQueue.TryDequeue(out parentItem) && errors.Count == 0)
 				{
 					try
 					{
-						// load the current level
-						LoadOneLevel(parentItem, retryer, consistencyChecker);
-
-						// check if we have child paths to process down
-						var children = TargetDataStore.GetChildren(parentItem).ToArray();
-
-						if (children.Length > 0)
+						using (new SecurityDisabler())
 						{
-							// make sure if a "templates" item exists in the current set, it goes first
-							if (children.Length > 1)
-							{
-								int templateIndex = Array.FindIndex(children, x => x.Path.EndsWith("templates", StringComparison.OrdinalIgnoreCase));
+							// load the current level
+							LoadOneLevel(parentItem, retryer, consistencyChecker);
 
-								if (templateIndex > 0)
+							// check if we have child paths to process down
+							var children = TargetDataStore.GetChildren(parentItem).ToArray();
+
+							if (children.Length > 0)
+							{
+								// make sure if a "templates" item exists in the current set, it goes first
+								if (children.Length > 1)
 								{
-									var zero = children[0];
-									children[0] = children[templateIndex];
-									children[templateIndex] = zero;
+									int templateIndex = Array.FindIndex(children,
+										x => x.Path.EndsWith("templates", StringComparison.OrdinalIgnoreCase));
+
+									if (templateIndex > 0)
+									{
+										var zero = children[0];
+										children[0] = children[templateIndex];
+										children[templateIndex] = zero;
+									}
 								}
-							}
 
-							// load each child path
-							foreach (var child in children)
-							{
-								processQueue.Enqueue(child);
-							}
+								// load each child path
+								foreach (var child in children)
+								{
+									processQueue.Enqueue(child);
+								}
 
-							// pull out any standard values failures for immediate retrying
-							retryer.RetryStandardValuesFailures(item => DoLoadItem(item, null));
-						} // children.length > 0
+								// pull out any standard values failures for immediate retrying
+								retryer.RetryStandardValuesFailures(item => DoLoadItem(item, null));
+							} // children.length > 0
+						}
 					}
-					catch (ConsistencyException)
+					catch (ConsistencyException cex)
 					{
-						throw;
+						errors.Enqueue(cex);
+						break;
 					}
 					catch (Exception ex)
 					{
@@ -201,6 +211,8 @@ namespace Unicorn.Loader
 
 			// ...and then wait for all the threads to finish
 			foreach (var thread in pool) thread.Join();
+
+			if(errors.Count > 0) throw new AggregateException(errors);
 		}
 
 		/// <summary>
