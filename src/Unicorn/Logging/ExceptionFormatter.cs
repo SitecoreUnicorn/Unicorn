@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Text;
-using Rainbow.Storage.Sc.Deserialization;
 
 namespace Unicorn.Logging
 {

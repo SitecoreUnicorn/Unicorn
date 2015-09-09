@@ -37,7 +37,8 @@ namespace Unicorn.Logging
 
 		public void Error(Exception exception)
 		{
-			_progress.ReportStatus(new ExceptionFormatter().FormatExceptionAsHtml(exception), MessageType.Error);
+			var error = new ExceptionFormatter().FormatExceptionAsHtml(exception);
+			_progress.ReportStatus(error, MessageType.Error);
 		}
 	}
 }
