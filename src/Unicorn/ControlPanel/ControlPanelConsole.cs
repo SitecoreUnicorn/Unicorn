@@ -112,10 +112,20 @@ namespace Unicorn.ControlPanel
 		private class CustomStyledHtml5WebConsole : Html5WebConsole
 		{
 			private readonly HttpResponse _response;
+			private object _writeLock = new object();
 
 			public CustomStyledHtml5WebConsole(HttpResponse response) : base(response)
 			{
 				_response = response;
+			}
+
+
+			public override void WriteScript(string script)
+			{
+				lock (_writeLock)
+				{
+					base.WriteScript(script);
+				}
 			}
 
 			public override void RenderResources()
