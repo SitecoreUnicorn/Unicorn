@@ -103,7 +103,7 @@ namespace Unicorn.Configuration
 						}
 						catch (Exception ex)
 						{
-							throw new MicroResolutionException("Cannot activate {0}, constructor param '{1}' because dependency failed. The type is probably not registered, or may need to be passed as an explicit unmapped parameter.".FormatWith(type.FullName, currentParam.Name), ex);
+							throw new MicroResolutionException("Cannot activate {0}, constructor param '{1}' ({2}). The type '{2}' is probably not registered, or may need to be an explicit unmapped parameter (as an XML attribute on the type registration). Inner message: {3}".FormatWith(type.FullName, currentParam.Name, currentParam.ParameterType.Name, ex.Message));
 						}
 					}
 				}
