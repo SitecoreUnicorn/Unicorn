@@ -12,8 +12,8 @@ namespace Unicorn.Loader
 	/// </summary>
 	public interface IDeserializeFailureRetryer
 	{
-		void AddItemRetry(IItemData reference, Exception exception);
-		void AddTreeRetry(IItemData reference, Exception exception);
+		void AddItemRetry(IItemData item, Exception exception);
+		void AddTreeRetry(IItemData item, Exception exception);
 		void RetryStandardValuesFailures(Action<IItemData> retryAction);
 		void RetryAll(ISourceDataStore sourceDataStore, Action<IItemData> retrySingleItemAction, Action<IItemData> retryTreeAction);
 	}

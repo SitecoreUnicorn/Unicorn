@@ -14,25 +14,25 @@ namespace Unicorn.Loader
 		private readonly List<Failure> _treeFailures = new List<Failure>();
 		private readonly object _collectionLock = new object();
 
-		public void AddItemRetry(IItemData reference, Exception exception)
+		public void AddItemRetry(IItemData item, Exception exception)
 		{
-			Assert.ArgumentNotNull(reference, "reference");
+			Assert.ArgumentNotNull(item, "reference");
 			Assert.ArgumentNotNull(exception, "exception");
 
 			lock (_collectionLock)
 			{
-				_itemFailures.Add(new Failure(reference, exception));
+				_itemFailures.Add(new Failure(item, exception));
 			}
 		}
 
-		public void AddTreeRetry(IItemData reference, Exception exception)
+		public void AddTreeRetry(IItemData item, Exception exception)
 		{
-			Assert.ArgumentNotNull(reference, "reference");
+			Assert.ArgumentNotNull(item, "reference");
 			Assert.ArgumentNotNull(exception, "exception");
 
 			lock (_collectionLock)
 			{
-				_treeFailures.Add(new Failure(reference, exception));
+				_treeFailures.Add(new Failure(item, exception));
 			}
 		}
 
@@ -53,7 +53,7 @@ namespace Unicorn.Loader
 
 			foreach (Failure failure in standardValuesFailures)
 			{
-				var item = failure.Reference;
+				var item = failure.Item;
 				if (item != null)
 				{
 					try
@@ -64,16 +64,16 @@ namespace Unicorn.Loader
 					{
 						lock (_collectionLock)
 						{
-							_itemFailures.Add(new Failure(failure.Reference, reason));
+							_itemFailures.Add(new Failure(failure.Item, reason));
 						}
 					}
 				}
 			}
 		}
 
-		public void RetryAll(ISourceDataStore sourceDataProvider, Action<IItemData> retrySingleItemAction, Action<IItemData> retryTreeAction)
+		public void RetryAll(ISourceDataStore sourceDataStore, Action<IItemData> retrySingleItemAction, Action<IItemData> retryTreeAction)
 		{
-			Assert.ArgumentNotNull(sourceDataProvider, "sourceDataProvider");
+			Assert.ArgumentNotNull(sourceDataStore, "sourceDataProvider");
 			Assert.ArgumentNotNull(retrySingleItemAction, "retrySingleItemAction");
 			Assert.ArgumentNotNull(retryTreeAction, "retryTreeAction");
 
@@ -84,7 +84,7 @@ namespace Unicorn.Loader
 
 				do
 				{
-					sourceDataProvider.ResetTemplateEngine();
+					sourceDataStore.ResetTemplateEngine();
 
 					// save existing failures collection
 					originalItemFailures = new List<Failure>(_itemFailures);
@@ -95,7 +95,7 @@ namespace Unicorn.Loader
 					foreach (var failure in originalItemFailures)
 					{
 						// retry loading a single item failure
-						var item = failure.Reference;
+						var item = failure.Item;
 						if (item != null)
 						{
 							try
@@ -104,21 +104,21 @@ namespace Unicorn.Loader
 							}
 							catch (Exception reason)
 							{
-								_itemFailures.Add(new Failure(failure.Reference, reason));
+								_itemFailures.Add(new Failure(failure.Item, reason));
 							}
 
 							continue;
 						}
 
 						// retry loading a reference failure (note the continues in the above ensure execution never arrives here for items)
-						retryTreeAction(failure.Reference);
+						retryTreeAction(failure.Item);
 					}
 				}
 				while (_itemFailures.Count > 0 && _itemFailures.Count < originalItemFailures.Count); // continue retrying until all possible failures have been fixed
 
 				do
 				{
-					sourceDataProvider.ResetTemplateEngine();
+					sourceDataStore.ResetTemplateEngine();
 
 					// save existing failures collection
 					originalTreeFailures = new List<Failure>(_treeFailures);
@@ -128,9 +128,8 @@ namespace Unicorn.Loader
 
 					foreach (var failure in originalTreeFailures)
 					{
-
 						// retry loading a tree failure
-						retryTreeAction(failure.Reference);
+						retryTreeAction(failure.Item);
 					}
 				}
 				while (_treeFailures.Count > 0 && _treeFailures.Count < originalTreeFailures.Count); // continue retrying until all possible failures have been fixed
@@ -142,12 +141,12 @@ namespace Unicorn.Loader
 
 				foreach (var failure in _itemFailures)
 				{
-					exceptions.Add(new DeserializationException(failure.Reference.GetDisplayIdentifier(), failure.Reference, failure.Reason));
+					exceptions.Add(new DeserializationException(failure.Item.GetDisplayIdentifier(), failure.Item, failure.Reason));
 				}
 
 				foreach (var failure in _treeFailures)
 				{
-					exceptions.Add(new DeserializationException(string.Format("This tree failed to load: {0} (the error may not be on this item, see the details below)", failure.Reference.GetDisplayIdentifier()), failure.Reference, failure.Reason));
+					exceptions.Add(new DeserializationException(string.Format("This tree failed to load: {0} (the error may not be on this item, see the details below)", failure.Item.GetDisplayIdentifier()), failure.Item, failure.Reason));
 				}
 
 				throw new DeserializationAggregateException("Some directories could not be loaded.") { InnerExceptions = exceptions.ToArray() };
@@ -159,12 +158,12 @@ namespace Unicorn.Loader
 		/// </summary>
 		private class Failure
 		{
-			public IItemData Reference { get; private set; }
+			public IItemData Item { get; private set; }
 			public Exception Reason { get; private set; }
 
-			public Failure(IItemData reference, Exception reason)
+			public Failure(IItemData item, Exception reason)
 			{
-				Reference = reference;
+				Item = item;
 				Reason = reason;
 			}
 		}
