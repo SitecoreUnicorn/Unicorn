@@ -78,7 +78,7 @@ namespace Unicorn.Loader
 					if (rootLoadedCallback != null) rootLoadedCallback(rootItem);
 				}
 			}
-			
+
 			retryer.RetryAll(SourceDataStore, item => DoLoadItem(item, null), item => LoadTreeInternal(item, retryer, null));
 		}
 
@@ -98,11 +98,23 @@ namespace Unicorn.Loader
 			Logger.BeginLoadingTree(rootItemData);
 
 
-			// load the root item (LoadTreeRecursive only evaluates children)
-			DoLoadItem(rootItemData, consistencyChecker);
+			// load the root item (LoadTreeInternal only evaluates children)
+			bool disableNewSerialization = UnicornDataProvider.DisableSerialization;
+			try
+			{
+				// NOTE: we disable serialization both here and in LoadTreeInternal. Why? Becuase the retryer calls LoadTreeInternal directly,
+				// and we need serialization disabled for loading the root item here.
+				UnicornDataProvider.DisableSerialization = true;
 
-			// load children of the root
-			LoadTreeInternal(rootItemData, retryer, consistencyChecker);
+				DoLoadItem(rootItemData, consistencyChecker);
+
+				// load children of the root
+				LoadTreeInternal(rootItemData, retryer, consistencyChecker);
+			}
+			finally
+			{
+				UnicornDataProvider.DisableSerialization = disableNewSerialization;
+			}
 
 			Logger.EndLoadingTree(rootItemData, _itemsProcessed, timer.ElapsedMilliseconds);
 
@@ -208,7 +220,7 @@ namespace Unicorn.Loader
 				UnicornDataProvider.DisableSerialization = disableNewSerialization;
 			}
 
-			if(errors.Count > 0) throw new AggregateException(errors);
+			if (errors.Count > 0) throw new AggregateException(errors);
 		}
 
 		/// <summary>
@@ -270,7 +282,7 @@ namespace Unicorn.Loader
 								foreach (IItemData loadedSourceChild in loadedSourceChildren)
 								{
 									// place any included source children on the orphan list for deletion, as no serialized children existed
-									if(Predicate.Includes(loadedSourceChild).IsIncluded)
+									if (Predicate.Includes(loadedSourceChild).IsIncluded)
 										orphanCandidates.Add(loadedSourceChild.Id, loadedSourceChild);
 								}
 							}
