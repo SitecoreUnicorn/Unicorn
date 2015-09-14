@@ -1,4 +1,5 @@
-﻿using Rainbow.Model;
+﻿using System;
+using Rainbow.Model;
 using Rainbow.Storage.Sc.Deserialization;
 using Sitecore.Data;
 using Sitecore.Data.Fields;
@@ -49,11 +50,6 @@ namespace Unicorn.Deserialization
 		public virtual void AddedNewVersion(Item newVersion)
 		{
 			_logger.Debug("* [A] version {0}#{1}".FormatWith(newVersion.Language.Name, newVersion.Version.Number));
-		}
-
-		public virtual void SkippedMissingTemplateField(Item item, IItemFieldValue field)
-		{
-			_logger.Warn("* [S] field {0} because it did not exist on template {1}.".FormatWith(field.FieldId, item.TemplateName));
 		}
 
 		public virtual void WroteBlobStream(Item item, IItemFieldValue field)

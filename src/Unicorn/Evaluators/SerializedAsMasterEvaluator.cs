@@ -49,7 +49,7 @@ namespace Unicorn.Evaluators
 
 			_logger.DeserializedNewItem(newItemData);
 
-			DoDeserialization(newItemData);
+			_sourceDataStore.Save(newItemData);
 
 			_logger.Evaluated(newItemData);
 
@@ -68,10 +68,9 @@ namespace Unicorn.Evaluators
 			if (ShouldUpdateExisting(sourceItem, targetItem, deferredUpdateLog))
 			{
 				_logger.SerializedUpdatedItem(targetItem);
-
 				deferredUpdateLog.ExecuteDeferredActions(_logger);
 
-				DoDeserialization(targetItem);
+				_sourceDataStore.Save(targetItem);
 
 				return targetItem;
 			}
@@ -122,11 +121,6 @@ namespace Unicorn.Evaluators
 			}
 
 			return !comparison.AreEqual;
-		}
-
-		protected virtual void DoDeserialization(IItemData targetItem)
-		{
-			_sourceDataStore.Save(targetItem);
 		}
 
 		public string FriendlyName

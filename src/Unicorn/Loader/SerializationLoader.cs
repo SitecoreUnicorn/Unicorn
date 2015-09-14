@@ -70,16 +70,27 @@ namespace Unicorn.Loader
 			Assert.ArgumentNotNull(rootItemsData, "rootItems");
 			Assert.IsTrue(rootItemsData.Length > 0, "No root items were passed!");
 
-			using (new EventDisabler())
+			// load the root item (LoadTreeInternal only evaluates children)
+			bool disableNewSerialization = UnicornDataProvider.DisableSerialization;
+			try
 			{
-				foreach (var rootItem in rootItemsData)
-				{
-					LoadTree(rootItem, retryer, consistencyChecker);
-					if (rootLoadedCallback != null) rootLoadedCallback(rootItem);
-				}
-			}
+				UnicornDataProvider.DisableSerialization = true;
 
-			retryer.RetryAll(SourceDataStore, item => DoLoadItem(item, null), item => LoadTreeInternal(item, retryer, null));
+				using (new EventDisabler())
+				{
+					foreach (var rootItem in rootItemsData)
+					{
+						LoadTree(rootItem, retryer, consistencyChecker);
+						if (rootLoadedCallback != null) rootLoadedCallback(rootItem);
+					}
+				}
+
+				retryer.RetryAll(SourceDataStore, item => DoLoadItem(item, null), item => LoadTreeInternal(item, retryer, null));
+			}
+			finally
+			{
+				UnicornDataProvider.DisableSerialization = disableNewSerialization;
+			}
 		}
 
 		/// <summary>
@@ -97,24 +108,10 @@ namespace Unicorn.Loader
 
 			Logger.BeginLoadingTree(rootItemData);
 
+			DoLoadItem(rootItemData, consistencyChecker);
 
-			// load the root item (LoadTreeInternal only evaluates children)
-			bool disableNewSerialization = UnicornDataProvider.DisableSerialization;
-			try
-			{
-				// NOTE: we disable serialization both here and in LoadTreeInternal. Why? Becuase the retryer calls LoadTreeInternal directly,
-				// and we need serialization disabled for loading the root item here.
-				UnicornDataProvider.DisableSerialization = true;
-
-				DoLoadItem(rootItemData, consistencyChecker);
-
-				// load children of the root
-				LoadTreeInternal(rootItemData, retryer, consistencyChecker);
-			}
-			finally
-			{
-				UnicornDataProvider.DisableSerialization = disableNewSerialization;
-			}
+			// load children of the root
+			LoadTreeInternal(rootItemData, retryer, consistencyChecker);
 
 			Logger.EndLoadingTree(rootItemData, _itemsProcessed, timer.ElapsedMilliseconds);
 
@@ -150,75 +147,62 @@ namespace Unicorn.Loader
 			// put the root in the queue
 			processQueue.Enqueue(root);
 
-			bool disableNewSerialization = UnicornDataProvider.DisableSerialization;
-			try
+			Thread[] pool = Enumerable.Range(0, ThreadCount).Select(i => new Thread(() =>
 			{
-				UnicornDataProvider.DisableSerialization = true;
+				Process:
+				Interlocked.Increment(ref activeThreads);
+				IItemData parentItem;
 
-				Thread[] pool = Enumerable.Range(0, ThreadCount).Select(i => new Thread(() =>
+
+				while (processQueue.TryDequeue(out parentItem) && errors.Count == 0)
 				{
-					Process:
-					Interlocked.Increment(ref activeThreads);
-					IItemData parentItem;
-
-
-					while (processQueue.TryDequeue(out parentItem) && errors.Count == 0)
+					try
 					{
-						try
+						using (new SecurityDisabler())
 						{
-							using (new SecurityDisabler())
+							// load the current level
+							LoadOneLevel(parentItem, retryer, consistencyChecker);
+
+							// check if we have child paths to process down
+							var children = TargetDataStore.GetChildren(parentItem).ToArray();
+
+							if (children.Length > 0)
 							{
-								// load the current level
-								LoadOneLevel(parentItem, retryer, consistencyChecker);
-
-								// check if we have child paths to process down
-								var children = TargetDataStore.GetChildren(parentItem).ToArray();
-
-								if (children.Length > 0)
+								// load each child path
+								foreach (var child in children)
 								{
-									// load each child path
-									foreach (var child in children)
-									{
-										processQueue.Enqueue(child);
-									}
-
-									// pull out any standard values failures for immediate retrying
-									retryer.RetryStandardValuesFailures(item => DoLoadItem(item, null));
-								} // children.length > 0
-							}
-						}
-						catch (ConsistencyException cex)
-						{
-							errors.Enqueue(cex);
-							break;
-						}
-						catch (Exception ex)
-						{
-							retryer.AddTreeRetry(root, ex);
+									processQueue.Enqueue(child);
+								}
+							} // children.length > 0
 						}
 					}
-
-					// if we get here, the queue was empty. let's make ourselves inactive.
-					Interlocked.Decrement(ref activeThreads);
-
-					// if some other thread in our pool was doing stuff, sleep for a sec to see if we can pick up their work
-					if (activeThreads > 0)
+					catch (ConsistencyException cex)
 					{
-						Thread.Sleep(10);
-						goto Process; // OH MY GOD :)
+						errors.Enqueue(cex);
+						break;
 					}
-				})).ToArray();
+					catch (Exception ex)
+					{
+						retryer.AddTreeRetry(root, ex);
+					}
+				}
 
-				// start the thread pool
-				foreach (var thread in pool) thread.Start();
+				// if we get here, the queue was empty. let's make ourselves inactive.
+				Interlocked.Decrement(ref activeThreads);
 
-				// ...and then wait for all the threads to finish
-				foreach (var thread in pool) thread.Join();
-			}
-			finally
-			{
-				UnicornDataProvider.DisableSerialization = disableNewSerialization;
-			}
+				// if some other thread in our pool was doing stuff, sleep for a sec to see if we can pick up their work
+				if (activeThreads > 0)
+				{
+					Thread.Sleep(10);
+					goto Process; // OH MY GOD :)
+				}
+			})).ToArray();
+
+			// start the thread pool
+			foreach (var thread in pool) thread.Start();
+
+			// ...and then wait for all the threads to finish
+			foreach (var thread in pool) thread.Join();
 
 			if (errors.Count > 0) throw new AggregateException(errors);
 		}
@@ -259,37 +243,29 @@ namespace Unicorn.Loader
 			{
 				try
 				{
-					if (serializedChild.IsStandardValuesItem())
+					// load a child item
+					var loadedSourceItem = DoLoadItem(serializedChild, consistencyChecker);
+					if (loadedSourceItem.ItemData != null)
 					{
-						orphanCandidates.Remove(serializedChild.Id); // avoid marking standard values items orphans
-						retryer.AddItemRetry(serializedChild, new StandardValuesException(serializedChild.Path));
-					}
-					else
-					{
-						// load a child item
-						var loadedSourceItem = DoLoadItem(serializedChild, consistencyChecker);
-						if (loadedSourceItem.ItemData != null)
+						orphanCandidates.Remove(loadedSourceItem.ItemData.Id);
+
+						// check if we have any child serialized items under this loaded child item (existing children) -
+						// if we do not, we can orphan any included children of the loaded item as well
+						var loadedItemSerializedChildren = TargetDataStore.GetChildren(serializedChild);
+
+						if (!loadedItemSerializedChildren.Any()) // no children were serialized on disk
 						{
-							orphanCandidates.Remove(loadedSourceItem.ItemData.Id);
-
-							// check if we have any child serialized items under this loaded child item (existing children) -
-							// if we do not, we can orphan any included children of the loaded item as well
-							var loadedItemSerializedChildren = TargetDataStore.GetChildren(serializedChild);
-
-							if (!loadedItemSerializedChildren.Any()) // no children were serialized on disk
+							var loadedSourceChildren = SourceDataStore.GetChildren(loadedSourceItem.ItemData);
+							foreach (IItemData loadedSourceChild in loadedSourceChildren)
 							{
-								var loadedSourceChildren = SourceDataStore.GetChildren(loadedSourceItem.ItemData);
-								foreach (IItemData loadedSourceChild in loadedSourceChildren)
-								{
-									// place any included source children on the orphan list for deletion, as no serialized children existed
-									if (Predicate.Includes(loadedSourceChild).IsIncluded)
-										orphanCandidates.Add(loadedSourceChild.Id, loadedSourceChild);
-								}
+								// place any included source children on the orphan list for deletion, as no serialized children existed
+								if (Predicate.Includes(loadedSourceChild).IsIncluded)
+									orphanCandidates.Add(loadedSourceChild.Id, loadedSourceChild);
 							}
 						}
-						else if (loadedSourceItem.Status == ItemLoadStatus.Skipped) // if the item got skipped we'll prevent it from being deleted
-							orphanCandidates.Remove(serializedChild.Id);
 					}
+					else if (loadedSourceItem.Status == ItemLoadStatus.Skipped) // if the item got skipped we'll prevent it from being deleted
+						orphanCandidates.Remove(serializedChild.Id);
 				}
 				catch (ConsistencyException)
 				{

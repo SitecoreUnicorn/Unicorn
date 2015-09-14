@@ -38,7 +38,11 @@ namespace Unicorn.Logging
 		public void Error(Exception exception)
 		{
 			var error = new ExceptionFormatter().FormatExceptionAsHtml(exception);
-			_progress.ReportStatus(error, MessageType.Error);
+
+			if(exception is DeserializationSoftFailureAggregateException)
+				_progress.ReportStatus(error, MessageType.Warning);
+			else
+				_progress.ReportStatus(error, MessageType.Error);
 		}
 	}
 }

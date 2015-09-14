@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Rainbow.Model;
 using Rainbow.Storage.Sc.Deserialization;
+using Sitecore.Data.Serialization.Exceptions;
 using Sitecore.Diagnostics;
 using Unicorn.Data;
 
@@ -14,64 +15,29 @@ namespace Unicorn.Loader
 		private readonly List<Failure> _treeFailures = new List<Failure>();
 		private readonly object _collectionLock = new object();
 
-		public void AddItemRetry(IItemData item, Exception exception)
+		public virtual void AddItemRetry(IItemData item, Exception exception)
 		{
 			Assert.ArgumentNotNull(item, "reference");
 			Assert.ArgumentNotNull(exception, "exception");
 
 			lock (_collectionLock)
 			{
-				_itemFailures.Add(new Failure(item, exception));
+				_itemFailures.Add(CreateFailure(item, exception));
 			}
 		}
 
-		public void AddTreeRetry(IItemData item, Exception exception)
+		public virtual void AddTreeRetry(IItemData item, Exception exception)
 		{
 			Assert.ArgumentNotNull(item, "reference");
 			Assert.ArgumentNotNull(exception, "exception");
 
 			lock (_collectionLock)
 			{
-				_treeFailures.Add(new Failure(item, exception));
+				_treeFailures.Add(CreateFailure(item, exception));
 			}
 		}
 
-		public void RetryStandardValuesFailures(Action<IItemData> retryAction)
-		{
-			Assert.ArgumentNotNull(retryAction, "retryAction");
-
-			Failure[] standardValuesFailures;
-
-			lock (_collectionLock)
-			{
-				// find all failures caused by a StandardValuesException
-				standardValuesFailures = _itemFailures.Where(x => x.Reason is StandardValuesException).ToArray();
-
-				// remove those failures from the main list - we're about to retry them again
-				_itemFailures.RemoveAll(x => x.Reason is StandardValuesException);
-			}
-
-			foreach (Failure failure in standardValuesFailures)
-			{
-				var item = failure.Item;
-				if (item != null)
-				{
-					try
-					{
-						retryAction(item);
-					}
-					catch (Exception reason)
-					{
-						lock (_collectionLock)
-						{
-							_itemFailures.Add(new Failure(failure.Item, reason));
-						}
-					}
-				}
-			}
-		}
-
-		public void RetryAll(ISourceDataStore sourceDataStore, Action<IItemData> retrySingleItemAction, Action<IItemData> retryTreeAction)
+		public virtual void RetryAll(ISourceDataStore sourceDataStore, Action<IItemData> retrySingleItemAction, Action<IItemData> retryTreeAction)
 		{
 			Assert.ArgumentNotNull(sourceDataStore, "sourceDataProvider");
 			Assert.ArgumentNotNull(retrySingleItemAction, "retrySingleItemAction");
@@ -104,7 +70,7 @@ namespace Unicorn.Loader
 							}
 							catch (Exception reason)
 							{
-								_itemFailures.Add(new Failure(failure.Item, reason));
+								_itemFailures.Add(CreateFailure(failure.Item, reason));
 							}
 
 							continue;
@@ -137,6 +103,14 @@ namespace Unicorn.Loader
 
 			if (_itemFailures.Count > 0 || _treeFailures.Count > 0)
 			{
+				if (_itemFailures.All(fail => !fail.IsHardFailure) && _treeFailures.All(fail => !fail.IsHardFailure))
+				{
+					throw new DeserializationSoftFailureAggregateException("Non-fatal warnings occurred during loading.")
+					{
+						InnerExceptions = _itemFailures.Select(fail => fail.Reason).Concat(_treeFailures.Select(fail => fail.Reason)).ToArray()
+					};
+				}
+
 				var exceptions = new List<DeserializationException>();
 
 				foreach (var failure in _itemFailures)
@@ -146,25 +120,35 @@ namespace Unicorn.Loader
 
 				foreach (var failure in _treeFailures)
 				{
-					exceptions.Add(new DeserializationException(string.Format("This tree failed to load: {0} (the error may not be on this item, see the details below)", failure.Item.GetDisplayIdentifier()), failure.Item, failure.Reason));
+					exceptions.Add(new DeserializationException(string.Format("Tree failed to load: {0} (the error may be on a child of this item, see the details below)", failure.Item.GetDisplayIdentifier()), failure.Item, failure.Reason));
 				}
 
 				throw new DeserializationAggregateException("Some directories could not be loaded.") { InnerExceptions = exceptions.ToArray() };
 			}
 		}
 
+		protected virtual Failure CreateFailure(IItemData item, Exception reason)
+		{
+			return new Failure(item, reason);
+		}
+
 		/// <summary>
 		/// Represents a single failure in a recursive serialization load operation
 		/// </summary>
-		private class Failure
+		protected class Failure
 		{
-			public IItemData Item { get; private set; }
-			public Exception Reason { get; private set; }
-
 			public Failure(IItemData item, Exception reason)
 			{
 				Item = item;
 				Reason = reason;
+			}
+
+			public IItemData Item { get; private set; }
+			public Exception Reason { get; private set; }
+
+			public virtual bool IsHardFailure
+			{
+				get { return !(Reason is TemplateMissingFieldException); }
 			}
 		}
 	}
