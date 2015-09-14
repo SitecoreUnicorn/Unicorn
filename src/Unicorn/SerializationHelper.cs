@@ -34,11 +34,11 @@ namespace Unicorn
 		}
 
 		/// <returns>True if the tree was dumped, false if the root item was not included</returns>
-		public virtual bool DumpTree(IItemData item)
+		public virtual bool DumpTree(IItemData item, IConfiguration configuration = null)
 		{
 			using (new TransparentSyncDisabler())
 			{
-				var configuration = GetConfigurationForItem(item);
+				if(configuration == null) configuration = GetConfigurationForItem(item);
 
 				if (configuration == null) return false;
 
@@ -65,11 +65,11 @@ namespace Unicorn
 		}
 
 		/// <returns>True if the item was dumped, false if it was not included</returns>
-		public virtual bool DumpItem(IItemData item)
+		public virtual bool DumpItem(IItemData item, IConfiguration configuration = null)
 		{
 			using (new TransparentSyncDisabler())
 			{
-				var configuration = GetConfigurationForItem(item);
+				if(configuration == null) configuration = GetConfigurationForItem(item);
 
 				if (configuration == null) return false;
 
