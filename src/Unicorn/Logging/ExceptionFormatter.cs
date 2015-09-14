@@ -74,7 +74,7 @@ namespace Unicorn.Logging
 				.Select(group => group.First())
 				.ToArray();
 
-			sb.AppendFormat("ERROR: {0} error{1} occurred during deserialization. Note that due to error retrying, some of these items may have appeared to 'load' earlier, but they have not.", dedupedExceptions.Length, dedupedExceptions.Length == 1 ? string.Empty : "s");
+			sb.AppendFormat("{0} error{1} occurred during deserialization. Earlier log messages for items below should be ignored; an error occurred that was retried and failed to correct.", dedupedExceptions.Length, dedupedExceptions.Length == 1 ? string.Empty : "s");
 
 			foreach (var inner in dedupedExceptions)
 			{
