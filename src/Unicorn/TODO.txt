@@ -1,4 +1,6 @@
 ﻿- General code review
+- Consider defaulting the data store path to auto unique per configuration?
+- Do something with the remoting project
 - Tests?
 - 8.0U5: publishing to a database with a configuration that has transparent sync enabled appears to hose the database by somehow corrupting the templates
 	- Data seems corrupt in the db, turning off transparent does not fix things
