@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Moq;
-using NUnit.Framework;
+using Xunit;
 using Rainbow.Diff;
 using Rainbow.Filtering;
 using Rainbow.Model;
@@ -16,7 +16,7 @@ namespace Unicorn.Tests.Evaluator
 	[TestFixture]
 	public class SerializedAsMasterEvaluatorTests
 	{
-		[Test]
+		[Fact]
 		public void EvaluateOrphans_ThrowsArgumentNullException_WhenItemsAreNull()
 		{
 			var evaluator = CreateTestEvaluator();
@@ -24,7 +24,7 @@ namespace Unicorn.Tests.Evaluator
 			Assert.Throws<ArgumentNullException>(() => evaluator.EvaluateOrphans(null));
 		}
 
-		[Test]
+		[Fact]
 		public void EvaluateOrphans_RecyclesSingleOrphanItem()
 		{
 			var item = new Mock<IItemData>();
@@ -37,7 +37,7 @@ namespace Unicorn.Tests.Evaluator
 			item.Verify(x => x.Recycle(), Times.Exactly(1));
 		}
 
-		[Test]
+		[Fact]
 		public void EvaluateOrphans_RecyclesMultipleOrphanItems()
 		{
 			var items = Enumerable.Range(1, 3).Select(x =>
@@ -56,7 +56,7 @@ namespace Unicorn.Tests.Evaluator
 				item.Verify(x => x.Recycle(), Times.Exactly(1));
 		}
 
-		[Test]
+		[Fact]
 		public void EvaluateNewSerializedItem_ThrowsArgumentNullException_WhenNewItemIsNull()
 		{
 			var evaluator = CreateTestEvaluator();
@@ -64,7 +64,7 @@ namespace Unicorn.Tests.Evaluator
 			Assert.Throws<ArgumentNullException>(() => evaluator.EvaluateNewSerializedItem(null));
 		}
 
-		[Test]
+		[Fact]
 		public void EvaluateNewSerializedItem_LogsCreatedItem()
 		{
 			var logger = new Mock<ISerializedAsMasterEvaluatorLogger>();
@@ -77,7 +77,7 @@ namespace Unicorn.Tests.Evaluator
 			logger.Verify(x => x.DeserializedNewItem(newItem));
 		}
 
-		[Test]
+		[Fact]
 		public void EvaluateNewSerializedItem_DeserializesItem()
 		{
 			var evaluator = CreateTestEvaluator();
@@ -89,7 +89,7 @@ namespace Unicorn.Tests.Evaluator
 			newItem.Verify(x => x.Deserialize(false));
 		}
 
-		[Test]
+		[Fact]
 		public void EvaluateUpdate_ThrowsArgumentNullException_WhenSerializedItemIsNull()
 		{
 			var evaluator = CreateTestEvaluator();
@@ -97,7 +97,7 @@ namespace Unicorn.Tests.Evaluator
 			Assert.Throws<ArgumentNullException>(() => evaluator.EvaluateUpdate(null, new Mock<ISourceItem>().Object));
 		}
 
-		[Test]
+		[Fact]
 		public void EvaluateUpdate_ThrowsArgumentNullException_WhenExistingItemIsNull()
 		{
 			var evaluator = CreateTestEvaluator();
@@ -105,19 +105,19 @@ namespace Unicorn.Tests.Evaluator
 			Assert.Throws<ArgumentNullException>(() => evaluator.EvaluateUpdate(new Mock<ISerializedItem>().Object, null));
 		}
 
-		[Test]
+		[Fact]
 		public void EvaluateUpdate_Deserializes_WhenItemUpdatedDateIsNewer()
 		{
-			Assert.IsTrue(EvaluateUpdate_DateComparisonTest(new DateTime(2013, 1, 1), new DateTime(2012, 1, 1)));
+			Assert.True(EvaluateUpdate_DateComparisonTest(new DateTime(2013, 1, 1), new DateTime(2012, 1, 1)));
 		}
 
-		[Test]
+		[Fact]
 		public void EvaluateUpdate_Deserializes_WhenItemUpdatedDateIsOlder()
 		{
-			Assert.IsTrue(EvaluateUpdate_DateComparisonTest(new DateTime(2012, 1, 1), new DateTime(2013, 1, 1)));
+			Assert.True(EvaluateUpdate_DateComparisonTest(new DateTime(2012, 1, 1), new DateTime(2013, 1, 1)));
 		}
 
-		[Test]
+		[Fact]
 		public void EvaluateUpdate_Deserializes_WhenRevisionsAreUnequal()
 		{
 			var evaluator = CreateTestEvaluator();
@@ -140,7 +140,7 @@ namespace Unicorn.Tests.Evaluator
 			serialized.Verify(x => x.Deserialize(false));
 		}
 
-		[Test]
+		[Fact]
 		public void EvaluateUpdate_Deserializes_WhenNewSerializedVersionExists()
 		{
 			var evaluator = CreateTestEvaluator();
@@ -164,7 +164,7 @@ namespace Unicorn.Tests.Evaluator
 			serialized.Verify(x => x.Deserialize(false));
 		}
 
-		[Test]
+		[Fact]
 		public void EvaluateUpdate_Deserializes_WhenNewSourceVersionExists()
 		{
 			var evaluator = CreateTestEvaluator();
@@ -188,7 +188,7 @@ namespace Unicorn.Tests.Evaluator
 			serialized.Verify(x => x.Deserialize(false));
 		}
 
-		[Test]
+		[Fact]
 		public void EvaluateUpdate_Deserializes_WhenNamesAreUnequal()
 		{
 			var evaluator = CreateTestEvaluator();
@@ -210,7 +210,7 @@ namespace Unicorn.Tests.Evaluator
 			serialized.Verify(x => x.Deserialize(false));
 		}
 
-		[Test]
+		[Fact]
 		public void EvaluateUpdate_Deserializes_WhenTemplatesAreUnequal()
 		{
 			var evaluator = CreateTestEvaluator();
@@ -232,7 +232,7 @@ namespace Unicorn.Tests.Evaluator
 			serialized.Verify(x => x.Deserialize(false));
 		}
 
-		[Test]
+		[Fact]
 		public void EvaluateUpdate_DoesNotDeserialize_WhenDateRevisionNameMatch()
 		{
 			var evaluator = CreateTestEvaluator();
@@ -251,7 +251,7 @@ namespace Unicorn.Tests.Evaluator
 
 			var result = evaluator.EvaluateUpdate(serialized.Object, item.Object);
 
-			Assert.IsNull(result);
+			Assert.Null(result);
 			serialized.Verify(x => x.Deserialize(It.IsAny<bool>()), Times.Never);
 		}
 

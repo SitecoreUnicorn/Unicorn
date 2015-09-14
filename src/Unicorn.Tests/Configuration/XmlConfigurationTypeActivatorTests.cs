@@ -1,12 +1,12 @@
 ﻿using System.Collections.Generic;
-using NUnit.Framework;
+using Xunit;
 using Unicorn.Configuration;
 
 namespace Unicorn.Tests.Configuration
 {
 	public class XmlConfigurationTypeActivatorTests
 	{
-		[Test]
+		[Fact]
 		public void Activator_ResolvesType_WithDependency()
 		{
 			var micro = new MicroConfiguration("Test");
@@ -15,12 +15,12 @@ namespace Unicorn.Tests.Configuration
 
 			var instance = (IDependency)micro.Activate(typeof(TestDependencyParameter), new KeyValuePair<string, object>[] { });
 
-			Assert.IsNotNull(instance);
+			Assert.NotNull(instance);
 
-			Assert.IsNotNull(instance.TestInstance);
+			Assert.NotNull(instance.TestInstance);
 		}
 
-		[Test]
+		[Fact]
 		public void Activator_ResolvesType_WithDependency_AndParameter()
 		{
 			var micro = new MicroConfiguration("Test");
@@ -29,9 +29,9 @@ namespace Unicorn.Tests.Configuration
 
 			var instance = (IDependency)micro.Activate(typeof(TestDependencyParameterStatic), new[] { new KeyValuePair<string, object>("value", "hello") });
 
-			Assert.IsNotNull(instance);
+			Assert.NotNull(instance);
 
-			Assert.AreEqual("hello", ((TestDependencyParameterStatic)instance).Value);
+			Assert.Equal("hello", ((TestDependencyParameterStatic)instance).Value);
 		}
 	}
 

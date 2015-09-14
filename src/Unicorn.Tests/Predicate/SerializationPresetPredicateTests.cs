@@ -3,16 +3,13 @@ using System.IO;
 using System.Reflection;
 using System.Xml;
 using NSubstitute;
-using NUnit.Framework;
-using Rainbow.Model;
+using Xunit;
 using Rainbow.Storage;
 using Rainbow.Tests;
-using Sitecore.Data;
 using Unicorn.Predicates;
 
 namespace Unicorn.Tests.Predicate
 {
-	[TestFixture]
 	public class SitecorePresetPredicateTests
 	{
 		private const string ExcludedPath = "/sitecore/layout/Simulators/Android Phone";
@@ -20,7 +17,7 @@ namespace Unicorn.Tests.Predicate
 		private const string ExcludedDatabase = "fake";
 		private const string IncludedDatabase = "master";
 
-		[Test]
+		[Fact]
 		public void ctor_ThrowsArgumentNullException_WhenNodeIsNull()
 		{
 			Assert.Throws<ArgumentNullException>(() => new SerializationPresetPredicate((XmlNode)null));
@@ -30,7 +27,7 @@ namespace Unicorn.Tests.Predicate
 		// PATH INCLUSION/EXCLUSION
 		//
 
-		[Test]
+		[Fact]
 		public void Includes_ExcludesSerializedItemByPath()
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
@@ -38,10 +35,10 @@ namespace Unicorn.Tests.Predicate
 			var item = new FakeItem(path:ExcludedPath);
 			var includes = predicate.Includes(item);
 
-			Assert.IsFalse(includes.IsIncluded, "Exclude serialized item by path failed.");
+			Assert.False(includes.IsIncluded, "Exclude serialized item by path failed.");
 		}
 
-		[Test]
+		[Fact]
 		public void Includes_ExcludesSerializedItemByPath_WhenCaseDoesNotMatch()
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
@@ -49,10 +46,10 @@ namespace Unicorn.Tests.Predicate
 			var item = new FakeItem(path: ExcludedPath.ToUpperInvariant());
 			var includes = predicate.Includes(item);
 
-			Assert.IsFalse(includes.IsIncluded, "Exclude serialized item by path failed.");
+			Assert.False(includes.IsIncluded, "Exclude serialized item by path failed.");
 		}
 
-		[Test]
+		[Fact]
 		public void Includes_IncludesSerializedItemByPath()
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
@@ -60,10 +57,10 @@ namespace Unicorn.Tests.Predicate
 			var item = new FakeItem(path: IncludedPath);
 			var includes = predicate.Includes(item);
 
-			Assert.IsTrue(includes.IsIncluded, "Include serialized item by path failed.");
+			Assert.True(includes.IsIncluded, "Include serialized item by path failed.");
 		}
 
-		[Test]
+		[Fact]
 		public void Includes_IncludesSerializedItemByPath_WhenCaseDoesNotMatch()
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
@@ -71,14 +68,14 @@ namespace Unicorn.Tests.Predicate
 			var item = new FakeItem(path: IncludedPath.ToUpperInvariant());
 			var includes = predicate.Includes(item);
 
-			Assert.IsTrue(includes.IsIncluded, "Include serialized item by path failed.");
+			Assert.True(includes.IsIncluded, "Include serialized item by path failed.");
 		}
 
 		//
 		// DATABASE INCLUSION/EXCLUSION
 		//
 
-		[Test]
+		[Fact]
 		public void Includes_ExcludesSerializedItemByDatabase()
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
@@ -86,10 +83,10 @@ namespace Unicorn.Tests.Predicate
 			var item = new FakeItem(path: IncludedPath, databaseName: ExcludedDatabase);
 			var includes = predicate.Includes(item);
 
-			Assert.IsFalse(includes.IsIncluded, "Exclude serialized item by database failed.");
+			Assert.False(includes.IsIncluded, "Exclude serialized item by database failed.");
 		}
 
-		[Test]
+		[Fact]
 		public void Includes_IncludesSerializedItemByDatabase()
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
@@ -98,10 +95,10 @@ namespace Unicorn.Tests.Predicate
 			var item = new FakeItem(path:IncludedPath, databaseName: IncludedDatabase);
 			var includes = predicate.Includes(item);
 
-			Assert.IsTrue(includes.IsIncluded, "Include serialized item by database failed.");
+			Assert.True(includes.IsIncluded, "Include serialized item by database failed.");
 		}
 
-		[Test]
+		[Fact]
 		public void GetRootItems_ReturnsExpectedRootValues()
 		{
 			var sourceItem1 = new FakeItem();
@@ -115,11 +112,11 @@ namespace Unicorn.Tests.Predicate
 
 			var roots = predicate.GetRootPaths();
 
-			Assert.IsTrue(roots.Length == 2, "Expected two root paths from test config");
-			Assert.AreEqual(roots[0].DatabaseName, "master", "Expected first root to be in master db");
-			Assert.AreEqual(roots[0].Path, "/sitecore/layout/Simulators", "Expected first root to be /sitecore/layout/Simulators");
-			Assert.AreEqual(roots[1].DatabaseName, "core", "Expected second root to be in core db");
-			Assert.AreEqual(roots[1].Path, "/sitecore/content", "Expected second root to be /sitecore/content");
+			Assert.True(roots.Length == 2, "Expected two root paths from test config");
+			Assert.Equal(roots[0].DatabaseName, "master");
+			Assert.Equal(roots[0].Path, "/sitecore/layout/Simulators");
+			Assert.Equal(roots[1].DatabaseName, "core");
+			Assert.Equal(roots[1].Path, "/sitecore/content");
 		}
 
 		private SerializationPresetPredicate CreateTestPredicate(XmlNode configNode)

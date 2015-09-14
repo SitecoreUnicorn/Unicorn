@@ -1,12 +1,12 @@
 ﻿using System;
-using NUnit.Framework;
+using Xunit;
 using Unicorn.Configuration;
 
 namespace Unicorn.Tests.Configuration
 {
 	public class MicroConfigurationTests
 	{
-		[Test]
+		[Fact]
 		public void Micro_ResolvesType()
 		{
 			var micro = new MicroConfiguration("Test");
@@ -15,10 +15,10 @@ namespace Unicorn.Tests.Configuration
 
 			var instance = micro.Resolve<ITest>();
 
-			Assert.IsNotNull(instance);
+			Assert.NotNull(instance);
 		}
 
-		[Test]
+		[Fact]
 		public void Micro_ResolvesType_AsInstance()
 		{
 			var micro = new MicroConfiguration("Test");
@@ -27,14 +27,14 @@ namespace Unicorn.Tests.Configuration
 			
 			var instance = micro.Resolve<IInstance>();
 
-			Assert.IsNotNull(instance);
+			Assert.NotNull(instance);
 
 			var instance2 = micro.Resolve<IInstance>();
 
-			Assert.AreNotEqual(instance.InstanceGuid, instance2.InstanceGuid);
+			Assert.NotEqual(instance.InstanceGuid, instance2.InstanceGuid);
 		}
 
-		[Test]
+		[Fact]
 		public void Micro_ResolvesType_AsSingleton()
 		{
 			var micro = new MicroConfiguration("Test");
@@ -43,11 +43,11 @@ namespace Unicorn.Tests.Configuration
 			
 			var instance = micro.Resolve<IInstance>();
 
-			Assert.IsNotNull(instance);
+			Assert.NotNull(instance);
 
 			var instance2 = micro.Resolve<IInstance>();
 
-			Assert.AreEqual(instance.InstanceGuid, instance2.InstanceGuid);
+			Assert.Equal(instance.InstanceGuid, instance2.InstanceGuid);
 		}
 
 		public interface IInstance
