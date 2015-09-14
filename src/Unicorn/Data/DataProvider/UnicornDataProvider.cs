@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
 using Rainbow.Filtering;
 using Rainbow.Model;
 using Sitecore;
@@ -111,7 +110,7 @@ namespace Unicorn.Data.DataProvider
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
 			Assert.ArgumentNotNull(changes, "changes");
 
-			var sourceItem = GetSourceFromId(changes.Item.ID, false);
+			var sourceItem = GetSourceFromId(changes.Item.ID);
 
 			if (sourceItem == null) return;
 
@@ -461,6 +460,8 @@ namespace Unicorn.Data.DataProvider
 
 			foreach (var field in blobFields)
 			{
+				// ReSharper disable once AssignNullToNotNullAttribute
+				// ReSharper disable once PossibleInvalidOperationException
 				_blobIdLookup[field.BlobId.Value] = Tuple.Create(itemData.Path, itemData.Id);
 			}
 		}

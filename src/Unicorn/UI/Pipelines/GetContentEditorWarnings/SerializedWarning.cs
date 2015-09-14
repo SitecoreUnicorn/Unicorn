@@ -1,5 +1,4 @@
 using System.Linq;
-using Rainbow.Model;
 using Rainbow.Storage.Sc;
 using Sitecore.Configuration;
 using Sitecore.Data.Items;

@@ -253,7 +253,7 @@ namespace Unicorn.Data.DataProvider
 			foreach (var provider in UnicornDataProviders)
 			{
 				var providerResult = provider.BlobStreamExists(blobId, context);
-				if (providerResult) return providerResult;
+				if (providerResult) return true;
 			}
 
 			return base.BlobStreamExists(blobId, context);

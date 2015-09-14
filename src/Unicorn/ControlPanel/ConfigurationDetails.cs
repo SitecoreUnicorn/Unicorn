@@ -1,6 +1,5 @@
 ﻿using System.Web.UI;
 using Rainbow;
-using Rainbow.Formatting;
 using Unicorn.Data;
 using Unicorn.Evaluators;
 using Unicorn.Predicates;
@@ -15,16 +14,14 @@ namespace Unicorn.ControlPanel
 		private readonly IPredicate _predicate;
 		private readonly ITargetDataStore _serializationStore;
 		private readonly ISourceDataStore _sourceDataStore;
-		private readonly ISerializationFormatter _formatter;
 		private readonly IEvaluator _evaluator;
 
-		public ConfigurationDetails(IPredicate predicate, ITargetDataStore serializationStore, ISourceDataStore sourceDataStore, IEvaluator evaluator, ISerializationFormatter formatter)
+		public ConfigurationDetails(IPredicate predicate, ITargetDataStore serializationStore, ISourceDataStore sourceDataStore, IEvaluator evaluator)
 		{
 			_predicate = predicate;
 			_serializationStore = serializationStore;
 			_sourceDataStore = sourceDataStore;
 			_evaluator = evaluator;
-			_formatter = formatter;
 		}
 
 		public string ConfigurationName { get; set; }
@@ -65,8 +62,6 @@ namespace Unicorn.ControlPanel
 
 		private void RenderType(string categorization, string categoryDescription, object type, HtmlTextWriter writer)
 		{
-			var documentable = type as IDocumentable;
-
 			writer.RenderBeginTag("li");
 				writer.RenderBeginTag("h5");
 					writer.Write(categorization);

@@ -1,5 +1,4 @@
-﻿using System;
-using Rainbow.Model;
+﻿using Rainbow.Model;
 using Rainbow.Storage.Sc.Deserialization;
 using Sitecore.Data;
 using Sitecore.Data.Fields;
