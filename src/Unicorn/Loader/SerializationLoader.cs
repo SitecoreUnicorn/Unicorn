@@ -37,7 +37,7 @@ namespace Unicorn.Loader
 			set { _threads = value; }
 		}
 
-		public SerializationLoader(ITargetDataStore targetDataStore, ISourceDataStore sourceDataStore, IPredicate predicate, IEvaluator evaluator, ISerializationLoaderLogger logger, PredicateRootPathResolver predicateRootPathResolver)
+		public SerializationLoader(ISourceDataStore sourceDataStore, ITargetDataStore targetDataStore, IPredicate predicate, IEvaluator evaluator, ISerializationLoaderLogger logger, PredicateRootPathResolver predicateRootPathResolver)
 		{
 			Assert.ArgumentNotNull(targetDataStore, "serializationProvider");
 			Assert.ArgumentNotNull(sourceDataStore, "sourceDataStore");
@@ -138,79 +138,75 @@ namespace Unicorn.Loader
 			// put the root in the queue
 			processQueue.Enqueue(root);
 
-			Thread[] pool = Enumerable.Range(0, ThreadCount).Select(i => new Thread(() =>
+			bool disableNewSerialization = UnicornDataProvider.DisableSerialization;
+			try
 			{
-				Process:
-				Interlocked.Increment(ref activeThreads);
-				IItemData parentItem;
-				
+				UnicornDataProvider.DisableSerialization = true;
 
-				while (processQueue.TryDequeue(out parentItem) && errors.Count == 0)
+				Thread[] pool = Enumerable.Range(0, ThreadCount).Select(i => new Thread(() =>
 				{
-					try
+					Process:
+					Interlocked.Increment(ref activeThreads);
+					IItemData parentItem;
+
+
+					while (processQueue.TryDequeue(out parentItem) && errors.Count == 0)
 					{
-						using (new SecurityDisabler())
+						try
 						{
-							// load the current level
-							LoadOneLevel(parentItem, retryer, consistencyChecker);
-
-							// check if we have child paths to process down
-							var children = TargetDataStore.GetChildren(parentItem).ToArray();
-
-							if (children.Length > 0)
+							using (new SecurityDisabler())
 							{
-								// make sure if a "templates" item exists in the current set, it goes first
-								if (children.Length > 1)
-								{
-									int templateIndex = Array.FindIndex(children,
-										x => x.Path.EndsWith("templates", StringComparison.OrdinalIgnoreCase));
+								// load the current level
+								LoadOneLevel(parentItem, retryer, consistencyChecker);
 
-									if (templateIndex > 0)
+								// check if we have child paths to process down
+								var children = TargetDataStore.GetChildren(parentItem).ToArray();
+
+								if (children.Length > 0)
+								{
+									// load each child path
+									foreach (var child in children)
 									{
-										var zero = children[0];
-										children[0] = children[templateIndex];
-										children[templateIndex] = zero;
+										processQueue.Enqueue(child);
 									}
-								}
 
-								// load each child path
-								foreach (var child in children)
-								{
-									processQueue.Enqueue(child);
-								}
-
-								// pull out any standard values failures for immediate retrying
-								retryer.RetryStandardValuesFailures(item => DoLoadItem(item, null));
-							} // children.length > 0
+									// pull out any standard values failures for immediate retrying
+									retryer.RetryStandardValuesFailures(item => DoLoadItem(item, null));
+								} // children.length > 0
+							}
+						}
+						catch (ConsistencyException cex)
+						{
+							errors.Enqueue(cex);
+							break;
+						}
+						catch (Exception ex)
+						{
+							retryer.AddTreeRetry(root, ex);
 						}
 					}
-					catch (ConsistencyException cex)
+
+					// if we get here, the queue was empty. let's make ourselves inactive.
+					Interlocked.Decrement(ref activeThreads);
+
+					// if some other thread in our pool was doing stuff, sleep for a sec to see if we can pick up their work
+					if (activeThreads > 0)
 					{
-						errors.Enqueue(cex);
-						break;
+						Thread.Sleep(10);
+						goto Process; // OH MY GOD :)
 					}
-					catch (Exception ex)
-					{
-						retryer.AddTreeRetry(root, ex);
-					}
-				}
+				})).ToArray();
 
-				// if we get here, the queue was empty. let's make ourselves inactive.
-				Interlocked.Decrement(ref activeThreads);
+				// start the thread pool
+				foreach (var thread in pool) thread.Start();
 
-				// if some other thread in our pool was doing stuff, sleep for a sec to see if we can pick up their work
-				if (activeThreads > 0)
-				{
-					Thread.Sleep(10);
-					goto Process; // OH MY GOD :)
-				}
-			})).ToArray();
-
-			// start the thread pool
-			foreach (var thread in pool) thread.Start();
-
-			// ...and then wait for all the threads to finish
-			foreach (var thread in pool) thread.Join();
+				// ...and then wait for all the threads to finish
+				foreach (var thread in pool) thread.Join();
+			}
+			finally
+			{
+				UnicornDataProvider.DisableSerialization = disableNewSerialization;
+			}
 
 			if(errors.Count > 0) throw new AggregateException(errors);
 		}
@@ -300,16 +296,7 @@ namespace Unicorn.Loader
 			// if we're forcing an update (ie deleting stuff not on disk) we send the items that we found that weren't on disk off to get evaluated as orphans
 			if (orphanCandidates.Count > 0)
 			{
-				bool disableNewSerialization = UnicornDataProvider.DisableSerialization;
-				try
-				{
-					UnicornDataProvider.DisableSerialization = true;
-					Evaluator.EvaluateOrphans(orphanCandidates.Values.ToArray());
-				}
-				finally
-				{
-					UnicornDataProvider.DisableSerialization = disableNewSerialization;
-				}
+				Evaluator.EvaluateOrphans(orphanCandidates.Values.ToArray());
 			}
 		}
 
@@ -326,37 +313,27 @@ namespace Unicorn.Loader
 				consistencyChecker.AddProcessedItem(serializedItemData);
 			}
 
-			bool disableNewSerialization = UnicornDataProvider.DisableSerialization;
-			try
+			_itemsProcessed++;
+
+			var included = Predicate.Includes(serializedItemData);
+
+			if (!included.IsIncluded)
 			{
-				UnicornDataProvider.DisableSerialization = true;
-
-				_itemsProcessed++;
-
-				var included = Predicate.Includes(serializedItemData);
-
-				if (!included.IsIncluded)
-				{
-					Logger.SkippedItemPresentInSerializationProvider(serializedItemData, Predicate.FriendlyName, TargetDataStore.FriendlyName, included.Justification ?? string.Empty);
-					return new ItemLoadResult(ItemLoadStatus.Skipped);
-				}
-
-				// detect if we should run an update for the item or if it's already up to date
-				var existingItem = SourceDataStore.GetByPathAndId(serializedItemData.Path, serializedItemData.Id, serializedItemData.DatabaseName);
-
-				// note that the evaluator is responsible for actual action being taken here
-				// as well as logging what it does
-				if (existingItem == null)
-					existingItem = Evaluator.EvaluateNewSerializedItem(serializedItemData);
-				else
-					Evaluator.EvaluateUpdate(existingItem, serializedItemData);
-
-				return new ItemLoadResult(ItemLoadStatus.Success, existingItem);
+				Logger.SkippedItemPresentInSerializationProvider(serializedItemData, Predicate.FriendlyName, TargetDataStore.FriendlyName, included.Justification ?? string.Empty);
+				return new ItemLoadResult(ItemLoadStatus.Skipped);
 			}
-			finally
-			{
-				UnicornDataProvider.DisableSerialization = disableNewSerialization;
-			}
+
+			// detect if we should run an update for the item or if it's already up to date
+			var existingItem = SourceDataStore.GetByPathAndId(serializedItemData.Path, serializedItemData.Id, serializedItemData.DatabaseName);
+
+			// note that the evaluator is responsible for actual action being taken here
+			// as well as logging what it does
+			if (existingItem == null)
+				existingItem = Evaluator.EvaluateNewSerializedItem(serializedItemData);
+			else
+				Evaluator.EvaluateUpdate(existingItem, serializedItemData);
+
+			return new ItemLoadResult(ItemLoadStatus.Success, existingItem);
 		}
 
 		protected class ItemLoadResult
