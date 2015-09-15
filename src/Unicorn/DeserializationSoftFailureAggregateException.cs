@@ -4,6 +4,9 @@ using System.Runtime.Serialization;
 
 namespace Unicorn
 {
+	/// <summary>
+	/// Thrown when a deserialization/load operation results in more than one non-fatal warning.
+	/// </summary>
 	[Serializable]
 	public class DeserializationSoftFailureAggregateException : Exception
 	{

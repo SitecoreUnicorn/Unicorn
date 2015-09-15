@@ -6,6 +6,9 @@ using Unicorn.Logging.Formatting;
 
 namespace Unicorn.Logging
 {
+	/// <summary>
+	/// Formats exceptions all pretty-like so we can log them and show them in the HTML console intelligibly
+	/// </summary>
 	public class ExceptionFormatter
 	{
 		protected List<IExceptionFormatter> Formatters = new List<IExceptionFormatter>();

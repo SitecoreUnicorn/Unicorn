@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using Rainbow.Model;
-using Rainbow.Predicates;
 using Sitecore.Configuration;
 using Sitecore.Pipelines;
 using Sitecore.SecurityModel;
@@ -18,6 +17,9 @@ using Unicorn.Predicates;
 
 namespace Unicorn
 {
+	/// <summary>
+	/// Utility class designed to make it a bit simpler to call primary serialization operations programmatically
+	/// </summary>
 	public class SerializationHelper
 	{
 		private int _threads = Settings.GetIntSetting("Unicorn.MaximumConcurrency", 16);

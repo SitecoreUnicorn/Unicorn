@@ -3,6 +3,9 @@ using System.Runtime.Serialization;
 
 namespace Unicorn.Loader
 {
+	/// <summary>
+	/// Thrown when a load detects an inconsistency in the serialization store
+	/// </summary>
 	[Serializable]
 	public class ConsistencyException : Exception
 	{

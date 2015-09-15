@@ -4,6 +4,9 @@ using Sitecore.Web.UI.Sheer;
 
 namespace Unicorn.UI.Pipelines.SaveUi
 {
+	/// <summary>
+	/// Base class for a SaveUI processor that pops up a confirmation dialog that can abort saving
+	/// </summary>
 	public abstract class SaveUiConfirmProcessor
 	{
 		public void Process(SaveArgs args)

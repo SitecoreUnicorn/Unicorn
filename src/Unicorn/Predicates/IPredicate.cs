@@ -1,6 +1,5 @@
 ﻿using Rainbow;
 using Rainbow.Model;
-using Rainbow.Predicates;
 using Rainbow.Storage;
 
 namespace Unicorn.Predicates

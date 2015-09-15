@@ -4,10 +4,14 @@ using Unicorn.Data;
 
 namespace Unicorn.Loader
 {
+	/// <summary>
+	/// Watches for a loader operation to attempt to load the same ID more than once
+	/// </summary>
 	public class DuplicateIdConsistencyChecker : IConsistencyChecker
 	{
 		private readonly IDuplicateIdConsistencyCheckerLogger _logger;
 		private readonly Dictionary<string, DuplicateIdEntry> _duplicateChecks = new Dictionary<string, DuplicateIdEntry>();
+		private readonly object _syncRoot = new object();
 
 		public DuplicateIdConsistencyChecker(IDuplicateIdConsistencyCheckerLogger logger)
 		{
@@ -17,7 +21,10 @@ namespace Unicorn.Loader
 		public bool IsConsistent(IItemData itemData)
 		{
 			DuplicateIdEntry duplicateItemData;
-			if(!_duplicateChecks.TryGetValue(CreateKey(itemData), out duplicateItemData)) return true;
+			lock (_syncRoot)
+			{
+				if (!_duplicateChecks.TryGetValue(CreateKey(itemData), out duplicateItemData)) return true;
+			}
 
 			_logger.DuplicateFound(duplicateItemData, itemData);
 
@@ -26,7 +33,10 @@ namespace Unicorn.Loader
 
 		public void AddProcessedItem(IItemData itemData)
 		{
-			_duplicateChecks.Add(CreateKey(itemData), new DuplicateIdEntry(itemData));
+			lock (_syncRoot)
+			{
+				_duplicateChecks.Add(CreateKey(itemData), new DuplicateIdEntry(itemData));
+			}
 		}
 
 		protected virtual string CreateKey(IItemData itemData)

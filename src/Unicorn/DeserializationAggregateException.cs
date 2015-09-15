@@ -5,6 +5,9 @@ using Rainbow.Storage.Sc.Deserialization;
 
 namespace Unicorn
 {
+	/// <summary>
+	/// Thrown when a deserialization/load operation results in more than one fatal exception.
+	/// </summary>
 	[Serializable]
 	public class DeserializationAggregateException : Exception
 	{
