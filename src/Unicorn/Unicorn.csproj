@@ -188,6 +188,11 @@
     <EmbeddedResource Include="ControlPanel\Headings\Unicorn3.svg.html" />
     <EmbeddedResource Include="ControlPanel\Headings\Unicorn2.svg.html" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="ControlPanel\Headings\April.svg.html">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
