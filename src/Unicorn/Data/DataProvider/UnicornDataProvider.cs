@@ -25,7 +25,7 @@ namespace Unicorn.Data.DataProvider
 	{
 		public const string TransparentSyncUpdatedByValue = "serialization\\UnicornDataProvider";
 
-        private readonly ITargetDataStore _targetDataStore;
+		private readonly ITargetDataStore _targetDataStore;
 		private readonly ISourceDataStore _sourceDataStore;
 		private readonly IPredicate _predicate;
 		private readonly IFieldFilter _fieldFilter;
@@ -497,6 +497,6 @@ namespace Unicorn.Data.DataProvider
 			Database.Caches.PathCache.Clear();
 		}
 
-		
+
 	}
 }

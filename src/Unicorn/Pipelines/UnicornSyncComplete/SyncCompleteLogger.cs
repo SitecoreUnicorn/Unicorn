@@ -19,7 +19,7 @@ namespace Unicorn.Pipelines.UnicornSyncComplete
 			var durationInMs = (DateTime.Now - args.SyncStartedTimestamp).TotalMilliseconds;
 			var msPerItem = (durationInMs/(args.ProcessedItemCount == 0 ? 1 : args.ProcessedItemCount)).ToString("N1");
 
-			logger.Info("{0}: {1} item{2} evaluated, {3} item{4} modified ({5} added, {6} updated, {7} deleted) in {8}ms (~{9}ms/item)".FormatWith(
+			logger.Info("{0}: {1} item{2} evaluated, {3} item{4} modified ({5} added, {6} updated, {7} recycled) in {8}ms (~{9}ms/item)".FormatWith(
 				args.Configuration.Name,
 				args.ProcessedItemCount,
 				args.ProcessedItemCount != 1 ? "s": string.Empty,

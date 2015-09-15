@@ -8,7 +8,7 @@ namespace Unicorn.Evaluators
 		/// <summary>
 		/// Called when an item is evaluated for deletion
 		/// </summary>
-		void DeletedItem(IItemData deletedItem);
+		void RecycledItem(IItemData deletedItem);
 		
 		/// <summary>
 		/// Fired when an item's name is different between serialized and source

@@ -23,9 +23,9 @@ namespace Unicorn.Evaluators
 			_pipelineDataCollector = pipelineDataCollector;
 		}
 
-		public virtual void DeletedItem(IItemData deletedItem)
+		public virtual void RecycledItem(IItemData deletedItem)
 		{
-			_logger.Warn("[D] {0} because it did not exist in the serialization provider.".FormatWith(deletedItem.GetDisplayIdentifier()));
+			_logger.Warn("[D] {0} because it did not exist in the serialization provider. Can restore from recycle bin.".FormatWith(deletedItem.GetDisplayIdentifier()));
 			_pipelineDataCollector.PushChangedItem(deletedItem, ChangeType.Deleted);
 			_pipelineDataCollector.AddProcessedItem();
 		}

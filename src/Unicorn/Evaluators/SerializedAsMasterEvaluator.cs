@@ -38,7 +38,7 @@ namespace Unicorn.Evaluators
 		{
 			Assert.ArgumentNotNull(orphanItems, "orphanItems");
 
-			EvaluatorUtility.RecycleItems(orphanItems, _sourceDataStore, item => _logger.DeletedItem(item));
+			EvaluatorUtility.RecycleItems(orphanItems, _sourceDataStore, item => _logger.RecycledItem(item));
 
 			foreach (var orphan in orphanItems) _logger.Evaluated(orphan);
 		}
