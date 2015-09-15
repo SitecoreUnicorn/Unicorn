@@ -47,9 +47,15 @@ namespace Unicorn.Configuration
 				throw new InvalidOperationException("No Unicorn configuration nodes found under unicorn/configurations/configuration. Missing Unicorn.config?");
 
 			var configurations = new Collection<IConfiguration>();
+			var nameChecker = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 			foreach (XmlElement element in configurationNodes)
 			{
-				configurations.Add(LoadConfiguration(element, defaultsNode));
+				var configuration = LoadConfiguration(element, defaultsNode);
+
+				if(nameChecker.Contains(configuration.Name)) throw new InvalidOperationException("The Unicorn configuration '" + configuration.Name + "' is defined twice. Configurations should have unique names.");
+				nameChecker.Add(configuration.Name);
+
+				configurations.Add(configuration);
 			}
 
 			_configurations = configurations.ToArray();
