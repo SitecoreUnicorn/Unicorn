@@ -148,7 +148,6 @@
     <Compile Include="UI\Pipelines\SaveUi\SerializationConflictProcessor.cs" />
     <Compile Include="Loader\SerializationLoader.cs" />
     <Compile Include="Data\DataProvider\DefaultUnicornDataProviderLogger.cs" />
-    <Compile Include="StandardValuesException.cs" />
     <Compile Include="Data\DataProvider\UnicornDataProvider.cs" />
     <Compile Include="Data\DataProvider\UnicornSqlServerDataProvider.cs" />
   </ItemGroup>

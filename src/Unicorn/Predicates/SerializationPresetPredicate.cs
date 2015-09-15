@@ -4,7 +4,6 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Xml;
 using Rainbow.Model;
-using Rainbow.Predicates;
 using Rainbow.Storage;
 using Sitecore.Data.Serialization.Presets;
 using Sitecore.Diagnostics;
