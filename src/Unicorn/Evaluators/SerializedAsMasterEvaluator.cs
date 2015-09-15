@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Rainbow;
 using Rainbow.Diff;
 using Rainbow.Filtering;
@@ -38,9 +39,10 @@ namespace Unicorn.Evaluators
 		{
 			Assert.ArgumentNotNull(orphanItems, "orphanItems");
 
-			EvaluatorUtility.RecycleItems(orphanItems, _sourceDataStore, item => _logger.RecycledItem(item));
-
-			foreach (var orphan in orphanItems) _logger.Evaluated(orphan);
+			foreach (var item in orphanItems)
+			{
+				RecycleItem(item);
+			}
 		}
 
 		public IItemData EvaluateNewSerializedItem(IItemData newItemData)
@@ -121,6 +123,34 @@ namespace Unicorn.Evaluators
 			}
 
 			return !comparison.AreEqual;
+		}
+
+		/// <summary>
+		/// Recycles a whole tree of items and reports their progress
+		/// </summary>
+		/// <param name="items">The item(s) to delete. Note that their children will be deleted before them, and also be reported upon.</param>
+		protected virtual void RecycleItems(IEnumerable<IItemData> items)
+		{
+			Assert.ArgumentNotNull(items, "items");
+
+			foreach (var item in items)
+			{
+				RecycleItem(item);
+			}
+		}
+
+		/// <summary>
+		/// Deletes an item from the source data provider
+		/// </summary>
+		protected virtual void RecycleItem(IItemData itemData)
+		{
+			var children = _sourceDataStore.GetChildren(itemData);
+
+			EvaluateOrphans(children.ToArray());
+
+			_logger.RecycledItem(itemData);
+			_logger.Evaluated(itemData);
+			_sourceDataStore.Remove(itemData);
 		}
 
 		public string FriendlyName

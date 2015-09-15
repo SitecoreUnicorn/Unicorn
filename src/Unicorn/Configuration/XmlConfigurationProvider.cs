@@ -31,9 +31,14 @@ namespace Unicorn.Configuration
 			}
 		}
 
+		protected virtual XmlNode GetConfigurationNode()
+		{
+			return Factory.GetConfigNode("/sitecore/unicorn");
+		}
+
 		protected virtual void LoadConfigurations()
 		{
-			var configNode = Factory.GetConfigNode("/sitecore/unicorn");
+			var configNode = GetConfigurationNode();
 
 			Assert.IsNotNull(configNode, "Root Unicorn config node not found. Missing Unicorn.config?");
 
@@ -52,7 +57,7 @@ namespace Unicorn.Configuration
 			{
 				var configuration = LoadConfiguration(element, defaultsNode);
 
-				if(nameChecker.Contains(configuration.Name)) throw new InvalidOperationException("The Unicorn configuration '" + configuration.Name + "' is defined twice. Configurations should have unique names.");
+				if (nameChecker.Contains(configuration.Name)) throw new InvalidOperationException("The Unicorn configuration '" + configuration.Name + "' is defined twice. Configurations should have unique names.");
 				nameChecker.Add(configuration.Name);
 
 				configurations.Add(configuration);
@@ -128,9 +133,9 @@ namespace Unicorn.Configuration
 		{
 			var type = GetConfigType(configuration, defaults, elementName);
 			var attributes = GetUnmappedAttributes(configuration, defaults, elementName);
-			var resultType = typeof (TResultType);
+			var resultType = typeof(TResultType);
 
-			if (resultType == typeof (ISourceDataStore))
+			if (resultType == typeof(ISourceDataStore))
 			{
 				Func<IDataStore> factory = () => (IDataStore)registry.Activate(type.Type, attributes);
 				Func<object> wrapperFactory = () => new ConfigurationDataStore(new Lazy<IDataStore>(factory));
@@ -139,7 +144,7 @@ namespace Unicorn.Configuration
 				return;
 			}
 
-			if (resultType == typeof (ITargetDataStore))
+			if (resultType == typeof(ITargetDataStore))
 			{
 				Func<IDataStore> factory = () => (IDataStore)registry.Activate(type.Type, attributes);
 				Func<object> wrapperFactory = () => new ConfigurationDataStore(new Lazy<IDataStore>(factory));
@@ -191,7 +196,7 @@ namespace Unicorn.Configuration
 				.Select(attr =>
 				{
 					bool boolean;
-					if(bool.TryParse(attr.InnerText, out boolean)) return new KeyValuePair<string, object>(attr.Name, boolean);
+					if (bool.TryParse(attr.InnerText, out boolean)) return new KeyValuePair<string, object>(attr.Name, boolean);
 
 					var value = attr.InnerText.Replace("$(configurationName)", GetAttributeValue(configuration, "name"));
 

@@ -12,7 +12,7 @@ Thumbs.db
 # Ignore binaries in the source
 src/*/bin
 src/*/obj
-src/*/v6obj
+src/*/license.xml
 
 # Ignore user-scoped solution and project settings
 *.user

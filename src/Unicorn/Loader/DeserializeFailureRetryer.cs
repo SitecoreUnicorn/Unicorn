@@ -51,7 +51,6 @@ namespace Unicorn.Loader
 			if (_itemFailures.Count > 0)
 			{
 				List<Failure> originalItemFailures;
-				List<Failure> originalTreeFailures;
 
 				do
 				{
@@ -84,8 +83,12 @@ namespace Unicorn.Loader
 						// retry loading a reference failure (note the continues in the above ensure execution never arrives here for items)
 						retryTreeAction(failure.Item);
 					}
-				}
-				while (_itemFailures.Count > 0 && _itemFailures.Count < originalItemFailures.Count); // continue retrying until all possible failures have been fixed
+				} while (_itemFailures.Count > 0 && _itemFailures.Count < originalItemFailures.Count);
+					// continue retrying until all possible failures have been fixed
+			}
+
+			if(_treeFailures.Count > 0) {
+				List<Failure> originalTreeFailures;
 
 				do
 				{
@@ -99,8 +102,15 @@ namespace Unicorn.Loader
 
 					foreach (var failure in originalTreeFailures)
 					{
-						// retry loading a tree failure
-						retryTreeAction(failure.Item);
+						try
+						{
+							// retry loading a tree failure
+							retryTreeAction(failure.Item);
+						}
+						catch (Exception reason)
+						{
+							_treeFailures.Add(CreateFailure(failure.Item, reason));
+						}
 					}
 				}
 				while (_treeFailures.Count > 0 && _treeFailures.Count < originalTreeFailures.Count); // continue retrying until all possible failures have been fixed

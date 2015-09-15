@@ -103,7 +103,6 @@
     <Compile Include="DeserializationAggregateException.cs" />
     <Compile Include="Evaluators\DefaultSerializedAsMasterEvaluatorLogger.cs" />
     <Compile Include="Evaluators\SerializedAsMasterEvaluator.cs" />
-    <Compile Include="Evaluators\EvaluatorUtility.cs" />
     <Compile Include="Evaluators\IEvaluator.cs" />
     <Compile Include="Evaluators\ISerializedAsMasterEvaluatorLogger.cs" />
     <Compile Include="Data\DataProvider\IUnicornDataProviderLogger.cs" />

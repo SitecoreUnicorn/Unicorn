@@ -1,4 +1,5 @@
-﻿using Rainbow.Model;
+﻿using System.Diagnostics.CodeAnalysis;
+using Rainbow.Model;
 using Rainbow.Storage.Sc.Deserialization;
 using Sitecore.Data;
 using Sitecore.Data.Fields;
@@ -8,6 +9,7 @@ using Unicorn.Logging;
 
 namespace Unicorn.Deserialization
 {
+	[ExcludeFromCodeCoverage]
 	public class DefaultDeserializerLogger : IDefaultDeserializerLogger
 	{
 		private readonly ILogger _logger;

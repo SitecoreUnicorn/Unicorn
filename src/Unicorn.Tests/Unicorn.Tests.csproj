@@ -49,6 +49,10 @@
     <Reference Include="Kamsar.WebConsole">
       <HintPath>..\..\packages\Kamsar.WebConsole.1.2.2.0\lib\net40\Kamsar.WebConsole.dll</HintPath>
     </Reference>
+    <Reference Include="Lucene.Net, Version=3.0.3.0, Culture=neutral, PublicKeyToken=85089178b9ac3181, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\lib\Sitecore\v7\Lucene.Net.dll</HintPath>
+    </Reference>
     <Reference Include="NSubstitute, Version=1.8.2.0, Culture=neutral, PublicKeyToken=92dd2e9066daa5ca, processorArchitecture=MSIL">
       <HintPath>..\..\packages\NSubstitute.1.8.2.0\lib\net45\NSubstitute.dll</HintPath>
       <Private>True</Private>
@@ -65,6 +69,12 @@
       <HintPath>..\..\packages\AutoFixture.Xunit2.3.34.0\lib\net45\Ploeh.AutoFixture.Xunit2.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Sitecore.Analytics">
+      <HintPath>..\..\lib\Sitecore\v7\Sitecore.Analytics.dll</HintPath>
+    </Reference>
+    <Reference Include="Sitecore.ContentSearch">
+      <HintPath>..\..\lib\Sitecore\v7\Sitecore.ContentSearch.dll</HintPath>
+    </Reference>
     <Reference Include="Sitecore.FakeDb, Version=0.30.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Sitecore.FakeDb.0.30.0\lib\net45\Sitecore.FakeDb.dll</HintPath>
       <Private>True</Private>
@@ -80,6 +90,13 @@
     <Reference Include="Sitecore.Kernel, Version=6.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\lib\Sitecore\v7\Sitecore.Kernel.dll</HintPath>
+    </Reference>
+    <Reference Include="Sitecore.Logging, Version=1.2.0.30715, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\lib\Sitecore\v7\Sitecore.Logging.dll</HintPath>
+    </Reference>
+    <Reference Include="sitecore.nexus">
+      <HintPath>..\..\lib\Sitecore\v7\sitecore.nexus.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
@@ -103,13 +120,23 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AutoDbData.cs" />
+    <Compile Include="Configuration\ConfigurationUtilityTests.cs" />
     <Compile Include="Configuration\MicroConfigurationTests.cs" />
     <None Include="app.config" />
     <None Include="App_Config\FieldTypes.config" />
-    <None Include="Evaluator\SerializedAsMasterEvaluatorTests.csx" />
+    <Compile Include="Evaluator\SerializedAsMasterEvaluatorTests.cs" />
+    <Compile Include="Configuration\TestXmlConfigurationProvider.cs" />
+    <Compile Include="Configuration\XmlConfigurationProviderTests.cs" />
     <Compile Include="Configuration\XmlConfigurationTypeActivatorTests.cs" />
+    <Compile Include="Content.cs" />
+    <Compile Include="ControlPanel\Headings\HeadingServiceTests.cs" />
+    <Compile Include="Data\DataProvider\DataProviderConfigurationTests.cs" />
+    <Compile Include="Data\DataProvider\UnicornDataProviderTests.cs" />
+    <Compile Include="Data\ISerializableItemExtensionsTests.cs" />
+    <Compile Include="Loader\DeserializeFailureRetryerTests.cs" />
     <Compile Include="Loader\DuplicateIdConsistencyCheckerTests.cs" />
-    <None Include="Loader\LoaderTests.csx" />
+    <Compile Include="Loader\LoaderTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Predicate\SerializationPresetPredicateTests.cs" />
   </ItemGroup>
@@ -119,7 +146,9 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Configuration\TestXmlConfiguration.xml" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\Rainbow\src\Rainbow.Storage.Sc\Rainbow.Storage.Sc.csproj">
       <Project>{956afe8b-51cd-4d61-b8c1-bffdc749fd82}</Project>
@@ -137,6 +166,9 @@
       <Project>{82c4441b-e11e-4601-b6b7-c5ad71b2ab70}</Project>
       <Name>Unicorn</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="license.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

@@ -49,7 +49,7 @@ namespace Unicorn.Data.DataProvider
 
 		protected void AddUnicornDataProvider(UnicornDataProvider dataProvider)
 		{
-			dataProvider.DataProvider = this;
+			dataProvider.Database = Database;
 			_unicornDataProviders.Add(dataProvider);
 		}
 

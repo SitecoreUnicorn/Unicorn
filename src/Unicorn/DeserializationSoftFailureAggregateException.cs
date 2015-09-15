@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.Serialization;
 
@@ -10,17 +11,7 @@ namespace Unicorn
 	[Serializable]
 	public class DeserializationSoftFailureAggregateException : Exception
 	{
-		public DeserializationSoftFailureAggregateException()
-		{
-			InnerExceptions = new Exception[0];
-		}
-
 		public DeserializationSoftFailureAggregateException(string message) : base(message)
-		{
-			InnerExceptions = new Exception[0];
-		}
-
-		public DeserializationSoftFailureAggregateException(string message, Exception inner) : base(message, inner)
 		{
 			InnerExceptions = new Exception[0];
 		}
@@ -32,6 +23,7 @@ namespace Unicorn
 			get { return base.Message + " (" + InnerExceptions.Length + " inner failures)\r\n" + string.Join("\r\n\r\n", InnerExceptions.Select(x => x.Message)); }
 		}
 
+		[ExcludeFromCodeCoverage]
 		protected DeserializationSoftFailureAggregateException(
 			SerializationInfo info,
 			StreamingContext context) : base(info, context)

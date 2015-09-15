@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Rainbow.Model;
 using Sitecore.Configuration;
@@ -11,6 +12,7 @@ using Unicorn.Pipelines.UnicornSyncComplete;
 
 namespace Unicorn.Evaluators
 {
+	[ExcludeFromCodeCoverage]
 	public class DefaultSerializedAsMasterEvaluatorLogger : ISerializedAsMasterEvaluatorLogger
 	{
 		private readonly ILogger _logger;

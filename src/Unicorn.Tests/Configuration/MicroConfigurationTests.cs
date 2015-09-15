@@ -7,7 +7,7 @@ namespace Unicorn.Tests.Configuration
 	public class MicroConfigurationTests
 	{
 		[Fact]
-		public void Micro_ResolvesType()
+		public void ResolvesType()
 		{
 			var micro = new MicroConfiguration("Test");
 
@@ -19,7 +19,15 @@ namespace Unicorn.Tests.Configuration
 		}
 
 		[Fact]
-		public void Micro_ResolvesType_AsInstance()
+		public void Throws_WhenConstructingUnregisteredType()
+		{
+			var micro = new MicroConfiguration("Test");
+
+			Assert.Throws<MicroResolutionException>(() => micro.Resolve<ITest>());
+		}
+
+		[Fact]
+		public void ResolvesType_AsInstance()
 		{
 			var micro = new MicroConfiguration("Test");
 
@@ -35,7 +43,7 @@ namespace Unicorn.Tests.Configuration
 		}
 
 		[Fact]
-		public void Micro_ResolvesType_AsSingleton()
+		public void ResolvesType_AsSingleton()
 		{
 			var micro = new MicroConfiguration("Test");
 

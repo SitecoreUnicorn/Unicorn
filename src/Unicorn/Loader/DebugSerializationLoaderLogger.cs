@@ -1,4 +1,5 @@
-﻿using Rainbow.Model;
+﻿using System.Diagnostics.CodeAnalysis;
+using Rainbow.Model;
 using Sitecore.StringExtensions;
 using Unicorn.Data;
 using Unicorn.Logging;
@@ -8,6 +9,7 @@ namespace Unicorn.Loader
 	/// <summary>
 	/// Loader logger that dumps additional debug data about loading to the logs
 	/// </summary>
+	[ExcludeFromCodeCoverage]
 	public class DebugSerializationLoaderLogger : DefaultSerializationLoaderLogger
 	{
 		private readonly ILogger _logger;

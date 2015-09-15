@@ -21,7 +21,7 @@ namespace Unicorn.Data.DataProvider
 	/// This class provides event-handling services to Unicorn - reflecting actions onto the serialization provider via the predicate when
 	/// changes occur to the source data.
 	/// </summary>
-	public class UnicornDataProvider
+	public class UnicornDataProvider : IDisposable
 	{
 		public const string TransparentSyncUpdatedByValue = "serialization\\UnicornDataProvider";
 
@@ -91,8 +91,7 @@ namespace Unicorn.Data.DataProvider
 			set { _disableTransparentSync = value; }
 		}
 
-		public Sitecore.Data.DataProviders.DataProvider DataProvider { get; set; }
-		protected Database Database { get { return DataProvider.Database; } }
+		public Database Database { get; set; }
 
 		public void CreateItem(ItemDefinition newItem, ID templateId, ItemDefinition parent, CallContext context)
 		{
@@ -497,6 +496,20 @@ namespace Unicorn.Data.DataProvider
 			Database.Caches.PathCache.Clear();
 		}
 
+		public void Dispose()
+		{
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
 
+		protected virtual void Dispose(bool disposing)
+		{
+			if (disposing)
+			{
+				// ReSharper disable once SuspiciousTypeConversion.Global
+				var targetAsDisposable = _targetDataStore as IDisposable;
+				if(targetAsDisposable != null) targetAsDisposable.Dispose();
+			}
+		}
 	}
 }
