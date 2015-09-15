@@ -71,6 +71,7 @@ namespace Unicorn.ControlPanel
 						content: '+ ';
 					}
 					.warning { color: red;font-weight: bold;border: 1px solid orange;padding: 1em;margin: 1em 0; }
+					.strong-info { color: orange; font-weight: bold; }
 					.button {
 						display: inline-block;
 						border: 1px solid gray;

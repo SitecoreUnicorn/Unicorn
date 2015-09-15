@@ -9,6 +9,7 @@ using Sitecore.Security.Authentication;
 using Sitecore.SecurityModel;
 using Sitecore.StringExtensions;
 using Unicorn.Configuration;
+using Unicorn.Data.DataProvider;
 
 namespace Unicorn.ControlPanel
 {
@@ -128,6 +129,9 @@ namespace Unicorn.ControlPanel
 
 					if (configurationHasSerializedItems)
 					{
+						var dpConfig = configuration.Resolve<IUnicornDataProviderConfiguration>();
+						if(dpConfig != null && dpConfig.EnableTransparentSync) yield return new Literal("<p class=\"strong-info\">Transparent sync is enabled for this configuration.</p>");
+
 						var controlOptions = configuration.Resolve<ControlOptions>();
 						controlOptions.ConfigurationName = configuration.Name;
 						yield return controlOptions;
