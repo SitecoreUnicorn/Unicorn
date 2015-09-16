@@ -7,7 +7,6 @@ using Unicorn.Logging;
 
 namespace Unicorn.Predicates
 {
-	// we'd killed IsourceDataStore. Now to fix the issues from that, and work out how we'll handle dep reg for IDataStore
 	public class PredicateRootPathResolver
 	{
 		private readonly IPredicate _predicate;

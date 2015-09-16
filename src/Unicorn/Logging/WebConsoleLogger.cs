@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using Kamsar.WebConsole;
 
 namespace Unicorn.Logging
@@ -6,6 +7,7 @@ namespace Unicorn.Logging
 	/// <summary>
 	/// Logger that writes to a WebConsole.
 	/// </summary>
+	[ExcludeFromCodeCoverage]
 	public class WebConsoleLogger : ILogger
 	{
 		private readonly IProgressStatus _progress;

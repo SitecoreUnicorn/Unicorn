@@ -10,6 +10,7 @@ namespace Unicorn
 	/// Thrown when a deserialization/load operation results in more than one fatal exception.
 	/// </summary>
 	[Serializable]
+	[ExcludeFromCodeCoverage]
 	public class DeserializationAggregateException : Exception
 	{
 		public DeserializationAggregateException(string message) : base(message)

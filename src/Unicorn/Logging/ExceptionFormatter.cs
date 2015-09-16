@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using Unicorn.Logging.Formatting;
@@ -9,6 +10,7 @@ namespace Unicorn.Logging
 	/// <summary>
 	/// Formats exceptions all pretty-like so we can log them and show them in the HTML console intelligibly
 	/// </summary>
+	[ExcludeFromCodeCoverage]
 	public class ExceptionFormatter
 	{
 		protected List<IExceptionFormatter> Formatters = new List<IExceptionFormatter>();

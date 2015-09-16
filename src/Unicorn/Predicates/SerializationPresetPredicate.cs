@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Xml;
 using Rainbow.Model;
@@ -83,16 +84,19 @@ namespace Unicorn.Predicates
 						: new PredicateResult(true);
 		}
 
+		[ExcludeFromCodeCoverage]
 		public string FriendlyName
 		{
 			get { return "Serialization Preset Predicate"; }
 		}
 
+		[ExcludeFromCodeCoverage]
 		public string Description
 		{
 			get { return "Defines what to include in Unicorn based on Sitecore's built in serialization preset system (documented in the Serialization Guide). This is the default predicate."; }
 		}
 
+		[ExcludeFromCodeCoverage]
 		public KeyValuePair<string, string>[] GetConfigurationDetails()
 		{
 			var configs = new Collection<KeyValuePair<string, string>>();
@@ -107,6 +111,7 @@ namespace Unicorn.Predicates
 			return configs.ToArray();
 		}
 
+		[ExcludeFromCodeCoverage]
 		private string GetExcludeDescription(PresetTreeRoot entry)
 		{
 			if (entry.Exclude.Count == 0) return string.Empty;

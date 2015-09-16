@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using Unicorn.Configuration;
 
 namespace Unicorn.Logging
@@ -11,6 +12,7 @@ namespace Unicorn.Logging
 	///			// code that should be logged to the web console too
 	///		} // when using goes out of scope the logger is detatched from the PubSubLogger
 	/// </example>
+	[ExcludeFromCodeCoverage]
 	public sealed class LoggingContext : IDisposable
 	{
 		private readonly ILogger _logger;

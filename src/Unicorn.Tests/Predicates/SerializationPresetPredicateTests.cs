@@ -3,12 +3,12 @@ using System.IO;
 using System.Reflection;
 using System.Xml;
 using NSubstitute;
-using Xunit;
 using Rainbow.Storage;
 using Rainbow.Tests;
 using Unicorn.Predicates;
+using Xunit;
 
-namespace Unicorn.Tests.Predicate
+namespace Unicorn.Tests.Predicates
 {
 	public class SitecorePresetPredicateTests
 	{
@@ -129,7 +129,7 @@ namespace Unicorn.Tests.Predicate
 			var assembly = Assembly.GetExecutingAssembly();
 			string text;
 			// ReSharper disable AssignNullToNotNullAttribute
-			using (var textStreamReader = new StreamReader(assembly.GetManifestResourceStream("Unicorn.Tests.Predicate.TestConfiguration.xml")))
+			using (var textStreamReader = new StreamReader(assembly.GetManifestResourceStream("Unicorn.Tests.Predicates.TestConfiguration.xml")))
 			// ReSharper restore AssignNullToNotNullAttribute
 			{
 				text = textStreamReader.ReadToEnd();

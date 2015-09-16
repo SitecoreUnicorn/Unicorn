@@ -1,18 +1,22 @@
 ﻿using System.Collections.Generic;
 using System;
 using System.Linq;
-using Lucene.Net.Index;
 using NSubstitute;
 using NSubstitute.Core;
 using Xunit;
 using Rainbow.Model;
+using Rainbow.Storage;
+using Rainbow.Storage.Sc;
+using Rainbow.Storage.Sc.Deserialization;
 using Rainbow.Tests;
 using Sitecore.Data;
+using Sitecore.FakeDb;
 using Unicorn.Data;
 using Unicorn.Evaluators;
 using Unicorn.Loader;
 using Unicorn.Logging;
 using Unicorn.Predicates;
+using ItemData = Rainbow.Storage.Sc.ItemData;
 
 namespace Unicorn.Tests.Loader
 {
@@ -42,7 +46,7 @@ namespace Unicorn.Tests.Loader
 			var serializedRootItem = new FakeItem();
 			var predicate = CreateExclusiveTestPredicate();
 			var logger = Substitute.For<ISerializationLoaderLogger>();
-			var loader = CreateTestLoader(predicate: predicate, logger:logger);
+			var loader = CreateTestLoader(predicate: predicate, logger: logger);
 
 			TestLoadTree(loader, serializedRootItem);
 
@@ -57,79 +61,45 @@ namespace Unicorn.Tests.Loader
 			var sourceData = Substitute.For<ISourceDataStore>();
 			sourceData.GetByPathAndId(serializedRootItem.Path, serializedRootItem.Id, serializedRootItem.DatabaseName).Returns((IItemData)null);
 
-			var loader = CreateTestLoader(evaluator: evaluator, sourceDataStore:sourceData);
+			var loader = CreateTestLoader(evaluator: evaluator, sourceDataStore: sourceData);
 
 			TestLoadTree(loader, serializedRootItem);
 
 			evaluator.Received().EvaluateNewSerializedItem(serializedRootItem);
 		}
 
-		//[Fact]
-		//public void LoadTree_SkipsChildOfRootWhenExcluded()
-		//{
-		//	var root = CreateTestTree(2);
+		[Fact]
+		public void LoadTree_SkipsChildOfRootWhenExcluded()
+		{
+			var dataStore = Substitute.For<ITargetDataStore>();
+			var root = new FakeItem();
+			var child = new FakeItem(parentId:root.Id, id:Guid.NewGuid());
+			dataStore.GetChildren(root).Returns(new[] {child});
 
-		//	var serializedRootItem = new FakeItem("Root");
+			var predicate = CreateExclusiveTestPredicate(new[] { root });
+			var logger = Substitute.For<ISerializationLoaderLogger>();
+			var loader = CreateTestLoader(predicate: predicate, logger:logger, targetDataStore: dataStore);
 
-		//	var predicate = CreateExclusiveTestPredicate(new[] { serializedRootItem }, new[] { root });
+			TestLoadTree(loader, root);
 
-		//	var serializationProvider = Substitute.For<ITargetDataStore>();
-		//	serializationProvider.Setup(x => x.GetReference(root)).Returns(serializedRootItem);
+			logger.Received().SkippedItemPresentInSerializationProvider(Arg.Is<IItemData>(data => data.Id == child.Id), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>());
+		}
 
-		//	var sourceDataProvider = Substitute.For<ISourceDataProvider>();
-		//	sourceDataProvider.Setup(x => x.GetItemById(It.IsAny<string>(), It.IsAny<ID>())).Returns(root);
+		[Fact]
+		public void LoadTree_LoadsChildOfRootWhenIncluded()
+		{
+			var dataStore = Substitute.For<ITargetDataStore>();
+			var root = new FakeItem();
+			var child = new FakeItem(parentId: root.Id, id: Guid.NewGuid());
+			dataStore.GetChildren(root).Returns(new[] { child });
+			
+			var evaluator = Substitute.For<IEvaluator>();
+			var loader = CreateTestLoader(evaluator: evaluator, targetDataStore: dataStore);
 
-		//	var logger = Substitute.For<ISerializationLoaderLogger>();
+			TestLoadTree(loader, root);
 
-		//	var loader = CreateTestLoader(sourceDataProvider, serializationProvider, predicate, null, logger);
-
-		//	TestLoadTree(loader, serializedRootItem);
-
-		//	logger.Verify(x => x.SkippedItem(root.Children[0], It.IsAny<string>(), It.IsAny<string>()));
-		//}
-
-		//[Fact]
-		//public void LoadTree_LoadsChildOfRootWhenIncluded()
-		//{
-		//	var root = CreateTestTree(2);
-
-		//	var serializedRootItem = new FakeItem("Root");
-		//	serializedRootItem.SetupGet(y => y.DatabaseName).Returns("root");
-
-
-		//	var serializedChildItem = new FakeItem("Child");
-		//	serializedChildItem.SetupGet(y => y.DatabaseName).Returns("child");
-		//	serializedChildItem.Setup(x => x.Deserialize(false)).Returns(root.Children[0]);
-
-		//	serializedRootItem.Setup(x => x.GetChildItems()).Returns(new[] { serializedChildItem });
-
-		//	var predicate = CreateInclusiveTestPredicate();
-
-		//	var serializationProvider = Substitute.For<ITargetDataStore>();
-		//	serializationProvider.Setup(x => x.GetReference(root)).Returns(serializedRootItem);
-		//	serializationProvider.Setup(x => x.GetReference(root.Children[0])).Returns(serializedChildItem);
-
-		//	var sourceDataProvider = Substitute.For<ISourceDataProvider>();
-		//	sourceDataProvider.Setup(x => x.GetItemById("root", It.IsAny<ID>())).Returns(root);
-		//	sourceDataProvider.Setup(x => x.GetItemById("child", It.IsAny<ID>())).Returns(root.Children[0]);
-
-		//	var logger = Substitute.For<ISerializationLoaderLogger>();
-
-		//	var evaluator = Substitute.For<IEvaluator>();
-		//	evaluator.Setup(x => x.EvaluateUpdate(serializedChildItem, root.Children[0])).Returns(root.Children[0]);
-
-		//	var loader = CreateTestLoader(sourceDataProvider, serializationProvider, predicate, evaluator, logger);
-
-		//	TestLoadTree(loader, serializedRootItem);
-
-		//	evaluator.Verify(x => x.EvaluateUpdate(serializedChildItem, root.Children[0]));
-		//}
-
-		//[Fact]
-		//public void LoadTree_WarnsIfSkippedItemExistsInSerializationProvider()
-		//{
-
-		//}
+			evaluator.Received().EvaluateUpdate(Arg.Any<IItemData>(), child);
+		}
 
 		//[Fact]
 		//public void LoadTree_IdentifiesOrphanChildItem()
@@ -294,9 +264,9 @@ namespace Unicorn.Tests.Loader
 		private IPredicate CreateExclusiveTestPredicate(IEnumerable<IItemData> includes = null)
 		{
 			var predicate = Substitute.For<IPredicate>();
-			predicate.Includes(Arg.Any<IItemData>()).Returns(delegate(CallInfo info)
+			predicate.Includes(Arg.Any<IItemData>()).Returns(delegate (CallInfo info)
 			{
-				if (includes != null && includes.Contains(info.Arg<IItemData>())) return new PredicateResult(true);
+				if (includes != null && includes.Any(x=>x.Id == info.Arg<IItemData>().Id)) return new PredicateResult(true);
 				return new PredicateResult(false);
 			});
 
