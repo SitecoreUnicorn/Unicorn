@@ -83,9 +83,9 @@ namespace Unicorn.Loader
 						LoadTree(rootItem, retryer, consistencyChecker);
 						if (rootLoadedCallback != null) rootLoadedCallback(rootItem);
 					}
-				}
 
-				retryer.RetryAll(SourceDataStore, item => DoLoadItem(item, null), item => LoadTreeInternal(item, retryer, null));
+					retryer.RetryAll(SourceDataStore, item => DoLoadItem(item, null), item => LoadTreeInternal(item, retryer, null));
+				}
 			}
 			finally
 			{
@@ -153,39 +153,42 @@ namespace Unicorn.Loader
 			{
 				Process:
 				Interlocked.Increment(ref activeThreads);
-				IItemData parentItem;
 
-
-				while (processQueue.TryDequeue(out parentItem) && errors.Count == 0)
+				using (new SecurityDisabler())
 				{
-					try
+					using (new EventDisabler())
 					{
-						using (new SecurityDisabler())
+						IItemData parentItem;
+						while (processQueue.TryDequeue(out parentItem) && errors.Count == 0)
 						{
-							// load the current level
-							LoadOneLevel(parentItem, retryer, consistencyChecker);
-
-							// check if we have child paths to process down
-							var children = TargetDataStore.GetChildren(parentItem).ToArray();
-
-							if (children.Length > 0)
+							try
 							{
-								// load each child path
-								foreach (var child in children)
+
+								// load the current level
+								LoadOneLevel(parentItem, retryer, consistencyChecker);
+
+								// check if we have child paths to process down
+								var children = TargetDataStore.GetChildren(parentItem).ToArray();
+
+								if (children.Length > 0)
 								{
-									processQueue.Enqueue(child);
-								}
-							} // children.length > 0
-						}
-					}
-					catch (ConsistencyException cex)
-					{
-						errors.Enqueue(cex);
-						break;
-					}
-					catch (Exception ex)
-					{
-						retryer.AddTreeRetry(root, ex);
+									// load each child path
+									foreach (var child in children)
+									{
+										processQueue.Enqueue(child);
+									}
+								} // children.length > 0
+							}
+							catch (ConsistencyException cex)
+							{
+								errors.Enqueue(cex);
+								break;
+							}
+							catch (Exception ex)
+							{
+								retryer.AddTreeRetry(root, ex);
+							}
+						} // end while
 					}
 				}
 
