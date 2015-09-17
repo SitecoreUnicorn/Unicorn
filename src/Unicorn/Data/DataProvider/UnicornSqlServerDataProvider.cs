@@ -8,6 +8,7 @@ using Sitecore.Data;
 using Sitecore.Data.DataProviders;
 using Sitecore.Data.Items;
 using Sitecore.Data.SqlServer;
+using Sitecore.Diagnostics;
 using Sitecore.Globalization;
 using Unicorn.Configuration;
 
@@ -49,7 +50,7 @@ namespace Unicorn.Data.DataProvider
 
 		protected void AddUnicornDataProvider(UnicornDataProvider dataProvider)
 		{
-			dataProvider.Database = Database;
+			dataProvider.ParentDataProvider = this;
 			_unicornDataProviders.Add(dataProvider);
 		}
 

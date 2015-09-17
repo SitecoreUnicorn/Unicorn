@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using FluentAssertions;
 using NSubstitute;
 using Rainbow.Filtering;
@@ -104,7 +105,7 @@ namespace Unicorn.Tests.Data.DataProvider
 
 			var dp = new UnicornDataProvider(targetDataStore ?? Substitute.For<ITargetDataStore>(), sourceDataStore ?? Substitute.For<ISourceDataStore>(), predicate, filter, logger ?? Substitute.For<IUnicornDataProviderLogger>(), new DefaultUnicornDataProviderConfiguration(enableTransparentSync));
 
-			dp.Database = db;
+			dp.ParentDataProvider = db.GetDataProviders().First();
 
 			return dp;
 		}

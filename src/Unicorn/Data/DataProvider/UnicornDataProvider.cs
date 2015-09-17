@@ -91,7 +91,9 @@ namespace Unicorn.Data.DataProvider
 			set { _disableTransparentSync = value; }
 		}
 
-		public Database Database { get; set; }
+		public Sitecore.Data.DataProviders.DataProvider ParentDataProvider { get; set; }
+
+		protected Database Database { get { return ParentDataProvider.Database; } }
 
 		public void CreateItem(ItemDefinition newItem, ID templateId, ItemDefinition parent, CallContext context)
 		{
