@@ -108,6 +108,8 @@ namespace Unicorn.Loader
 
 			Logger.BeginLoadingTree(rootItemData);
 
+			// LoadTreeInternal does not load the root item passed to it (only the children thereof)
+			// so we have to seed the load by loading the root item
 			DoLoadItem(rootItemData, consistencyChecker);
 
 			// load children of the root
