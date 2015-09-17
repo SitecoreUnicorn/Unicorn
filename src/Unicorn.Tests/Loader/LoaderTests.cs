@@ -5,18 +5,12 @@ using NSubstitute;
 using NSubstitute.Core;
 using Xunit;
 using Rainbow.Model;
-using Rainbow.Storage;
-using Rainbow.Storage.Sc;
-using Rainbow.Storage.Sc.Deserialization;
 using Rainbow.Tests;
-using Sitecore.Data;
-using Sitecore.FakeDb;
 using Unicorn.Data;
 using Unicorn.Evaluators;
 using Unicorn.Loader;
 using Unicorn.Logging;
 using Unicorn.Predicates;
-using ItemData = Rainbow.Storage.Sc.ItemData;
 
 namespace Unicorn.Tests.Loader
 {
