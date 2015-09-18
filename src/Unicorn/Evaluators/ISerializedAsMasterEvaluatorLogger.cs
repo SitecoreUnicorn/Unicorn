@@ -3,7 +3,7 @@ using Rainbow.Model;
 
 namespace Unicorn.Evaluators
 {
-	public interface ISerializedAsMasterEvaluatorLogger
+	public interface ISerializedAsMasterEvaluatorLogger : INewItemOnlyEvaluatorLogger
 	{
 		/// <summary>
 		/// Called when an item is evaluated for deletion
@@ -38,11 +38,6 @@ namespace Unicorn.Evaluators
 		void NewTargetVersion(IItemVersion newSerializedVersion, IItemData serializedItemData, IItemData existingItemData);
 
 		/// <summary>
-		/// Called when you serialize an item that does not yet exist in the provider
-		/// </summary>
-		void DeserializedNewItem(IItemData targetItem);
-
-		/// <summary>
 		/// Called when you serialize an updated item that already existed in the provider
 		/// </summary>
 		void SerializedUpdatedItem(IItemData targetItem);
@@ -51,10 +46,5 @@ namespace Unicorn.Evaluators
 		/// Called when extra versions exist in a source item compared to the serialized version
 		/// </summary>
 		void OrphanSourceVersion(IItemData existingItemData, IItemData serializedItemData, IItemVersion[] orphanSourceVersions);
-
-		/// <summary>
-		/// Called when an item is evaluated regardless of the result (deleted, added, same, changed, etc)
-		/// </summary>
-		void Evaluated(IItemData item);
 	}
 }

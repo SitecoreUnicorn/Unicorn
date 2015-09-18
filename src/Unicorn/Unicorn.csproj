@@ -56,6 +56,8 @@
     <Compile Include="Data\DataProvider\DefaultUnicornDataProviderConfiguration.cs" />
     <Compile Include="Data\DataProvider\IUnicornDataProviderConfiguration.cs" />
     <Compile Include="DeserializationSoftFailureAggregateException.cs" />
+    <Compile Include="Evaluators\INewItemOnlyEvaluatorLogger.cs" />
+    <Compile Include="Evaluators\NewItemOnlyEvaluator.cs" />
     <Compile Include="Logging\Formatting\DeserializationExceptionFormatter.cs" />
     <Compile Include="Logging\Formatting\IExceptionFormatter.cs" />
     <Compile Include="Logging\Formatting\TemplateMissingFieldExceptionFormatter.cs" />
