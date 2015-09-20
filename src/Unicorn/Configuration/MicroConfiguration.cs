@@ -88,9 +88,9 @@ namespace Unicorn.Configuration
 			{
 				var currentParam = ctorParams[parameterIndex];
 
-				if (unmappedConstructorParameters.Any(kv => kv.Key.Equals(currentParam.Name, StringComparison.Ordinal)))
+				if (unmappedConstructorParameters.Any(kv => kv.Key.Equals(currentParam.Name, StringComparison.OrdinalIgnoreCase)))
 				{
-					args[parameterIndex] = unmappedConstructorParameters.First(kv => kv.Key.Equals(currentParam.Name, StringComparison.Ordinal)).Value;
+					args[parameterIndex] = unmappedConstructorParameters.First(kv => kv.Key.Equals(currentParam.Name, StringComparison.OrdinalIgnoreCase)).Value;
 				}
 				else
 				{
