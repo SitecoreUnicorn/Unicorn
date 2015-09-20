@@ -106,6 +106,8 @@ namespace Unicorn.ControlPanel
 
 			if (isAuthorized)
 			{
+				if (Configurations.Length == 0) yield return new NoConfigurations();
+
 				if (Configurations.Length > 1 && hasSerializedItems && hasValidSerializedItems)
 				{
 					yield return new Literal("<h2>Global Actions</h2>");

@@ -48,8 +48,12 @@ namespace Unicorn.Configuration
 
 			var configurationNodes = configNode.SelectNodes("./configurations/configuration");
 
+			// no configs let's get outta here
 			if (configurationNodes == null || configurationNodes.Count == 0)
-				throw new InvalidOperationException("No Unicorn configuration nodes found under unicorn/configurations/configuration. Missing Unicorn.config?");
+			{
+				_configurations = new IConfiguration[0];
+				return;
+			}
 
 			var configurations = new Collection<IConfiguration>();
 			var nameChecker = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -72,7 +76,9 @@ namespace Unicorn.Configuration
 
 			Assert.IsNotNullOrEmpty(name, "Configuration node had empty or missing name attribute.");
 
-			var registry = new MicroConfiguration(name);
+			var description = GetAttributeValue(configuration, "description");
+
+			var registry = new MicroConfiguration(name, description);
 
 			// these are config types we absolutely must have instances of to use Unicorn - an exception will throw if they don't exist
 			var configMapping = new Dictionary<string, Action<XmlElement, XmlElement, string, IConfiguration>>

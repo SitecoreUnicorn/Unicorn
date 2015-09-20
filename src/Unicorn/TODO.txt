@@ -1,2 +1,0 @@
-﻿- Do something with the remoting project
-- Tests?
