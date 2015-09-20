@@ -18,9 +18,9 @@ namespace Unicorn.ControlPanel
 					h1 { margin: 0; }
 					small { font-style: italic; }
 					svg { margin: 1em 0 2em 0; height: 200px; display: block; }
-					h2 { border-bottom: 4px solid black; font-size: 2.2em; line-height: 80%; margin: .5em 0; }
-					h4 { margin: .5em 0 0 0; }
-					p { margin-top: 0.2em; font-size: 0.8rem; }
+					h2 { border-bottom: 4px solid black; font-size: 2.2rem; line-height: 80%; margin: .5em 0; }
+					h4 { margin: .5em 0 0 0; font-size: 1.4rem; }
+					p { margin-top: 0.2em; }
 					code { font-family: monospace; }
 					a[href='#'] { font-size: 0.7em; }
 					ul { margin: 0; padding: 0; }
@@ -35,11 +35,12 @@ namespace Unicorn.ControlPanel
 						position: relative;
 						margin: 0 0 0 -5px;
 						padding: 0 5px;
-						top: -20px;
+						top: -1.7rem;
+						font-size: 1.7rem;
 						background: white;
 					}
-					.configuration h3 + section {
-						margin-top: -15px;
+					.configuration h3 + * {
+						margin-top: -1.5rem;
 					}
 					.details > li {
 						border-top: 1px solid #DDD;
@@ -50,22 +51,19 @@ namespace Unicorn.ControlPanel
 					.details h5 + p {
 						margin-top: -10px;
 					}
-					.details ul > li {
-						font-size: 0.7em;
-					}
 					.details h5 {
 						display: inline-block;
 						margin: 0 0 0 -5px;
-						font-size: 1em;
+						font-size: 1.3rem;
 						position: relative;
 						background: white;
 						padding: 0 5px;
-						top: -20px;
+						top: -1.3rem;
 					}
 					h4.expand {
 						color: blue;
 						text-decoration: underline;
-						cursor: hand;
+						cursor: pointer;
 					}
 					h4.expand::before {
 						content: '+ ';
@@ -74,13 +72,16 @@ namespace Unicorn.ControlPanel
 					.strong-info { color: orange; font-weight: bold; }
 					.button {
 						display: inline-block;
-						border: 1px solid gray;
-						color: black;
+						border: 2px solid #E35131;
+						color: #E35131;
 						text-decoration: none;
 						padding: .3em .5em;
-						border-radius: 0.3em;
-						background: #EEE;
 						margin: 0 0 1em 0;
+						font-size: 1.2rem;
+					}
+					.button:hover {
+						background: #E35131;
+						color: white;
 					}
 					.collapsed { display: none; }
 				</style>
