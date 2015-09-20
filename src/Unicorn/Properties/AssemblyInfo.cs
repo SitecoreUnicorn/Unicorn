@@ -18,6 +18,6 @@ using System.Runtime.InteropServices;
 
 [assembly: AssemblyVersion("3.0.0.0")]
 [assembly: AssemblyFileVersion("3.0.0.0")]
-[assembly: AssemblyInformationalVersion("3.0.0-beta09")]
+[assembly: AssemblyInformationalVersion("3.0.0-rc1")]
 
 [assembly: InternalsVisibleTo("Unicorn.Tests")]
