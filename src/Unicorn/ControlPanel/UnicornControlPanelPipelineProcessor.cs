@@ -122,9 +122,14 @@ namespace Unicorn.ControlPanel
 					var configurationHasSerializedItems = ControlPanelUtility.HasAnySerializedItems(configuration);
 					var configurationHasValidRootItems = ControlPanelUtility.HasAnySourceItems(configuration);
 
-					yield return new Literal("<div class=\"configuration\"><h3>{0}</h3><section>".FormatWith(configuration.Name));
+					yield return new Literal("<div class=\"configuration\"><h3>{0}</h3>".FormatWith(configuration.Name));
 
-					if(!configurationHasValidRootItems)
+					if(!configuration.Description.IsNullOrEmpty())
+						yield return new Literal("<p>{0}<p>".FormatWith(configuration.Description));
+
+					yield return new Literal("<section>");
+
+					if (!configurationHasValidRootItems)
 						yield return new Literal("<p class=\"warning\">This configuration's predicate cannot resolve any valid root items. This usually means it is configured to look for nonexistant paths or GUIDs. Please review your predicate configuration.</p>");
 					else if (!configurationHasSerializedItems)
 						yield return new Literal("<p class=\"warning\">This configuration does not currently have any valid serialized items. You cannot sync it until you perform an initial serialization.</p>");
@@ -132,7 +137,7 @@ namespace Unicorn.ControlPanel
 					if (configurationHasSerializedItems)
 					{
 						var dpConfig = configuration.Resolve<IUnicornDataProviderConfiguration>();
-						if(dpConfig != null && dpConfig.EnableTransparentSync) yield return new Literal("<p class=\"strong-info\">Transparent sync is enabled for this configuration.</p>");
+						if (dpConfig != null && dpConfig.EnableTransparentSync) yield return new Literal("<p class=\"strong-info\">Transparent sync is enabled for this configuration.</p>");
 
 						var controlOptions = configuration.Resolve<ControlOptions>();
 						controlOptions.ConfigurationName = configuration.Name;
@@ -211,6 +216,6 @@ namespace Unicorn.ControlPanel
 			public bool IsAutomatedTool { get; private set; }
 		}
 
-		
+
 	}
 }

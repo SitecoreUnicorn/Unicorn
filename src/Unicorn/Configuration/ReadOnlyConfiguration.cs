@@ -19,6 +19,7 @@ namespace Unicorn.Configuration
 		}
 
 		public string Name { get { return _innerConfiguration.Name; }}
+		public string Description { get { return _innerConfiguration.Description; } }
 
 		public T Resolve<T>() where T : class
 		{
