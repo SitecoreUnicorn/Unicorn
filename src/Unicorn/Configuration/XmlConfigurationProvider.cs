@@ -88,7 +88,6 @@ namespace Unicorn.Configuration
 				{"evaluator", RegisterExpectedConfigType<IEvaluator>},
 				{"predicate", RegisterExpectedConfigType<IPredicate>},
 				{"targetDataStore", RegisterExpectedConfigType<ITargetDataStore>},
-				{"sourceControlManager", RegisterExpectedConfigType<ISourceControlManager>},
 				{"sourceControlSync", RegisterExpectedConfigType<ISourceControlSync>},
 				{"logger", RegisterExpectedConfigType<ILogger>},
 				{"loaderLogger", RegisterExpectedConfigType<ISerializationLoaderLogger>},
