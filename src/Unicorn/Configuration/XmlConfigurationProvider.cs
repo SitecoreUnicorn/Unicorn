@@ -32,9 +32,14 @@ namespace Unicorn.Configuration
 			}
 		}
 
+		protected virtual XmlNode GetConfigurationNode()
+		{
+			return Factory.GetConfigNode("/sitecore/unicorn");
+		}
+
 		protected virtual void LoadConfigurations()
 		{
-			var configNode = Factory.GetConfigNode("/sitecore/unicorn");
+			var configNode = GetConfigurationNode();
 
 			Assert.IsNotNull(configNode, "Root Unicorn config node not found. Missing Unicorn.config?");
 
@@ -44,13 +49,23 @@ namespace Unicorn.Configuration
 
 			var configurationNodes = configNode.SelectNodes("./configurations/configuration");
 
+			// no configs let's get outta here
 			if (configurationNodes == null || configurationNodes.Count == 0)
-				throw new InvalidOperationException("No Unicorn configuration nodes found under unicorn/configurations/configuration. Missing Unicorn.config?");
+			{
+				_configurations = new IConfiguration[0];
+				return;
+			}
 
 			var configurations = new Collection<IConfiguration>();
+			var nameChecker = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 			foreach (XmlElement element in configurationNodes)
 			{
-				configurations.Add(LoadConfiguration(element, defaultsNode));
+				var configuration = LoadConfiguration(element, defaultsNode);
+
+				if (nameChecker.Contains(configuration.Name)) throw new InvalidOperationException("The Unicorn configuration '" + configuration.Name + "' is defined twice. Configurations should have unique names.");
+				nameChecker.Add(configuration.Name);
+
+				configurations.Add(configuration);
 			}
 
 			_configurations = configurations.ToArray();
@@ -62,7 +77,9 @@ namespace Unicorn.Configuration
 
 			Assert.IsNotNullOrEmpty(name, "Configuration node had empty or missing name attribute.");
 
-			var registry = new MicroConfiguration(name);
+			var description = GetAttributeValue(configuration, "description");
+
+			var registry = new MicroConfiguration(name, description);
 
 			// these are config types we absolutely must have instances of to use Unicorn - an exception will throw if they don't exist
 			var configMapping = new Dictionary<string, Action<XmlElement, XmlElement, string, IConfiguration>>
@@ -125,9 +142,9 @@ namespace Unicorn.Configuration
 		{
 			var type = GetConfigType(configuration, defaults, elementName);
 			var attributes = GetUnmappedAttributes(configuration, defaults, elementName);
-			var resultType = typeof (TResultType);
+			var resultType = typeof(TResultType);
 
-			if (resultType == typeof (ISourceDataStore))
+			if (resultType == typeof(ISourceDataStore))
 			{
 				Func<IDataStore> factory = () => (IDataStore)registry.Activate(type.Type, attributes);
 				Func<object> wrapperFactory = () => new ConfigurationDataStore(new Lazy<IDataStore>(factory));
@@ -136,7 +153,7 @@ namespace Unicorn.Configuration
 				return;
 			}
 
-			if (resultType == typeof (ITargetDataStore))
+			if (resultType == typeof(ITargetDataStore))
 			{
 				Func<IDataStore> factory = () => (IDataStore)registry.Activate(type.Type, attributes);
 				Func<object> wrapperFactory = () => new ConfigurationDataStore(new Lazy<IDataStore>(factory));
@@ -184,12 +201,15 @@ namespace Unicorn.Configuration
 
 			// ReSharper disable once PossibleNullReferenceException
 			var attributes = typeNode.Attributes.Cast<XmlAttribute>()
-				.Where(x => x.Name != "type" && x.Name != "singleInstance")
-				.Select(x =>
+				.Where(attr => attr.Name != "type" && attr.Name != "singleInstance")
+				.Select(attr =>
 				{
 					bool boolean;
-					if(bool.TryParse(x.InnerText, out boolean)) return new KeyValuePair<string, object>(x.Name, boolean);
-					return new KeyValuePair<string, object>(x.Name, x.InnerText);
+					if (bool.TryParse(attr.InnerText, out boolean)) return new KeyValuePair<string, object>(attr.Name, boolean);
+
+					var value = attr.InnerText.Replace("$(configurationName)", GetAttributeValue(configuration, "name"));
+
+					return new KeyValuePair<string, object>(attr.Name, value);
 				});
 
 			// we pass it the XML element as 'configNode'

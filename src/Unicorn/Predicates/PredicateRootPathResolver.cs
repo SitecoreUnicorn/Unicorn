@@ -7,7 +7,6 @@ using Unicorn.Logging;
 
 namespace Unicorn.Predicates
 {
-	// we'd killed IsourceDataStore. Now to fix the issues from that, and work out how we'll handle dep reg for IDataStore
 	public class PredicateRootPathResolver
 	{
 		private readonly IPredicate _predicate;
@@ -50,7 +49,14 @@ namespace Unicorn.Predicates
 				{
 					items.Add(item[0]);
 				}
-				else _logger.Error("Unable to resolve root serialized item for predicate root path {0}:{1}. Either the path did not exist, or multiple items matched the path. It has been skipped.".FormatWith(include.DatabaseName, include.Path));
+				else if (item.Length == 0)
+				{
+					_logger.Error("Unable to resolve serialized item for included root path {0}:{1}. The item does not exist in {2}. It has been skipped. Perhaps you need to perform an initial serialization from the control panel?".FormatWith(include.DatabaseName, include.Path, _targetDataStore.FriendlyName));
+				}
+				else
+				{
+					_logger.Error("Multiple serialized items matched included root path {0}:{1} in {2}. You cannot have a root path that is not unique. It has been skipped.".FormatWith(include.DatabaseName, include.Path, _targetDataStore.FriendlyName));
+				}
 			}
 
 			return items.ToArray();

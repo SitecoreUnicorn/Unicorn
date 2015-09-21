@@ -1,6 +1,0 @@
-﻿- General code review
-- Tests?
-- 8.0U5: publishing to a database with a configuration that has transparent sync enabled appears to hose the database by somehow corrupting the templates
-	- Data seems corrupt in the db, turning off transparent does not fix things
-	- Templates were not included in the transparent configuration
-	- Appears to occur as long as UDP is attached to the web database, and anything at all has transparent on. If transparent always off, no issue.

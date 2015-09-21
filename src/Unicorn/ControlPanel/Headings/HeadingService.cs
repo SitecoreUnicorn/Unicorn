@@ -17,6 +17,9 @@ namespace Unicorn.ControlPanel.Headings
 
 		public string GetHeadingHtml()
 		{
+			// heh heh :)
+			if (DateTime.Today.Month == 4 && DateTime.Today.Day == 1) return ReadResource("Unicorn.ControlPanel.Headings.April.svg.html");
+
 			var headerIndex = Random.Next(0, HtmlChoices.Length);
 
 			return ReadResource(HtmlChoices[headerIndex]);

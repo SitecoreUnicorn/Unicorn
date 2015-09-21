@@ -1,10 +1,12 @@
-﻿using Rainbow.Model;
+﻿using System.Diagnostics.CodeAnalysis;
+using Rainbow.Model;
 using Sitecore.StringExtensions;
 using Unicorn.Data;
 using Unicorn.Logging;
 
 namespace Unicorn.Loader
 {
+	[ExcludeFromCodeCoverage]
 	public class DefaultSerializationLoaderLogger : ISerializationLoaderLogger
 	{
 		private readonly ILogger _logger;

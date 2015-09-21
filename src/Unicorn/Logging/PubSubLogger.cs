@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Unicorn.Logging
 {
@@ -11,6 +12,7 @@ namespace Unicorn.Logging
 	/// 
 	/// See also LoggingContext.
 	/// </summary>
+	[ExcludeFromCodeCoverage]
 	public class PubSubLogger : ILogger
 	{
 		public PubSubLogger()

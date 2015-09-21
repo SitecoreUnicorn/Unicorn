@@ -28,7 +28,7 @@ namespace Unicorn.Pipelines.UnicornSyncEnd
 			Assert.ArgumentNotNullOrEmpty(databaseName, "databaseName");
 
 			// raising this event can take a long time. like 16 seconds. So we boot it as a job so it can go in the background.
-			Job asyncSerializationFinished = new Job(new JobOptions("Raise deserialization complete async", "serialization", "shell", this, "RaiseEvent", new[] { databaseName }));
+			Job asyncSerializationFinished = new Job(new JobOptions("Raise deserialization complete async", "serialization", "shell", this, "RaiseEvent", new object[] { databaseName }));
 			JobManager.Start(asyncSerializationFinished);
 		}
 

@@ -1,4 +1,5 @@
-﻿using Rainbow.Model;
+﻿using System.Diagnostics.CodeAnalysis;
+using Rainbow.Model;
 using Rainbow.Storage.Sc.Deserialization;
 using Sitecore.Data;
 using Sitecore.Data.Fields;
@@ -8,6 +9,7 @@ using Unicorn.Logging;
 
 namespace Unicorn.Deserialization
 {
+	[ExcludeFromCodeCoverage]
 	public class DefaultDeserializerLogger : IDefaultDeserializerLogger
 	{
 		private readonly ILogger _logger;
@@ -49,11 +51,6 @@ namespace Unicorn.Deserialization
 		public virtual void AddedNewVersion(Item newVersion)
 		{
 			_logger.Debug("* [A] version {0}#{1}".FormatWith(newVersion.Language.Name, newVersion.Version.Number));
-		}
-
-		public virtual void SkippedMissingTemplateField(Item item, IItemFieldValue field)
-		{
-			_logger.Warn("* [S] field {0} because it did not exist on template {1}.".FormatWith(field.FieldId, item.TemplateName));
 		}
 
 		public virtual void WroteBlobStream(Item item, IItemFieldValue field)

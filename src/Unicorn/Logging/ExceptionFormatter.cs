@@ -1,16 +1,33 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
+using Unicorn.Logging.Formatting;
 
 namespace Unicorn.Logging
 {
+	/// <summary>
+	/// Formats exceptions all pretty-like so we can log them and show them in the HTML console intelligibly
+	/// </summary>
+	[ExcludeFromCodeCoverage]
 	public class ExceptionFormatter
 	{
-		public string FormatExceptionAsHtml(Exception exception)
+		protected List<IExceptionFormatter> Formatters = new List<IExceptionFormatter>();
+
+		public ExceptionFormatter()
+		{
+			Formatters.Add(new TemplateMissingFieldExceptionFormatter());
+			Formatters.Add(new DeserializationExceptionFormatter());
+		}
+
+		public virtual string FormatExceptionAsHtml(Exception exception)
 		{
 			var aggregateException = exception as DeserializationAggregateException;
-
 			if (aggregateException != null) return FormatAggregateExceptionAsHtml(aggregateException);
+
+			var softFailException = exception as DeserializationSoftFailureAggregateException;
+			if (softFailException != null) return FormatSoftFailAsHtml(softFailException);
 
 			var exMessage = new StringBuilder();
 			exMessage.AppendFormat("ERROR: {0} ({1})", exception.Message, exception.GetType().FullName);
@@ -28,7 +45,7 @@ namespace Unicorn.Logging
 			return exMessage.ToString();
 		}
 
-		public string FormatExceptionAsText(Exception exception)
+		public virtual string FormatExceptionAsText(Exception exception)
 		{
 			var exMessage = new StringBuilder();
 			exMessage.AppendFormat("ERROR: {0} ({1})", exception.Message, exception.GetType().FullName);
@@ -53,7 +70,7 @@ namespace Unicorn.Logging
 			return exMessage.ToString();
 		}
 
-		private static string FormatAggregateExceptionAsHtml(DeserializationAggregateException exception)
+		protected virtual string FormatAggregateExceptionAsHtml(DeserializationAggregateException exception)
 		{
 			var sb = new StringBuilder();
 
@@ -62,32 +79,38 @@ namespace Unicorn.Logging
 				.Select(group => group.First())
 				.ToArray();
 
-			sb.AppendFormat("ERROR: {0} unrecoverable error{1} occurred during deserialization. Note that due to error retrying, some of these items may have appeared to 'load' earlier, but they have not.", dedupedExceptions.Length, dedupedExceptions.Length == 1 ? string.Empty : "s");
+			sb.AppendFormat("{0} error{1} occurred during deserialization. Earlier log messages for items below should be ignored; an error occurred that was retried and failed to correct.", dedupedExceptions.Length, dedupedExceptions.Length == 1 ? string.Empty : "s");
 
-			sb.Append(string.Join("", dedupedExceptions.Select(x =>
+			foreach (var inner in dedupedExceptions)
 			{
-				var result = new StringBuilder();
+				FormatException(inner, sb, true);
+			}
 
-				result.AppendFormat("<p style=\"margin-bottom: 0; font-size: 1.1em; color: orange;\">{0}</p>", x.Message);
-
-				if (x.SerializedItemId != null)
-				{
-					result.AppendFormat("<p style=\"margin: 0; font-size: 0.7em; color: grey;\">{0}</p>", x.SerializedItemId);
-				}
-
-				Exception inner = x.InnerException;
-
-				while (inner != null)
-				{
-					result.AppendFormat("<p style=\"margin-top: 0.2em; font-size: 1.1em;\" class=\"stacktrace\">&gt; {0}: {1}</p>", inner.GetType().Name, inner.Message);
-					inner = inner.InnerException;
-				}
-
-				return result.ToString();
-			})));
 			sb.Append("<br />For full stack traces of each exception, see the Sitecore logs.");
 
 			return sb.ToString();
+		}
+
+		protected virtual string FormatSoftFailAsHtml(DeserializationSoftFailureAggregateException exception)
+		{
+			var sb = new StringBuilder();
+
+			sb.AppendFormat("<span class=\"line warning\">{0} non-fatal warning{1} occurred during deserialization.</span>", exception.InnerExceptions.Length, exception.InnerExceptions.Length == 1 ? string.Empty : "s");
+
+			foreach (var inner in exception.InnerExceptions)
+			{
+				FormatException(inner, sb, true);
+			}
+
+			return sb.ToString();
+		}
+
+		protected virtual void FormatException(Exception exception, StringBuilder result, bool asHtml)
+		{
+			foreach (var handler in Formatters)
+			{
+				if (handler.Format(exception, result, asHtml)) return;
+			}
 		}
 
 		private static void WriteInnerExceptionAsText(Exception innerException, StringBuilder exMessage)

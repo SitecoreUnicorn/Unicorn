@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 
 namespace Unicorn.Loader
 {
-	[Serializable]
+	/// <summary>
+	/// Thrown when a load detects an inconsistency in the serialization store
+	/// </summary>
+	[Serializable, ExcludeFromCodeCoverage]
 	public class ConsistencyException : Exception
 	{
 		public ConsistencyException()

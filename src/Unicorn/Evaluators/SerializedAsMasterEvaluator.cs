@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Rainbow;
 using Rainbow.Diff;
 using Rainbow.Filtering;
@@ -13,7 +14,7 @@ namespace Unicorn.Evaluators
 	/// <summary>
 	/// Evaluates to overwrite the source data if ANY differences exist in the serialized version.
 	/// </summary>
-	public class SerializedAsMasterEvaluator : IEvaluator, IDocumentable
+	public class SerializedAsMasterEvaluator : NewItemOnlyEvaluator
 	{
 		private readonly ISerializedAsMasterEvaluatorLogger _logger;
 		private readonly IItemComparer _itemComparer;
@@ -21,7 +22,7 @@ namespace Unicorn.Evaluators
 		private readonly ISourceDataStore _sourceDataStore;
 		protected static readonly Guid RootId = new Guid("{11111111-1111-1111-1111-111111111111}");
 
-		public SerializedAsMasterEvaluator(ISerializedAsMasterEvaluatorLogger logger, IItemComparer itemComparer, IFieldFilter fieldFilter, ISourceDataStore sourceDataStore)
+		public SerializedAsMasterEvaluator(ISerializedAsMasterEvaluatorLogger logger, IItemComparer itemComparer, IFieldFilter fieldFilter, ISourceDataStore sourceDataStore) : base(logger, sourceDataStore)
 		{
 			Assert.ArgumentNotNull(logger, "logger");
 			Assert.ArgumentNotNull(itemComparer, "itemComparer");
@@ -34,29 +35,17 @@ namespace Unicorn.Evaluators
 			_sourceDataStore = sourceDataStore;
 		}
 
-		public void EvaluateOrphans(IItemData[] orphanItems)
+		public override void EvaluateOrphans(IItemData[] orphanItems)
 		{
 			Assert.ArgumentNotNull(orphanItems, "orphanItems");
 
-			EvaluatorUtility.RecycleItems(orphanItems, _sourceDataStore, item => _logger.DeletedItem(item));
-
-			foreach (var orphan in orphanItems) _logger.Evaluated(orphan);
+			foreach (var item in orphanItems)
+			{
+				RecycleItem(item);
+			}
 		}
 
-		public IItemData EvaluateNewSerializedItem(IItemData newItemData)
-		{
-			Assert.ArgumentNotNull(newItemData, "newItem");
-
-			_logger.DeserializedNewItem(newItemData);
-
-			DoDeserialization(newItemData);
-
-			_logger.Evaluated(newItemData);
-
-			return newItemData;
-		}
-
-		public IItemData EvaluateUpdate(IItemData sourceItem, IItemData targetItem)
+		public override IItemData EvaluateUpdate(IItemData sourceItem, IItemData targetItem)
 		{
 			Assert.ArgumentNotNull(targetItem, "targetItemData");
 			Assert.ArgumentNotNull(sourceItem, "sourceItemData");
@@ -68,10 +57,9 @@ namespace Unicorn.Evaluators
 			if (ShouldUpdateExisting(sourceItem, targetItem, deferredUpdateLog))
 			{
 				_logger.SerializedUpdatedItem(targetItem);
-
 				deferredUpdateLog.ExecuteDeferredActions(_logger);
 
-				DoDeserialization(targetItem);
+				_sourceDataStore.Save(targetItem);
 
 				return targetItem;
 			}
@@ -124,22 +112,45 @@ namespace Unicorn.Evaluators
 			return !comparison.AreEqual;
 		}
 
-		protected virtual void DoDeserialization(IItemData targetItem)
+		/// <summary>
+		/// Recycles a whole tree of items and reports their progress
+		/// </summary>
+		/// <param name="items">The item(s) to delete. Note that their children will be deleted before them, and also be reported upon.</param>
+		protected virtual void RecycleItems(IEnumerable<IItemData> items)
 		{
-			_sourceDataStore.Save(targetItem);
+			Assert.ArgumentNotNull(items, "items");
+
+			foreach (var item in items)
+			{
+				RecycleItem(item);
+			}
 		}
 
-		public string FriendlyName
+		/// <summary>
+		/// Deletes an item from the source data provider
+		/// </summary>
+		protected virtual void RecycleItem(IItemData itemData)
+		{
+			var children = _sourceDataStore.GetChildren(itemData);
+
+			EvaluateOrphans(children.ToArray());
+
+			_logger.RecycledItem(itemData);
+			_logger.Evaluated(itemData);
+			_sourceDataStore.Remove(itemData);
+		}
+
+		public override string FriendlyName
 		{
 			get { return "Serialized as Master Evaluator"; }
 		}
 
-		public string Description
+		public override string Description
 		{
 			get { return "Treats the items that are serialized as the master copy, and any changes whether newer or older are synced into the source data. This allows for all merging to occur in source control, and is the default way Unicorn behaves."; }
 		}
 
-		public KeyValuePair<string, string>[] GetConfigurationDetails()
+		public override KeyValuePair<string, string>[] GetConfigurationDetails()
 		{
 			return new[] { new KeyValuePair<string, string>("Item comparer", DocumentationUtility.GetFriendlyName(_itemComparer)) };
 		}

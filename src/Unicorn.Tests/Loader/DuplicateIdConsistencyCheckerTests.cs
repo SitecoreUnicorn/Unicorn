@@ -1,15 +1,14 @@
 ﻿using NSubstitute;
-using NUnit.Framework;
+using Xunit;
 using Rainbow.Tests;
 using Sitecore.Data;
 using Unicorn.Loader;
 
 namespace Unicorn.Tests.Loader
 {
-	[TestFixture]
 	public class DuplicateIdConsistencyCheckerTests
 	{
-		[Test]
+		[Fact]
 		public void IsConsistent_ReturnsTrue_WhenEmpty()
 		{
 			var testLogger = Substitute.For<IDuplicateIdConsistencyCheckerLogger>();
@@ -18,10 +17,10 @@ namespace Unicorn.Tests.Loader
 
 			var testItem = new FakeItem(ID.NewID.Guid);
 
-			Assert.IsTrue(testChecker.IsConsistent(testItem));
+			Assert.True(testChecker.IsConsistent(testItem));
 		}
 
-		[Test]
+		[Fact]
 		public void IsConsistent_ReturnsTrue_WhenNotDuplicated()
 		{
 			var testLogger = Substitute.For<IDuplicateIdConsistencyCheckerLogger>();
@@ -33,10 +32,10 @@ namespace Unicorn.Tests.Loader
 			var testItem2 = new FakeItem(ID.NewID.Guid);
 
 			testChecker.AddProcessedItem(testItem1);
-			Assert.IsTrue(testChecker.IsConsistent(testItem2));
+			Assert.True(testChecker.IsConsistent(testItem2));
 		}
 
-		[Test]
+		[Fact]
 		public void IsConsistent_ReturnsFalse_WhenDuplicated()
 		{
 			var testLogger = Substitute.For<IDuplicateIdConsistencyCheckerLogger>();
@@ -50,10 +49,10 @@ namespace Unicorn.Tests.Loader
 			var testItem2 = new FakeItem(duplicatedId);
 
 			testChecker.AddProcessedItem(testItem1);
-			Assert.IsFalse(testChecker.IsConsistent(testItem2));
+			Assert.False(testChecker.IsConsistent(testItem2));
 		}
 
-		[Test]
+		[Fact]
 		public void IsConsistent_ReturnsTrue_WhenDuplicatedIdsAreInDifferentDatabases()
 		{
 			var testLogger = Substitute.For<IDuplicateIdConsistencyCheckerLogger>();
@@ -67,10 +66,10 @@ namespace Unicorn.Tests.Loader
 			var testItem2  = new FakeItem(duplicatedId, "core");
 
 			testChecker.AddProcessedItem(testItem1);
-			Assert.IsTrue(testChecker.IsConsistent(testItem2));
+			Assert.True(testChecker.IsConsistent(testItem2));
 		}
 
-		[Test]
+		[Fact]
 		public void IsConsistent_LogsError_WhenDuplicated()
 		{
 			var testLogger = Substitute.For<IDuplicateIdConsistencyCheckerLogger>();

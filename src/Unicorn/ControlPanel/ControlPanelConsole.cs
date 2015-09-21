@@ -136,7 +136,16 @@ namespace Unicorn.ControlPanel
 			{
 				base.RenderResources();
 				_response.Write("<link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic' rel='stylesheet' type='text/css'>");
-				_response.Write(@"<style>.wrapper { width: auto; max-width: 1850px; } a, a:visited { color: lightblue; } #console{ height: 50em; } h1 { font-size: 3em; } h1, p { font-family: 'Source Sans Pro'; }</style>");
+				_response.Write(@"<style>
+					.wrapper { width: auto; max-width: 1850px; } 
+					a, a:visited { color: lightblue; } 
+					#console{ height: 40em; } 
+					h1 { font-size: 3em; } 
+					h1, p { font-family: 'Source Sans Pro'; } 
+					.line { margin: 1em 0 0 0; font-size: 1.2em; display: block; }
+					.line-inner { display: block; font-size: 0.9em; }
+					.line-smaller { font-size: 0.7em !important; margin-bottom: .4em; font-style: italic; color: gray; }
+				</style>");
 			}
 		}
 	}

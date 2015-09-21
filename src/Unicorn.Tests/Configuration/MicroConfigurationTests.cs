@@ -1,53 +1,61 @@
 ﻿using System;
-using NUnit.Framework;
+using Xunit;
 using Unicorn.Configuration;
 
 namespace Unicorn.Tests.Configuration
 {
 	public class MicroConfigurationTests
 	{
-		[Test]
-		public void Micro_ResolvesType()
+		[Fact]
+		public void ResolvesType()
 		{
-			var micro = new MicroConfiguration("Test");
+			var micro = new MicroConfiguration("Test", null);
 
 			micro.Register(typeof(ITest), () => new Test(), true);
 
 			var instance = micro.Resolve<ITest>();
 
-			Assert.IsNotNull(instance);
+			Assert.NotNull(instance);
 		}
 
-		[Test]
-		public void Micro_ResolvesType_AsInstance()
+		[Fact]
+		public void Throws_WhenConstructingUnregisteredType()
 		{
-			var micro = new MicroConfiguration("Test");
+			var micro = new MicroConfiguration("Test", null);
+
+			Assert.Throws<MicroResolutionException>(() => micro.Resolve<ITest>());
+		}
+
+		[Fact]
+		public void ResolvesType_AsInstance()
+		{
+			var micro = new MicroConfiguration("Test", null);
 
 			micro.Register(typeof(IInstance), () => new TestInstance(), false);
 			
 			var instance = micro.Resolve<IInstance>();
 
-			Assert.IsNotNull(instance);
+			Assert.NotNull(instance);
 
 			var instance2 = micro.Resolve<IInstance>();
 
-			Assert.AreNotEqual(instance.InstanceGuid, instance2.InstanceGuid);
+			Assert.NotEqual(instance.InstanceGuid, instance2.InstanceGuid);
 		}
 
-		[Test]
-		public void Micro_ResolvesType_AsSingleton()
+		[Fact]
+		public void ResolvesType_AsSingleton()
 		{
-			var micro = new MicroConfiguration("Test");
+			var micro = new MicroConfiguration("Test", null);
 
 			micro.Register(typeof(IInstance), () => new TestInstance(), true);
 			
 			var instance = micro.Resolve<IInstance>();
 
-			Assert.IsNotNull(instance);
+			Assert.NotNull(instance);
 
 			var instance2 = micro.Resolve<IInstance>();
 
-			Assert.AreEqual(instance.InstanceGuid, instance2.InstanceGuid);
+			Assert.Equal(instance.InstanceGuid, instance2.InstanceGuid);
 		}
 
 		public interface IInstance

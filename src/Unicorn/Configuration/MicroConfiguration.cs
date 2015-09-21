@@ -12,12 +12,14 @@ namespace Unicorn.Configuration
 		private readonly ConcurrentDictionary<Type, Lazy<object>> _singletons = new ConcurrentDictionary<Type, Lazy<object>>();
 		private readonly ConcurrentDictionary<Type, Func<object>> _transients = new ConcurrentDictionary<Type, Func<object>>();
 
-		public MicroConfiguration(string name)
+		public MicroConfiguration(string name, string description)
 		{
 			Name = name;
+			Description = description;
 		}
 
 		public string Name { get; private set; }
+		public string Description { get; private set; }
 
 		/// <summary>
 		/// Resolves a registered type with its dependencies. Note: to activate unregistered types and inject dependencies use Activate() instead.

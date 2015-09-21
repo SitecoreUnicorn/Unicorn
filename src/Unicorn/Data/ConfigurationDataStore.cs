@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Rainbow;
 using Rainbow.Model;
 using Rainbow.Storage;
@@ -10,6 +11,7 @@ namespace Unicorn.Data
 	/// Facade that enables mapping arbitrary IDataStore implementations onto ISourceDataStore/ITargetDataStore,
 	/// so that Unicorn can disambiguate which dependency it's after.
 	/// </summary>
+	[ExcludeFromCodeCoverage]
 	public class ConfigurationDataStore : ISourceDataStore, ITargetDataStore
 	{
 		private readonly Lazy<IDataStore> _innerDataStore;

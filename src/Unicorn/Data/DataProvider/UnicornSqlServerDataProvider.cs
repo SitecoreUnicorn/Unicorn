@@ -8,6 +8,7 @@ using Sitecore.Data;
 using Sitecore.Data.DataProviders;
 using Sitecore.Data.Items;
 using Sitecore.Data.SqlServer;
+using Sitecore.Diagnostics;
 using Sitecore.Globalization;
 using Unicorn.Configuration;
 
@@ -49,7 +50,7 @@ namespace Unicorn.Data.DataProvider
 
 		protected void AddUnicornDataProvider(UnicornDataProvider dataProvider)
 		{
-			dataProvider.DataProvider = this;
+			dataProvider.ParentDataProvider = this;
 			_unicornDataProviders.Add(dataProvider);
 		}
 
@@ -253,7 +254,7 @@ namespace Unicorn.Data.DataProvider
 			foreach (var provider in UnicornDataProviders)
 			{
 				var providerResult = provider.BlobStreamExists(blobId, context);
-				if (providerResult) return providerResult;
+				if (providerResult) return true;
 			}
 
 			return base.BlobStreamExists(blobId, context);

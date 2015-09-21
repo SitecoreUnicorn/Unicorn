@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
 using Rainbow.Filtering;
 using Rainbow.Model;
 using Sitecore;
@@ -22,11 +21,11 @@ namespace Unicorn.Data.DataProvider
 	/// This class provides event-handling services to Unicorn - reflecting actions onto the serialization provider via the predicate when
 	/// changes occur to the source data.
 	/// </summary>
-	public class UnicornDataProvider
+	public class UnicornDataProvider : IDisposable
 	{
 		public const string TransparentSyncUpdatedByValue = "serialization\\UnicornDataProvider";
 
-        private readonly ITargetDataStore _targetDataStore;
+		private readonly ITargetDataStore _targetDataStore;
 		private readonly ISourceDataStore _sourceDataStore;
 		private readonly IPredicate _predicate;
 		private readonly IFieldFilter _fieldFilter;
@@ -92,8 +91,9 @@ namespace Unicorn.Data.DataProvider
 			set { _disableTransparentSync = value; }
 		}
 
-		public Sitecore.Data.DataProviders.DataProvider DataProvider { get; set; }
-		protected Database Database { get { return DataProvider.Database; } }
+		public Sitecore.Data.DataProviders.DataProvider ParentDataProvider { get; set; }
+
+		protected Database Database { get { return ParentDataProvider.Database; } }
 
 		public void CreateItem(ItemDefinition newItem, ID templateId, ItemDefinition parent, CallContext context)
 		{
@@ -111,7 +111,7 @@ namespace Unicorn.Data.DataProvider
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
 			Assert.ArgumentNotNull(changes, "changes");
 
-			var sourceItem = GetSourceFromId(changes.Item.ID, false);
+			var sourceItem = GetSourceFromId(changes.Item.ID);
 
 			if (sourceItem == null) return;
 
@@ -461,6 +461,8 @@ namespace Unicorn.Data.DataProvider
 
 			foreach (var field in blobFields)
 			{
+				// ReSharper disable once AssignNullToNotNullAttribute
+				// ReSharper disable once PossibleInvalidOperationException
 				_blobIdLookup[field.BlobId.Value] = Tuple.Create(itemData.Path, itemData.Id);
 			}
 		}
@@ -496,6 +498,20 @@ namespace Unicorn.Data.DataProvider
 			Database.Caches.PathCache.Clear();
 		}
 
-		
+		public void Dispose()
+		{
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+
+		protected virtual void Dispose(bool disposing)
+		{
+			if (disposing)
+			{
+				// ReSharper disable once SuspiciousTypeConversion.Global
+				var targetAsDisposable = _targetDataStore as IDisposable;
+				if(targetAsDisposable != null) targetAsDisposable.Dispose();
+			}
+		}
 	}
 }

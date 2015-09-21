@@ -1,10 +1,12 @@
-﻿using Sitecore.Diagnostics;
+﻿using System.Diagnostics.CodeAnalysis;
+using Sitecore.Diagnostics;
 
 namespace Unicorn.Logging
 {
 	/// <summary>
 	/// Logger that writes to the Sitecore logs
 	/// </summary>
+	[ExcludeFromCodeCoverage]
 	public class SitecoreLogger : ILogger
 	{
 		public void Info(string message)

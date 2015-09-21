@@ -14,6 +14,11 @@ namespace Unicorn.Configuration
 		string Name { get; }
 
 		/// <summary>
+		/// A description of what this configuration is for. Displayed in control panel if present.
+		/// </summary>
+		string Description { get; }
+
+		/// <summary>
 		/// Resolves an instance of a type from a generic parameter. This should be an explicitly registered type.
 		/// </summary>
 		T Resolve<T>() where T : class;

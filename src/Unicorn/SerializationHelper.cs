@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using Rainbow.Model;
-using Rainbow.Predicates;
 using Sitecore.Configuration;
 using Sitecore.Pipelines;
 using Sitecore.SecurityModel;
@@ -18,6 +17,9 @@ using Unicorn.Predicates;
 
 namespace Unicorn
 {
+	/// <summary>
+	/// Utility class designed to make it a bit simpler to call primary serialization operations programmatically
+	/// </summary>
 	public class SerializationHelper
 	{
 		private int _threads = Settings.GetIntSetting("Unicorn.MaximumConcurrency", 16);
@@ -34,11 +36,11 @@ namespace Unicorn
 		}
 
 		/// <returns>True if the tree was dumped, false if the root item was not included</returns>
-		public virtual bool DumpTree(IItemData item)
+		public virtual bool DumpTree(IItemData item, IConfiguration configuration = null)
 		{
 			using (new TransparentSyncDisabler())
 			{
-				var configuration = GetConfigurationForItem(item);
+				if(configuration == null) configuration = GetConfigurationForItem(item);
 
 				if (configuration == null) return false;
 
@@ -65,11 +67,11 @@ namespace Unicorn
 		}
 
 		/// <returns>True if the item was dumped, false if it was not included</returns>
-		public virtual bool DumpItem(IItemData item)
+		public virtual bool DumpItem(IItemData item, IConfiguration configuration = null)
 		{
 			using (new TransparentSyncDisabler())
 			{
-				var configuration = GetConfigurationForItem(item);
+				if(configuration == null) configuration = GetConfigurationForItem(item);
 
 				if (configuration == null) return false;
 

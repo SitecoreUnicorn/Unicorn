@@ -1,4 +1,4 @@
-﻿namespace Rainbow.Predicates
+﻿namespace Unicorn.Predicates
 {
 	public class PredicateResult
 	{

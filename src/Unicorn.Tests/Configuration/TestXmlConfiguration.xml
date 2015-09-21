@@ -1,0 +1,26 @@
+﻿<unicorn>
+	<configurations>
+		<configuration name="Default Configuration">
+			<predicate type="Unicorn.Predicates.SerializationPresetPredicate, Unicorn" singleInstance="true">
+			</predicate>
+		</configuration>
+		<configuration name="Test Configuration">
+			<predicate type="Unicorn.Predicates.SerializationPresetPredicate, Unicorn" singleInstance="true">
+			</predicate>
+			<loaderLogger type="Unicorn.Loader.DebugSerializationLoaderLogger, Unicorn" singleInstance="true"/>
+		</configuration>
+	</configurations>
+
+	<defaults>
+		<sourceDataStore type="Rainbow.Storage.Sc.SitecoreDataStore, Rainbow.Storage.Sc" singleInstance="true"/>
+		<targetDataStore type="Rainbow.Storage.SerializationFileSystemDataStore, Rainbow" physicalRootPath="$(dataFolder)\Unicorn\$(configurationName)" useDataCache="false" singleInstance="true"/>
+		<evaluator type="Unicorn.Evaluators.SerializedAsMasterEvaluator, Unicorn" singleInstance="true"/>
+		<evaluatorLogger type="Unicorn.Evaluators.DefaultSerializedAsMasterEvaluatorLogger, Unicorn" singleInstance="true"/>
+		<logger type="Unicorn.Logging.PubSubLogger, Unicorn" singleInstance="true" />
+		<loaderLogger type="Unicorn.Loader.DefaultSerializationLoaderLogger, Unicorn" singleInstance="true"/>
+		<loaderConsistencyChecker type="Unicorn.Loader.DuplicateIdConsistencyChecker, Unicorn"/>
+		<loaderDeserializeFailureRetryer type="Unicorn.Loader.DeserializeFailureRetryer, Unicorn" singleInstance="false"/>
+	</defaults>
+
+	<configurationProvider type="Unicorn.Configuration.XmlConfigurationProvider, Unicorn"/>
+</unicorn>

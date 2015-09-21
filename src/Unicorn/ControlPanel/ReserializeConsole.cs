@@ -60,7 +60,7 @@ namespace Unicorn.ControlPanel
 							int index = 1;
 							foreach (var root in roots)
 							{
-								helper.DumpTree(root);
+								helper.DumpTree(root, configuration);
 								progress.Report((int) ((index/(double) roots.Length)*100));
 								index++;
 							}
