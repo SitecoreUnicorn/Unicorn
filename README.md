@@ -14,7 +14,7 @@ Unicorn solves some of the same issues as [Hedgehog's TDS](https://www.hhogdev.c
 
 ## Initial Setup
 * Upgrading from 2.x? [Read this](https://github.com/kamsar/Unicorn/wiki/Upgrading-to-Unicorn-3)
-* You'll need Sitecore 7.0 or later. Tested with Sitecore through 8.0 Update-5. Might be tested with something later than 8.0 as well.
+* You'll need Sitecore 6.6 or later (including 8.x). Note that for 6.6 compatibility you must have .NET 4.5 installed.
 * Install Unicorn. This is as simple as adding the Unicorn NuGet package to your project.
 * When you install the NuGet package, a [README file](https://github.com/kamsar/Unicorn/blob/master/Build/Unicorn.nuget/readme.txt) will come up in Visual Studio with help to get you started.
 
