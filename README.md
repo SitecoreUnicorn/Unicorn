@@ -49,6 +49,8 @@ There are also a series of blog posts detailing enhancements to Unicorn 3 (and R
 [Rethinking the Sitecore Serialization Format with Rainbow](http://kamsar.net/index.php/2015/07/Rethinking-the-Sitecore-Serialization-Format-Unicorn-3-Preview-part-1/)
 [Reinventing the Serialization File System with Rainbow](http://kamsar.net/index.php/2015/08/Reinventing-the-Serialization-File-System-Rainbow-Preview-Part-2/)
 
+[Andrii Snigyr](https://twitter.com/berserkerdotnet) has written a [Unicorn Visual Studio Extension](https://visualstudiogallery.msdn.microsoft.com/64439022-f470-422a-b663-fbb89aaf6e86) that enables syncing from within Visual Studio 2013-2015. This tool is natively supported in Unicorn 3 without any additional installation; you just need to enable the `Unicorn.Remote.config.disabled` file to enable its APIs.
+
 ## Automated Deployment
 
 Using Unicorn for automated deployment is easy - simply configure your CI server to make a HTTP call to the control panel after deploying the site. 

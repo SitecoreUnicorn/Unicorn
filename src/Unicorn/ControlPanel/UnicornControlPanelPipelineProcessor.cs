@@ -44,7 +44,7 @@ namespace Unicorn.ControlPanel
 			}
 		}
 
-		public void ProcessRequest(HttpContext context)
+		public virtual void ProcessRequest(HttpContext context)
 		{
 			context.Server.ScriptTimeout = 86400;
 
