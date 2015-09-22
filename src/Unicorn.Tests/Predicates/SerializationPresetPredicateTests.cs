@@ -134,7 +134,7 @@ namespace Unicorn.Tests.Predicates
 
 			var roots = predicate.GetRootPaths();
 
-			Assert.True(roots.Length == 2, "Expected two root paths from test config");
+			Assert.True(roots.Length == 3, "Expected three root paths from test config");
 			Assert.Equal(roots[0].DatabaseName, "master");
 			Assert.Equal(roots[0].Path, "/sitecore/layout/Simulators");
 			Assert.Equal(roots[1].DatabaseName, "core");

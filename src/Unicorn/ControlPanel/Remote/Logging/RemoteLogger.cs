@@ -48,6 +48,11 @@ namespace Unicorn.ControlPanel.Remote.Logging
 			SendOpeartionMessage(MessageLevel.Error, exception.ToString());
 		}
 
+		public void Flush()
+		{
+			
+		}
+
 		public void ReportProgress(int progress)
 		{
 			SendMessage(ReportType.Progress, MessageLevel.Info, progress.ToString());

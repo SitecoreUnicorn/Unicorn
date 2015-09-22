@@ -16,19 +16,22 @@ namespace Unicorn.Evaluators
 	/// </summary>
 	public class SerializedAsMasterEvaluator : NewItemOnlyEvaluator
 	{
+		private readonly ILogger _globalLogger;
 		private readonly ISerializedAsMasterEvaluatorLogger _logger;
 		private readonly IItemComparer _itemComparer;
 		private readonly IFieldFilter _fieldFilter;
 		private readonly ISourceDataStore _sourceDataStore;
 		protected static readonly Guid RootId = new Guid("{11111111-1111-1111-1111-111111111111}");
 
-		public SerializedAsMasterEvaluator(ISerializedAsMasterEvaluatorLogger logger, IItemComparer itemComparer, IFieldFilter fieldFilter, ISourceDataStore sourceDataStore) : base(logger, sourceDataStore)
+		public SerializedAsMasterEvaluator(ILogger globalLogger, ISerializedAsMasterEvaluatorLogger logger, IItemComparer itemComparer, IFieldFilter fieldFilter, ISourceDataStore sourceDataStore) : base(logger, sourceDataStore)
 		{
+			Assert.ArgumentNotNull(globalLogger, "globalLogger");
 			Assert.ArgumentNotNull(logger, "logger");
 			Assert.ArgumentNotNull(itemComparer, "itemComparer");
 			Assert.ArgumentNotNull(fieldFilter, "fieldFilter");
 			Assert.ArgumentNotNull(sourceDataStore, "sourceDataStore");
 
+			_globalLogger = globalLogger;
 			_logger = logger;
 			_itemComparer = itemComparer;
 			_fieldFilter = fieldFilter;
@@ -56,11 +59,13 @@ namespace Unicorn.Evaluators
 
 			if (ShouldUpdateExisting(sourceItem, targetItem, deferredUpdateLog))
 			{
-				_logger.SerializedUpdatedItem(targetItem);
-				deferredUpdateLog.ExecuteDeferredActions(_logger);
+				using (new LogTransaction(_globalLogger))
+				{
+					_logger.SerializedUpdatedItem(targetItem);
+					deferredUpdateLog.ExecuteDeferredActions(_logger);
 
-				_sourceDataStore.Save(targetItem);
-
+					_sourceDataStore.Save(targetItem);
+				}
 				return targetItem;
 			}
 

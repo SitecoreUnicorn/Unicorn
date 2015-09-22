@@ -66,6 +66,7 @@
     <Compile Include="Logging\Formatting\DeserializationExceptionFormatter.cs" />
     <Compile Include="Logging\Formatting\IExceptionFormatter.cs" />
     <Compile Include="Logging\Formatting\TemplateMissingFieldExceptionFormatter.cs" />
+    <Compile Include="Logging\LogTransaction.cs" />
     <Compile Include="UI\Commands\UnicornDumpTreeCommand.cs" />
     <Compile Include="UI\Commands\UnicornLoadTreeCommand.cs" />
     <Compile Include="UI\Commands\UnicornLoadItemCommand.cs" />

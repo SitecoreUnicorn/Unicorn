@@ -34,5 +34,10 @@ namespace Unicorn.Logging
 		{
 			Log.Error(new ExceptionFormatter().FormatExceptionAsText(exception), this);
 		}
+
+		public void Flush()
+		{
+			
+		}
 	}
 }

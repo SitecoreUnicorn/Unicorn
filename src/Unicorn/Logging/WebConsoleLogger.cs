@@ -46,5 +46,9 @@ namespace Unicorn.Logging
 			else
 				_progress.ReportStatus(error, MessageType.Error);
 		}
+		public void Flush()
+		{
+			
+		}
 	}
 }

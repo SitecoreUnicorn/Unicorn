@@ -12,5 +12,6 @@ namespace Unicorn.Logging
 		void Warn(string message);
 		void Error(string message);
 		void Error(Exception exception);
+		void Flush();
 	}
 }
