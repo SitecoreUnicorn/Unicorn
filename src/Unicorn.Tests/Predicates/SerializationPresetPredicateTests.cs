@@ -50,6 +50,28 @@ namespace Unicorn.Tests.Predicates
 		}
 
 		[Fact]
+		public void Includes_IncludesSerializedItemByPath_WhenChildrenOfRootAreExcluded_AndPathIsRootItem()
+		{
+			var predicate = CreateTestPredicate(CreateTestConfiguration());
+
+			var item = new FakeItem(path: "/test");
+			var includes = predicate.Includes(item);
+
+			Assert.True(includes.IsIncluded, "Included parent serialized item when all children excluded failed.");
+		}
+
+		[Fact]
+		public void Includes_ExcludesSerializedItemByPath_WhenChildrenOfRootAreExcluded()
+		{
+			var predicate = CreateTestPredicate(CreateTestConfiguration());
+
+			var item = new FakeItem(path: "/test/child");
+			var includes = predicate.Includes(item);
+
+			Assert.False(includes.IsIncluded, "Exclude serialized item by all children failed.");
+		}
+
+		[Fact]
 		public void Includes_IncludesSerializedItemByPath()
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());

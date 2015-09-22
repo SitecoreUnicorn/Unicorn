@@ -5,4 +5,7 @@
 		<exclude path="/sitecore/layout/Simulators/Android Phone" />
 	</include>
 	<include database="core" path="/sitecore/content" />
+	<include database="master" path="/test">
+		<exclude path="/test/" />
+	</include>
 </preset>
