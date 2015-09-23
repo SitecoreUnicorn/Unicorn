@@ -1,5 +1,7 @@
 # Unicorn
 
+![la la la la](http://kamsar.net/nuget/unicorn/logo.png)
+
 Unicorn is a utility for Sitecore that solves the issue of moving templates, renderings, and other database items between Sitecore instances. This becomes problematic when developers have their own local instances - packages are error-prone and tend to be forgotten on the way to production. Unicorn solves this issue by writing serialized copies of Sitecore items to disk along with the code - this way, a copy of the necessary database items for a given codebase accompanies it in source control.
 
 For basic usage, Unicorn 3 has two moving parts:
