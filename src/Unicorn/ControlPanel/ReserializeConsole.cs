@@ -32,7 +32,10 @@ namespace Unicorn.ControlPanel
 
 		protected override void Process(IProgressStatus progress)
 		{
-			foreach (var configuration in ResolveConfigurations())
+			var configurations = ResolveConfigurations();
+			int taskNumber = 1;
+
+			foreach (var configuration in configurations)
 			{
 				var logger = configuration.Resolve<ILogger>();
 
@@ -57,12 +60,12 @@ namespace Unicorn.ControlPanel
 							targetDataStore.Clear();
 
 							var roots = configuration.Resolve<PredicateRootPathResolver>().GetRootSourceItems();
-
+							
 							int index = 1;
 							foreach (var root in roots)
 							{
 								helper.DumpTree(root, configuration);
-								progress.Report((int) ((index/(double) roots.Length)*100));
+								SetTaskProgress(progress, taskNumber, configurations.Length, (int) ((index/(double) roots.Length)*100));
 								index++;
 							}
 						}
@@ -76,6 +79,8 @@ namespace Unicorn.ControlPanel
 						logger.Error(ex);
 						break;
 					}
+
+					taskNumber++;
 				}
 			}
 		}

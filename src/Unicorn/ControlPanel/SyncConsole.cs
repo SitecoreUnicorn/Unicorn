@@ -32,6 +32,7 @@ namespace Unicorn.ControlPanel
 		protected override void Process(IProgressStatus progress)
 		{
 			var configurations = ResolveConfigurations();
+			int taskNumber = 1;
 
 			foreach (var configuration in configurations)
 			{
@@ -55,7 +56,7 @@ namespace Unicorn.ControlPanel
 
 							helper.SyncTree(configuration, item =>
 							{
-								progress.Report((int) (((index + 1)/(double) roots.Length)*100));
+								SetTaskProgress(progress, taskNumber, configurations.Length, (int)((index / (double)roots.Length) * 100));
 								index++;
 							}, roots);
 						}
@@ -66,6 +67,8 @@ namespace Unicorn.ControlPanel
 						break;
 					}
 				}
+
+				taskNumber++;
 			}
 
 			CorePipeline.Run("unicornSyncEnd", new UnicornSyncEndPipelineArgs(configurations));
