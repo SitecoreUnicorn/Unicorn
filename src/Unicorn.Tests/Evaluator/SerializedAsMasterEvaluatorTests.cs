@@ -15,6 +15,7 @@ using Sitecore.Data.Items;
 using Sitecore.FakeDb;
 using Unicorn.Data;
 using Unicorn.Evaluators;
+using Unicorn.Logging;
 
 namespace Unicorn.Tests.Evaluator
 {
@@ -134,7 +135,7 @@ namespace Unicorn.Tests.Evaluator
 				comparer.FastCompare(Arg.Any<IItemData>(), Arg.Any<IItemData>()).Returns(new ItemComparisonResult(new FakeItem(), new FakeItem()));
 			}
 
-			return new SerializedAsMasterEvaluator(logger ?? Substitute.For<ISerializedAsMasterEvaluatorLogger>(), comparer, CreateTestFieldFilter(), dataStore);
+			return new SerializedAsMasterEvaluator(Substitute.For<ILogger>(), logger ?? Substitute.For<ISerializedAsMasterEvaluatorLogger>(), comparer, CreateTestFieldFilter(), dataStore);
 		}
 
 		private IFieldFilter CreateTestFieldFilter()
