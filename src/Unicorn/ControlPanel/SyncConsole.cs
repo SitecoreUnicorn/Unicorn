@@ -42,7 +42,8 @@ namespace Unicorn.ControlPanel
 				{
 					try
 					{
-						logger.Info("Control Panel Sync: Processing Unicorn configuration " + configuration.Name);
+						logger.Info(string.Empty);
+						logger.Info(configuration.Name + " is being synced.");
 
 						using (new TransparentSyncDisabler())
 						{
@@ -58,8 +59,6 @@ namespace Unicorn.ControlPanel
 								index++;
 							}, roots);
 						}
-
-						logger.Info("Control Panel Sync: Completed syncing Unicorn configuration " + configuration.Name);
 					}
 					catch (Exception ex)
 					{

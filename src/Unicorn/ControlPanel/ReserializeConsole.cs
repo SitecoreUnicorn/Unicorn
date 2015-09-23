@@ -43,7 +43,8 @@ namespace Unicorn.ControlPanel
 						var timer = new Stopwatch();
 						timer.Start();
 
-						logger.Info(configuration.Name + " is being reserialized");
+						logger.Info(string.Empty);
+						logger.Info(configuration.Name + " is being reserialized.");
 
 						using (new TransparentSyncDisabler())
 						{
@@ -68,7 +69,7 @@ namespace Unicorn.ControlPanel
 
 						timer.Stop();
 
-						logger.Info("{0} reserialization complete in {1}ms".FormatWith(configuration.Name, timer.ElapsedMilliseconds));
+						logger.Info("{0} reserialization complete in {1}ms.".FormatWith(configuration.Name, timer.ElapsedMilliseconds));
 					}
 					catch (Exception ex)
 					{
