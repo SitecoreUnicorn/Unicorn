@@ -74,7 +74,7 @@ namespace Unicorn.ControlPanel
 
 					table {
 						border-spacing: 0 20px;
-						margin-top: 0;
+						margin: 0 0 -20px 0;
 						width: 100%;
 					}
 
