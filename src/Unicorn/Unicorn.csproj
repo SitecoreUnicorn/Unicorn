@@ -151,6 +151,7 @@
     <Compile Include="Publishing\ManualPublishQueueHandler.cs" />
     <Compile Include="TransparentSyncDisabler.cs" />
     <Compile Include="UI\Pipelines\GetContentEditorWarnings\SerializedWarning.cs" />
+    <Compile Include="UI\Pipelines\GetContentEditorWarnings\Warning.cs" />
     <Compile Include="UI\Pipelines\SaveUi\SaveUiConfirmProcessor.cs" />
     <Compile Include="UI\Pipelines\SaveUi\SerializationChangeBlocker.cs" />
     <Compile Include="UI\Pipelines\SaveUi\SerializationConflictProcessor.cs" />

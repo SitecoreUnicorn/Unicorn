@@ -1,8 +1,12 @@
 ﻿using System.Collections.Generic;
 using Rainbow;
 using Rainbow.Model;
+using Sitecore.Configuration;
+using Sitecore.Data.Items;
 using Sitecore.Diagnostics;
 using Unicorn.Data;
+using Unicorn.Data.DataProvider;
+using Unicorn.UI.Pipelines.GetContentEditorWarnings;
 
 namespace Unicorn.Evaluators
 {
@@ -15,14 +19,17 @@ namespace Unicorn.Evaluators
 	{
 		private readonly INewItemOnlyEvaluatorLogger _logger;
 		private readonly ISourceDataStore _sourceDataStore;
+		private readonly ITargetDataStore _targetDataStore;
 
-		public NewItemOnlyEvaluator(INewItemOnlyEvaluatorLogger logger, ISourceDataStore sourceDataStore)
+		public NewItemOnlyEvaluator(INewItemOnlyEvaluatorLogger logger, ISourceDataStore sourceDataStore, ITargetDataStore targetDataStore)
 		{
 			Assert.ArgumentNotNull(logger, "logger");
 			Assert.ArgumentNotNull(sourceDataStore, "sourceDataStore");
+			Assert.ArgumentNotNull(targetDataStore, "targetDataStore");
 
 			_logger = logger;
 			_sourceDataStore = sourceDataStore;
+			_targetDataStore = targetDataStore;
 		}
 
 		public virtual void EvaluateOrphans(IItemData[] orphanItems)
@@ -50,6 +57,20 @@ namespace Unicorn.Evaluators
 			_logger.Evaluated(sourceItem);
 
 			return null;
+		}
+
+		public virtual Warning EvaluateEditorWarning(Item item)
+		{
+			// if dev mode is on, we don't need a warning
+			if (Settings.GetBoolSetting("Unicorn.DevMode", true))
+				return new Warning("This item is part of a Unicorn deploy once configuration", "Changes to this item will not be synced to other environments unless the item needs to be created.");
+
+			var existingTargetItem = _targetDataStore.GetByPathAndId(item.Paths.Path, item.ID.Guid, item.Database.Name);
+
+			// if we have no existing serialized item, there's no need for a warning: Unicorn won't touch this item when using NIO
+			if (existingTargetItem == null) return null;
+
+			return new Warning("This item was created by Unicorn", "You may edit this item, but deleting it may result in its return next time code is deployed. Ask a developer to help if you need to delete this item.");
 		}
 
 		public virtual string FriendlyName

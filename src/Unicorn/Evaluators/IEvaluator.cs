@@ -1,4 +1,6 @@
 ﻿using Rainbow.Model;
+using Sitecore.Data.Items;
+using Unicorn.UI.Pipelines.GetContentEditorWarnings;
 
 namespace Unicorn.Evaluators
 {
@@ -30,5 +32,13 @@ namespace Unicorn.Evaluators
 		/// <param name="targetItem">The serialized item to evaluate</param>
 		/// <returns>If an update is performed, return the updated source item. If no update occurs, return null.</returns>
 		IItemData EvaluateUpdate(IItemData sourceItem, IItemData targetItem);
+
+		/// <summary>
+		/// Allows the evaluator to customize how editor warnings appear for items where the evaluator applies.
+		/// You can safely assume that any item passed in is included in the context configuration.
+		/// </summary>
+		/// <param name="item">The item being loaded in the content editor.</param>
+		/// <returns>Return a warning to show a message, or null to show no warning.</returns>
+		Warning EvaluateEditorWarning(Item item);
 	}
 }

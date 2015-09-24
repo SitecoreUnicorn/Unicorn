@@ -4,7 +4,7 @@ using Sitecore.Configuration;
 using Sitecore.Data.Items;
 using Sitecore.Pipelines.GetContentEditorWarnings;
 using Unicorn.Configuration;
-using Unicorn.Data.DataProvider;
+using Unicorn.Evaluators;
 using Unicorn.Predicates;
 
 namespace Unicorn.UI.Pipelines.GetContentEditorWarnings
@@ -33,29 +33,20 @@ namespace Unicorn.UI.Pipelines.GetContentEditorWarnings
 
 			var existingSitecoreItem = new ItemData(item);
 
-			if (_configurations.Any(configuration => configuration.Resolve<IPredicate>().Includes(existingSitecoreItem).IsIncluded))
+			var configuration = _configurations.FirstOrDefault(config => config.Resolve<IPredicate>().Includes(existingSitecoreItem).IsIncluded);
+			if (configuration != null)
 			{
-				GetContentEditorWarningsArgs.ContentEditorWarning warning = args.Add();
-				warning.Title = RenderTitle(item);
-				warning.Text = RenderWarning(item);
+				var evaluator = configuration.Resolve<IEvaluator>();
+
+				var warningObject = evaluator.EvaluateEditorWarning(item);
+
+				if (warningObject != null)
+				{
+					GetContentEditorWarningsArgs.ContentEditorWarning warning = args.Add();
+					warning.Title = warningObject.Title;
+					warning.Text = warningObject.Message;
+				}
 			}
-		}
-
-
-		protected virtual string RenderTitle(Item item)
-		{
-			if (item.Statistics.UpdatedBy == UnicornDataProvider.TransparentSyncUpdatedByValue)
-				return "This item is transparently synced by Unicorn";
-
-			return "This item is controlled by Unicorn";
-		}
-
-		protected virtual string RenderWarning(Item item)
-		{
-			if (Settings.GetBoolSetting("Unicorn.DevMode", true))
-				return "Changes to this item will be written to disk so they can be committed to source control and shared with others.";
-
-			return "You should not change this item because your changes may be overwritten by the next code deployment.";
 		}
 	}
 }

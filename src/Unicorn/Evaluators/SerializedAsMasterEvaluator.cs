@@ -5,9 +5,13 @@ using Rainbow;
 using Rainbow.Diff;
 using Rainbow.Filtering;
 using Rainbow.Model;
+using Sitecore.Configuration;
+using Sitecore.Data.Items;
 using Sitecore.Diagnostics;
 using Unicorn.Data;
+using Unicorn.Data.DataProvider;
 using Unicorn.Logging;
+using Unicorn.UI.Pipelines.GetContentEditorWarnings;
 
 namespace Unicorn.Evaluators
 {
@@ -23,7 +27,7 @@ namespace Unicorn.Evaluators
 		private readonly ISourceDataStore _sourceDataStore;
 		protected static readonly Guid RootId = new Guid("{11111111-1111-1111-1111-111111111111}");
 
-		public SerializedAsMasterEvaluator(ILogger globalLogger, ISerializedAsMasterEvaluatorLogger logger, IItemComparer itemComparer, IFieldFilter fieldFilter, ISourceDataStore sourceDataStore) : base(logger, sourceDataStore)
+		public SerializedAsMasterEvaluator(ILogger globalLogger, ISerializedAsMasterEvaluatorLogger logger, IItemComparer itemComparer, IFieldFilter fieldFilter, ISourceDataStore sourceDataStore, ITargetDataStore targetDataStore) : base(logger, sourceDataStore, targetDataStore)
 		{
 			Assert.ArgumentNotNull(globalLogger, "globalLogger");
 			Assert.ArgumentNotNull(logger, "logger");
@@ -70,6 +74,20 @@ namespace Unicorn.Evaluators
 			}
 
 			return null;
+		}
+
+		public override Warning EvaluateEditorWarning(Item item)
+		{
+			string title = "This item is controlled by Unicorn";
+			if (item.Statistics.UpdatedBy == UnicornDataProvider.TransparentSyncUpdatedByValue)
+				title = "This item is transparently synced by Unicorn";
+
+			string message = "You should not change this item because your changes will be overwritten by the next code deployment. Ask a developer for help if you need to change this item.";
+
+			if (Settings.GetBoolSetting("Unicorn.DevMode", true))
+				message = "Changes to this item will be written to disk so they can be committed to source control and shared with others.";
+
+			return new Warning(title, message);
 		}
 
 		protected virtual bool ShouldUpdateExisting(IItemData sourceItem, IItemData targetItem, DeferredLogWriter<ISerializedAsMasterEvaluatorLogger> deferredUpdateLog)
