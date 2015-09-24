@@ -25,92 +25,91 @@ namespace Unicorn.ControlPanel
 		}
 
 		public string ConfigurationName { get; set; }
-		public bool CollapseByDefault { get; set; }
+		public string ModalId { get; set; }
 
 		public void Render(HtmlTextWriter writer)
 		{
-			if (CollapseByDefault) writer.Write("<h4 class=\"expand\">{0} Details</h4>", ConfigurationName);
-			else writer.Write("<h4>{0} Details</h4>", ConfigurationName);
+			bool collapse = !string.IsNullOrWhiteSpace(ModalId);
 
-			if(CollapseByDefault) writer.AddAttribute("class", "details collapsed");
-			else writer.AddAttribute("class", "details");
+			if (collapse) writer.Write(@"
+				<div id=""{0}"" class=""overlay"">", ModalId);
 
-			writer.RenderBeginTag("ul");
+			writer.Write(@"
+					<article class=""modal"">");
 
-			RenderType("Predicate", 
-				"Predicates define what items get included into Unicorn, because you don't want to serialize everything. You can implement your own to use any criteria for inclusion you can possibly imagine.", 
+			if(collapse)
+				writer.Write(@"
+						<h2>{0} Details</h2>", ConfigurationName);
+
+			RenderType(collapse,
+				"Predicate", 
+				"Predicates define which items are included or excluded in Unicorn.", 
 				_predicate, 
 				writer);
 
-			RenderType("Serialization Provider",
-				"Defines how items are serialized - for example, using standard Sitecore serialization APIs, JSON to disk, XML in SQL server, etc",
+			RenderType(collapse,
+				"Target Data Store",
+				"Defines how items are serialized, for example to disk using YAML format.",
 				_serializationStore,
 				writer);
 
-			RenderType("Source Data Provider",
-				"Defines how source data is read to compare with serialized data. Normally this is a Sitecore database.",
+			RenderType(collapse,
+				"Source Data Store",
+				"Defines how source data is read to compare with serialized data. Normally this is a Sitecore data store.",
 				_sourceDataStore,
 				writer);
 
-			RenderType("Evaluator",
-				"The evaluator decides what to do when included items need to be evaluated to see if they need updating, creation, or deletion.",
+			RenderType(collapse,
+				"Evaluator",
+				"The evaluator decides what to do when included items need updating, creation, or deletion.",
 				_evaluator,
 				writer);
 
-			writer.RenderEndTag(); // ul
+			writer.Write(@"
+					</article>");
+
+			if (collapse) writer.Write(@"
+				</div>");
 		}
 
-		private void RenderType(string categorization, string categoryDescription, object type, HtmlTextWriter writer)
+		private void RenderType(bool collapsed, string categorization, string categoryDescription, object type, HtmlTextWriter writer)
 		{
-			writer.RenderBeginTag("li");
-				writer.RenderBeginTag("h5");
-					writer.Write(categorization);
-					RenderHelp(categoryDescription, writer);
-				writer.RenderEndTag();
+			writer.Write(@"
+				<section>");
 
-				writer.RenderBeginTag("p");
-					writer.RenderBeginTag("strong");
-						writer.WriteEncodedText(DocumentationUtility.GetFriendlyName(type));
-					writer.RenderEndTag();
+			writer.Write(@"
+					<h{0}>{1}</h{0}>", collapsed ? 3 : 4, categorization);
 
-					writer.Write(" <code>({0})</code>", type.GetType().FullName);
-				writer.RenderEndTag();
+			writer.Write(@"
+					<p class=""help"">{0}</p>", categoryDescription);
 
-				var description = DocumentationUtility.GetDescription(type);
-				if (!string.IsNullOrWhiteSpace(description))
-					writer.Write("<p>{0}</p>", description);
+			writer.Write(@"
+					<h4>{0}</h4>", DocumentationUtility.GetFriendlyName(type));
 
-				var configuration = DocumentationUtility.GetConfigurationDetails(type);
+			var description = DocumentationUtility.GetDescription(type);
+			if (!string.IsNullOrWhiteSpace(description))
+					writer.Write(@"
+					<p>{0}</p>", description);
 
-				if (configuration == null || configuration.Length == 0)
+			var configuration = DocumentationUtility.GetConfigurationDetails(type);
+
+			if (configuration != null && configuration.Length > 0)
+			{
+				writer.Write(@"
+					<ul>");
+
+				foreach (var config in configuration)
 				{
-					writer.RenderEndTag();
-					return;
+					writer.Write(@"
+						<li><strong>{0}</strong>: {1}</li>", config.Key, config.Value);
 				}
 
-				writer.RenderBeginTag("ul");
-					foreach (var config in configuration)
-					{
-						writer.RenderBeginTag("li");
-							writer.RenderBeginTag("strong");
-								writer.Write(config.Key);
-							writer.RenderEndTag();
+				writer.Write(@"
+					</ul>");
+			}
 
-							writer.Write(": ");
-							writer.Write(config.Value);
-						writer.RenderEndTag();
-					}
-				writer.RenderEndTag();
-			writer.RenderEndTag();
-		}
-
-		private void RenderHelp(string help, HtmlTextWriter writer)
-		{
-			writer.AddAttribute("title", help);
-			writer.AddAttribute("href", "#");
-			writer.RenderBeginTag("a");
-				writer.Write("[?]");
-			writer.RenderEndTag();
+			writer.Write(@"
+				</section>");
 		}
 	}
 }

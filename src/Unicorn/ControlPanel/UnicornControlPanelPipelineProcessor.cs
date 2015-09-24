@@ -52,7 +52,6 @@ namespace Unicorn.ControlPanel
 
 			if (!Authorization.IsAllowed)
 			{
-				context.Response.AddHeader("Content-Type", "text/html");
 				controls = GetDefaultControls();
 			}
 			else
@@ -71,7 +70,6 @@ namespace Unicorn.ControlPanel
 							controls = GetReserializeControls(Authorization.IsAutomatedTool);
 							break;
 						default:
-							context.Response.AddHeader("Content-Type", "text/html");
 							controls = GetDefaultControls();
 							break;
 					}
@@ -91,6 +89,8 @@ namespace Unicorn.ControlPanel
 
 		protected virtual IEnumerable<IControlPanelControl> GetDefaultControls()
 		{
+			HttpContext.Current.Response.AddHeader("Content-Type", "text/html");
+
 			var hasSerializedItems = Configurations.All(ControlPanelUtility.HasAnySerializedItems);
 			var hasValidSerializedItems = Configurations.All(ControlPanelUtility.HasAnySourceItems);
 
@@ -106,56 +106,46 @@ namespace Unicorn.ControlPanel
 
 			if (isAuthorized)
 			{
-				if (Configurations.Length == 0) yield return new NoConfigurations();
+				if (Configurations.Length == 0)
+				{
+					yield return new NoConfigurations();
+					yield break;
+				}
 
 				if (Configurations.Length > 1 && hasSerializedItems && hasValidSerializedItems)
 				{
-					yield return new Literal("<h2>Global Actions</h2>");
+					yield return new Literal(@"
+						<article>
+							<h2>Global Actions</h2>
+							<section>
+								<p>These actions apply to all configurations.</p>
+								<p>
+									<a class=""button"" href=""?verb=Sync&amp;configuration="">Sync Everything</a>
+									<a class=""button"" href=""?verb=Reserialize&amp;configuration="" onclick=""return confirm('This will reset the serialized state to match Sitecore. This normally is not needed after initial setup unless changing path configuration. Continue?')"">Reserialize Everything</a>
+								</p>
+							</section");
 
-					yield return new ControlOptions();
-
-					yield return new Literal("<h2>Configurations</h2>");
+					yield return new Literal(@"
+						</article>");
 				}
+
+				yield return new Literal(@"
+						<article>
+							<h2>Configurations</h2>
+							<table>
+								<tbody>");
 
 				foreach (var configuration in Configurations)
 				{
-					var configurationHasSerializedItems = ControlPanelUtility.HasAnySerializedItems(configuration);
-					var configurationHasValidRootItems = ControlPanelUtility.HasAnySourceItems(configuration);
-
-					yield return new Literal("<div class=\"configuration\"><h3>{0}</h3>".FormatWith(configuration.Name));
-
-					if(!configuration.Description.IsNullOrEmpty())
-						yield return new Literal("<p>{0}<p>".FormatWith(configuration.Description));
-
-					yield return new Literal("<section>");
-
-					if (!configurationHasValidRootItems)
-						yield return new Literal("<p class=\"warning\">This configuration's predicate cannot resolve any valid root items. This usually means it is configured to look for nonexistant paths or GUIDs. Please review your predicate configuration.</p>");
-					else if (!configurationHasSerializedItems)
-						yield return new Literal("<p class=\"warning\">This configuration does not currently have any valid serialized items. You cannot sync it until you perform an initial serialization.</p>");
-
-					if (configurationHasSerializedItems)
-					{
-						var dpConfig = configuration.Resolve<IUnicornDataProviderConfiguration>();
-						if (dpConfig != null && dpConfig.EnableTransparentSync) yield return new Literal("<p class=\"strong-info\">Transparent sync is enabled for this configuration.</p>");
-
-						var controlOptions = configuration.Resolve<ControlOptions>();
-						controlOptions.ConfigurationName = configuration.Name;
-						yield return controlOptions;
-					}
-
-					var configDetails = configuration.Resolve<ConfigurationDetails>();
-					configDetails.ConfigurationName = configuration.Name;
-					configDetails.CollapseByDefault = configurationHasSerializedItems;
-					yield return configDetails;
-
-					if (!configurationHasSerializedItems)
-					{
-						yield return new InitialSetup(configuration);
-					}
-
-					yield return new Literal("</section></div>");
+					yield return new ConfigurationInfo(configuration);
 				}
+
+				yield return new Literal(@"
+								</tbody>
+							</table>
+						</article>");
+
+				yield return new QuickReference();
 			}
 			else
 			{

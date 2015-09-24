@@ -53,6 +53,8 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ControlPanel\ConfigurationInfo.cs" />
+    <Compile Include="ControlPanel\QuickReference.cs" />
     <Compile Include="ControlPanel\NoConfigurations.cs" />
     <Compile Include="ControlPanel\Remote\Logging\MessageLevel.cs" />
     <Compile Include="ControlPanel\Remote\Logging\RemoteLogger.cs" />
@@ -78,7 +80,6 @@
     <Compile Include="ControlPanel\AccessDenied.cs" />
     <Compile Include="ControlPanel\CheckIfFilterDisablerIsActive.cs" />
     <Compile Include="ControlPanel\ConfigurationDetails.cs" />
-    <Compile Include="ControlPanel\ControlOptions.cs" />
     <Compile Include="ControlPanel\Headings\HeadingService.cs" />
     <Compile Include="ControlPanel\ItemFilterDisabler.cs" />
     <Compile Include="ControlPanel\UnicornControlPanelPipelineProcessor.cs" />

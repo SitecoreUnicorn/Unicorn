@@ -18,7 +18,7 @@ namespace Unicorn.ControlPanel
 			if (IsAuthenticated)
 			{
 				var version = (AssemblyInformationalVersionAttribute)Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false).Single();
-				writer.Write("<small>Version {0} - <a href=\"https://github.com/kamsar/Unicorn\">Documentation</a> | <a href=\"https://github.com/kamsar/Unicorn/issues/new\">Report issue</a></small>", version.InformationalVersion);
+				writer.Write("<p class=\"version\">Version {0}</p>", version.InformationalVersion);
 
 				if (!HasSerializedItems)
 				{

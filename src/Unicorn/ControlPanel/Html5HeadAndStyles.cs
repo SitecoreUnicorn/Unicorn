@@ -13,77 +13,166 @@ namespace Unicorn.ControlPanel
 				<title>Unicorn Control Panel</title>
 				<link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic' rel='stylesheet' type='text/css'>
 				<style>
-					* { font-family: 'Source Sans Pro', sans-serif; }
-					body { max-width: 960px; margin: 0 auto;padding: 1em; }
-					h1 { margin: 0; }
-					small { font-style: italic; }
-					svg { margin: 1em 0 2em 0; height: 200px; display: block; }
-					h2 { border-bottom: 4px solid black; font-size: 2.2rem; line-height: 80%; margin: .5em 0; }
-					h4 { margin: .5em 0 0 0; font-size: 1.4rem; }
-					p { margin-top: 0.2em; }
-					code { font-family: monospace; }
-					a[href='#'] { font-size: 0.7em; }
-					ul { margin: 0; padding: 0; }
-					li { list-style-type: none; margin: 0; padding: 0; }
-					.configuration {
-						border: 1px solid gray;
-						padding: 10px;
-						margin-top: 2em;
+					* {
+						font-family: 'Source Sans Pro', sans-serif;
 					}
-					.configuration h3 {
-						display: inline-block;
-						position: relative;
-						margin: 0 0 0 -5px;
-						padding: 0 5px;
-						top: -1.7rem;
+		
+					/* vertical rhythms */
+					article { margin: 30px 0; }
+					td { padding: 0 0 30px 10px; }
+					article > * { margin: 20px 0 0 0; }
+					td > *, 
+					section > * { margin: 0 0 8px 0; }
+
+					/* general styles */
+					body {
+						max-width: 960px;
+						margin: 0 auto;
+						padding: 1em;
+					}
+
+					code {
+						font-family: monospace;
+					}
+
+					h2 {
+						font-size: 2.2rem;
+						color: #E35131;
+					}
+
+					h3 {
 						font-size: 1.7rem;
-						background: white;
+
 					}
-					.configuration h3 + * {
-						margin-top: -1.5rem;
+
+					h4 {
+						font-size: 1.4rem;
 					}
-					.details > li {
-						border-top: 1px solid #DDD;
-						border-left: 1px solid #DDD;
-						margin: 20px 0;
-						padding:  10px;
+
+					input {
+						color: white;
+						border: 2px solid #E35131;
+						display: block;
 					}
-					.details h5 + p {
-						margin-top: -10px;
+
+					li {
+						list-style-type: none;
+						margin: 0;
+						padding: 0 0 8px 0;
 					}
-					.details h5 {
-						display: inline-block;
-						margin: 0 0 0 -5px;
-						font-size: 1.3rem;
-						position: relative;
-						background: white;
-						padding: 0 5px;
-						top: -1.3rem;
+
+					svg {
+						margin: 1em 0 2em 0;
+						height: 200px;
+						display: block;
 					}
-					h4.expand {
-						color: blue;
-						text-decoration: underline;
-						cursor: pointer;
+
+					ul {
+						margin: 0;
+						padding: 0;
 					}
-					h4.expand::before {
-						content: '+ ';
+
+					table {
+						border-spacing: 0 20px;
+						margin-top: 0;
+						width: 100%;
 					}
-					.warning { color: red;font-weight: bold;border: 1px solid orange;padding: 1em;margin: 1em 0; }
-					.strong-info { color: orange; font-weight: bold; }
+
+					td {
+						padding: 0;
+					}
+
+					td + td {
+						padding-left: 20px;
+					}
+
+					/* specific styles */
 					.button {
 						display: inline-block;
 						border: 2px solid #E35131;
 						color: #E35131;
 						text-decoration: none;
 						padding: .3em .5em;
-						margin: 0 0 1em 0;
 						font-size: 1.2rem;
 					}
-					.button:hover {
-						background: #E35131;
-						color: white;
+
+						.button:hover {
+							background: #E35131;
+							color: white;
+						}
+
+					.controls {
+						white-space: nowrap;
+						text-align: right;
+						vertical-align: top;
+						padding-top: 1.7rem;
 					}
-					.collapsed { display: none; }
+
+					.help {
+						font-style: italic;
+						color: #666;
+						font-size: 0.9rem;
+					}
+
+					.hidden {
+						display: none;
+					}
+
+					.overlay {
+					  visibility: hidden;
+					  opacity: 0;
+					  position: fixed;
+					  top: 0;
+					  bottom: 0;
+					  right: 0;
+					  left: 0;
+					  z-index: 2;
+					  width: 100%;
+					  height: 100%;
+					  background-color: rgba(0,0,0,0.85);
+					  cursor: pointer;
+					  transition: opacity 0.3s ease-in-out;
+					}
+
+						.overlay h2 { margin-top: 0; }
+
+						.overlay .modal {
+						  position: absolute;
+						  z-index: 3;
+						  top: 0;
+						  bottom: 0;
+						  right: 0;
+						  left: 0;
+						  margin: auto;
+						  min-width: 500px;
+						  max-width: 80%;
+						  max-height: 80%;
+						  overflow: scroll;
+						  padding: 20px;
+						  background-color: #FFF;
+						}
+
+						.overlay.shown {
+						  opacity: 1;
+						}
+
+					.transparent-sync {
+						color: #E35131;
+						font-weight: bold;
+					}
+	
+					.version {
+						font-style: italic;
+						font-size: 0.9rem;
+					}
+
+					.warning {
+						color: white;
+						font-weight: bold;
+						background: #E35131;
+						padding: 1em;
+						margin: 1em 0;
+					}
 				</style>
 			</head>
 			<body>");
