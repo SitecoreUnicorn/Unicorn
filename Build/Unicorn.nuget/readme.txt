@@ -18,6 +18,8 @@ You can also automate doing a sync as part of a CI deployment process; see the r
 
 Want deeper documentation? The README.md on GitHub is your friend: https://github.com/kamsar/Unicorn/blob/master/README.md, as well as the comments in all the config files.
 
+Looking for TFS 2010 support? Follow the instructions on the TFS Plug-In for Rainbow README.md: https://github.com/PetersonDave/Rainbow.Tfs.
+
 Have questions? Tweet @kamsar.
 
 Found a bug? Send me a pull request on GitHub if you're feeling awesome: https://github.com/kamsar/Unicorn
