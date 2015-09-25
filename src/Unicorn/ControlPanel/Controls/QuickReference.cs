@@ -16,13 +16,13 @@ namespace Unicorn.ControlPanel.Controls
 
 			writer.Write("<section>");
 			writer.Write("<h3>What is Sync?</h3>");
-			writer.Write("<p>Runs a synchronization operation, which will sync serialized items with Sitecore.</p>");
+			writer.Write("<p>Runs a synchronization operation, which will sync serialized items into Sitecore.</p>");
 			writer.Write("<p class=\"help\">Note: if you only need to sync part of a configuration, you can use the <em>Update Tree</em> command on the Developer tab of the Sitecore ribbon. When used on a Unicorn item, it performs a partial sync.");
 			writer.Write("</section>");
 
 			writer.Write("<section>");
 			writer.Write("<h3>What is Reserialize?</h3>");
-			writer.Write("<p>This clears the serialized data and refills it with the items in the Sitecore database. This can be useful if changing path configurations.</p>");
+			writer.Write("<p>This clears the serialized data and refills it with the items in the Sitecore database. This should be done if you add or remove items from your predicate after initial serialization.</p>");
 			writer.Write("<p class=\"help\">Note: if you only need to reserialize part of a configuration, you can use the <em>Dump Tree</em> command on the Developer tab of the Sitecore ribbon. When used on a Unicorn item, it performs a partial reserialize.");
 			writer.Write("</section>");
 
