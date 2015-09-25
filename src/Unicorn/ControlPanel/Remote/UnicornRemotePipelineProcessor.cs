@@ -164,14 +164,11 @@ namespace Unicorn.ControlPanel.Remote
 		protected virtual IConfiguration[] ResolveConfigurations()
 		{
 			var config = HttpContext.Current.Request.QueryString["configuration"];
-			var configurations = UnicornConfigurationManager.Configurations;
-			if (string.IsNullOrWhiteSpace(config)) return configurations;
+			var targetConfigurations = ControlPanelUtility.ResolveConfigurationsFromQueryParameter(config);
 
-			var targetConfiguration = configurations.FirstOrDefault(x => x.Name == config);
+			if (targetConfigurations.Length == 0) throw new ArgumentException("Configuration(s) requested were not defined.");
 
-			if (targetConfiguration == null) throw new ArgumentException("Configuration requested was not defined.");
-
-			return new[] { targetConfiguration };
+			return targetConfigurations;
 		}
 
 		protected virtual void ProcessConfiguration(HttpContext context)

@@ -1,4 +1,6 @@
-﻿using Unicorn.Configuration;
+﻿using System;
+using System.Linq;
+using Unicorn.Configuration;
 using Unicorn.Predicates;
 
 namespace Unicorn.ControlPanel
@@ -19,6 +21,21 @@ namespace Unicorn.ControlPanel
 		public static bool HasAnySourceItems(IConfiguration configuration)
 		{
 			return configuration.Resolve<PredicateRootPathResolver>().GetRootSourceItems().Length > 0;
+		}
+
+		public static IConfiguration[] ResolveConfigurationsFromQueryParameter(string queryParameter)
+		{
+			var config = (queryParameter ?? string.Empty)
+				.Split('^')
+				.Where(key => !string.IsNullOrWhiteSpace(key))
+				.ToLookup(key => key);
+
+			var configurations = UnicornConfigurationManager.Configurations;
+			if (config.Count == 0) return configurations;
+
+			var targetConfigurations = configurations.Where(x => config.Contains(x.Name)).ToArray();
+
+			return targetConfigurations;
 		}
 	}
 }

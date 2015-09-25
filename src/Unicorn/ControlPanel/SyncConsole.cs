@@ -77,14 +77,11 @@ namespace Unicorn.ControlPanel
 		protected virtual IConfiguration[] ResolveConfigurations()
 		{
 			var config = HttpContext.Current.Request.QueryString["configuration"];
+			var targetConfigurations = ControlPanelUtility.ResolveConfigurationsFromQueryParameter(config);
 
-			if (string.IsNullOrWhiteSpace(config)) return _configurations;
+			if (targetConfigurations.Length == 0) throw new ArgumentException("Configuration(s) requested were not defined.");
 
-			var targetConfiguration = _configurations.FirstOrDefault(x => x.Name == config);
-
-			if (targetConfiguration == null) throw new ArgumentException("Configuration requested was not defined.");
-
-			return new[] { targetConfiguration };
+			return targetConfigurations;
 		}
 	}
 }

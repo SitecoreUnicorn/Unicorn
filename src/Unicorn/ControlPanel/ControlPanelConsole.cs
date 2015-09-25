@@ -5,6 +5,7 @@ using System.Web;
 using System.Web.UI;
 using Kamsar.WebConsole;
 using Sitecore.SecurityModel;
+using Unicorn.ControlPanel.Controls;
 using Unicorn.ControlPanel.Headings;
 
 namespace Unicorn.ControlPanel

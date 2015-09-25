@@ -9,6 +9,7 @@ using Sitecore.Security.Authentication;
 using Sitecore.SecurityModel;
 using Sitecore.StringExtensions;
 using Unicorn.Configuration;
+using Unicorn.ControlPanel.Controls;
 using Unicorn.Data.DataProvider;
 
 namespace Unicorn.ControlPanel
@@ -114,30 +115,23 @@ namespace Unicorn.ControlPanel
 
 				if (Configurations.Length > 1 && hasSerializedItems && hasValidSerializedItems)
 				{
-					yield return new Literal(@"
-						<article>
-							<h2>Global Actions</h2>
-							<section>
-								<p>These actions apply to all configurations.</p>
-								<p>
-									<a class=""button"" href=""?verb=Sync&amp;configuration="">Sync Everything</a>
-									<a class=""button"" href=""?verb=Reserialize&amp;configuration="" onclick=""return confirm('This will reset the serialized state to match Sitecore. This normally is not needed after initial setup unless changing path configuration. Continue?')"">Reserialize Everything</a>
-								</p>
-							</section");
-
-					yield return new Literal(@"
-						</article>");
+					yield return new BatchProcessingControls();
 				}
 
 				yield return new Literal(@"
 						<article>
-							<h2>Configurations</h2>
+							<h2{0} Configurations</h2>".FormatWith(Configurations.Length > 1 ? @" class=""fakebox fakebox-all""><span></span>" : ">"));
+
+				if (Configurations.Length > 1) yield return new Literal(@"
+							<p class=""help"">Check 'Configurations' above to select all configurations, or individually select as many as you like below.</p>");
+
+				yield return new Literal(@"
 							<table>
 								<tbody>");
 
 				foreach (var configuration in Configurations)
 				{
-					yield return new ConfigurationInfo(configuration);
+					yield return new ConfigurationInfo(configuration) { MultipleConfigurationsExist = Configurations.Length > 1 };
 				}
 
 				yield return new Literal(@"

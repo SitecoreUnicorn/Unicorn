@@ -2,12 +2,12 @@
 using System.Web.UI;
 using Unicorn.Configuration;
 
-namespace Unicorn.ControlPanel
+namespace Unicorn.ControlPanel.Controls
 {
 	/// <summary>
 	/// Allows performing the initial serialization of an empty configuration.
 	/// </summary>
-	public class InitialSetup : IControlPanelControl
+	internal class InitialSetup : IControlPanelControl
 	{
 		private readonly IConfiguration _configuration;
 

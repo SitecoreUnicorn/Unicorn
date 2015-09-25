@@ -53,9 +53,10 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ControlPanel\ConfigurationInfo.cs" />
-    <Compile Include="ControlPanel\QuickReference.cs" />
-    <Compile Include="ControlPanel\NoConfigurations.cs" />
+    <Compile Include="ControlPanel\Controls\BatchProcessingControls.cs" />
+    <Compile Include="ControlPanel\Controls\ConfigurationInfo.cs" />
+    <Compile Include="ControlPanel\Controls\QuickReference.cs" />
+    <Compile Include="ControlPanel\Controls\NoConfigurations.cs" />
     <Compile Include="ControlPanel\Remote\Logging\MessageLevel.cs" />
     <Compile Include="ControlPanel\Remote\Logging\RemoteLogger.cs" />
     <Compile Include="ControlPanel\Remote\Logging\ReportType.cs" />
@@ -77,19 +78,19 @@
     <Compile Include="Configuration\ConfigurationUtility.cs" />
     <Compile Include="Configuration\MicroConfiguration.cs" />
     <Compile Include="Configuration\MicroResolutionException.cs" />
-    <Compile Include="ControlPanel\AccessDenied.cs" />
+    <Compile Include="ControlPanel\Controls\AccessDenied.cs" />
     <Compile Include="ControlPanel\CheckIfFilterDisablerIsActive.cs" />
-    <Compile Include="ControlPanel\ConfigurationDetails.cs" />
+    <Compile Include="ControlPanel\Controls\ConfigurationDetails.cs" />
     <Compile Include="ControlPanel\Headings\HeadingService.cs" />
     <Compile Include="ControlPanel\ItemFilterDisabler.cs" />
     <Compile Include="ControlPanel\UnicornControlPanelPipelineProcessor.cs" />
     <Compile Include="ControlPanel\ControlPanelUtility.cs" />
-    <Compile Include="ControlPanel\Heading.cs" />
-    <Compile Include="ControlPanel\Html5Footer.cs" />
-    <Compile Include="ControlPanel\Html5HeadAndStyles.cs" />
-    <Compile Include="ControlPanel\IControlPanelControl.cs" />
-    <Compile Include="ControlPanel\InitialSetup.cs" />
-    <Compile Include="ControlPanel\Literal.cs" />
+    <Compile Include="ControlPanel\Controls\Heading.cs" />
+    <Compile Include="ControlPanel\Controls\Html5Footer.cs" />
+    <Compile Include="ControlPanel\Controls\Html5HeadAndStyles.cs" />
+    <Compile Include="ControlPanel\Controls\IControlPanelControl.cs" />
+    <Compile Include="ControlPanel\Controls\InitialSetup.cs" />
+    <Compile Include="ControlPanel\Controls\Literal.cs" />
     <Compile Include="ControlPanel\ReserializeConsole.cs" />
     <Compile Include="ControlPanel\ControlPanelConsole.cs" />
     <Compile Include="ControlPanel\SyncConsole.cs" />

@@ -1,8 +1,8 @@
 ﻿using System.Web.UI;
 
-namespace Unicorn.ControlPanel
+namespace Unicorn.ControlPanel.Controls
 {
-	public class Html5HeadAndStyles : IControlPanelControl
+	internal class Html5HeadAndStyles : IControlPanelControl
 	{
 		public void Render(HtmlTextWriter writer)
 		{
@@ -86,7 +86,29 @@ namespace Unicorn.ControlPanel
 						padding-left: 20px;
 					}
 
+					/* allows clicking when sidebar active */
+					td > * { position: relative; }
+
 					/* specific styles */
+					.batch {
+						display: none;
+						position: fixed;
+						top: 270px;
+						width: 100%;
+						max-width: 960px;
+					}
+
+					.batch > section {
+						float: right;
+						background: white;
+						width: 200px;
+					}
+
+					.batch a {
+						display: block;
+						text-align: center;
+					}
+
 					.button {
 						display: inline-block;
 						border: 2px solid #E35131;
@@ -103,10 +125,37 @@ namespace Unicorn.ControlPanel
 
 					.controls {
 						white-space: nowrap;
+						width: 200px;
 						text-align: right;
 						vertical-align: top;
 						padding-top: 1.7rem;
 					}
+
+					.fakebox {
+						font-weight: bold;
+						cursor: pointer;
+						position: relative;
+					}
+
+						.fakebox > span {
+							width: 20px;
+							height: 20px;
+							border: 2px solid #E35131;
+							font-size: 1rem;
+							display: block;
+							float: left;
+							margin: .35em .4em 0 0;
+						}
+
+						h2.fakebox > span {
+							margin: .75em .4em 0 0;
+						}
+
+						.fakebox.checked > span:before {
+							content: '✓';
+							margin-left: 3px;
+							color: #E35131;
+						}
 
 					.help {
 						font-style: italic;

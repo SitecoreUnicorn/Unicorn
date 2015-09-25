@@ -1,4 +1,4 @@
-﻿namespace Unicorn.ControlPanel
+﻿namespace Unicorn.ControlPanel.Controls
 {
 	/// <summary>
 	/// Emits a HTML literal into the control panel

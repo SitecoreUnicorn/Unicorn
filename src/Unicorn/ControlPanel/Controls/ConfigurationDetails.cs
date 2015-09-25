@@ -4,12 +4,12 @@ using Unicorn.Data;
 using Unicorn.Evaluators;
 using Unicorn.Predicates;
 
-namespace Unicorn.ControlPanel
+namespace Unicorn.ControlPanel.Controls
 {
 	/// <summary>
 	/// Renders the current dependency/provider configuration for Unicorn, using IDocumentable to show additional details when available.
 	/// </summary>
-	public class ConfigurationDetails : IControlPanelControl
+	internal class ConfigurationDetails : IControlPanelControl
 	{
 		private readonly IPredicate _predicate;
 		private readonly ITargetDataStore _serializationStore;

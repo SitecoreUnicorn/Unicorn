@@ -1,11 +1,11 @@
 ﻿using System.Web.UI;
 
-namespace Unicorn.ControlPanel
+namespace Unicorn.ControlPanel.Controls
 {
 	/// <summary>
 	/// Shown when no configurations exist
 	/// </summary>
-	public class NoConfigurations : IControlPanelControl
+	internal class NoConfigurations : IControlPanelControl
 	{
 		public void Render(HtmlTextWriter writer)
 		{

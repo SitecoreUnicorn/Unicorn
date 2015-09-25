@@ -1,11 +1,11 @@
 ﻿using System.Web.UI;
 
-namespace Unicorn.ControlPanel
+namespace Unicorn.ControlPanel.Controls
 {
 	/// <summary>
 	/// Quick reference about what commands mean
 	/// </summary>
-	public class QuickReference : IControlPanelControl
+	internal class QuickReference : IControlPanelControl
 	{
 		public void Render(HtmlTextWriter writer)
 		{

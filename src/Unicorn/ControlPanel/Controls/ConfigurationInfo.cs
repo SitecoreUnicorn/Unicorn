@@ -5,11 +5,13 @@ using Sitecore.StringExtensions;
 using Unicorn.Configuration;
 using Unicorn.Data.DataProvider;
 
-namespace Unicorn.ControlPanel
+namespace Unicorn.ControlPanel.Controls
 {
 	internal class ConfigurationInfo : IControlPanelControl
 	{
 		private readonly IConfiguration _configuration;
+
+		public bool MultipleConfigurationsExist { get; set; }
 
 		public ConfigurationInfo(IConfiguration configuration)
 		{
@@ -27,7 +29,7 @@ namespace Unicorn.ControlPanel
 				<td{0}>", configurationHasSerializedItems ? string.Empty:" colspan=\"2\"");
 
 			writer.Write(@"
-					<h3>{0}</h3>".FormatWith(_configuration.Name));
+					<h3{0}{1}</h3>".FormatWith(MultipleConfigurationsExist ? @" class=""fakebox""><span></span>" : ">", _configuration.Name));
 
 			if(!string.IsNullOrWhiteSpace(_configuration.Description))
 				writer.Write(@"

@@ -1,9 +1,9 @@
 ﻿using System.Web;
 using System.Web.UI;
 
-namespace Unicorn.ControlPanel
+namespace Unicorn.ControlPanel.Controls
 {
-	public class AccessDenied : IControlPanelControl
+	internal class AccessDenied : IControlPanelControl
 	{
 		public void Render(HtmlTextWriter writer)
 		{

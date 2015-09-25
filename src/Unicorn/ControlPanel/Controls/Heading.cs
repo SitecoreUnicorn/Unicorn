@@ -3,9 +3,9 @@ using System.Reflection;
 using System.Web.UI;
 using Unicorn.ControlPanel.Headings;
 
-namespace Unicorn.ControlPanel
+namespace Unicorn.ControlPanel.Controls
 {
-	public class Heading : IControlPanelControl
+	internal class Heading : IControlPanelControl
 	{
 		public bool HasSerializedItems { get; set; }
 		public bool HasValidSerializedItems { get; set; }
