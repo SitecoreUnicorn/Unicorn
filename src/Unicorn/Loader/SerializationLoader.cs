@@ -9,6 +9,7 @@ using Sitecore.Configuration;
 using Sitecore.Data.Events;
 using Sitecore.Diagnostics;
 using Sitecore.SecurityModel;
+using Unicorn.ControlPanel;
 using Unicorn.Data;
 using Unicorn.Data.DataProvider;
 using Unicorn.Evaluators;
@@ -110,7 +111,10 @@ namespace Unicorn.Loader
 
 			// LoadTreeInternal does not load the root item passed to it (only the children thereof)
 			// so we have to seed the load by loading the root item
-			DoLoadItem(rootItemData, consistencyChecker);
+			using (new UnicornOperationContext())
+			{
+				DoLoadItem(rootItemData, consistencyChecker);
+			}
 
 			// load children of the root
 			LoadTreeInternal(rootItemData, retryer, consistencyChecker);
@@ -154,42 +158,39 @@ namespace Unicorn.Loader
 				Process:
 				Interlocked.Increment(ref activeThreads);
 
-				using (new SecurityDisabler())
+				using (new UnicornOperationContext()) // disablers only work on the current thread. So we need to disable on all worker threads
 				{
-					using (new EventDisabler())
+					IItemData parentItem;
+					while (processQueue.TryDequeue(out parentItem) && errors.Count == 0)
 					{
-						IItemData parentItem;
-						while (processQueue.TryDequeue(out parentItem) && errors.Count == 0)
+						try
 						{
-							try
+
+							// load the current level
+							LoadOneLevel(parentItem, retryer, consistencyChecker);
+
+							// check if we have child paths to process down
+							var children = TargetDataStore.GetChildren(parentItem).ToArray();
+
+							if (children.Length > 0)
 							{
-
-								// load the current level
-								LoadOneLevel(parentItem, retryer, consistencyChecker);
-
-								// check if we have child paths to process down
-								var children = TargetDataStore.GetChildren(parentItem).ToArray();
-
-								if (children.Length > 0)
+								// load each child path
+								foreach (var child in children)
 								{
-									// load each child path
-									foreach (var child in children)
-									{
-										processQueue.Enqueue(child);
-									}
-								} // children.length > 0
-							}
-							catch (ConsistencyException cex)
-							{
-								errors.Enqueue(cex);
-								break;
-							}
-							catch (Exception ex)
-							{
-								retryer.AddTreeRetry(root, ex);
-							}
-						} // end while
-					}
+									processQueue.Enqueue(child);
+								}
+							} // children.length > 0
+						}
+						catch (ConsistencyException cex)
+						{
+							errors.Enqueue(cex);
+							break;
+						}
+						catch (Exception ex)
+						{
+							retryer.AddTreeRetry(root, ex);
+						}
+					} // end while
 				}
 
 				// if we get here, the queue was empty. let's make ourselves inactive.

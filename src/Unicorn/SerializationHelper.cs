@@ -8,6 +8,7 @@ using Sitecore.Pipelines;
 using Sitecore.SecurityModel;
 using Sitecore.StringExtensions;
 using Unicorn.Configuration;
+using Unicorn.ControlPanel;
 using Unicorn.Data;
 using Unicorn.Loader;
 using Unicorn.Logging;
@@ -40,7 +41,7 @@ namespace Unicorn
 		{
 			using (new TransparentSyncDisabler())
 			{
-				if(configuration == null) configuration = GetConfigurationForItem(item);
+				if (configuration == null) configuration = GetConfigurationForItem(item);
 
 				if (configuration == null) return false;
 
@@ -71,7 +72,7 @@ namespace Unicorn
 		{
 			using (new TransparentSyncDisabler())
 			{
-				if(configuration == null) configuration = GetConfigurationForItem(item);
+				if (configuration == null) configuration = GetConfigurationForItem(item);
 
 				if (configuration == null) return false;
 
@@ -131,8 +132,11 @@ namespace Unicorn
 			// to add 8 things to the queue - so it shouldn't quit till all is done)
 			int activeThreads = 0;
 
-			var rootResult = DumpItemInternal(root, predicate, serializationStore);
-			if (!rootResult.IsIncluded) return;
+			using (new UnicornOperationContext())
+			{
+				var rootResult = DumpItemInternal(root, predicate, serializationStore);
+				if (!rootResult.IsIncluded) return;
+			}
 
 			processQueue.Enqueue(root);
 
@@ -144,7 +148,7 @@ namespace Unicorn
 
 				while (processQueue.TryDequeue(out parentItem) && errors.Count == 0)
 				{
-					using (new SecurityDisabler())
+					using (new UnicornOperationContext()) // disablers only work on the current thread. So we need to disable on all worker threads
 					{
 						var children = sourceDataStore.GetChildren(parentItem);
 

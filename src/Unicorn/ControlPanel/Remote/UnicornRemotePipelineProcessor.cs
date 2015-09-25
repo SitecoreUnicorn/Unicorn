@@ -33,27 +33,24 @@ namespace Unicorn.ControlPanel.Remote
 			}
 			else
 			{
-				using (new SecurityDisabler())
+				var verb = (context.Request.QueryString["verb"] ?? string.Empty).ToLowerInvariant();
+				switch (verb)
 				{
-					var verb = (context.Request.QueryString["verb"] ?? string.Empty).ToLowerInvariant();
-					switch (verb)
-					{
-						case "sync":
-							Process(context, ProcessSync);
-							break;
-						case "reserialize":
-							Process(context, ProcessReserialize);
-							break;
-						case "handshake":
-							SetSuccessResponse(context);
-							break;
-						case "config":
-							ProcessConfiguration(context);
-							break;
-						default:
-							SetResponse(context, 404, "Not Found");
-							break;
-					}
+					case "sync":
+						Process(context, ProcessSync);
+						break;
+					case "reserialize":
+						Process(context, ProcessReserialize);
+						break;
+					case "handshake":
+						SetSuccessResponse(context);
+						break;
+					case "config":
+						ProcessConfiguration(context);
+						break;
+					default:
+						SetResponse(context, 404, "Not Found");
+						break;
 				}
 			}
 		}
@@ -69,12 +66,9 @@ namespace Unicorn.ControlPanel.Remote
 				using (var streamWriter = new StreamWriter(outputStream))
 				{
 					var progress = new RemoteLogger(streamWriter);
-					using (new SecurityDisabler())
+					using (new UnicornOperationContext())
 					{
-						using (new ItemFilterDisabler())
-						{
-							action(progress);
-						}
+						action(progress);
 					}
 				}
 			}

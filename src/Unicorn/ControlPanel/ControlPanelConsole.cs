@@ -90,10 +90,7 @@ namespace Unicorn.ControlPanel
 			{
 				using (new SecurityDisabler())
 				{
-					using (new ItemFilterDisabler()) // disable all item filtering (if we're running in live mode we need this to get unadulterated items)
-					{
-						Process(progress);
-					}
+					Process(progress);
 				}
 			}
 			finally

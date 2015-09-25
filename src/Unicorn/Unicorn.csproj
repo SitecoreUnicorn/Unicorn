@@ -159,6 +159,7 @@
     <Compile Include="Data\DataProvider\DefaultUnicornDataProviderLogger.cs" />
     <Compile Include="Data\DataProvider\UnicornDataProvider.cs" />
     <Compile Include="Data\DataProvider\UnicornSqlServerDataProvider.cs" />
+    <Compile Include="UnicornOperationContext.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
