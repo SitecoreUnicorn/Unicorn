@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using Rainbow.Model;
+using Sitecore.Caching;
 using Sitecore.Configuration;
 using Sitecore.Pipelines;
 using Sitecore.SecurityModel;
@@ -79,7 +80,16 @@ namespace Unicorn
 				var predicate = configuration.Resolve<IPredicate>();
 				var serializationStore = configuration.Resolve<ITargetDataStore>();
 
-				return DumpItemInternal(item, predicate, serializationStore).IsIncluded;
+				CacheManager.ClearAllCaches(); // BOOM! This clears all caches before we begin; 
+											   // because for a TpSync configuration we could have TpSync items in the data cache which 'taint' the reserialize
+											   // from being purely database
+
+				var result = DumpItemInternal(item, predicate, serializationStore).IsIncluded;
+
+				CacheManager.ClearAllCaches(); // BOOM! And we clear everything again at the end, because now
+											   // for a TpSync configuration we might have DATABASE items in cache where we want TpSync.
+
+				return result;
 			}
 		}
 
@@ -121,6 +131,10 @@ namespace Unicorn
 
 		protected virtual void DumpTreeInternal(IItemData root, IPredicate predicate, ITargetDataStore serializationStore, ISourceDataStore sourceDataStore, ILogger logger)
 		{
+			CacheManager.ClearAllCaches(); // BOOM! This clears all caches before we begin; 
+										   // because for a TpSync configuration we could have TpSync items in the data cache which 'taint' the reserialize
+										   // from being purely database
+
 			// we throw items into this queue, and let a thread pool pick up anything available to process in parallel. only the children of queued items are processed, not the item itself
 			ConcurrentQueue<IItemData> processQueue = new ConcurrentQueue<IItemData>();
 
@@ -196,6 +210,9 @@ namespace Unicorn
 
 			// ...and then wait for all the threads to finish
 			foreach (var thread in pool) thread.Join();
+
+			CacheManager.ClearAllCaches(); // BOOM! And we clear everything again at the end, because now
+										   // for a TpSync configuration we might have DATABASE items in cache where we want TpSync.
 
 			if (errors.Count > 0) throw new AggregateException(errors);
 		}
