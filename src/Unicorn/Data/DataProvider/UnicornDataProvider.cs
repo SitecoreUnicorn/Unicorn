@@ -175,8 +175,6 @@ namespace Unicorn.Data.DataProvider
 
 				var sourceItem = GetSourceFromId(itemDefinition.ID); // re-get the item with cache disabled
 
-
-
 				// this allows us to filter out any excluded children by predicate when the data store moves children
 				var predicatedItem = new PredicateFilteredItemData(sourceItem, _predicate);
 

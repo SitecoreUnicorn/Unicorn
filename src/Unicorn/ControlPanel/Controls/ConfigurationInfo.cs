@@ -73,8 +73,12 @@ namespace Unicorn.ControlPanel.Controls
 
 				var htmlConfigName = HttpUtility.UrlEncode(_configuration.Name ?? string.Empty);
 
+				var blurb = _configuration.Resolve<IUnicornDataProviderConfiguration>().EnableTransparentSync
+					? "DANGER: This configuration uses Transparent Sync. Items may not actually exist in the database, and if they do not reserializing will DELETE THEM from serialized. Continue?"
+					: "This will reset the serialized state to match Sitecore. This normally is not needed after initial setup unless changing path configuration. Continue?";
+
 				writer.Write(@"
-					<a class=""button"" href=""?verb=Reserialize&amp;configuration={0}"" onclick=""return confirm('This will reset the serialized state to match Sitecore. This normally is not needed after initial setup unless changing path configuration. Continue?')"">Reserialize</a>", htmlConfigName);
+					<a class=""button"" href=""?verb=Reserialize&amp;configuration={0}"" onclick=""return confirm('{1}')"">Reserialize</a>", htmlConfigName, blurb);
 
 				writer.Write(@"
 					<a class=""button"" href=""?verb=Sync&amp;configuration={0}"">Sync</a>", htmlConfigName);
