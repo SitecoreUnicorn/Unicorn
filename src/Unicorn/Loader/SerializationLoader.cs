@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using Rainbow.Model;
+using Sitecore.Caching;
 using Sitecore.Configuration;
 using Sitecore.Data.Events;
 using Sitecore.Diagnostics;
@@ -71,7 +72,9 @@ namespace Unicorn.Loader
 			Assert.ArgumentNotNull(rootItemsData, "rootItems");
 			Assert.IsTrue(rootItemsData.Length > 0, "No root items were passed!");
 
-			// load the root item (LoadTreeInternal only evaluates children)
+			CacheManager.ClearAllCaches(); // BOOM! This clears all caches before we begin; 
+										   // because for a TpSync configuration we could have TpSync items in the data cache which 'taint' the item comparisons and result in missed updates
+
 			bool disableNewSerialization = UnicornDataProvider.DisableSerialization;
 			try
 			{
