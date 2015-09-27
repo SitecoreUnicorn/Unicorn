@@ -1,6 +1,5 @@
 using System.Linq;
 using Rainbow.Storage.Sc;
-using Sitecore.Configuration;
 using Sitecore.Data.Items;
 using Sitecore.Pipelines.GetContentEditorWarnings;
 using Unicorn.Configuration;

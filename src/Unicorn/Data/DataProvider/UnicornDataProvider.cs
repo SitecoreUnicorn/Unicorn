@@ -101,7 +101,17 @@ namespace Unicorn.Data.DataProvider
 
 			Assert.ArgumentNotNull(newItem, "itemDefinition");
 
-			SerializeItemIfIncluded(newItem, "Created");
+			// get the item's parent. We need to know the path to be able to serialize it, and the ItemDefinition doesn't have it.
+			var parentItem = Database.GetItem(parent.ID);
+
+			Assert.IsNotNull(parentItem, "New item parent {0} did not exist!", parent.ID);
+
+			// create a new skeleton item based on the ItemDefinition; at this point the item has no fields, data, etc
+			var newItemProxy = new ProxyItem(newItem.Name, newItem.ID.Guid, parent.ID.Guid, newItem.TemplateID.Guid, parentItem.Paths.Path + "/" + newItem.Name, Database.Name);
+			newItemProxy.BranchId = newItem.BranchId.Guid;
+
+			// serialize the skeleton if the predicate includes it
+			SerializeItemIfIncluded(newItemProxy, "Created");
 		}
 
 		public void SaveItem(ItemDefinition itemDefinition, ItemChanges changes, CallContext context)
@@ -111,9 +121,16 @@ namespace Unicorn.Data.DataProvider
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
 			Assert.ArgumentNotNull(changes, "changes");
 
-			var sourceItem = GetSourceFromId(changes.Item.ID);
+			// get the item from the database (note: we don't allow TpSync to be a database here, because we handle that below)
+			var sourceItem = GetSourceFromId(changes.Item.ID, allowTpSyncFallback: false);
 
-			if (sourceItem == null) return;
+			if (sourceItem == null)
+			{
+				if (DisableTransparentSync) return;
+
+				// if TpSync is enabled, we wrap the item changes item directly; the TpSync item will NOT have the new changes as we need to write those here
+				sourceItem = new ItemData(changes.Item);
+			}
 
 			if (!_predicate.Includes(sourceItem).IsIncluded) return;
 
@@ -150,15 +167,17 @@ namespace Unicorn.Data.DataProvider
 
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
 
-			var oldSourceItem = GetSourceFromId(itemDefinition.ID, true); // we use cache here because we want the old path
+			var sourceItem = GetSourceFromId(itemDefinition.ID, true); // we use cache here because we want the old path (no cache would have the new path); TpSync always has old path
 
-			var oldPath = oldSourceItem.Path; // NOTE: we cap the path here, because once we enter the cache-disabled section - to get the new paths for parent and children - the path cache updates and the old path is lost in oldSourceItem because it is reevaluated each time.
+			var oldPath = sourceItem.Path; // NOTE: we cap the path here, because Sitecore can change the item's path value as we're updating stuff.
 
 			var destinationItem = GetSourceFromId(destination.ID);
 
+			if (destinationItem == null) return; // can occur with TpSync on, when this isn't the configuration we're moving for the data store will return null
+
 			if (!_predicate.Includes(destinationItem).IsIncluded) // if the destination we are moving to is NOT included for serialization, we delete the existing item
 			{
-				var existingItem = _targetDataStore.GetByPathAndId(oldSourceItem.Path, oldSourceItem.Id, oldSourceItem.DatabaseName);
+				var existingItem = _targetDataStore.GetByPathAndId(sourceItem.Path, sourceItem.Id, sourceItem.DatabaseName);
 
 				if (existingItem != null)
 				{
@@ -169,18 +188,14 @@ namespace Unicorn.Data.DataProvider
 				return;
 			}
 
-			using (new DatabaseCacheDisabler())
-			{
-				// disabling the DB caches while running this ensures that any children of the moved item are retrieved with their proper post-rename paths and thus are not saved at their old location
+			// rebase the path to the new destination path (this handles children too)
+			var rebasedSourceItem = new PathRebasingItemData(sourceItem, destinationItem.Path, destinationItem.Id);
 
-				var sourceItem = GetSourceFromId(itemDefinition.ID); // re-get the item with cache disabled
+			// this allows us to filter out any excluded children by predicate when the data store moves children
+			var predicatedItem = new PredicateFilteredItemData(rebasedSourceItem, _predicate);
 
-				// this allows us to filter out any excluded children by predicate when the data store moves children
-				var predicatedItem = new PredicateFilteredItemData(sourceItem, _predicate);
-
-				_targetDataStore.MoveOrRenameItem(predicatedItem, oldPath);
-				_logger.MovedItem(_targetDataStore.FriendlyName, sourceItem, destinationItem);
-			}
+			_targetDataStore.MoveOrRenameItem(predicatedItem, oldPath);
+			_logger.MovedItem(_targetDataStore.FriendlyName, predicatedItem, destinationItem);
 		}
 
 		public void CopyItem(ItemDefinition source, ItemDefinition destination, string copyName, ID copyId, CallContext context)
@@ -188,7 +203,11 @@ namespace Unicorn.Data.DataProvider
 			if (DisableSerialization) return;
 
 			// copying is easy - all we have to do is serialize the copyID. Copied children will all result in multiple calls to CopyItem so we don't even need to worry about them.
-			var copiedItem = new ItemData(Database.GetItem(copyId), _sourceDataStore);
+			var existingItem = Database.GetItem(copyId);
+
+			Assert.IsNotNull(existingItem, "Existing item to copy was not in the database!");
+
+			var copiedItem = new ItemData(existingItem, _sourceDataStore);
 
 			if (!_predicate.Includes(copiedItem).IsIncluded) return; // destination parent is not in a path that we are serializing, so skip out
 
@@ -202,7 +221,37 @@ namespace Unicorn.Data.DataProvider
 
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
 
-			SerializeItemIfIncluded(itemDefinition, "Version Added");
+			var sourceItem = GetSourceFromIdIfIncluded(itemDefinition);
+
+			if (sourceItem == null) return; // not an included item
+
+			// we make a clone of the item so that we can insert a new version on it
+			var versionAddProxy = new ProxyItem(sourceItem);
+
+			// determine what the next version number should be in the current language
+			// (highest number currently present + 1)
+			var newVersionNumber = 1 + versionAddProxy.Versions
+				.Where(v => v.Language.Equals(baseVersion.Language.CultureInfo))
+				.Select(v => v.VersionNumber)
+				.DefaultIfEmpty()
+				.Max();
+
+			IItemVersion newVersion;
+
+			// if the base version is 0 or less, that means add a blank version (per SC DP behavior). If 1 or more we should copy all fields on that version into the new version.
+			if (baseVersion.Version.Number > 0)
+			{
+				newVersion = versionAddProxy.Versions.First(v => v.Language.Equals(baseVersion.Language.CultureInfo) && v.VersionNumber.Equals(baseVersion.Version.Number));
+				newVersion = new ProxyItemVersion(newVersion) { VersionNumber = newVersionNumber }; // creating a new proxyversion essentially clones the existing version
+			}
+			else newVersion = new ProxyItemVersion(baseVersion.Language.CultureInfo, newVersionNumber);
+
+			// inject the new version we created into the proxy item
+			var newVersions = versionAddProxy.Versions.Concat(new[] { newVersion }).ToArray();
+			versionAddProxy.Versions = newVersions;
+
+			// flush to serialization data store
+			SerializeItemIfIncluded(versionAddProxy, "Version Added");
 		}
 
 		public void DeleteItem(ItemDefinition itemDefinition, CallContext context)
@@ -211,6 +260,8 @@ namespace Unicorn.Data.DataProvider
 
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
 
+			// use cache or else item is already gone from base DP
+			// (in the case of TpSync, it's still there because base.Delete hasn't removed it from serialized)
 			var existingItem = GetSourceFromId(itemDefinition.ID, true);
 
 			if (existingItem == null) return; // it was already gone or an item from a different data provider
@@ -225,7 +276,17 @@ namespace Unicorn.Data.DataProvider
 
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
 
-			SerializeItemIfIncluded(itemDefinition, "Version Removed");
+			var sourceItem = GetSourceFromIdIfIncluded(itemDefinition);
+
+			if (sourceItem == null) return; // predicate excluded item
+
+			// create a clone of the item to remove the version from
+			var versionRemovingProxy = new ProxyItem(sourceItem);
+			
+			// exclude the removed version
+			versionRemovingProxy.Versions = versionRemovingProxy.Versions.Where(v => !v.Language.Equals(version.Language.CultureInfo) || !v.VersionNumber.Equals(version.Version.Number));
+
+			SerializeItemIfIncluded(versionRemovingProxy, "Version Removed");
 		}
 
 		public void RemoveVersions(ItemDefinition itemDefinition, Language language, bool removeSharedData, CallContext context)
@@ -234,9 +295,25 @@ namespace Unicorn.Data.DataProvider
 
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
 
-			SerializeItemIfIncluded(itemDefinition, "Versions Removed");
+			var sourceItem = GetSourceFromIdIfIncluded(itemDefinition);
+
+			if (sourceItem == null) return;
+
+			// create a clone of the item to remove the versions from
+			var versionRemovingProxy = new ProxyItem(sourceItem);
+
+			// drop all versions in the language
+			versionRemovingProxy.Versions = versionRemovingProxy.Versions.Where(v => !v.Language.Equals(language.CultureInfo));
+
+			SerializeItemIfIncluded(versionRemovingProxy, "Versions Removed");
 		}
 
+		/*
+		 *	TRANSPARENT SYNC
+		 *	This part of the data provider handles reading from a serialization store and 'ghosting' that into Sitecore
+		 *	As if they were database items.
+		 * 
+		*/
 		public virtual IEnumerable<ID> GetChildIds(ItemDefinition itemDefinition, CallContext context)
 		{
 			if (DisableSerialization || DisableTransparentSync) return Enumerable.Empty<ID>();
@@ -373,16 +450,14 @@ namespace Unicorn.Data.DataProvider
 			return _blobIdLookup.ContainsKey(blobId);
 		}
 
-		protected virtual bool SerializeItemIfIncluded(ItemDefinition itemDefinition, string triggerReason)
+		protected virtual bool SerializeItemIfIncluded(IItemData item, string triggerReason)
 		{
-			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
+			Assert.ArgumentNotNull(item, "item");
 
-			var sourceItem = GetSourceFromId(itemDefinition.ID);
+			if (!_predicate.Includes(item).IsIncluded) return false;
 
-			if (!_predicate.Includes(sourceItem).IsIncluded) return false; // item was not included so we get out
-
-			_targetDataStore.Save(sourceItem);
-			_logger.SavedItem(_targetDataStore.FriendlyName, sourceItem, triggerReason);
+			_targetDataStore.Save(item);
+			_logger.SavedItem(_targetDataStore.FriendlyName, item, triggerReason);
 
 			return true;
 		}
@@ -410,11 +485,33 @@ namespace Unicorn.Data.DataProvider
 			return false;
 		}
 
-		protected virtual IItemData GetSourceFromId(ID id, bool useCache = false)
+		protected virtual IItemData GetSourceFromIdIfIncluded(ItemDefinition itemDefinition)
+		{
+			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
+
+			var sourceItem = GetSourceFromId(itemDefinition.ID);
+
+			if (sourceItem == null) return null;
+			if (!_predicate.Includes(sourceItem).IsIncluded) return null;
+
+			return sourceItem;
+		}
+
+		protected virtual IItemData GetSourceFromId(ID id, bool useCache = false, bool allowTpSyncFallback = true)
 		{
 			var item = GetItemFromId(id, useCache);
 
-			if (item == null) return null;
+			if (item == null)
+			{
+				if (allowTpSyncFallback && !DisableTransparentSync)
+				{
+					// note: if reliant on item data, e.g. for saves, this fallback will not have any updates applied
+					// and is thus useless. Disallow fallback for that case but you need data from elsewhere.
+					return _targetDataStore.GetById(id.Guid, Database.Name);
+				}
+
+				return null;
+			}
 
 			return new ItemData(item);
 		}
@@ -508,7 +605,7 @@ namespace Unicorn.Data.DataProvider
 			{
 				// ReSharper disable once SuspiciousTypeConversion.Global
 				var targetAsDisposable = _targetDataStore as IDisposable;
-				if(targetAsDisposable != null) targetAsDisposable.Dispose();
+				if (targetAsDisposable != null) targetAsDisposable.Dispose();
 			}
 		}
 	}

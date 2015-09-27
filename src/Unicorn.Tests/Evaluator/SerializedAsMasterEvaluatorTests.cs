@@ -135,7 +135,7 @@ namespace Unicorn.Tests.Evaluator
 				comparer.FastCompare(Arg.Any<IItemData>(), Arg.Any<IItemData>()).Returns(new ItemComparisonResult(new FakeItem(), new FakeItem()));
 			}
 
-			return new SerializedAsMasterEvaluator(Substitute.For<ILogger>(), logger ?? Substitute.For<ISerializedAsMasterEvaluatorLogger>(), comparer, CreateTestFieldFilter(), dataStore);
+			return new SerializedAsMasterEvaluator(Substitute.For<ILogger>(), logger ?? Substitute.For<ISerializedAsMasterEvaluatorLogger>(), comparer, CreateTestFieldFilter(), dataStore, Substitute.For<ITargetDataStore>());
 		}
 
 		private IFieldFilter CreateTestFieldFilter()

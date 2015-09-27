@@ -7,8 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unicorn", "src\Unicorn\Unic
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unicorn.Tests", "src\Unicorn.Tests\Unicorn.Tests.csproj", "{7E03DC10-5D06-4173-89CA-2AEFBA4FAD55}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unicorn.Remoting", "src\Unicorn.Remoting\Unicorn.Remoting.csproj", "{5BCC8851-B076-40DE-B1D4-5E8C2F8BD09E}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rainbow", "..\Rainbow\src\Rainbow\Rainbow.csproj", "{8FF75C8B-2A9E-4D95-91AD-333071813199}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rainbow.Storage.Sc", "..\Rainbow\src\Rainbow.Storage.Sc\Rainbow.Storage.Sc.csproj", "{956AFE8B-51CD-4D61-B8C1-BFFDC749FD82}"
@@ -31,10 +29,6 @@ Global
 		{7E03DC10-5D06-4173-89CA-2AEFBA4FAD55}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7E03DC10-5D06-4173-89CA-2AEFBA4FAD55}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7E03DC10-5D06-4173-89CA-2AEFBA4FAD55}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5BCC8851-B076-40DE-B1D4-5E8C2F8BD09E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5BCC8851-B076-40DE-B1D4-5E8C2F8BD09E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5BCC8851-B076-40DE-B1D4-5E8C2F8BD09E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5BCC8851-B076-40DE-B1D4-5E8C2F8BD09E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8FF75C8B-2A9E-4D95-91AD-333071813199}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8FF75C8B-2A9E-4D95-91AD-333071813199}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8FF75C8B-2A9E-4D95-91AD-333071813199}.Release|Any CPU.ActiveCfg = Release|Any CPU
