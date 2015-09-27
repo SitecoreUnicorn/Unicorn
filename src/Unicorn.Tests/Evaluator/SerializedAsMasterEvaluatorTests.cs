@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Linq;
-using System.Xml;
 using FluentAssertions;
 using NSubstitute;
 using Xunit;

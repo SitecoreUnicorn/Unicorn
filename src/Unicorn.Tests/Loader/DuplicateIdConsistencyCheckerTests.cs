@@ -61,6 +61,7 @@ namespace Unicorn.Tests.Loader
 
 			var duplicatedId = ID.NewID.Guid;
 
+			// ReSharper disable once RedundantArgumentDefaultValue
 			var testItem1 = new FakeItem(duplicatedId, "master");
 
 			var testItem2  = new FakeItem(duplicatedId, "core");

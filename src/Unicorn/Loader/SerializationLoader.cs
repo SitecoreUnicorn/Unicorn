@@ -9,8 +9,6 @@ using Sitecore.Caching;
 using Sitecore.Configuration;
 using Sitecore.Data.Events;
 using Sitecore.Diagnostics;
-using Sitecore.SecurityModel;
-using Unicorn.ControlPanel;
 using Unicorn.Data;
 using Unicorn.Data.DataProvider;
 using Unicorn.Evaluators;

@@ -16,12 +16,8 @@ namespace Unicorn.ControlPanel
 	/// </summary>
 	public class ReserializeConsole : ControlPanelConsole
 	{
-		private readonly IConfiguration[] _configurations;
-
-		public ReserializeConsole(bool isAutomatedTool, IConfiguration[] configurations)
-			: base(isAutomatedTool, new HeadingService())
+		public ReserializeConsole(bool isAutomatedTool)	: base(isAutomatedTool, new HeadingService())
 		{
-			_configurations = configurations;
 		}
 
 		protected override string Title

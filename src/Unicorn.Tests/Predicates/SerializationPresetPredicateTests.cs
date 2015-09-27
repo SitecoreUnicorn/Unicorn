@@ -20,7 +20,7 @@ namespace Unicorn.Tests.Predicates
 		[Fact]
 		public void ctor_ThrowsArgumentNullException_WhenNodeIsNull()
 		{
-			Assert.Throws<ArgumentNullException>(() => new SerializationPresetPredicate((XmlNode)null));
+			Assert.Throws<ArgumentNullException>(() => new SerializationPresetPredicate(null));
 		}
 
 		//

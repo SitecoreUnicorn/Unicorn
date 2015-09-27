@@ -10,7 +10,6 @@ using Sitecore.SecurityModel;
 using Sitecore.StringExtensions;
 using Unicorn.Configuration;
 using Unicorn.ControlPanel.Controls;
-using Unicorn.Data.DataProvider;
 
 namespace Unicorn.ControlPanel
 {
@@ -151,12 +150,12 @@ namespace Unicorn.ControlPanel
 
 		protected virtual IEnumerable<IControlPanelControl> GetReserializeControls(bool isAutomatedTool)
 		{
-			yield return new ReserializeConsole(isAutomatedTool, Configurations);
+			yield return new ReserializeConsole(isAutomatedTool);
 		}
 
 		protected virtual IEnumerable<IControlPanelControl> GetSyncControls(bool isAutomatedTool)
 		{
-			yield return new SyncConsole(isAutomatedTool, Configurations);
+			yield return new SyncConsole(isAutomatedTool);
 		}
 
 		protected virtual SecurityState Authorization

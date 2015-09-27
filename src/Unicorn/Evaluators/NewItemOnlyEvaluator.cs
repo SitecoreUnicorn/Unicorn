@@ -5,7 +5,6 @@ using Sitecore.Configuration;
 using Sitecore.Data.Items;
 using Sitecore.Diagnostics;
 using Unicorn.Data;
-using Unicorn.Data.DataProvider;
 using Unicorn.UI.Pipelines.GetContentEditorWarnings;
 
 namespace Unicorn.Evaluators

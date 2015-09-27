@@ -6,9 +6,7 @@ using Rainbow.Filtering;
 using Rainbow.Model;
 using Sitecore.Data;
 using Sitecore.Data.DataProviders;
-using Sitecore.Data.Items;
 using Sitecore.FakeDb;
-using Sitecore.FakeDb.Data.DataProviders;
 using Unicorn.Data;
 using Unicorn.Data.DataProvider;
 using Unicorn.Predicates;
@@ -16,7 +14,7 @@ using Xunit;
 
 namespace Unicorn.Tests.Data.DataProvider
 {
-	public class UnicornDataProviderTests
+	public partial class UnicornDataProviderTests
 	{
 		[Theory, AutoDbData]
 		public void ShouldDisableTransparentSync_WhenDisablerInScope(Db db)
@@ -34,58 +32,9 @@ namespace Unicorn.Tests.Data.DataProvider
 			}
 		}
 
-		[Theory, AutoDbData]
-		public void Create_ShouldSerializeItem(Db db)
-		{
-			var target = Substitute.For<ITargetDataStore>();
 
-			using (var provider = CreateTestProvider(db.Database, targetDataStore: target))
-			{
-				provider.CreateItem(CreateTestDefinition(), ID.NewID, CreateTestDefinition(), CreateTestCallContext(db.Database));
 
-				target.Received().Save(Arg.Any<IItemData>());
-			}
-		}
 
-		[Theory, AutoDbData]
-		public void Save_ShouldSerializeItem(Db db)
-		{
-			var target = Substitute.For<ITargetDataStore>();
-
-			using (var provider = CreateTestProvider(db.Database, targetDataStore: target))
-			{
-				var fieldId = ID.NewID;
-				var item = new DbItem("Test") { { fieldId, "World" } };
-				db.Add(item);
-
-				var dbItem = db.GetItem(item.ID);
-
-				var changes = new ItemChanges(dbItem);
-				changes.SetFieldValue(dbItem.Fields[fieldId], "Hello", "World");
-
-				provider.SaveItem(CreateTestDefinition(), changes, CreateTestCallContext(db.Database));
-
-				target.Received().Save(Arg.Any<IItemData>());
-			}
-		}
-
-		[Theory, AutoDbData]
-		public void Save_ShouldNotSerializeItem_IfNoMeaningfulChanges(Db db, DbItem item)
-		{
-			var target = Substitute.For<ITargetDataStore>();
-
-			using (var provider = CreateTestProvider(db.Database, targetDataStore: target))
-			{
-				db.Add(item);
-
-				var dbItem = db.GetItem(item.ID);
-				var changes = new ItemChanges(dbItem);
-
-				provider.SaveItem(CreateTestDefinition(), changes, CreateTestCallContext(db.Database));
-
-				target.DidNotReceive().Save(Arg.Any<IItemData>());
-			}
-		}
 
 		// TODO
 
@@ -93,8 +42,7 @@ namespace Unicorn.Tests.Data.DataProvider
 		{
 			if (predicate == null)
 			{
-				predicate = Substitute.For<IPredicate>();
-				predicate.Includes(Arg.Any<IItemData>()).Returns(new PredicateResult(true));
+				predicate = CreateInclusiveTestPredicate();
 			}
 
 			if (filter == null)
@@ -110,14 +58,30 @@ namespace Unicorn.Tests.Data.DataProvider
 			return dp;
 		}
 
-		private ItemDefinition CreateTestDefinition()
+		private ItemDefinition CreateTestDefinition(ID id = null, string name = null, ID templateId = null, ID branchId = null)
 		{
-			return new ItemDefinition(ID.NewID, "Test", ID.NewID, ID.NewID);
+			return new ItemDefinition(id ?? ID.NewID, name ?? "Test", templateId ?? ID.NewID, branchId ?? ID.NewID);
 		}
 
 		private CallContext CreateTestCallContext(Database db)
 		{
 			return new CallContext(new DataManager(db), 1);
+		}
+
+		private IPredicate CreateInclusiveTestPredicate()
+		{
+			var predicate = Substitute.For<IPredicate>();
+			predicate.Includes(Arg.Any<IItemData>()).Returns(new PredicateResult(true));
+
+			return predicate;
+		}
+
+		private IPredicate CreateExclusiveTestPredicate()
+		{
+			var predicate = Substitute.For<IPredicate>();
+			predicate.Includes(Arg.Any<IItemData>()).Returns(new PredicateResult(false));
+
+			return predicate;
 		}
 	}
 }

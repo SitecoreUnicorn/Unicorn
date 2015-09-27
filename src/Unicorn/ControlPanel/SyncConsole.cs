@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Web;
 using Kamsar.WebConsole;
 using Sitecore.Pipelines;
@@ -16,12 +15,8 @@ namespace Unicorn.ControlPanel
 	/// </summary>
 	public class SyncConsole : ControlPanelConsole
 	{
-		private readonly IConfiguration[] _configurations;
-
-		public SyncConsole(bool isAutomatedTool, IConfiguration[] configurations)
-			: base(isAutomatedTool, new HeadingService())
+		public SyncConsole(bool isAutomatedTool) : base(isAutomatedTool, new HeadingService())
 		{
-			_configurations = configurations;
 		}
 
 		protected override string Title

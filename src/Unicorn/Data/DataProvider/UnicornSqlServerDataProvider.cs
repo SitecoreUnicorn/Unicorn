@@ -8,7 +8,6 @@ using Sitecore.Data;
 using Sitecore.Data.DataProviders;
 using Sitecore.Data.Items;
 using Sitecore.Data.SqlServer;
-using Sitecore.Diagnostics;
 using Sitecore.Globalization;
 using Unicorn.Configuration;
 
