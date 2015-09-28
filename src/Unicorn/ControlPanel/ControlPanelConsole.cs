@@ -176,7 +176,7 @@ namespace Unicorn.ControlPanel
 					a, a:visited { color: lightblue; } 
 					#console{ height: 40em; } 
 					h1 { font-size: 3em; } 
-					h1, p { font-family: 'Source Sans Pro'; } 
+					h1, p { font-family: 'Source Sans Pro', sans-serif; } 
 					.line { margin: 1em 0 0 0; font-size: 1.2em; display: block; }
 					.line-inner { display: block; font-size: 0.9em; }
 					.line-smaller { font-size: 0.7em !important; margin-bottom: .4em; font-style: italic; color: gray; }
