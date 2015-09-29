@@ -150,7 +150,25 @@ namespace Unicorn.Data.DataProvider
 				}
 			}
 
-			if(results.Count == 0) return base.GetChildIDs(itemDefinition, context);
+			if (results.Count == 0)
+			{
+				// get database children
+				var baseIds = base.GetChildIDs(itemDefinition, context);
+
+				// get additional children from Unicorn providers
+				// e.g. for TpSync if the root item of a tree is not in the database
+				// this allows us to inject that root as a child of the DB item
+				foreach (var provider in UnicornDataProviders)
+				{
+					var providerResult = provider.GetAdditionalChildIds(itemDefinition, context);
+					foreach (var result in providerResult)
+					{
+						if (!baseIds.Contains(result)) baseIds.Add(result);
+					}
+				}
+
+				return baseIds;
+			}
 
 			return IDList.Build(results.ToArray());
 		}

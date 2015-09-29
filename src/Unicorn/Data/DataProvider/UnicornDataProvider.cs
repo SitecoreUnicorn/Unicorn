@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using Rainbow.Filtering;
@@ -30,22 +31,27 @@ namespace Unicorn.Data.DataProvider
 		private readonly IPredicate _predicate;
 		private readonly IFieldFilter _fieldFilter;
 		private readonly IUnicornDataProviderLogger _logger;
-		private readonly IUnicornDataProviderConfiguration _configuration;
+		private readonly IUnicornDataProviderConfiguration _dataProviderConfiguration;
+		private readonly PredicateRootPathResolver _rootPathResolver;
 		private static bool _disableSerialization;
 		private bool _disableTransparentSync;
 		private readonly Dictionary<Guid, Tuple<string, Guid>> _blobIdLookup = new Dictionary<Guid, Tuple<string, Guid>>();
+		protected IReadOnlyDictionary<Guid, IReadOnlyList<ID>> RootIds;
+		private readonly object _rootIdInitLock = new object();
 
-		public UnicornDataProvider(ITargetDataStore targetDataStore, ISourceDataStore sourceDataStore, IPredicate predicate, IFieldFilter fieldFilter, IUnicornDataProviderLogger logger, IUnicornDataProviderConfiguration configuration)
+		public UnicornDataProvider(ITargetDataStore targetDataStore, ISourceDataStore sourceDataStore, IPredicate predicate, IFieldFilter fieldFilter, IUnicornDataProviderLogger logger, IUnicornDataProviderConfiguration dataProviderConfiguration, PredicateRootPathResolver rootPathResolver)
 		{
 			Assert.ArgumentNotNull(targetDataStore, "serializationProvider");
 			Assert.ArgumentNotNull(predicate, "predicate");
 			Assert.ArgumentNotNull(fieldFilter, "fieldPredicate");
 			Assert.ArgumentNotNull(logger, "logger");
 			Assert.ArgumentNotNull(sourceDataStore, "sourceDataStore");
-			Assert.ArgumentNotNull(configuration, "configuration");
+			Assert.ArgumentNotNull(dataProviderConfiguration, "configuration");
+			Assert.ArgumentNotNull(rootPathResolver, "rootPathResolver");
 
 			_logger = logger;
-			_configuration = configuration;
+			_dataProviderConfiguration = dataProviderConfiguration;
+			_rootPathResolver = rootPathResolver;
 			_predicate = predicate;
 			_fieldFilter = fieldFilter;
 			_targetDataStore = targetDataStore;
@@ -85,12 +91,12 @@ namespace Unicorn.Data.DataProvider
 			get
 			{
 				if (TransparentSyncDisabler.CurrentValue) return true;
-				if (!_configuration.EnableTransparentSync) return true;
+				if (!_dataProviderConfiguration.EnableTransparentSync) return true;
 				return _disableTransparentSync;
 			}
 			set { _disableTransparentSync = value; }
 		}
-
+		
 		public Sitecore.Data.DataProviders.DataProvider ParentDataProvider { get; set; }
 
 		protected Database Database { get { return ParentDataProvider.Database; } }
@@ -282,7 +288,7 @@ namespace Unicorn.Data.DataProvider
 
 			// create a clone of the item to remove the version from
 			var versionRemovingProxy = new ProxyItem(sourceItem);
-			
+
 			// exclude the removed version
 			versionRemovingProxy.Versions = versionRemovingProxy.Versions.Where(v => !v.Language.Equals(version.Language.CultureInfo) || !v.VersionNumber.Equals(version.Version.Number));
 
@@ -324,6 +330,19 @@ namespace Unicorn.Data.DataProvider
 			if (parentItem == null) return Enumerable.Empty<ID>();
 
 			return _targetDataStore.GetChildren(parentItem).Select(item => new ID(item.Id));
+		}
+
+		/// <summary>
+		/// Gets additional children that should be added IN ADDITION TO the base database children.
+		/// This is used to patch in TpSync root items that do not exist in the database under items that do exist in the database.
+		/// </summary>
+		public IEnumerable<ID> GetAdditionalChildIds(ItemDefinition itemDefinition, CallContext context)
+		{
+			EnsureRootsInitialized();
+
+			if (DisableSerialization || DisableTransparentSync || !RootIds.ContainsKey(itemDefinition.ID.Guid)) return Enumerable.Empty<ID>();
+
+			return RootIds[itemDefinition.ID.Guid];
 		}
 
 		public virtual ItemDefinition GetItemDefinition(ID itemId, CallContext context)
@@ -591,6 +610,38 @@ namespace Unicorn.Data.DataProvider
 			Database.Caches.ItemCache.Clear();
 			Database.Caches.ItemPathsCache.Clear();
 			Database.Caches.PathCache.Clear();
+		}
+
+		/// <summary>
+		/// Initializes the root items into a lookup so that TpSync can inject roots
+		/// under Sitecore items that are in the database that are TpSynced
+		/// </summary>
+		protected virtual void EnsureRootsInitialized()
+		{
+			if (RootIds != null) return;
+
+			lock (_rootIdInitLock)
+			{
+				if (RootIds != null) return;
+
+				var rootItems = _rootPathResolver.GetRootSerializedItems()
+					.Where(root => root.DatabaseName.Equals(Database.Name));
+
+				var rootItemLookup = new Dictionary<Guid, IReadOnlyList<ID>>();
+
+				foreach (var root in rootItems)
+				{
+					var items = rootItemLookup.ContainsKey(root.ParentId)
+						? new List<ID>(rootItemLookup[root.ParentId])
+						: new List<ID>();
+
+					items.Add(new ID(root.Id));
+
+					rootItemLookup[root.ParentId] = items.AsReadOnly();
+				}
+
+				RootIds = new ReadOnlyDictionary<Guid, IReadOnlyList<ID>>(rootItemLookup);
+			}
 		}
 
 		public void Dispose()
