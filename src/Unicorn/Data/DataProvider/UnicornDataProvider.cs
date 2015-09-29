@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -35,7 +36,7 @@ namespace Unicorn.Data.DataProvider
 		private readonly PredicateRootPathResolver _rootPathResolver;
 		private static bool _disableSerialization;
 		private bool _disableTransparentSync;
-		private readonly Dictionary<Guid, Tuple<string, Guid>> _blobIdLookup = new Dictionary<Guid, Tuple<string, Guid>>();
+		private readonly ConcurrentDictionary<Guid, Tuple<string, Guid>> _blobIdLookup = new ConcurrentDictionary<Guid, Tuple<string, Guid>>();
 		protected IReadOnlyDictionary<Guid, IReadOnlyList<ID>> RootIds;
 		private readonly object _rootIdInitLock = new object();
 
