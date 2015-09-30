@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Web;
 using Rainbow.Model;
 using Sitecore.Configuration;
 using Sitecore.Data;
@@ -17,7 +18,7 @@ namespace Unicorn.Evaluators
 	{
 		private readonly ILogger _logger;
 		private readonly ISyncCompleteDataCollector _pipelineDataCollector;
-		private const int MaxFieldLenthToDisplayValue = 40;
+		private const int MaxFieldLengthToDisplayValue = 60;
 
 		public DefaultSerializedAsMasterEvaluatorLogger(ILogger logger, ISyncCompleteDataCollector pipelineDataCollector)
 		{
@@ -40,9 +41,11 @@ namespace Unicorn.Evaluators
 			{
 				_logger.Debug("> Field {0} - Reset to standard value".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId)));
 			}
-			else if (targetValue.Length < MaxFieldLenthToDisplayValue && (sourceValue == null || sourceValue.Length < MaxFieldLenthToDisplayValue))
+			else if (targetValue.Length < MaxFieldLengthToDisplayValue && (sourceValue == null || sourceValue.Length < MaxFieldLengthToDisplayValue))
 			{
-				_logger.Debug("> Field {0} - Serialized {1}, Source {2}".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId), targetValue, sourceValue));
+				var encodedTarget = HttpUtility.HtmlEncode(targetValue);
+				var encodedSource = sourceValue == null ? string.Empty: HttpUtility.HtmlEncode(sourceValue);
+				_logger.Debug("> Field {0} - Serialized {1}, Source {2}".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId), encodedTarget, encodedSource));
 			}
 			else
 			{
@@ -59,9 +62,11 @@ namespace Unicorn.Evaluators
 			{
 				_logger.Debug("> Field {0} - {1}#{2} - Reset to standard value".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId), version.Language, version.VersionNumber));
 			}
-			else if (targetValue.Length < MaxFieldLenthToDisplayValue && (sourceValue == null || sourceValue.Length < MaxFieldLenthToDisplayValue))
+			else if (targetValue.Length < MaxFieldLengthToDisplayValue && (sourceValue == null || sourceValue.Length < MaxFieldLengthToDisplayValue))
 			{
-				_logger.Debug("> Field {0} - {1}#{2}: Serialized {3}, Source {4}".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId), version.Language, version.VersionNumber, targetValue, sourceValue));
+				var encodedTarget = HttpUtility.HtmlEncode(targetValue);
+				var encodedSource = sourceValue == null ? string.Empty : HttpUtility.HtmlEncode(sourceValue);
+				_logger.Debug("> Field {0} - {1}#{2}: Serialized {3}, Source {4}".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId), version.Language, version.VersionNumber, encodedTarget, encodedSource));
 			}
 			else
 			{
