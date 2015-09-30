@@ -93,6 +93,7 @@ namespace Unicorn.ControlPanel
 
 			var hasSerializedItems = Configurations.All(ControlPanelUtility.HasAnySerializedItems);
 			var hasValidSerializedItems = Configurations.All(ControlPanelUtility.HasAnySourceItems);
+			var allowMultiSelect = hasSerializedItems && hasValidSerializedItems && Configurations.Length > 1;
 
 			var isAuthorized = Authorization.IsAllowed;
 
@@ -119,9 +120,9 @@ namespace Unicorn.ControlPanel
 
 				yield return new Literal(@"
 						<article>
-							<h2{0} Configurations</h2>".FormatWith(Configurations.Length > 1 ? @" class=""fakebox fakebox-all""><span></span>" : ">"));
+							<h2{0} Configurations</h2>".FormatWith(allowMultiSelect ? @" class=""fakebox fakebox-all""><span></span>" : ">"));
 
-				if (Configurations.Length > 1) yield return new Literal(@"
+				if (allowMultiSelect) yield return new Literal(@"
 							<p class=""help"">Check 'Configurations' above to select all configurations, or individually select as many as you like below.</p>");
 
 				yield return new Literal(@"
@@ -130,7 +131,7 @@ namespace Unicorn.ControlPanel
 
 				foreach (var configuration in Configurations)
 				{
-					yield return new ConfigurationInfo(configuration) { MultipleConfigurationsExist = Configurations.Length > 1 };
+					yield return new ConfigurationInfo(configuration) { MultipleConfigurationsExist = allowMultiSelect };
 				}
 
 				yield return new Literal(@"
