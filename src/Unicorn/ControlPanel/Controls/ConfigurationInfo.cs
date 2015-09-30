@@ -29,7 +29,7 @@ namespace Unicorn.ControlPanel.Controls
 				<td{0}>", configurationHasSerializedItems ? string.Empty:" colspan=\"2\"");
 
 			writer.Write(@"
-					<h3{0}{1}</h3>".FormatWith(MultipleConfigurationsExist ? @" class=""fakebox""><span></span>" : ">", _configuration.Name));
+					<h3{0}{1}</h3>".FormatWith(MultipleConfigurationsExist && configurationHasSerializedItems && configurationHasValidRootItems ? @" class=""fakebox""><span></span>" : ">", _configuration.Name));
 
 			if(!string.IsNullOrWhiteSpace(_configuration.Description))
 				writer.Write(@"
