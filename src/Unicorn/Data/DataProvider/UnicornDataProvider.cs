@@ -75,6 +75,8 @@ namespace Unicorn.Data.DataProvider
 		{
 			get
 			{
+				if (SerializationEnabler.CurrentValue) return false;
+
 				// we have to check standard serialization's disabled attribute as well,
 				// because if we do not serialization operations in the content editor will clash with ours
 				if (ItemHandler.DisabledLocally) return true;

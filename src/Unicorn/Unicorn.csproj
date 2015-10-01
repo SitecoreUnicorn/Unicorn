@@ -65,12 +65,15 @@
     <Compile Include="Data\DataProvider\IUnicornDataProviderConfiguration.cs" />
     <Compile Include="Data\DataProvider\PathRebasingItemData.cs" />
     <Compile Include="DeserializationSoftFailureAggregateException.cs" />
+    <Compile Include="Deserialization\UnicornDeserializer.cs" />
     <Compile Include="Evaluators\INewItemOnlyEvaluatorLogger.cs" />
     <Compile Include="Evaluators\NewItemOnlyEvaluator.cs" />
     <Compile Include="Logging\Formatting\DeserializationExceptionFormatter.cs" />
     <Compile Include="Logging\Formatting\IExceptionFormatter.cs" />
     <Compile Include="Logging\Formatting\TemplateMissingFieldExceptionFormatter.cs" />
     <Compile Include="Logging\LogTransaction.cs" />
+    <Compile Include="SerializationEnabler.cs" />
+    <Compile Include="TransparentSyncEnabler.cs" />
     <Compile Include="UI\Commands\UnicornDumpTreeCommand.cs" />
     <Compile Include="UI\Commands\UnicornLoadTreeCommand.cs" />
     <Compile Include="UI\Commands\UnicornLoadItemCommand.cs" />

@@ -8,7 +8,12 @@ namespace Unicorn
 	/// </summary>
 	public class TransparentSyncDisabler : Switcher<bool, TransparentSyncDisabler>
 	{
-		public TransparentSyncDisabler() : base(true)
+		public TransparentSyncDisabler() : this(true)
+		{
+			
+		}
+
+		protected TransparentSyncDisabler(bool value) : base(value)
 		{
 			
 		}
