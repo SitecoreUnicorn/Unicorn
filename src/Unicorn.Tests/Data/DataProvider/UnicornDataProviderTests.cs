@@ -9,6 +9,7 @@ using Sitecore.Data.DataProviders;
 using Sitecore.FakeDb;
 using Unicorn.Data;
 using Unicorn.Data.DataProvider;
+using Unicorn.Logging;
 using Unicorn.Predicates;
 using Xunit;
 
@@ -51,8 +52,17 @@ namespace Unicorn.Tests.Data.DataProvider
 				filter.Includes(Arg.Any<Guid>()).Returns(true);
 			}
 
-			var dp = new UnicornDataProvider(targetDataStore ?? Substitute.For<ITargetDataStore>(), sourceDataStore ?? Substitute.For<ISourceDataStore>(), predicate, filter, logger ?? Substitute.For<IUnicornDataProviderLogger>(), new DefaultUnicornDataProviderConfiguration(enableTransparentSync));
+			targetDataStore = targetDataStore ?? Substitute.For<ITargetDataStore>();
+			sourceDataStore = sourceDataStore ?? Substitute.For<ISourceDataStore>();
 
+			var dp = new UnicornDataProvider(targetDataStore, 
+				sourceDataStore, 
+				predicate, 
+				filter, 
+				logger ?? Substitute.For<IUnicornDataProviderLogger>(), 
+				new DefaultUnicornDataProviderConfiguration(enableTransparentSync), 
+				new PredicateRootPathResolver(predicate, targetDataStore, sourceDataStore, Substitute.For<ILogger>()));
+			
 			dp.ParentDataProvider = db.GetDataProviders().First();
 
 			return dp;
