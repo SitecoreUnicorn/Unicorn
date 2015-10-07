@@ -97,8 +97,8 @@ _Note: these rules concern the default Evaluator only. This is probably what mak
 * Clone the repository
 * Place a copy of your Sitecore.Kernel.dll assembly in /lib/sitecore/v7 (for v7/v8)
 * Build the project for your Sitecore version using Visual Studio 2012 or later
-* Copy Unicorn.dll and Kamsar.WebConsole.dll to your main project in whatever fashion you wish (project reference, as binary references, etc)
-* Copy `Default Config Files\*.config` to the `App_Config\Include\Unicorn` folder
+* Copy Unicorn.dll, Rainbow.dll, Rainbow.Storage.Sc.dll, Rainbow.Storage.Yaml.dll and Kamsar.WebConsole.dll to your main project in whatever fashion you wish (project reference, as binary references, etc)
+* Copy `Standard Config Files\*.config` to the `App_Config\Include\Unicorn` folder
 * Configure to your liking; the [setup README file](https://github.com/kamsar/Unicorn/blob/master/Build/Unicorn.nuget/readme.txt) is a good starting point.
 * Hit $yoursite/unicorn.aspx to perform initial serialization of your configured predicate
 
