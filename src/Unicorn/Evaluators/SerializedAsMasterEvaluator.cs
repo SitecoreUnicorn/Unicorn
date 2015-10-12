@@ -9,6 +9,8 @@ using Sitecore.Configuration;
 using Sitecore.Data;
 using Sitecore.Data.Items;
 using Sitecore.Diagnostics;
+using Sitecore.StringExtensions;
+using Unicorn.Configuration;
 using Unicorn.Data;
 using Unicorn.Data.DataProvider;
 using Unicorn.Logging;
@@ -26,9 +28,10 @@ namespace Unicorn.Evaluators
 		private readonly IItemComparer _itemComparer;
 		private readonly IFieldFilter _fieldFilter;
 		private readonly ISourceDataStore _sourceDataStore;
+		private readonly IConfiguration _parentConfiguration;
 		protected static readonly Guid RootId = new Guid("{11111111-1111-1111-1111-111111111111}");
 
-		public SerializedAsMasterEvaluator(ILogger globalLogger, ISerializedAsMasterEvaluatorLogger logger, IItemComparer itemComparer, IFieldFilter fieldFilter, ISourceDataStore sourceDataStore, ITargetDataStore targetDataStore) : base(logger, sourceDataStore, targetDataStore)
+		public SerializedAsMasterEvaluator(ILogger globalLogger, ISerializedAsMasterEvaluatorLogger logger, IItemComparer itemComparer, IFieldFilter fieldFilter, ISourceDataStore sourceDataStore, ITargetDataStore targetDataStore, IConfiguration parentConfiguration) : base(logger, sourceDataStore, targetDataStore, parentConfiguration)
 		{
 			Assert.ArgumentNotNull(globalLogger, "globalLogger");
 			Assert.ArgumentNotNull(logger, "logger");
@@ -41,6 +44,7 @@ namespace Unicorn.Evaluators
 			_itemComparer = itemComparer;
 			_fieldFilter = fieldFilter;
 			_sourceDataStore = sourceDataStore;
+			_parentConfiguration = parentConfiguration;
 		}
 
 		public override void EvaluateOrphans(IItemData[] orphanItems)
@@ -86,7 +90,7 @@ namespace Unicorn.Evaluators
 
 			if (Settings.GetBoolSetting("Unicorn.DevMode", true))
 			{
-				message = "Changes to this item will be written to disk so they can be committed to source control and shared with others.";
+				message = "Changes to this item will be written to disk as part of the '{0}' configuration so they can be shared with others.".FormatWith(_parentConfiguration.Name);
 			}
 
 			if (transparentSync)
