@@ -341,9 +341,11 @@ namespace Unicorn.Data.DataProvider
 		/// </summary>
 		public IEnumerable<ID> GetAdditionalChildIds(ItemDefinition itemDefinition, CallContext context)
 		{
+			if (DisableSerialization || DisableTransparentSync) return Enumerable.Empty<ID>();
+
 			EnsureRootsInitialized();
 
-			if (DisableSerialization || DisableTransparentSync || !RootIds.ContainsKey(itemDefinition.ID.Guid)) return Enumerable.Empty<ID>();
+			if (!RootIds.ContainsKey(itemDefinition.ID.Guid)) return Enumerable.Empty<ID>();
 
 			return RootIds[itemDefinition.ID.Guid];
 		}
