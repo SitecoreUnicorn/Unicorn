@@ -111,6 +111,9 @@ namespace Unicorn.Configuration
 				RegisterGenericConfigTypeByInterfaces(configuration, defaults, adHocElement.Name, registry);
 			}
 
+			// register the configuration with itself. how meta!
+			registry.Register(typeof(IConfiguration), () => new ReadOnlyConfiguration(registry), true);
+
 			return new ReadOnlyConfiguration(registry);
 		}
 
