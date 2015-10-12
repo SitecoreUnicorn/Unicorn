@@ -2,7 +2,6 @@
 using Rainbow.Storage.Sc.Deserialization;
 using Sitecore.Data;
 using Sitecore.Data.Templates;
-using Unicorn.Data.DataProvider;
 
 namespace Unicorn.Deserialization
 {
