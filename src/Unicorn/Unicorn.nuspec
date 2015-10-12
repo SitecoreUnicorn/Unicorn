@@ -3,7 +3,7 @@
   <metadata>
     <id>Unicorn.Core</id>
     <version>$version$</version>
-    <title>$title$</title>
+    <title>Unicorn.Core</title>
     <authors>Kam Figy</authors>
     <owners>Kam Figy</owners>
     <licenseUrl>http://opensource.org/licenses/MIT</licenseUrl>
