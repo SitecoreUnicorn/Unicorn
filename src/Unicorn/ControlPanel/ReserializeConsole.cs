@@ -51,7 +51,7 @@ namespace Unicorn.ControlPanel
 
 							// nuke any existing items in the store before we begin. This is a full reserialize so we want to
 							// get rid of any existing stuff even if it's not part of existing configs
-							logger.Warn("[D] Clearing existing items from {0}".FormatWith(targetDataStore.FriendlyName));
+							logger.Warn("[D] Clearing existing items from {0} (if any)".FormatWith(targetDataStore.FriendlyName));
 							targetDataStore.Clear();
 
 							var roots = configuration.Resolve<PredicateRootPathResolver>().GetRootSourceItems();
