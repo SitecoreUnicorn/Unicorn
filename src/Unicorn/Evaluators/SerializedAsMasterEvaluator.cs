@@ -6,6 +6,7 @@ using Rainbow.Diff;
 using Rainbow.Filtering;
 using Rainbow.Model;
 using Sitecore.Configuration;
+using Sitecore.Data;
 using Sitecore.Data.Items;
 using Sitecore.Diagnostics;
 using Unicorn.Data;
@@ -78,14 +79,29 @@ namespace Unicorn.Evaluators
 
 		public override Warning EvaluateEditorWarning(Item item)
 		{
-			string title = "This item is controlled by Unicorn";
-			if (item.Statistics.UpdatedBy == UnicornDataProvider.TransparentSyncUpdatedByValue)
-				title = "This item is transparently synced by Unicorn";
+			bool transparentSync = item.Statistics.UpdatedBy == UnicornDataProvider.TransparentSyncUpdatedByValue;
+			string title = transparentSync ? "This item is included by Unicorn Transparent Sync" : "This item is controlled by Unicorn";
 
 			string message = "You should not change this item because your changes will be overwritten by the next code deployment. Ask a developer for help if you need to change this item.";
 
 			if (Settings.GetBoolSetting("Unicorn.DevMode", true))
+			{
 				message = "Changes to this item will be written to disk so they can be committed to source control and shared with others.";
+			}
+
+			if (transparentSync)
+			{
+				using (new TransparentSyncDisabler())
+				{
+					using (new DatabaseCacheDisabler())
+					{
+						var dbItem = Database.GetItem(item.Uri);
+						if (dbItem != null) message += " Item exists in the Sitecore database as well as Transparent Sync.";
+						else
+							message += " Item does not exist in the Sitecore database.";
+					}
+				}
+			}
 
 			return new Warning(title, message);
 		}
