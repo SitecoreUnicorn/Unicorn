@@ -11,6 +11,7 @@ using Rainbow.Storage.Sc.Deserialization;
 using Rainbow.Tests;
 using Sitecore.Data.Items;
 using Sitecore.FakeDb;
+using Unicorn.Configuration;
 using Unicorn.Data;
 using Unicorn.Evaluators;
 using Unicorn.Logging;
@@ -133,7 +134,7 @@ namespace Unicorn.Tests.Evaluator
 				comparer.FastCompare(Arg.Any<IItemData>(), Arg.Any<IItemData>()).Returns(new ItemComparisonResult(new FakeItem(), new FakeItem()));
 			}
 
-			return new SerializedAsMasterEvaluator(Substitute.For<ILogger>(), logger ?? Substitute.For<ISerializedAsMasterEvaluatorLogger>(), comparer, CreateTestFieldFilter(), dataStore, Substitute.For<ITargetDataStore>());
+			return new SerializedAsMasterEvaluator(Substitute.For<ILogger>(), logger ?? Substitute.For<ISerializedAsMasterEvaluatorLogger>(), comparer, CreateTestFieldFilter(), dataStore, Substitute.For<ITargetDataStore>(), Substitute.For<IConfiguration>());
 		}
 
 		private IFieldFilter CreateTestFieldFilter()
