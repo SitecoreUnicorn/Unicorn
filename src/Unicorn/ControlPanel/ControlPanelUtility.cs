@@ -27,12 +27,14 @@ namespace Unicorn.ControlPanel
 			var config = (queryParameter ?? string.Empty)
 				.Split('^')
 				.Where(key => !string.IsNullOrWhiteSpace(key))
-				.ToLookup(key => key);
+				.ToList();
 
 			var configurations = UnicornConfigurationManager.Configurations;
 			if (config.Count == 0) return configurations;
 
-			var targetConfigurations = configurations.Where(x => config.Contains(x.Name)).ToArray();
+			var targetConfigurations = config.Select(name => configurations.FirstOrDefault(conf => conf.Name.Equals(name)))
+				.Where(conf => conf != null)
+				.ToArray();
 
 			return targetConfigurations;
 		}
