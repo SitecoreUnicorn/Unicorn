@@ -1,20 +1,15 @@
 <!--
-	Unicorn.config
+	This is an example of how to configure a Unicorn configuration that overrides the location on disk to store the serialized items.
 
-	This file configures the Unicorn serialization system, which enables automatic
-	synchronization of Sitecore items without packages or manual merging.
+	Enabled configuration definition patches should be present on all environments Unicorn is present on.
 
-	This file should be present on all environments Unicorn is present on. It is
-	safe to leave on Content Delivery servers, as it changes no stock Sitecore
-	configuration.
-
-	http://github.com/kamsar/Unicorn
+	See Unicorn.config for commentary on how configurations operate, or https://github.com/kamsar/Unicorn/blob/master/README.md
 -->
 <configuration xmlns:patch="http://www.sitecore.net/xmlconfig/">
-  <sitecore>
-    <unicorn>
-      <defaults>
-        <!--
+	<sitecore>
+		<unicorn>
+			<defaults>
+				<!--
 						The target data store is where we write serialized items to, use this patch to alter where items are serialized to and from.
 
 						Note the target data store's rootPath can be any of:
@@ -30,12 +25,14 @@
 						is recommended if using transparent syncing for performance. It's not really
 						needed otherwise.
 					-->
-        <targetDataStore type="Rainbow.Storage.SerializationFileSystemDataStore, Rainbow">
-          <patch:attribute name="physicalRootPath">c:\path-to-source\Unicorn\$(configurationName)</patch:attribute>
-        </targetDataStore>
+				<targetDataStore type="Rainbow.Storage.SerializationFileSystemDataStore, Rainbow">
+					<patch:attribute name="physicalRootPath">c:\path-to-source\Unicorn\$(configurationName)</patch:attribute>
+				</targetDataStore>
 
-      </defaults>
-    </unicorn>
-
-  </sitecore>
+				<predicate type="Unicorn.Predicates.SerializationPresetPredicate, Unicorn" singleInstance="true">
+					<include database="master" path="/sitecore/content/global-settings" />
+				</predicate>
+			</defaults>
+		</unicorn>
+	</sitecore>
 </configuration>

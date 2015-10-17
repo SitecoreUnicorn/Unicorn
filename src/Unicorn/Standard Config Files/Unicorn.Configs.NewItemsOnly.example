@@ -5,7 +5,7 @@
 	to only load items that are new on disk into Sitecore. This can be handy if you want to only deploy some content items
 	once and thereafter cede control over them to content editors.
 
-	Configuration definition patches should be present on all environments Unicorn is present on.
+	Enabled configuration definition patches should be present on all environments Unicorn is present on.
 
 	See Unicorn.config for commentary on how configurations operate, or https://github.com/kamsar/Unicorn/blob/master/README.md
 -->
