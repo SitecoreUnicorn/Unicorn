@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Web;
 using Kamsar.WebConsole;
 
 namespace Unicorn.Logging
@@ -12,6 +13,15 @@ namespace Unicorn.Logging
 	{
 		private readonly IProgressStatus _progress;
 
+		protected bool Quiet
+		{
+			get
+			{
+				if (HttpContext.Current == null) return false;
+				return HttpContext.Current.Request.QueryString["quiet"] == "1";
+			}
+		}
+
 		public WebConsoleLogger(IProgressStatus progress)
 		{
 			_progress = progress;
@@ -19,11 +29,15 @@ namespace Unicorn.Logging
 
 		public void Info(string message)
 		{
+			if (Quiet) return;
+
 			_progress.ReportStatus(message, MessageType.Info);
 		}
 
 		public void Debug(string message)
 		{
+			if (Quiet) return;
+
 			_progress.ReportStatus(message, MessageType.Debug);
 		}
 
@@ -46,6 +60,7 @@ namespace Unicorn.Logging
 			else
 				_progress.ReportStatus(error, MessageType.Error);
 		}
+
 		public void Flush()
 		{
 			

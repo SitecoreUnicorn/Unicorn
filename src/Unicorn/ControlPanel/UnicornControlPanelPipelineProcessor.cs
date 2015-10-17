@@ -126,6 +126,9 @@ namespace Unicorn.ControlPanel
 							<p class=""help"">Check 'Configurations' above to select all configurations, or individually select as many as you like below.</p>");
 
 				yield return new Literal(@"
+							<p class=""help"">Expecting a huge number of changes? Try Quiet mode, which only logs warnings and errors and runs faster for large changesets. Add '&quiet=1' to any sync or reserialize URL to activate. Sitecore logs will still receive full detail.</p>");
+
+				yield return new Literal(@"
 							<table>
 								<tbody>");
 

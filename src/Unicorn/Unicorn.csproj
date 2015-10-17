@@ -180,7 +180,7 @@
     </None>
     <None Include="Standard Config Files\Unicorn.Deployed.config.disabled" />
     <None Include="Standard Config Files\Unicorn.Remote.config.disabled" />
-    <None Include="Standard Config Files\Unicorn.SerializationFolder.config.disabled" />
+    <None Include="Standard Config Files\Unicorn.Configs.SerializationFolder.config.disabled" />
     <None Include="Standard Config Files\Unicorn.UI.config">
       <SubType>Designer</SubType>
     </None>
