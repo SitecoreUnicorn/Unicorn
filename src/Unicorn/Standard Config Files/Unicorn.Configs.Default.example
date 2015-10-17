@@ -43,6 +43,7 @@
 
 						<!-- Master Layout items (and renderings, sublayouts, etc) -->
 						<include database="master" path="/sitecore/layout">
+							<!-- NOTE: You cannot use excludes with Transparent Sync. See https://github.com/kamsar/Unicorn/wiki/The-Transparent-Sync-Guide -->
 							<exclude path="/sitecore/layout/Simulators" />
 							<exclude path="/sitecore/layout/Layouts/System" />
 							<exclude path="/sitecore/layout/Renderings/App Center Sync" />
