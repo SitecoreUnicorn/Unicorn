@@ -53,29 +53,33 @@ There are also a series of blog posts detailing enhancements to Unicorn 3 (and R
 
 ## Automated Deployment
 
-Using Unicorn for automated deployment is fairly easy - configure your CI server to make a HTTP call to the control panel after deploying the site. 
+With Unicorn you've got two options for automated deployment of item changes, for example from a Continuous Integration server or production deploy scripts.
 
-The Unicorn control panel looks for a pre-shared "Authenticate" HTTP header that is used when doing automated deployments. Simply define the key as a "DeploymentToolAuthToken" appSetting:
+### Use Transparent Sync
+When using [Transparent Sync](http://kamsar.net/index.php/2015/10/Unicorn-Introducing-Transparent-Sync/), the items on disk magically appear in Sitecore without syncing. So one automated deployment option is to simply use Transparent Sync and copy your updated serialized items to the deployment target alongside your code. This is advantageous because it's simple to set up and requires no direct intervention with the deployed server after deployment (e.g. a HTTP call).
 
-    <add key="DeploymentToolAuthToken" value="generate-a-long-random-string-for-this" />
-	
-Then when your build script calls the Unicorn control panel, pass this key value along as an Authenticate HTTP header. For example using PowerShell 3.0 or later (such as with [Beaver](https://github.com/kamsar/Beaver)) you would use this:
+### Use the Automated Tool API
+Unicorn has an automated tool API whereby you can invoke actions in the Unicorn control panel from a script.
 
-	$url = 'http://your-site-authoring-url/unicorn.aspx?verb=Sync'
-	$deploymentToolAuthToken = 'generate-a-long-random-string-for-this'
-    $result = Invoke-WebRequest -Uri $url -Headers @{ "Authenticate" = $deploymentToolAuthToken } -TimeoutSec 10800 -UseBasicParsing
-	
-	Write-Host $result.Content
+**NOTE: Automated Tool API is completely overhauled in Unicorn 3.1, and these instructions are for 3.1 only**
 
-If you're on Azure, note that `Invoke-WebRequest` has [a bug](https://github.com/kamsar/Unicorn/issues/29) that prevents it from working correctly on Azure. See [#29](https://github.com/kamsar/Unicorn/issues/29) for a workaround on the above script if on Azure.
-	
-Calls to the control panel from an automated script behave a little differently from interactive calls do. Specifically:
+Tools are authenticated using a shared secret between the tool and the Sitecore server running Unicorn, which is relayed via [CHAP](https://en.wikipedia.org/wiki/Challenge-Handshake_Authentication_Protocol)+[HMAC](https://en.wikipedia.org/wiki/Hash-based_message_authentication_code)-SHA512. The practical upshot of this is that the shared secret never travels over the wire, the authentication key is unique every time, and replay attacks are not possible. You should still use the tool API over a TLS connection if possible.
+
+Calls to the control panel from an automated tool behave a little differently from interactive control panel sessions. Specifically:
 
 * Automated calls are not streaming (nothing is written to the response until everything is complete)
 * Automated calls return HTTP 500 if an error occurs (interactive calls that fail return HTTP 200, because the HTTP headers have been sent long before the error occurs). In the example PS script above, this will throw a PowerShell exception.
 * The output is text formatted, instead of HTML formatted, so it is much easier to read in logs.
 
-NOTE: When deploying to a Content Editing or Content Delivery server, the Unicorn configuration should be trimmed down from development. Each config file in `App_Config/Include/Unicorn` has comments at the top designating what environment(s) it should live on.
+
+Ok, ok. Shut up about crypto and tell me how to set it up.
+
+1. Generate a very long random shared secret key, preferably using a password generator. There are no limits on character count, character types, etc but it must be > 30 characters.
+2. Install the shared secret into the `Unicorn.UI.config` file - or a patch thereof, under the `authenticationProvider/SharedSecret` node. There are comments to help.
+3. To call the tool API from a script, a PowerShell module is provided. Acquire the module and its supporting files from the `doc\PowerShell Remote Scripting` folder of the Unicorn git repository.
+4. Review the `sample.ps1` file and adapt it to your needs, including putting the shared secret into it and setting the URL as needed. Don't worry the guts of `sample.ps1` are two simple lines of code :)
+
+NOTE: When deploying to a Content Editing or Content Delivery server, the Unicorn configuration should be trimmed down from development. Each config file in `App_Config/Include/Unicorn` has comments at the top designating what environment(s) it should live on. If you opt to use Transparent Sync as a deployment mechanism, make sure you do not disable the data provider config file.
 
 [Andrew Lansdowne](https://twitter.com/Rangler2) has also written a post _(for version 1, so some of it is outdated but the concepts still apply)_ about [setting up Unicorn with TeamCity and WebDeploy](http://andrew.lansdowne.me/2013/06/07/auto-deploy-sitecore-items-using-unicorn-and-teamcity/) that may be useful when setting up automated deployments.
 
