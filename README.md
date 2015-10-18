@@ -59,7 +59,7 @@ With Unicorn you've got two options for automated deployment of item changes, fo
 When using [Transparent Sync](http://kamsar.net/index.php/2015/10/Unicorn-Introducing-Transparent-Sync/), the items on disk magically appear in Sitecore without syncing. So one automated deployment option is to simply use Transparent Sync and copy your updated serialized items to the deployment target alongside your code. This is advantageous because it's simple to set up and requires no direct intervention with the deployed server after deployment (e.g. a HTTP call).
 
 ### Use the Automated Tool API
-Unicorn has an automated tool API whereby you can invoke actions in the Unicorn control panel from a script.
+Unicorn has an automated tool API whereby you can invoke actions in the Unicorn control panel from a script, such as invoking a sync after a code deployment.
 
 **NOTE: Automated Tool API is completely overhauled in Unicorn 3.1, and these instructions are for 3.1 only**
 
