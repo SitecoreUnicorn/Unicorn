@@ -30,7 +30,7 @@ namespace Unicorn.ControlPanel.Remote
 
 			var verb = (context.Request.QueryString["verb"] ?? string.Empty).ToLowerInvariant();
 
-			if (verb == "Challenge")
+			if (verb == "challenge")
 			{
 				context.Response.ContentType = "text/plain";
 				context.Response.Write(AuthenticationProvider.GetChallengeToken());
