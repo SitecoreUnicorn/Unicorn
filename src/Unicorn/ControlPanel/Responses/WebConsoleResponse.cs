@@ -2,13 +2,12 @@
 using System.Globalization;
 using System.Timers;
 using System.Web;
-using System.Web.UI;
 using Kamsar.WebConsole;
+using Sitecore.Diagnostics;
 using Sitecore.SecurityModel;
-using Unicorn.ControlPanel.Controls;
 using Unicorn.ControlPanel.Headings;
 
-namespace Unicorn.ControlPanel
+namespace Unicorn.ControlPanel.Responses
 {
 	/// <summary>
 	/// Creates a Html5WebConsole to render something into, using Unicorn chrome
@@ -16,42 +15,48 @@ namespace Unicorn.ControlPanel
 	/// Note that classes using this need to use LoggingContext/WebConsoleLogger to attach the WebConsole
 	/// to the current Unicorn logger instance or they will not receive Unicorn log output.
 	/// </summary>
-	public abstract class ControlPanelConsole : IControlPanelControl
+	public class WebConsoleResponse : IResponse
 	{
+		private readonly string _title;
+		private readonly Action<IProgressStatus> _processAction;
 		private readonly bool _isAutomatedTool;
 		private readonly HeadingService _headingService;
 
-		protected ControlPanelConsole(bool isAutomatedTool, HeadingService headingService)
+		public WebConsoleResponse(string title, bool isAutomatedTool, HeadingService headingService, Action<IProgressStatus> processAction)
 		{
+			Assert.ArgumentNotNullOrEmpty(title, "title");
+			Assert.ArgumentNotNull(processAction, "processAction");
+			Assert.ArgumentNotNull(headingService, "headingService");
+
+			_title = title;
+			_processAction = processAction;
 			_isAutomatedTool = isAutomatedTool;
 			_headingService = headingService;
 		}
 
-		protected abstract string Title { get; }
-
-		public void Render(HtmlTextWriter writer)
+		public virtual void Execute(HttpResponseBase response)
 		{
 			if (_isAutomatedTool)
 			{
 				var console = new StringProgressStatus();
 				ProcessInternal(console);
 
-				HttpContext.Current.Response.ContentType = "text/plain";
-				HttpContext.Current.Response.Write(Title + "\n\n");
-				HttpContext.Current.Response.Write(console.Output);
+				response.ContentType = "text/plain";
+				response.Write(_title + "\n\n");
+				response.Write(console.Output);
 
 				if (console.HasErrors)
 				{
-					HttpContext.Current.Response.StatusCode = 500;
-					HttpContext.Current.Response.TrySkipIisCustomErrors = true;
+					response.StatusCode = 500;
+					response.TrySkipIisCustomErrors = true;
 				}
 
-				HttpContext.Current.Response.End();
+				response.End();
 			}
 			else
 			{
-				var console = new CustomStyledHtml5WebConsole(HttpContext.Current.Response);
-				console.Title = Title;
+				var console = new CustomStyledHtml5WebConsole(response);
+				console.Title = _title;
 				console.Render(ProcessInternal);
 			}
 		}
@@ -91,7 +96,7 @@ namespace Unicorn.ControlPanel
 			{
 				using (new SecurityDisabler())
 				{
-					Process(progress);
+					_processAction(progress);
 				}
 			}
 			finally
@@ -105,51 +110,12 @@ namespace Unicorn.ControlPanel
 			progress.ReportStatus("Completed. Want to <a href=\"?verb=\">return to the control panel?</a>");
 		}
 
-		protected abstract void Process(IProgressStatus progress);
-
-		/// <summary>
-		/// Sets the progress of the whole based on the progress within a sub-task of the main progress (e.g. 0-100% of a task within the global range of 0-20%)
-		/// </summary>
-		/// <param name="progress"></param>
-		/// <param name="taskNumber">The index of the current sub-task</param>
-		/// <param name="totalTasks">The total number of sub-tasks</param>
-		/// <param name="taskPercent">The percentage complete of the sub-task (0-100)</param>
-		protected void SetTaskProgress(IProgressStatus progress, int taskNumber, int totalTasks, int taskPercent)
-		{
-			if (taskNumber < 1) throw new ArgumentException("taskNumber must be 1 or more");
-			if (totalTasks < 1) throw new ArgumentException("totalTasks must be 1 or more");
-			if (taskNumber > totalTasks) throw new ArgumentException("taskNumber was greater than the number of totalTasks!");
-
-			int start = (int)Math.Round(((taskNumber - 1) / (double)totalTasks) * 100d);
-			int end = start + (int)Math.Round((1d / totalTasks) * 100d);
-
-			SetRangeTaskProgress(progress, Math.Max(start, 0), Math.Min(end, 100), taskPercent);
-		}
-
-		/// <summary>
-		/// Sets the progress of the whole based on the progress within a percentage range of the main progress (e.g. 0-100% of a task within the global range of 0-20%)
-		/// </summary>
-		/// <param name="progress"></param>
-		/// <param name="startPercentage">The percentage the task began at</param>
-		/// <param name="endPercentage">The percentage the task ends at</param>
-		/// <param name="taskPercent">The percentage complete of the sub-task (0-100)</param>
-		private void SetRangeTaskProgress(IProgressStatus progress, int startPercentage, int endPercentage, int taskPercent)
-		{
-			int range = endPercentage - startPercentage;
-
-			if (range <= 0) throw new ArgumentException("endPercentage must be greater than startPercentage");
-
-			int offset = (int)Math.Round(range * (taskPercent / 100d));
-
-			progress.Report(Math.Min(startPercentage + offset, 100));
-		}
-
 		private class CustomStyledHtml5WebConsole : Html5WebConsole
 		{
-			private readonly HttpResponse _response;
+			private readonly HttpResponseBase _response;
 			private readonly object _writeLock = new object();
 
-			public CustomStyledHtml5WebConsole(HttpResponse response) : base(response)
+			public CustomStyledHtml5WebConsole(HttpResponseBase response) : base(response)
 			{
 				_response = response;
 			}

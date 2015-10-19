@@ -59,16 +59,34 @@
   <ItemGroup>
     <Compile Include="ControlPanel\Controls\BatchProcessingControls.cs" />
     <Compile Include="ControlPanel\Controls\ConfigurationInfo.cs" />
+    <Compile Include="ControlPanel\Controls\GlobalWarnings.cs" />
     <Compile Include="ControlPanel\Controls\QuickReference.cs" />
     <Compile Include="ControlPanel\Controls\NoConfigurations.cs" />
-    <Compile Include="ControlPanel\Remote\Logging\MessageLevel.cs" />
-    <Compile Include="ControlPanel\Remote\Logging\RemoteLogger.cs" />
-    <Compile Include="ControlPanel\Remote\Logging\ReportType.cs" />
-    <Compile Include="ControlPanel\Remote\UnicornRemotePipelineProcessor.cs" />
+    <Compile Include="ControlPanel\Pipelines\UnicornControlPanelRequest\ChallengeVerb.cs" />
+    <Compile Include="ControlPanel\Pipelines\UnicornControlPanelRequest\HandleAccessDenied.cs" />
+    <Compile Include="ControlPanel\Pipelines\UnicornControlPanelRequest\RenderControlPanel.cs" />
+    <Compile Include="ControlPanel\Pipelines\UnicornControlPanelRequest\ReserializeVerb.cs" />
+    <Compile Include="ControlPanel\Pipelines\UnicornControlPanelRequest\SyncVerb.cs" />
+    <Compile Include="ControlPanel\VisualStudio\Pipelines\UnicornControlPanelRequest\ConfigurationsVerb.cs" />
+    <Compile Include="ControlPanel\VisualStudio\Pipelines\UnicornControlPanelRequest\VersionVerb.cs" />
+    <Compile Include="ControlPanel\Responses\ApiResponse.cs" />
+    <Compile Include="ControlPanel\Responses\ControlPanelPageResponse.cs" />
+    <Compile Include="ControlPanel\Responses\IResponse.cs" />
+    <Compile Include="ControlPanel\Responses\PlainTextResponse.cs" />
+    <Compile Include="ControlPanel\VisualStudio\Logging\MessageLevel.cs" />
+    <Compile Include="ControlPanel\VisualStudio\Logging\NullProgressStatus.cs" />
+    <Compile Include="ControlPanel\VisualStudio\Logging\RemoteLogger.cs" />
+    <Compile Include="ControlPanel\VisualStudio\Logging\ReportType.cs" />
+    <Compile Include="ControlPanel\VisualStudio\Pipelines\UnicornControlPanelRequest\VSReserializeVerb.cs" />
+    <Compile Include="ControlPanel\VisualStudio\Pipelines\UnicornControlPanelRequest\VSSyncVerb.cs" />
+    <Compile Include="ControlPanel\VisualStudio\Responses\StreamingEncodedLogResponse.cs" />
     <Compile Include="ControlPanel\Security\IUnicornAuthenticationProvider.cs" />
     <Compile Include="ControlPanel\Security\ChapAuthenticationProvider.cs" />
     <Compile Include="ControlPanel\Security\LegacyAuthenticationProvider.cs" />
     <Compile Include="ControlPanel\Security\SecurityState.cs" />
+    <Compile Include="ControlPanel\Pipelines\UnicornControlPanelRequest\UnicornControlPanelRequestPipelineProcessor.cs" />
+    <Compile Include="ControlPanel\Pipelines\UnicornControlPanelRequest\UnicornControlPanelRequestPipelineArgs.cs" />
+    <Compile Include="ControlPanel\WebConsoleUtility.cs" />
     <Compile Include="Data\DataProvider\DefaultUnicornDataProviderConfiguration.cs" />
     <Compile Include="Data\DataProvider\IUnicornDataProviderConfiguration.cs" />
     <Compile Include="Data\DataProvider\PathRebasingItemData.cs" />
@@ -103,9 +121,7 @@
     <Compile Include="ControlPanel\Controls\IControlPanelControl.cs" />
     <Compile Include="ControlPanel\Controls\InitialSetup.cs" />
     <Compile Include="ControlPanel\Controls\Literal.cs" />
-    <Compile Include="ControlPanel\ReserializeConsole.cs" />
-    <Compile Include="ControlPanel\ControlPanelConsole.cs" />
-    <Compile Include="ControlPanel\SyncConsole.cs" />
+    <Compile Include="ControlPanel\Responses\WebConsoleResponse.cs" />
     <Compile Include="Data\ConfigurationDataStore.cs" />
     <Compile Include="Data\ISerializableItemExtensions.cs" />
     <Compile Include="Configuration\XmlConfigurationProvider.cs" />
@@ -173,6 +189,7 @@
     <Compile Include="Data\DataProvider\UnicornDataProvider.cs" />
     <Compile Include="Data\DataProvider\UnicornSqlServerDataProvider.cs" />
     <Compile Include="UnicornOperationContext.cs" />
+    <Compile Include="UnicornVersion.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

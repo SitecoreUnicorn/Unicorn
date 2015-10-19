@@ -4,7 +4,7 @@ using System.Text;
 using Sitecore.StringExtensions;
 using Unicorn.Logging;
 
-namespace Unicorn.ControlPanel.Remote.Logging
+namespace Unicorn.ControlPanel.VisualStudio.Logging
 {
 	/// <summary>
 	/// Logger implementation used for streaming remote API (used by Visual Studio control panel)
@@ -18,34 +18,29 @@ namespace Unicorn.ControlPanel.Remote.Logging
 			_output = output;
 		}
 
-		public void ReportSimple(string text, MessageLevel level)
-		{
-			SendOpeartionMessage(level, text);
-		}
-
 		public void Info(string message)
 		{
-			SendOpeartionMessage(MessageLevel.Info, message);
+			SendOperationMessage(MessageLevel.Info, message);
 		}
 
 		public void Debug(string message)
 		{
-			SendOpeartionMessage(MessageLevel.Debug, message);
+			SendOperationMessage(MessageLevel.Debug, message);
 		}
 
 		public void Warn(string message)
 		{
-			SendOpeartionMessage(MessageLevel.Warning, message);
+			SendOperationMessage(MessageLevel.Warning, message);
 		}
 
 		public void Error(string message)
 		{
-			SendOpeartionMessage(MessageLevel.Error, message);
+			SendOperationMessage(MessageLevel.Error, message);
 		}
 
 		public void Error(Exception exception)
 		{
-			SendOpeartionMessage(MessageLevel.Error, exception.ToString());
+			SendOperationMessage(MessageLevel.Error, exception.ToString());
 		}
 
 		public void Flush()
@@ -58,7 +53,7 @@ namespace Unicorn.ControlPanel.Remote.Logging
 			SendMessage(ReportType.Progress, MessageLevel.Info, progress.ToString());
 		}
 
-		private void SendOpeartionMessage(MessageLevel level, string message)
+		private void SendOperationMessage(MessageLevel level, string message)
 		{
 			SendMessage(ReportType.Operation, level, message);
 		}

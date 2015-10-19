@@ -4,27 +4,30 @@ using Kamsar.WebConsole;
 using Sitecore.Pipelines;
 using Unicorn.Configuration;
 using Unicorn.ControlPanel.Headings;
+using Unicorn.ControlPanel.Responses;
 using Unicorn.Logging;
 using Unicorn.Pipelines.UnicornSyncEnd;
 using Unicorn.Predicates;
 
-namespace Unicorn.ControlPanel
+namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 {
-	/// <summary>
-	/// Runs a Unicorn sync in a WebConsole of a configuration or configurations
-	/// </summary>
-	public class SyncConsole : ControlPanelConsole
+	public class SyncVerb : UnicornControlPanelRequestPipelineProcessor
 	{
-		public SyncConsole(bool isAutomatedTool) : base(isAutomatedTool, new HeadingService())
+		public SyncVerb() : this("Sync")
 		{
 		}
 
-		protected override string Title
+		protected SyncVerb(string verb) : base(verb)
 		{
-			get { return "Sync Unicorn"; }
+			
 		}
 
-		protected override void Process(IProgressStatus progress)
+		protected override IResponse CreateResponse(UnicornControlPanelRequestPipelineArgs args)
+		{
+			return new WebConsoleResponse("Sync Unicorn", args.SecurityState.IsAutomatedTool, new HeadingService(), progress => Process(progress, new WebConsoleLogger(progress)));
+		}
+
+		protected virtual void Process(IProgressStatus progress, ILogger additionalLogger)
 		{
 			var configurations = ResolveConfigurations();
 			int taskNumber = 1;
@@ -34,7 +37,7 @@ namespace Unicorn.ControlPanel
 				var logger = configuration.Resolve<ILogger>();
 				var helper = configuration.Resolve<SerializationHelper>();
 
-				using (new LoggingContext(new WebConsoleLogger(progress), configuration))
+				using (new LoggingContext(additionalLogger, configuration))
 				{
 					try
 					{
@@ -51,7 +54,7 @@ namespace Unicorn.ControlPanel
 
 							helper.SyncTree(configuration, item =>
 							{
-								SetTaskProgress(progress, taskNumber, configurations.Length, (int)((index / (double)roots.Length) * 100));
+								WebConsoleUtility.SetTaskProgress(progress, taskNumber, configurations.Length, (int)((index / (double)roots.Length) * 100));
 								index++;
 							}, roots);
 						}
