@@ -196,7 +196,7 @@ namespace Unicorn.Data.DataProvider
 			}
 
 			// rebase the path to the new destination path (this handles children too)
-			var rebasedSourceItem = new PathRebasingItemData(sourceItem, destinationItem.Path, destinationItem.Id);
+			var rebasedSourceItem = new PathRebasingProxyItem(sourceItem, destinationItem.Path, destinationItem.Id);
 
 			// this allows us to filter out any excluded children by predicate when the data store moves children
 			var predicatedItem = new PredicateFilteredItemData(rebasedSourceItem, _predicate);

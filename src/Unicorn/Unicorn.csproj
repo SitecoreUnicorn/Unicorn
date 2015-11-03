@@ -63,7 +63,6 @@
     <Compile Include="ControlPanel\Remote\UnicornRemotePipelineProcessor.cs" />
     <Compile Include="Data\DataProvider\DefaultUnicornDataProviderConfiguration.cs" />
     <Compile Include="Data\DataProvider\IUnicornDataProviderConfiguration.cs" />
-    <Compile Include="Data\DataProvider\PathRebasingItemData.cs" />
     <Compile Include="DeserializationSoftFailureAggregateException.cs" />
     <Compile Include="Deserialization\UnicornDeserializer.cs" />
     <Compile Include="Evaluators\INewItemOnlyEvaluatorLogger.cs" />
