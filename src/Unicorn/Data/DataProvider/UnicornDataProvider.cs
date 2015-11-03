@@ -130,16 +130,8 @@ namespace Unicorn.Data.DataProvider
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
 			Assert.ArgumentNotNull(changes, "changes");
 
-			// get the item from the database (note: we don't allow TpSync to be a database here, because we handle that below)
-			var sourceItem = GetSourceFromId(changes.Item.ID, allowTpSyncFallback: false);
-
-			if (sourceItem == null)
-			{
-				if (DisableTransparentSync) return;
-
-				// if TpSync is enabled, we wrap the item changes item directly; the TpSync item will NOT have the new changes as we need to write those here
-				sourceItem = new ItemData(changes.Item);
-			}
+			// get the item we're saving from the item changes
+			var sourceItem = new ItemData(changes.Item);
 
 			if (!_predicate.Includes(sourceItem).IsIncluded) return;
 
