@@ -16,7 +16,7 @@ namespace Unicorn.ControlPanel
 	/// </summary>
 	public class ReserializeConsole : ControlPanelConsole
 	{
-		public ReserializeConsole(bool isAutomatedTool)	: base(isAutomatedTool, new HeadingService())
+		public ReserializeConsole(bool isAutomatedTool) : base(isAutomatedTool, new HeadingService())
 		{
 		}
 
@@ -55,12 +55,12 @@ namespace Unicorn.ControlPanel
 							targetDataStore.Clear();
 
 							var roots = configuration.Resolve<PredicateRootPathResolver>().GetRootSourceItems();
-							
+
 							int index = 1;
 							foreach (var root in roots)
 							{
-								helper.DumpTree(root, configuration);
-								SetTaskProgress(progress, taskNumber, configurations.Length, (int) ((index/(double) roots.Length)*100));
+								helper.DumpTree(root, new[] { configuration });
+								SetTaskProgress(progress, taskNumber, configurations.Length, (int)((index / (double)roots.Length) * 100));
 								index++;
 							}
 						}
