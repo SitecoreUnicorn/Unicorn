@@ -104,7 +104,7 @@ namespace Unicorn.Data.DataProvider
 
 		protected Database Database { get { return ParentDataProvider.Database; } }
 
-		public void CreateItem(ItemDefinition newItem, ID templateId, ItemDefinition parent, CallContext context)
+		public virtual void CreateItem(ItemDefinition newItem, ID templateId, ItemDefinition parent, CallContext context)
 		{
 			if (DisableSerialization) return;
 
@@ -123,7 +123,7 @@ namespace Unicorn.Data.DataProvider
 			SerializeItemIfIncluded(newItemProxy, "Created");
 		}
 
-		public void SaveItem(ItemDefinition itemDefinition, ItemChanges changes, CallContext context)
+		public virtual void SaveItem(ItemDefinition itemDefinition, ItemChanges changes, CallContext context)
 		{
 			if (DisableSerialization) return;
 
@@ -162,7 +162,7 @@ namespace Unicorn.Data.DataProvider
 			}
 		}
 
-		public void MoveItem(ItemDefinition itemDefinition, ItemDefinition destination, CallContext context)
+		public virtual void MoveItem(ItemDefinition itemDefinition, ItemDefinition destination, CallContext context)
 		{
 			if (DisableSerialization) return;
 
@@ -199,7 +199,7 @@ namespace Unicorn.Data.DataProvider
 			_logger.MovedItem(_targetDataStore.FriendlyName, predicatedItem, destinationItem);
 		}
 
-		public void CopyItem(ItemDefinition source, ItemDefinition destination, string copyName, ID copyId, CallContext context)
+		public virtual void CopyItem(ItemDefinition source, ItemDefinition destination, string copyName, ID copyId, CallContext context)
 		{
 			if (DisableSerialization) return;
 
@@ -216,7 +216,7 @@ namespace Unicorn.Data.DataProvider
 			_logger.CopiedItem(_targetDataStore.FriendlyName, () => GetSourceFromId(source.ID), copiedItem);
 		}
 
-		public void AddVersion(ItemDefinition itemDefinition, VersionUri baseVersion, CallContext context)
+		public virtual void AddVersion(ItemDefinition itemDefinition, VersionUri baseVersion, CallContext context)
 		{
 			if (DisableSerialization) return;
 
@@ -255,7 +255,7 @@ namespace Unicorn.Data.DataProvider
 			SerializeItemIfIncluded(versionAddProxy, "Version Added");
 		}
 
-		public void DeleteItem(ItemDefinition itemDefinition, CallContext context)
+		public virtual void DeleteItem(ItemDefinition itemDefinition, CallContext context)
 		{
 			if (DisableSerialization) return;
 
@@ -271,7 +271,7 @@ namespace Unicorn.Data.DataProvider
 				_logger.DeletedItem(_targetDataStore.FriendlyName, existingItem);
 		}
 
-		public void RemoveVersion(ItemDefinition itemDefinition, VersionUri version, CallContext context)
+		public virtual void RemoveVersion(ItemDefinition itemDefinition, VersionUri version, CallContext context)
 		{
 			if (DisableSerialization) return;
 
@@ -290,7 +290,7 @@ namespace Unicorn.Data.DataProvider
 			SerializeItemIfIncluded(versionRemovingProxy, "Version Removed");
 		}
 
-		public void RemoveVersions(ItemDefinition itemDefinition, Language language, bool removeSharedData, CallContext context)
+		public virtual void RemoveVersions(ItemDefinition itemDefinition, Language language, bool removeSharedData, CallContext context)
 		{
 			if (DisableSerialization) return;
 
@@ -331,7 +331,7 @@ namespace Unicorn.Data.DataProvider
 		/// Gets additional children that should be added IN ADDITION TO the base database children.
 		/// This is used to patch in TpSync root items that do not exist in the database under items that do exist in the database.
 		/// </summary>
-		public IEnumerable<ID> GetAdditionalChildIds(ItemDefinition itemDefinition, CallContext context)
+		public virtual IEnumerable<ID> GetAdditionalChildIds(ItemDefinition itemDefinition, CallContext context)
 		{
 			if (DisableSerialization || DisableTransparentSync) return Enumerable.Empty<ID>();
 
