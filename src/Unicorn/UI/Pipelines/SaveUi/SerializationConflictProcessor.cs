@@ -53,65 +53,78 @@ namespace Unicorn.UI.Pipelines.SaveUi
 		{
 			var results = new Dictionary<Item, IList<string>>();
 
-			try
+			foreach (var item in args.Items)
 			{
-				foreach (var item in args.Items)
+				// we grab the existing item from the database. This will NOT include the changed values we're saving.
+				// this is because we want to verify that the base state of the item matches serialized, NOT the state we're saving.
+				// if the base state and the serialized state match we can be pretty sure that the changes we are writing won't clobber anything serialized but not synced
+				Item existingItem = Client.ContentDatabase.GetItem(item.ID, item.Language, item.Version);
+
+				Assert.IsNotNull(existingItem, "Existing item {0} did not exist! This should never occur.", item.ID);
+
+				var existingSitecoreItem = new ItemData(existingItem);
+
+				foreach (var configuration in _configurations)
 				{
-					// we grab the existing item from the database. This will NOT include the changed values we're saving.
-					// this is because we want to verify that the base state of the item matches serialized, NOT the state we're saving.
-					// if the base state and the serialized state match we can be pretty sure that the changes we are writing won't clobber anything serialized but not synced
-					Item existingItem = Client.ContentDatabase.GetItem(item.ID, item.Language, item.Version);
+					// ignore conflicts on items that Unicorn is not managing
+					if (!configuration.Resolve<IPredicate>().Includes(existingSitecoreItem).IsIncluded) continue;
 
-					Assert.IsNotNull(existingItem, "Existing item {0} did not exist! This should never occur.", item.ID);
+					IItemData serializedItemData = configuration.Resolve<ITargetDataStore>().GetByPathAndId(existingSitecoreItem.Path, existingSitecoreItem.Id, existingSitecoreItem.DatabaseName);
 
-					var existingSitecoreItem = new ItemData(existingItem);
+					// not having an existing serialized version means no possibility of conflict here
+					if (serializedItemData == null) continue;
 
-					foreach (var configuration in _configurations)
-					{
-						// ignore conflicts on items that Unicorn is not managing
-						if (!configuration.Resolve<IPredicate>().Includes(existingSitecoreItem).IsIncluded) continue;
+					var fieldFilter = configuration.Resolve<IFieldFilter>();
+					var itemComparer = configuration.Resolve<IItemComparer>();
 
-						IItemData serializedItemData = configuration.Resolve<ITargetDataStore>().GetByPathAndId(existingSitecoreItem.Path, existingSitecoreItem.Id, existingSitecoreItem.DatabaseName);
-					
-						// not having an existing serialized version means no possibility of conflict here
-						if (serializedItemData == null) continue;
+					var fieldIssues = GetFieldSyncStatus(existingSitecoreItem, serializedItemData, fieldFilter, itemComparer);
 
-						var fieldFilter = configuration.Resolve<IFieldFilter>();
-						var itemComparer = configuration.Resolve<IItemComparer>();
+					if (fieldIssues.Count == 0) continue;
 
-						var fieldIssues = GetFieldSyncStatus(existingSitecoreItem, serializedItemData, fieldFilter, itemComparer);
-
-						if (fieldIssues.Count == 0) continue;
-
-						results.Add(existingItem, fieldIssues);
-					}
-					
+					results[existingItem] = fieldIssues;
 				}
+			}
 
-				// no problems
-				if (results.Count == 0) return null;
+			// no problems
+			if (results.Count == 0) return null;
 
-				var sb = new StringBuilder();
+			var sb = new StringBuilder();
+
+			if (About.Version.StartsWith("7") || About.Version.StartsWith("6"))
+			{
+				// older Sitecores used \n to format dialog text
+
 				sb.Append("CRITICAL MESSAGE FROM UNICORN:\n");
 				sb.Append("You need to run a Unicorn sync. The following fields did not match the serialized version:\n");
 
 				foreach (var item in results)
 				{
-					if(results.Count > 1)
+					if (results.Count > 1)
 						sb.AppendFormat("\n{0}: {1}", item.Key.DisplayName, string.Join(", ", item.Value));
 					else
 						sb.AppendFormat("\n{0}", string.Join(", ", item.Value));
 				}
 
 				sb.Append("\n\nDo you want to overwrite anyway?\nTHIS MAY CAUSE LOST WORK.");
-
-				return sb.ToString();
 			}
-			catch (Exception ex)
+			else
 			{
-				Log.Error("Exception occurred while performing serialization conflict check!", ex, this);
-				return "Exception occurred: " + ex.Message; // this will cause a few retries
+				// Sitecore 8.x+ uses HTML to format dialog text
+				sb.Append("<p style=\"font-weight: bold; margin-bottom: 1em;\">CRITICAL MESSAGE FROM UNICORN:</p>");
+				sb.Append("<p>You need to run a Unicorn sync. The following fields did not match the serialized version:</p><ul style=\"margin: 1em 0\">");
+
+				foreach (var item in results)
+				{
+					if (results.Count > 1)
+						sb.AppendFormat("<li>{0}: {1}</li>", item.Key.DisplayName, string.Join(", ", item.Value));
+					else
+						sb.AppendFormat("<li>{0}</li>", string.Join(", ", item.Value));
+				}
+
+				sb.Append("</ul><p>Do you want to overwrite anyway?<br>THIS MAY CAUSE LOST WORK.</p>");
 			}
+
+			return sb.ToString();
 		}
 
 		private IList<string> GetFieldSyncStatus(IItemData itemData, IItemData serializedItemData, IFieldFilter fieldFilter, IItemComparer itemComparer)
@@ -127,10 +140,10 @@ namespace Unicorn.UI.Pipelines.SaveUi
 				.Select(field => field.DisplayName)
 				.ToList();
 
-			if(comparison.IsMoved) changedFields.Add("Item has been moved");
-			if(comparison.IsRenamed) changedFields.Add("Item has been renamed");
-			if(comparison.IsTemplateChanged) changedFields.Add("Item's template has changed");
-			if(comparison.ChangedVersions.Any(version => version.SourceVersion == null || version.TargetVersion == null)) changedFields.Add("Item versions do not match");
+			if (comparison.IsMoved) changedFields.Add("Item has been moved");
+			if (comparison.IsRenamed) changedFields.Add("Item has been renamed");
+			if (comparison.IsTemplateChanged) changedFields.Add("Item's template has changed");
+			if (comparison.ChangedVersions.Any(version => version.SourceVersion == null || version.TargetVersion == null)) changedFields.Add("Item versions do not match");
 
 			return changedFields;
 		}
