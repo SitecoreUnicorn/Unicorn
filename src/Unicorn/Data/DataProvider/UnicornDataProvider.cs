@@ -4,15 +4,18 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Rainbow.Filtering;
 using Rainbow.Model;
 using Sitecore;
 using Sitecore.Collections;
 using Sitecore.Data;
+using Sitecore.Data.Archiving;
 using Sitecore.Data.DataProviders;
 using Sitecore.Data.Items;
 using Sitecore.Data.Serialization;
 using Sitecore.Diagnostics;
+using Sitecore.Eventing;
 using Sitecore.Globalization;
 using Unicorn.Predicates;
 using ItemData = Rainbow.Storage.Sc.ItemData;
@@ -58,6 +61,9 @@ namespace Unicorn.Data.DataProvider
 			_targetDataStore = targetDataStore;
 			_sourceDataStore = sourceDataStore;
 
+			// enable capturing recycle bin and archive restores to serialize the target item if included
+			EventManager.Subscribe<RestoreItemCompletedEvent>(HandleItemRestored);
+
 			try
 			{
 				_targetDataStore.RegisterForChanges(RemoveItemFromCaches);
@@ -99,7 +105,7 @@ namespace Unicorn.Data.DataProvider
 			}
 			set { _disableTransparentSync = value; }
 		}
-		
+
 		public Sitecore.Data.DataProviders.DataProvider ParentDataProvider { get; set; }
 
 		protected Database Database { get { return ParentDataProvider.Database; } }
@@ -464,6 +470,30 @@ namespace Unicorn.Data.DataProvider
 			if (DisableSerialization || DisableTransparentSync) return false;
 
 			return _blobIdLookup.ContainsKey(blobId);
+		}
+
+		/// <summary>
+		/// Restoring items from the recycle bin does not invoke the data provider at all, so we have to attach to its event
+		/// to cause restored items to be rewritten to disk if they are included.
+		/// </summary>
+		protected virtual void HandleItemRestored(RestoreItemCompletedEvent restoreItemCompletedEvent)
+		{
+			if (!restoreItemCompletedEvent.DatabaseName.Equals(Database.Name, StringComparison.Ordinal)) return;
+
+			// we use a timer to delay the execution of our handler for a couple seconds.
+			// at the time the handler is called, calling Database.GetItem(id) returns NULL,
+			// or without cache an item with an orphan path. The delay allows Sitecore to catch up
+			// with it.
+			new Timer(state =>
+			{
+				var item = GetItemFromId(new ID(restoreItemCompletedEvent.ItemId), true);
+
+				Assert.IsNotNull(item, "Item that was restored was null.");
+
+				var iitem = new ItemData(item);
+
+				SerializeItemIfIncluded(iitem, "Restored");
+			}, null, 2000, Timeout.Infinite);
 		}
 
 		protected virtual bool SerializeItemIfIncluded(IItemData item, string triggerReason)
