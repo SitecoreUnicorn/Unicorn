@@ -137,7 +137,8 @@ namespace Unicorn.Data.DataProvider
 			Assert.ArgumentNotNull(changes, "changes");
 
 			// get the item we're saving from the item changes
-			var sourceItem = new ItemData(changes.Item);
+			// this lets us detect standard values resets, among other things
+			var sourceItem = new ItemChangesFilteredItemData(changes);
 
 			if (!_predicate.Includes(sourceItem).IsIncluded) return;
 

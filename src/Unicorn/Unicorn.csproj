@@ -62,6 +62,7 @@
     <Compile Include="ControlPanel\Remote\Logging\ReportType.cs" />
     <Compile Include="ControlPanel\Remote\UnicornRemotePipelineProcessor.cs" />
     <Compile Include="Data\DataProvider\DefaultUnicornDataProviderConfiguration.cs" />
+    <Compile Include="Data\DataProvider\ItemChangesFilteredItemData.cs" />
     <Compile Include="Data\DataProvider\IUnicornDataProviderConfiguration.cs" />
     <Compile Include="DeserializationSoftFailureAggregateException.cs" />
     <Compile Include="Deserialization\UnicornDeserializer.cs" />
