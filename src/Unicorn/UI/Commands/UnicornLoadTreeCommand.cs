@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using Kamsar.WebConsole;
 using Rainbow.Model;
 using Sitecore.Data;
 using Sitecore.Data.Items;
@@ -65,7 +66,7 @@ namespace Unicorn.UI.Commands
 				throw;
 			}
 
-			CorePipeline.Run("unicornSyncEnd", new UnicornSyncEndPipelineArgs(configuration));
+			CorePipeline.Run("unicornSyncEnd", new UnicornSyncEndPipelineArgs(new StringProgressStatus(), configuration));
 
 			return Database.GetItem(item.Uri);
 		}
