@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Configuration;
 using System.Linq;
 using System.Xml;
 using Rainbow.Storage;
@@ -20,18 +21,20 @@ namespace Unicorn.Configuration
 	/// </summary>
 	public class XmlConfigurationProvider : IConfigurationProvider
 	{
-		private IConfiguration[] _configurations;
+        private IConfiguration[] _configurations;
 
 		public IConfiguration[] Configurations
 		{
 			get
 			{
-				if (_configurations == null) LoadConfigurations();
+				if (_configurations == null)
+                    LoadConfigurations();
 				return _configurations;
 			}
 		}
 
-		protected virtual XmlNode GetConfigurationNode()
+
+        protected virtual XmlNode GetConfigurationNode()
 		{
 			return Factory.GetConfigNode("/sitecore/unicorn");
 		}
@@ -78,7 +81,10 @@ namespace Unicorn.Configuration
 
 			var description = GetAttributeValue(configuration, "description");
 
-			var registry = new MicroConfiguration(name, description);
+		    var attributeValue = GetAttributeValue(configuration, "dependencies");
+		    var dependencies = !string.IsNullOrEmpty(attributeValue) ? attributeValue.Split("|;, ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries) : null;
+
+            var registry = new MicroConfiguration(name, description, dependencies);
 
 			// these are config types we absolutely must have instances of to use Unicorn - an exception will throw if they don't exist
 			var configMapping = new Dictionary<string, Action<XmlElement, XmlElement, string, IConfiguration>>
@@ -90,8 +96,8 @@ namespace Unicorn.Configuration
 				{"logger", RegisterExpectedConfigType<ILogger>},
 				{"loaderLogger", RegisterExpectedConfigType<ISerializationLoaderLogger>},
 				{"loaderConsistencyChecker", RegisterExpectedConfigType<IConsistencyChecker>},
-				{"loaderDeserializeFailureRetryer", RegisterExpectedConfigType<IDeserializeFailureRetryer>}
-			};
+                {"loaderDeserializeFailureRetryer", RegisterExpectedConfigType<IDeserializeFailureRetryer>}
+            };
 
 			foreach (var explicitMapping in configMapping)
 			{

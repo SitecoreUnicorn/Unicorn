@@ -8,7 +8,7 @@ namespace Unicorn.ControlPanel.Controls
 	internal class Heading : IControlPanelControl
 	{
 		public bool HasSerializedItems { get; set; }
-		public bool HasValidSerializedItems { get; set; }
+		public bool HasAllRootPaths { get; set; }
 		public bool IsAuthenticated { get; set; }
 
 		public void Render(HtmlTextWriter writer)
@@ -22,7 +22,7 @@ namespace Unicorn.ControlPanel.Controls
 
 				if (!HasSerializedItems)
 				{
-					if(HasValidSerializedItems)
+					if (HasAllRootPaths)
 						writer.Write("<p class=\"warning\">Warning: at least one configuration has not serialized any items yet. Unicorn cannot operate properly until this is complete. Please review the configuration below and then perform initial serialization if it is accurate.</p>");
 					else 
 						writer.Write("<p class=\"warning\">Warning: your current predicate configuration for at least one configuration does not have any valid root items defined. Nothing will be serialized until valid root items to start serializing from can be resolved. Please review your predicate configuration.</p>");

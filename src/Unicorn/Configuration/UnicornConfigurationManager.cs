@@ -1,4 +1,6 @@
-﻿using Sitecore.Configuration;
+﻿using System.Configuration;
+using System.Linq;
+using Sitecore.Configuration;
 
 namespace Unicorn.Configuration
 {
@@ -13,6 +15,11 @@ namespace Unicorn.Configuration
 			Instance = (IConfigurationProvider) Factory.CreateObject("/sitecore/unicorn/configurationProvider", true);
 		}
 
-		public static IConfiguration[] Configurations { get { return Instance.Configurations; } }
-	}
+		public static IConfiguration[] Configurations => Instance.Configurations;
+
+	    public static IConfiguration[] GetConfigurationsOrdererdByDependants()
+	    {
+	        return Configurations.OrderByDescending(configuration => configuration.Resolve<ConfigurationDependencyResolver>().Dependants.Length).ThenBy(configuration => configuration.Name).ToArray();
+        }
+    }
 }

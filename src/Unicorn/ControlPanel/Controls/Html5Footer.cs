@@ -84,7 +84,7 @@ namespace Unicorn.ControlPanel.Controls
 					.get();
 
 				var allSelected = checked.length == $fakeboxes.length;
-				var configSpec = allSelected ? '' : checked.join('^');
+				var configSpec = checked.join('^');
 
 				$('.batch-sync').attr('href', '?verb=Sync&configuration=' + configSpec);
 				$('.batch-reserialize').attr('href', '?verb=Reserialize&configuration=' + configSpec);

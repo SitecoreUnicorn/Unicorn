@@ -26,14 +26,9 @@ namespace Unicorn.ControlPanel
 			_activationUrl = activationUrl;
 		}
 
-		private IConfiguration[] _configurations = UnicornConfigurationManager.Configurations;
-		protected IConfiguration[] Configurations
-		{
-			get { return _configurations; }
-			set { _configurations = value; }
-		}
+	    protected IConfiguration[] Configurations { get; set; } = UnicornConfigurationManager.GetConfigurationsOrdererdByDependants();
 
-		public override void Process(HttpRequestArgs args)
+	    public override void Process(HttpRequestArgs args)
 		{
 			if (string.IsNullOrWhiteSpace(_activationUrl)) return;
 
@@ -92,8 +87,8 @@ namespace Unicorn.ControlPanel
 			HttpContext.Current.Response.AddHeader("Content-Type", "text/html");
 
 			var hasSerializedItems = Configurations.All(ControlPanelUtility.HasAnySerializedItems);
-			var hasValidSerializedItems = Configurations.All(ControlPanelUtility.HasAnySourceItems);
-			var allowMultiSelect = hasSerializedItems && hasValidSerializedItems && Configurations.Length > 1;
+			var hasAllRootPaths = Configurations.All(ControlPanelUtility.AllRootPathsExists);
+			var allowMultiSelect = hasSerializedItems && hasAllRootPaths && Configurations.Length > 1;
 
 			var isAuthorized = Authorization.IsAllowed;
 
@@ -101,7 +96,7 @@ namespace Unicorn.ControlPanel
 
 			var heading = new Heading();
 			heading.HasSerializedItems = hasSerializedItems;
-			heading.HasValidSerializedItems = hasValidSerializedItems;
+			heading.HasAllRootPaths = hasAllRootPaths;
 			heading.IsAuthenticated = isAuthorized;
 			yield return heading;
 
@@ -113,7 +108,7 @@ namespace Unicorn.ControlPanel
 					yield break;
 				}
 
-				if (Configurations.Length > 1 && hasSerializedItems && hasValidSerializedItems)
+				if (Configurations.Length > 1 && hasSerializedItems && hasAllRootPaths)
 				{
 					yield return new BatchProcessingControls();
 				}

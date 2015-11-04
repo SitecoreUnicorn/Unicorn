@@ -116,6 +116,9 @@ namespace Unicorn.ControlPanel.Controls
 						text-decoration: none;
 						padding: .3em .5em;
 						font-size: 1.2rem;
+                        min-width: 85px;
+                        text-align: center;
+
 					}
 
 						.button:hover {
