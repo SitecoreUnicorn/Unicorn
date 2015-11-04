@@ -7,6 +7,7 @@ using Unicorn.ControlPanel.Headings;
 using Unicorn.Logging;
 using Unicorn.Pipelines.UnicornSyncEnd;
 using Unicorn.Predicates;
+using Sitecore.Diagnostics;
 
 namespace Unicorn.ControlPanel
 {
@@ -66,7 +67,15 @@ namespace Unicorn.ControlPanel
 				taskNumber++;
 			}
 
-			CorePipeline.Run("unicornSyncEnd", new UnicornSyncEndPipelineArgs(configurations));
+			try
+			{
+				CorePipeline.Run("unicornSyncEnd", new UnicornSyncEndPipelineArgs(progress, configurations));
+			}
+			catch (Exception exception)
+			{
+				Log.Error("Error occurred in unicornSyncEnd pipeline.", exception);
+				progress.ReportException(exception);
+			}
 		}
 
 		protected virtual IConfiguration[] ResolveConfigurations()
