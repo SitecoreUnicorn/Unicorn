@@ -1,6 +1,7 @@
-﻿using NSubstitute;
+﻿using System;
+using NSubstitute;
+using Rainbow.Model;
 using Xunit;
-using Rainbow.Tests;
 using Sitecore.Data;
 using Unicorn.Loader;
 
@@ -15,7 +16,7 @@ namespace Unicorn.Tests.Loader
 
 			var testChecker = new DuplicateIdConsistencyChecker(testLogger);
 
-			var testItem = new FakeItem(ID.NewID.Guid);
+			var testItem = CreateTestItem(ID.NewID.Guid);
 
 			Assert.True(testChecker.IsConsistent(testItem));
 		}
@@ -27,9 +28,9 @@ namespace Unicorn.Tests.Loader
 
 			var testChecker = new DuplicateIdConsistencyChecker(testLogger);
 
-			var testItem1 = new FakeItem(ID.NewID.Guid);
+			var testItem1 = CreateTestItem(ID.NewID.Guid);
 
-			var testItem2 = new FakeItem(ID.NewID.Guid);
+			var testItem2 = CreateTestItem(ID.NewID.Guid);
 
 			testChecker.AddProcessedItem(testItem1);
 			Assert.True(testChecker.IsConsistent(testItem2));
@@ -44,9 +45,9 @@ namespace Unicorn.Tests.Loader
 
 			var duplicatedId = ID.NewID.Guid;
 
-			var testItem1 = new FakeItem(duplicatedId);
+			var testItem1 = CreateTestItem(duplicatedId);
 
-			var testItem2 = new FakeItem(duplicatedId);
+			var testItem2 = CreateTestItem(duplicatedId);
 
 			testChecker.AddProcessedItem(testItem1);
 			Assert.False(testChecker.IsConsistent(testItem2));
@@ -62,9 +63,9 @@ namespace Unicorn.Tests.Loader
 			var duplicatedId = ID.NewID.Guid;
 
 			// ReSharper disable once RedundantArgumentDefaultValue
-			var testItem1 = new FakeItem(duplicatedId, "master");
+			var testItem1 = CreateTestItem(duplicatedId, "master");
 
-			var testItem2  = new FakeItem(duplicatedId, "core");
+			var testItem2 = CreateTestItem(duplicatedId, "core");
 
 			testChecker.AddProcessedItem(testItem1);
 			Assert.True(testChecker.IsConsistent(testItem2));
@@ -79,14 +80,19 @@ namespace Unicorn.Tests.Loader
 
 			var duplicatedId = ID.NewID.Guid;
 
-			var testItem1 = new FakeItem(duplicatedId);
+			var testItem1 = CreateTestItem(duplicatedId);
 
-			var testItem2 = new FakeItem(duplicatedId);
+			var testItem2 = CreateTestItem(duplicatedId);
 
 			testChecker.AddProcessedItem(testItem1);
 			testChecker.IsConsistent(testItem2);
 
 			testLogger.Received().DuplicateFound(Arg.Any<DuplicateIdConsistencyChecker.DuplicateIdEntry>(), testItem2);
+		}
+
+		private IItemData CreateTestItem(Guid id, string database = "master")
+		{
+			return new ProxyItem { Id = id, Path = "/sitecore/test", DatabaseName = database };
 		}
 	}
 }
