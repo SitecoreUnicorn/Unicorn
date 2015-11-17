@@ -52,10 +52,15 @@ namespace Unicorn.ControlPanel
 
 							helper.SyncTree(configuration, item =>
 							{
-								SetTaskProgress(progress, taskNumber, configurations.Length, (int)((index / (double)roots.Length) * 100));
+								SetTaskProgress(progress, taskNumber, configurations.Length, (int) ((index/(double) roots.Length)*100));
 								index++;
 							}, roots);
 						}
+					}
+					catch (DeserializationSoftFailureAggregateException ex)
+					{
+						logger.Error(ex);
+						// allow execution to continue, because the exception was non-fatal
 					}
 					catch (Exception ex)
 					{
