@@ -110,6 +110,12 @@ namespace Unicorn.Evaluators
 			return new Warning(title, message);
 		}
 
+		public override bool ShouldPerformConflictCheck(Item item)
+		{
+			// we expect that items on disk should always match the base state of what is being saved, as disk is master
+			return true;
+		}
+
 		protected virtual bool ShouldUpdateExisting(IItemData sourceItem, IItemData targetItem, DeferredLogWriter<ISerializedAsMasterEvaluatorLogger> deferredUpdateLog)
 		{
 			Assert.ArgumentNotNull(targetItem, "targetItem");

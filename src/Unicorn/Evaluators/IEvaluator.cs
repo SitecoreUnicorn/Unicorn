@@ -40,5 +40,13 @@ namespace Unicorn.Evaluators
 		/// <param name="item">The item being loaded in the content editor.</param>
 		/// <returns>Return a warning to show a message, or null to show no warning.</returns>
 		Warning EvaluateEditorWarning(Item item);
+
+		/// <summary>
+		/// Allows the evaluator to decide if items being saved should be checked against the serialized state to find sync issues
+		/// (e.g. SerializationConflictProcessor). In some cases, like new items only, we do not care if the state on disk matches what is being saved.
+		/// </summary>
+		/// <param name="item">The item being saved. You can assume it is included in the current configuration by predicate.</param>
+		/// <returns>True to perform a conflict check against the serialized version, false otherwise.</returns>
+		bool ShouldPerformConflictCheck(Item item);
 	}
 }

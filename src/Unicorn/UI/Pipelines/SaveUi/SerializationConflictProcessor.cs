@@ -13,6 +13,8 @@ using Sitecore.Diagnostics;
 using Sitecore.Pipelines.Save;
 using Unicorn.Configuration;
 using Unicorn.Data;
+using Unicorn.Data.DataProvider;
+using Unicorn.Evaluators;
 using Unicorn.Predicates;
 using ItemData = Rainbow.Storage.Sc.ItemData;
 
@@ -66,8 +68,14 @@ namespace Unicorn.UI.Pipelines.SaveUi
 
 				foreach (var configuration in _configurations)
 				{
+					// ignore conflict checks if Transparent Sync is turned on (in which case this is a tautology - 'get from database' would be 'get from disk' so it always matches
+					if (configuration.Resolve<IUnicornDataProviderConfiguration>().EnableTransparentSync) continue;
+
 					// ignore conflicts on items that Unicorn is not managing
 					if (!configuration.Resolve<IPredicate>().Includes(existingSitecoreItem).IsIncluded) continue;
+
+					// evaluator signals that it does not care about conflicts (e.g. NIO)
+					if (!configuration.Resolve<IEvaluator>().ShouldPerformConflictCheck(existingItem)) continue;
 
 					IItemData serializedItemData = configuration.Resolve<ITargetDataStore>().GetByPathAndId(existingSitecoreItem.Path, existingSitecoreItem.Id, existingSitecoreItem.DatabaseName);
 

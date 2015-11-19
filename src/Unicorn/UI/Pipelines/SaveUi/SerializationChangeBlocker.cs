@@ -7,6 +7,8 @@ using Sitecore.Diagnostics;
 using Sitecore.Pipelines.Save;
 using Sitecore.StringExtensions;
 using Unicorn.Configuration;
+using Unicorn.Data.DataProvider;
+using Unicorn.Evaluators;
 using Unicorn.Predicates;
 
 namespace Unicorn.UI.Pipelines.SaveUi
@@ -40,7 +42,15 @@ namespace Unicorn.UI.Pipelines.SaveUi
 
 				var existingSitecoreItem = new ItemData(existingItem);
 
-				if (_configurations.Any(configuration => configuration.Resolve<IPredicate>().Includes(existingSitecoreItem).IsIncluded))
+				if (_configurations.Any(configuration =>
+				{
+					if (!configuration.Resolve<IUnicornDataProviderConfiguration>().EnableTransparentSync &&
+						configuration.Resolve<IPredicate>().Includes(existingSitecoreItem).IsIncluded &&
+						configuration.Resolve<IEvaluator>().ShouldPerformConflictCheck(existingItem))
+						return true;
+
+					return false;
+				}))
 				{
 					return GetMessage(existingSitecoreItem);
 				}
