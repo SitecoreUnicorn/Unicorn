@@ -1,5 +1,6 @@
 ﻿using System;
 using Kamsar.WebConsole;
+using Unicorn.Logging;
 
 namespace Unicorn.ControlPanel.VisualStudio.Logging
 {

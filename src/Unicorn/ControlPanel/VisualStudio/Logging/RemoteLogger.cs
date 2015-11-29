@@ -1,7 +1,6 @@
 using System;
 using System.IO;
-using System.Text;
-using Sitecore.StringExtensions;
+using Unicorn.ControlPanel.Extensions;
 using Unicorn.Logging;
 
 namespace Unicorn.ControlPanel.VisualStudio.Logging
@@ -58,12 +57,9 @@ namespace Unicorn.ControlPanel.VisualStudio.Logging
 			SendMessage(ReportType.Operation, level, message);
 		}
 
-		private void SendMessage(ReportType type, MessageLevel level, string message)
-		{
-			var encodedMessage = Convert.ToBase64String(Encoding.UTF8.GetBytes(message));
-			var report = "{0}|{1}|{2}".FormatWith(type, level, encodedMessage);
-			_output.WriteLine(report);
-			_output.Flush();
-		}
+	    private void SendMessage(ReportType type, MessageLevel level, string message)
+	    {
+	        _output.SendMessage(type, level, message);
+	    }
 	}
 }
