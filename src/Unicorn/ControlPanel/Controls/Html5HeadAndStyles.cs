@@ -116,12 +116,25 @@ namespace Unicorn.ControlPanel.Controls
 						text-decoration: none;
 						padding: .3em .5em;
 						font-size: 1.2rem;
+						min-width: 85px;
+						text-align: center;
 					}
 
-						.button:hover {
-							background: #E35131;
-							color: white;
-						}
+					.button:hover {
+						background: #E35131;
+						color: white;
+					}
+
+					.warning .button {
+						border: 2px solid white;
+						color: white;
+					}
+
+					.warning .button:hover {
+						border: 2px solid white;
+						background-color: white;
+						color: #E35131;
+					}
 
 					.controls {
 						white-space: nowrap;

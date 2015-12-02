@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Configuration;
 using System.Linq;
 using System.Xml;
 using Rainbow.Storage;
@@ -26,10 +27,12 @@ namespace Unicorn.Configuration
 		{
 			get
 			{
-				if (_configurations == null) LoadConfigurations();
+				if (_configurations == null)
+					LoadConfigurations();
 				return _configurations;
 			}
 		}
+
 
 		protected virtual XmlNode GetConfigurationNode()
 		{
@@ -78,7 +81,10 @@ namespace Unicorn.Configuration
 
 			var description = GetAttributeValue(configuration, "description");
 
-			var registry = new MicroConfiguration(name, description);
+			var attributeValue = GetAttributeValue(configuration, "dependencies");
+			var dependencies = !string.IsNullOrEmpty(attributeValue) ? attributeValue.Split("|;, ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries) : null;
+
+			var registry = new MicroConfiguration(name, description, dependencies);
 
 			// these are config types we absolutely must have instances of to use Unicorn - an exception will throw if they don't exist
 			var configMapping = new Dictionary<string, Action<XmlElement, XmlElement, string, IConfiguration>>
