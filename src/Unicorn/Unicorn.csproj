@@ -66,8 +66,8 @@
     <Compile Include="ControlPanel\Remote\Logging\ReportType.cs" />
     <Compile Include="ControlPanel\Remote\UnicornRemotePipelineProcessor.cs" />
     <Compile Include="Data\DataProvider\DefaultUnicornDataProviderConfiguration.cs" />
+    <Compile Include="Data\DataProvider\ItemChangesFilteredItemData.cs" />
     <Compile Include="Data\DataProvider\IUnicornDataProviderConfiguration.cs" />
-    <Compile Include="Data\DataProvider\PathRebasingItemData.cs" />
     <Compile Include="DeserializationSoftFailureAggregateException.cs" />
     <Compile Include="Deserialization\UnicornDeserializer.cs" />
     <Compile Include="Evaluators\INewItemOnlyEvaluatorLogger.cs" />
@@ -76,6 +76,7 @@
     <Compile Include="Logging\Formatting\IExceptionFormatter.cs" />
     <Compile Include="Logging\Formatting\TemplateMissingFieldExceptionFormatter.cs" />
     <Compile Include="Logging\LogTransaction.cs" />
+    <Compile Include="Pipelines\UnicornSyncComplete\DictionaryCacheClearer.cs" />
     <Compile Include="SerializationEnabler.cs" />
     <Compile Include="TransparentSyncEnabler.cs" />
     <Compile Include="UI\Commands\UnicornDumpTreeCommand.cs" />
@@ -184,7 +185,7 @@
     </None>
     <None Include="Standard Config Files\Unicorn.Deployed.config.disabled" />
     <None Include="Standard Config Files\Unicorn.Remote.config.disabled" />
-    <None Include="Standard Config Files\Unicorn.Configs.SerializationFolder.config.disabled" />
+    <None Include="Standard Config Files\Unicorn.Configs.SerializationFolder.config.example" />
     <None Include="Standard Config Files\Unicorn.UI.config">
       <SubType>Designer</SubType>
     </None>

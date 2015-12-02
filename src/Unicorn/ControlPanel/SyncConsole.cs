@@ -7,6 +7,7 @@ using Unicorn.ControlPanel.Headings;
 using Unicorn.Logging;
 using Unicorn.Pipelines.UnicornSyncEnd;
 using Unicorn.Predicates;
+using Sitecore.Diagnostics;
 
 namespace Unicorn.ControlPanel
 {
@@ -51,10 +52,15 @@ namespace Unicorn.ControlPanel
 
 							helper.SyncTree(configuration, item =>
 							{
-								SetTaskProgress(progress, taskNumber, configurations.Length, (int)((index / (double)roots.Length) * 100));
+								SetTaskProgress(progress, taskNumber, configurations.Length, (int) ((index/(double) roots.Length)*100));
 								index++;
 							}, roots);
 						}
+					}
+					catch (DeserializationSoftFailureAggregateException ex)
+					{
+						logger.Error(ex);
+						// allow execution to continue, because the exception was non-fatal
 					}
 					catch (Exception ex)
 					{
@@ -66,7 +72,15 @@ namespace Unicorn.ControlPanel
 				taskNumber++;
 			}
 
-			CorePipeline.Run("unicornSyncEnd", new UnicornSyncEndPipelineArgs(configurations));
+			try
+			{
+				CorePipeline.Run("unicornSyncEnd", new UnicornSyncEndPipelineArgs(progress, configurations));
+			}
+			catch (Exception exception)
+			{
+				Log.Error("Error occurred in unicornSyncEnd pipeline.", exception);
+				progress.ReportException(exception);
+			}
 		}
 
 		protected virtual IConfiguration[] ResolveConfigurations()

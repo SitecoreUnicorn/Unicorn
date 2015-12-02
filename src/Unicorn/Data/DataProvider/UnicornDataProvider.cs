@@ -4,15 +4,18 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Rainbow.Filtering;
 using Rainbow.Model;
 using Sitecore;
 using Sitecore.Collections;
 using Sitecore.Data;
+using Sitecore.Data.Archiving;
 using Sitecore.Data.DataProviders;
 using Sitecore.Data.Items;
 using Sitecore.Data.Serialization;
 using Sitecore.Diagnostics;
+using Sitecore.Eventing;
 using Sitecore.Globalization;
 using Unicorn.Predicates;
 using ItemData = Rainbow.Storage.Sc.ItemData;
@@ -58,6 +61,9 @@ namespace Unicorn.Data.DataProvider
 			_targetDataStore = targetDataStore;
 			_sourceDataStore = sourceDataStore;
 
+			// enable capturing recycle bin and archive restores to serialize the target item if included
+			EventManager.Subscribe<RestoreItemCompletedEvent>(HandleItemRestored);
+
 			try
 			{
 				_targetDataStore.RegisterForChanges(RemoveItemFromCaches);
@@ -99,12 +105,12 @@ namespace Unicorn.Data.DataProvider
 			}
 			set { _disableTransparentSync = value; }
 		}
-		
+
 		public Sitecore.Data.DataProviders.DataProvider ParentDataProvider { get; set; }
 
 		protected Database Database { get { return ParentDataProvider.Database; } }
 
-		public void CreateItem(ItemDefinition newItem, ID templateId, ItemDefinition parent, CallContext context)
+		public virtual void CreateItem(ItemDefinition newItem, ID templateId, ItemDefinition parent, CallContext context)
 		{
 			if (DisableSerialization) return;
 
@@ -123,23 +129,16 @@ namespace Unicorn.Data.DataProvider
 			SerializeItemIfIncluded(newItemProxy, "Created");
 		}
 
-		public void SaveItem(ItemDefinition itemDefinition, ItemChanges changes, CallContext context)
+		public virtual void SaveItem(ItemDefinition itemDefinition, ItemChanges changes, CallContext context)
 		{
 			if (DisableSerialization) return;
 
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
 			Assert.ArgumentNotNull(changes, "changes");
 
-			// get the item from the database (note: we don't allow TpSync to be a database here, because we handle that below)
-			var sourceItem = GetSourceFromId(changes.Item.ID, allowTpSyncFallback: false);
-
-			if (sourceItem == null)
-			{
-				if (DisableTransparentSync) return;
-
-				// if TpSync is enabled, we wrap the item changes item directly; the TpSync item will NOT have the new changes as we need to write those here
-				sourceItem = new ItemData(changes.Item);
-			}
+			// get the item we're saving from the item changes
+			// this lets us detect standard values resets, among other things
+			var sourceItem = new ItemChangesFilteredItemData(changes);
 
 			if (!_predicate.Includes(sourceItem).IsIncluded) return;
 
@@ -170,7 +169,7 @@ namespace Unicorn.Data.DataProvider
 			}
 		}
 
-		public void MoveItem(ItemDefinition itemDefinition, ItemDefinition destination, CallContext context)
+		public virtual void MoveItem(ItemDefinition itemDefinition, ItemDefinition destination, CallContext context)
 		{
 			if (DisableSerialization) return;
 
@@ -198,7 +197,7 @@ namespace Unicorn.Data.DataProvider
 			}
 
 			// rebase the path to the new destination path (this handles children too)
-			var rebasedSourceItem = new PathRebasingItemData(sourceItem, destinationItem.Path, destinationItem.Id);
+			var rebasedSourceItem = new PathRebasingProxyItem(sourceItem, destinationItem.Path, destinationItem.Id);
 
 			// this allows us to filter out any excluded children by predicate when the data store moves children
 			var predicatedItem = new PredicateFilteredItemData(rebasedSourceItem, _predicate);
@@ -207,7 +206,7 @@ namespace Unicorn.Data.DataProvider
 			_logger.MovedItem(_targetDataStore.FriendlyName, predicatedItem, destinationItem);
 		}
 
-		public void CopyItem(ItemDefinition source, ItemDefinition destination, string copyName, ID copyId, CallContext context)
+		public virtual void CopyItem(ItemDefinition source, ItemDefinition destination, string copyName, ID copyId, CallContext context)
 		{
 			if (DisableSerialization) return;
 
@@ -224,7 +223,7 @@ namespace Unicorn.Data.DataProvider
 			_logger.CopiedItem(_targetDataStore.FriendlyName, () => GetSourceFromId(source.ID), copiedItem);
 		}
 
-		public void AddVersion(ItemDefinition itemDefinition, VersionUri baseVersion, CallContext context)
+		public virtual void AddVersion(ItemDefinition itemDefinition, VersionUri baseVersion, CallContext context)
 		{
 			if (DisableSerialization) return;
 
@@ -263,7 +262,7 @@ namespace Unicorn.Data.DataProvider
 			SerializeItemIfIncluded(versionAddProxy, "Version Added");
 		}
 
-		public void DeleteItem(ItemDefinition itemDefinition, CallContext context)
+		public virtual void DeleteItem(ItemDefinition itemDefinition, CallContext context)
 		{
 			if (DisableSerialization) return;
 
@@ -279,7 +278,7 @@ namespace Unicorn.Data.DataProvider
 				_logger.DeletedItem(_targetDataStore.FriendlyName, existingItem);
 		}
 
-		public void RemoveVersion(ItemDefinition itemDefinition, VersionUri version, CallContext context)
+		public virtual void RemoveVersion(ItemDefinition itemDefinition, VersionUri version, CallContext context)
 		{
 			if (DisableSerialization) return;
 
@@ -298,7 +297,7 @@ namespace Unicorn.Data.DataProvider
 			SerializeItemIfIncluded(versionRemovingProxy, "Version Removed");
 		}
 
-		public void RemoveVersions(ItemDefinition itemDefinition, Language language, bool removeSharedData, CallContext context)
+		public virtual void RemoveVersions(ItemDefinition itemDefinition, Language language, bool removeSharedData, CallContext context)
 		{
 			if (DisableSerialization) return;
 
@@ -339,7 +338,7 @@ namespace Unicorn.Data.DataProvider
 		/// Gets additional children that should be added IN ADDITION TO the base database children.
 		/// This is used to patch in TpSync root items that do not exist in the database under items that do exist in the database.
 		/// </summary>
-		public IEnumerable<ID> GetAdditionalChildIds(ItemDefinition itemDefinition, CallContext context)
+		public virtual IEnumerable<ID> GetAdditionalChildIds(ItemDefinition itemDefinition, CallContext context)
 		{
 			if (DisableSerialization || DisableTransparentSync) return Enumerable.Empty<ID>();
 
@@ -472,6 +471,30 @@ namespace Unicorn.Data.DataProvider
 			if (DisableSerialization || DisableTransparentSync) return false;
 
 			return _blobIdLookup.ContainsKey(blobId);
+		}
+
+		/// <summary>
+		/// Restoring items from the recycle bin does not invoke the data provider at all, so we have to attach to its event
+		/// to cause restored items to be rewritten to disk if they are included.
+		/// </summary>
+		protected virtual void HandleItemRestored(RestoreItemCompletedEvent restoreItemCompletedEvent)
+		{
+			if (!restoreItemCompletedEvent.DatabaseName.Equals(Database.Name, StringComparison.Ordinal)) return;
+
+			// we use a timer to delay the execution of our handler for a couple seconds.
+			// at the time the handler is called, calling Database.GetItem(id) returns NULL,
+			// or without cache an item with an orphan path. The delay allows Sitecore to catch up
+			// with it.
+			new Timer(state =>
+			{
+				var item = GetItemFromId(new ID(restoreItemCompletedEvent.ItemId), true);
+
+				Assert.IsNotNull(item, "Item that was restored was null.");
+
+				var iitem = new ItemData(item);
+
+				SerializeItemIfIncluded(iitem, "Restored");
+			}, null, 2000, Timeout.Infinite);
 		}
 
 		protected virtual bool SerializeItemIfIncluded(IItemData item, string triggerReason)

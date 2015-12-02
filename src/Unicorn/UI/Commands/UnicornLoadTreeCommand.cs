@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using Kamsar.WebConsole;
 using Rainbow.Model;
 using Sitecore.Data;
 using Sitecore.Data.Items;
@@ -33,7 +35,7 @@ namespace Unicorn.UI.Commands
 
 			IItemData itemData = new ItemData(item);
 
-			var configuration = _helper.GetConfigurationForItem(itemData);
+			var configuration = _helper.GetConfigurationsForItem(itemData).FirstOrDefault(); // if multiple configs contain item, load from first one
 
 			if (configuration == null) return base.LoadItem(item, options);
 
@@ -64,7 +66,7 @@ namespace Unicorn.UI.Commands
 				throw;
 			}
 
-			CorePipeline.Run("unicornSyncEnd", new UnicornSyncEndPipelineArgs(configuration));
+			CorePipeline.Run("unicornSyncEnd", new UnicornSyncEndPipelineArgs(new StringProgressStatus(), configuration));
 
 			return Database.GetItem(item.Uri);
 		}

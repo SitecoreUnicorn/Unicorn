@@ -141,7 +141,7 @@ namespace Unicorn.ControlPanel.Remote
 							int index = 1;
 							foreach (var root in roots)
 							{
-								helper.DumpTree(root, configuration);
+								helper.DumpTree(root, new[] { configuration });
 								progress.ReportProgress((int)((index / (double)roots.Length) * 100));
 								index++;
 							}

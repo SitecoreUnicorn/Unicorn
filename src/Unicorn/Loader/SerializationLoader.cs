@@ -114,7 +114,14 @@ namespace Unicorn.Loader
 			// so we have to seed the load by loading the root item
 			using (new UnicornOperationContext())
 			{
-				DoLoadItem(rootItemData, consistencyChecker);
+				try
+				{
+					DoLoadItem(rootItemData, consistencyChecker);
+				}
+				catch (Exception exception)
+				{
+					retryer.AddItemRetry(rootItemData, exception);
+				}
 			}
 
 			// load children of the root

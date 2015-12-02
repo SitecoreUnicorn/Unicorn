@@ -12,6 +12,7 @@ namespace Unicorn.Pipelines.UnicornSyncEnd
 	public class TriggerAutoPublishSyncedItems : IUnicornSyncEndProcessor
 	{
 		public string PublishTriggerItemId { get; set; }
+
 		private readonly List<string> _targetDatabases = new List<string>();
 
 		public void AddTargetDatabase(string database)
@@ -28,12 +29,18 @@ namespace Unicorn.Pipelines.UnicornSyncEnd
 			var dbs = _targetDatabases.Select(Factory.GetDatabase).ToArray();
 			var trigger = Factory.GetDatabase("master").GetItem(PublishTriggerItemId);
 
+			if (!ManualPublishQueueHandler.HasItemsToPublish) return;
+
 			Assert.IsTrue(dbs.Length > 0, "No valid databases specified to publish to.");
 			Assert.IsNotNull(trigger, "Invalid trigger item ID");
 
-			if (ManualPublishQueueHandler.PublishQueuedItems(trigger, dbs))
+			args.Console.ReportStatus(string.Empty);
+			args.Console.ReportStatus("[P] Auto-publishing of synced items is beginning.");
+			Log.Info("Unicorn: initiated synchronous publishing of synced items.", this);
+
+			if (ManualPublishQueueHandler.PublishQueuedItems(trigger, dbs, args.Console))
 			{
-				Log.Info("Unicorn: initiated publishing of synced items.", this);
+				Log.Info("Unicorn: publishing of synced items is complete.", this);
 			}
 		}
 	}

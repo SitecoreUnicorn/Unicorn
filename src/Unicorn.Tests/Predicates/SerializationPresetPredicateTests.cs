@@ -3,8 +3,8 @@ using System.IO;
 using System.Reflection;
 using System.Xml;
 using NSubstitute;
+using Rainbow.Model;
 using Rainbow.Storage;
-using Rainbow.Tests;
 using Unicorn.Predicates;
 using Xunit;
 
@@ -32,7 +32,7 @@ namespace Unicorn.Tests.Predicates
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
 
-			var item = new FakeItem(path:ExcludedPath);
+			var item = CreateTestItem(ExcludedPath);
 			var includes = predicate.Includes(item);
 
 			Assert.False(includes.IsIncluded, "Exclude serialized item by path failed.");
@@ -43,7 +43,7 @@ namespace Unicorn.Tests.Predicates
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
 
-			var item = new FakeItem(path: ExcludedPath.ToUpperInvariant());
+			var item = CreateTestItem(ExcludedPath.ToUpperInvariant());
 			var includes = predicate.Includes(item);
 
 			Assert.False(includes.IsIncluded, "Exclude serialized item by path failed.");
@@ -54,7 +54,7 @@ namespace Unicorn.Tests.Predicates
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
 
-			var item = new FakeItem(path: "/test");
+			var item = CreateTestItem("/test");
 			var includes = predicate.Includes(item);
 
 			Assert.True(includes.IsIncluded, "Included parent serialized item when all children excluded failed.");
@@ -65,7 +65,7 @@ namespace Unicorn.Tests.Predicates
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
 
-			var item = new FakeItem(path: "/test/child");
+			var item = CreateTestItem("/test/child");
 			var includes = predicate.Includes(item);
 
 			Assert.False(includes.IsIncluded, "Exclude serialized item by all children failed.");
@@ -76,7 +76,7 @@ namespace Unicorn.Tests.Predicates
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
 
-			var item = new FakeItem(path: IncludedPath);
+			var item = CreateTestItem(IncludedPath);
 			var includes = predicate.Includes(item);
 
 			Assert.True(includes.IsIncluded, "Include serialized item by path failed.");
@@ -87,7 +87,7 @@ namespace Unicorn.Tests.Predicates
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
 
-			var item = new FakeItem(path: IncludedPath.ToUpperInvariant());
+			var item = CreateTestItem(IncludedPath.ToUpperInvariant());
 			var includes = predicate.Includes(item);
 
 			Assert.True(includes.IsIncluded, "Include serialized item by path failed.");
@@ -102,7 +102,7 @@ namespace Unicorn.Tests.Predicates
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
 
-			var item = new FakeItem(path: IncludedPath, databaseName: ExcludedDatabase);
+			var item = CreateTestItem(IncludedPath, ExcludedDatabase);
 			var includes = predicate.Includes(item);
 
 			Assert.False(includes.IsIncluded, "Exclude serialized item by database failed.");
@@ -114,7 +114,7 @@ namespace Unicorn.Tests.Predicates
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
 
 			// ReSharper disable once RedundantArgumentDefaultValue
-			var item = new FakeItem(path:IncludedPath, databaseName: IncludedDatabase);
+			var item = CreateTestItem(IncludedPath, IncludedDatabase);
 			var includes = predicate.Includes(item);
 
 			Assert.True(includes.IsIncluded, "Include serialized item by database failed.");
@@ -123,8 +123,8 @@ namespace Unicorn.Tests.Predicates
 		[Fact]
 		public void GetRootItems_ReturnsExpectedRootValues()
 		{
-			var sourceItem1 = new FakeItem();
-			var sourceItem2 = new FakeItem();
+			var sourceItem1 = CreateTestItem("/sitecore/layout/Simulators");
+			var sourceItem2 = CreateTestItem("/sitecore/content", "core");
 
 			var sourceDataProvider = Substitute.For<IDataStore>();
 			sourceDataProvider.GetByPath("master", "/sitecore/layout/Simulators").Returns(new[] { sourceItem1 });
@@ -161,6 +161,11 @@ namespace Unicorn.Tests.Predicates
 			doc.LoadXml(text);
 
 			return doc.DocumentElement;
+		}
+
+		private IItemData CreateTestItem(string path, string database = "master")
+		{
+			return new ProxyItem { Path = path, DatabaseName = database };
 		}
 	}
 }

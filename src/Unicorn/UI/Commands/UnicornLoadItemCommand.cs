@@ -1,4 +1,5 @@
-﻿using Sitecore.Data;
+﻿using System.Linq;
+using Sitecore.Data;
 using Sitecore.Data.Items;
 using Sitecore.Data.Serialization;
 using Sitecore.Diagnostics;
@@ -28,7 +29,7 @@ namespace Unicorn.UI.Commands
 
 			var itemData = new ItemData(item);
 
-			var configuration = _helper.GetConfigurationForItem(itemData);
+			var configuration = _helper.GetConfigurationsForItem(itemData).FirstOrDefault(); // if multiple configs contain item, load from first one
 
 			if (configuration == null) return base.LoadItem(item, options);
 

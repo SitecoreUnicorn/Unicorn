@@ -5,7 +5,6 @@ using NSubstitute;
 using NSubstitute.Core;
 using Xunit;
 using Rainbow.Model;
-using Rainbow.Tests;
 using Unicorn.Data;
 using Unicorn.Evaluators;
 using Unicorn.Loader;
@@ -37,7 +36,7 @@ namespace Unicorn.Tests.Loader
 		[Fact]
 		public void LoadTree_SkipsRootWhenExcluded()
 		{
-			var serializedRootItem = new FakeItem();
+			var serializedRootItem = new ProxyItem();
 			var predicate = CreateExclusiveTestPredicate();
 			var logger = Substitute.For<ISerializationLoaderLogger>();
 			var loader = CreateTestLoader(predicate: predicate, logger: logger);
@@ -50,7 +49,7 @@ namespace Unicorn.Tests.Loader
 		[Fact]
 		public void LoadTree_LoadsRootWhenIncluded()
 		{
-			var serializedRootItem = new FakeItem();
+			var serializedRootItem = new ProxyItem();
 			var evaluator = Substitute.For<IEvaluator>();
 			var sourceData = Substitute.For<ISourceDataStore>();
 			sourceData.GetByPathAndId(serializedRootItem.Path, serializedRootItem.Id, serializedRootItem.DatabaseName).Returns((IItemData)null);
@@ -66,13 +65,14 @@ namespace Unicorn.Tests.Loader
 		public void LoadTree_SkipsChildOfRootWhenExcluded()
 		{
 			var dataStore = Substitute.For<ITargetDataStore>();
-			var root = new FakeItem();
-			var child = new FakeItem(parentId:root.Id, id:Guid.NewGuid());
-			dataStore.GetChildren(root).Returns(new[] {child});
+			var root = new ProxyItem();
+			var child = new ProxyItem { ParentId = root.Id };
+
+			dataStore.GetChildren(root).Returns(new[] { child });
 
 			var predicate = CreateExclusiveTestPredicate(new[] { root });
 			var logger = Substitute.For<ISerializationLoaderLogger>();
-			var loader = CreateTestLoader(predicate: predicate, logger:logger, targetDataStore: dataStore);
+			var loader = CreateTestLoader(predicate: predicate, logger: logger, targetDataStore: dataStore);
 
 			TestLoadTree(loader, root);
 
@@ -83,10 +83,10 @@ namespace Unicorn.Tests.Loader
 		public void LoadTree_LoadsChildOfRootWhenIncluded()
 		{
 			var dataStore = Substitute.For<ITargetDataStore>();
-			var root = new FakeItem();
-			var child = new FakeItem(parentId: root.Id, id: Guid.NewGuid());
+			var root = new ProxyItem();
+			var child = new ProxyItem { ParentId = root.Id };
 			dataStore.GetChildren(root).Returns(new[] { child });
-			
+
 			var evaluator = Substitute.For<IEvaluator>();
 			var loader = CreateTestLoader(evaluator: evaluator, targetDataStore: dataStore);
 
@@ -260,7 +260,7 @@ namespace Unicorn.Tests.Loader
 			var predicate = Substitute.For<IPredicate>();
 			predicate.Includes(Arg.Any<IItemData>()).Returns(delegate (CallInfo info)
 			{
-				if (includes != null && includes.Any(x=>x.Id == info.Arg<IItemData>().Id)) return new PredicateResult(true);
+				if (includes != null && includes.Any(x => x.Id == info.Arg<IItemData>().Id)) return new PredicateResult(true);
 				return new PredicateResult(false);
 			});
 

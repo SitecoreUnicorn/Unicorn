@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using Kamsar.WebConsole;
 using Sitecore.Data;
 using Sitecore.Data.Items;
+using Sitecore.Jobs;
 using Sitecore.Publishing;
 using Sitecore.Publishing.Pipelines.Publish;
 
@@ -21,12 +23,22 @@ namespace Unicorn.Publishing
 			ManuallyAddedCandidates.Enqueue(new ID(itemId));
 		}
 
-		public static bool PublishQueuedItems(Item triggerItem, Database[] targets)
+		public static bool HasItemsToPublish { get { return ManuallyAddedCandidates.Count > 0; } }
+
+		public static bool PublishQueuedItems(Item triggerItem, Database[] targets, IProgressStatus progress = null)
 		{
 			if (ManuallyAddedCandidates.Count == 0) return false;
 
-			// the trigger item simply has to exist so the publish occurs - our queue will then be injected
-			PublishManager.PublishItem(triggerItem, targets, new[] { triggerItem.Language }, true, false);
+			foreach (var database in targets)
+			{
+				if (progress != null) progress.ReportStatus("> Publishing {0} synced item{2} in queue to {1}", MessageType.Debug, ManuallyAddedCandidates.Count, database.Name, ManuallyAddedCandidates.Count == 1 ? string.Empty : "s");
+
+				var publishOptions = new PublishOptions(triggerItem.Database, database, PublishMode.SingleItem, triggerItem.Language, DateTime.UtcNow) { RootItem = triggerItem };
+
+				var result = new Publisher(publishOptions).PublishWithResult();
+
+				if (progress != null) progress.ReportStatus("> Published synced items to {0} (New: {1}, Updated: {2}, Deleted: {3} Skipped: {4})", MessageType.Debug, database.Name, result.Statistics.Created, result.Statistics.Updated, result.Statistics.Deleted, result.Statistics.Skipped);
+			}
 
 			return true;
 		}

@@ -1,7 +1,6 @@
 ﻿using System;
 using NSubstitute;
 using Rainbow.Model;
-using Rainbow.Tests;
 using Unicorn.Data;
 using Unicorn.Loader;
 using Xunit;
@@ -14,7 +13,7 @@ namespace Unicorn.Tests.Loader
 		public void ShouldRetrieveItemRetry()
 		{
 			var retryer = new DeserializeFailureRetryer();
-			var item = new FakeItem();
+			var item = CreateTestItem();
 			var exception = new Exception();
 			retryer.AddItemRetry(item, exception);
 
@@ -29,7 +28,7 @@ namespace Unicorn.Tests.Loader
 		public void ShouldRetrieveTreeRetry()
 		{
 			var retryer = new DeserializeFailureRetryer();
-			var item = new FakeItem();
+			var item = CreateTestItem();
 			var exception = new Exception();
 			retryer.AddTreeRetry(item, exception);
 
@@ -44,12 +43,12 @@ namespace Unicorn.Tests.Loader
 		public void ShouldThrowIfItemRetryFails()
 		{
 			var retryer = new DeserializeFailureRetryer();
-			var item = new FakeItem();
+			var item = CreateTestItem();
 			var exception = new Exception();
 
 			retryer.AddItemRetry(item, exception);
 
-			Action<IItemData> callback = delegate(IItemData x) { throw new Exception(); };
+			Action<IItemData> callback = delegate (IItemData x) { throw new Exception(); };
 
 			Assert.Throws<DeserializationAggregateException>(() => retryer.RetryAll(Substitute.For<ISourceDataStore>(), callback, callback));
 		}
@@ -58,7 +57,7 @@ namespace Unicorn.Tests.Loader
 		public void ShouldThrowIfTreeRetryFails()
 		{
 			var retryer = new DeserializeFailureRetryer();
-			var item = new FakeItem();
+			var item = CreateTestItem();
 			var exception = new Exception();
 
 			retryer.AddTreeRetry(item, exception);
@@ -66,6 +65,11 @@ namespace Unicorn.Tests.Loader
 			Action<IItemData> callback = delegate (IItemData x) { throw new Exception(); };
 
 			Assert.Throws<DeserializationAggregateException>(() => retryer.RetryAll(Substitute.For<ISourceDataStore>(), callback, callback));
+		}
+
+		private IItemData CreateTestItem()
+		{
+			return new ProxyItem { Path = "/test" };
 		}
 	}
 }
