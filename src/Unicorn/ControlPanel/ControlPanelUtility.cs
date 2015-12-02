@@ -23,25 +23,25 @@ namespace Unicorn.ControlPanel
 		/// </summary>
 		public static bool AllRootPathsExists(IConfiguration configuration)
 		{
-		    var predicate = configuration.Resolve<PredicateRootPathResolver>();
-		    return predicate.GetRootPaths().All(include => RootPathsExists(predicate.SourceDataStore, include));
+			var predicate = configuration.Resolve<PredicateRootPathResolver>();
+			return predicate.GetRootPaths().All(include => RootPathsExists(predicate.SourceDataStore, include));
 		}
 
-	    private static bool RootPathsExists(IDataStore dataStore, TreeRoot include)
-	    {
-	        if (dataStore.GetByPath(include.Path, include.DatabaseName).FirstOrDefault() != null)
-	            return true;
-	        return ParentPathExists(dataStore, include);
-	    }
+		private static bool RootPathsExists(IDataStore dataStore, TreeRoot include)
+		{
+			if (dataStore.GetByPath(include.Path, include.DatabaseName).FirstOrDefault() != null)
+				return true;
+			return ParentPathExists(dataStore, include);
+		}
 
-	    private static bool ParentPathExists(IDataStore dataStore, TreeRoot include)
-	    {
-	        var path = include.Path.TrimEnd('/');
-	        var parentPath = path.Substring(0, path.LastIndexOf('/'));
-	        return dataStore.GetByPath(parentPath, include.DatabaseName).FirstOrDefault() != null;
-	    }
+		private static bool ParentPathExists(IDataStore dataStore, TreeRoot include)
+		{
+			var path = include.Path.TrimEnd('/');
+			var parentPath = path.Substring(0, path.LastIndexOf('/'));
+			return dataStore.GetByPath(parentPath, include.DatabaseName).FirstOrDefault() != null;
+		}
 
-	    public static IConfiguration[] ResolveConfigurationsFromQueryParameter(string queryParameter)
+		public static IConfiguration[] ResolveConfigurationsFromQueryParameter(string queryParameter)
 		{
 			var config = (queryParameter ?? string.Empty)
 				.Split('^')
@@ -58,19 +58,19 @@ namespace Unicorn.ControlPanel
 			return targetConfigurations;
 		}
 
-        public static IEnumerable<IConfigurationDependency> FindConfigurationsDependencies(IConfiguration configuration)
-        {
-            return configuration.Resolve<ConfigurationDependencyResolver>().Dependencies;
-        }
+		public static IEnumerable<IConfigurationDependency> FindConfigurationsDependencies(IConfiguration configuration)
+		{
+			return configuration.Resolve<ConfigurationDependencyResolver>().Dependencies;
+		}
 
-        public static IEnumerable<IConfiguration> FindConfigurationsDependants(IConfiguration configuration)
-        {
-            return configuration.Resolve<ConfigurationDependencyResolver>().Dependants;
-        }
+		public static IEnumerable<IConfiguration> FindConfigurationsDependents(IConfiguration configuration)
+		{
+			return configuration.Resolve<ConfigurationDependencyResolver>().Dependents;
+		}
 
-        public static bool HasDependants(IConfiguration configuration)
-        {
-            return configuration.Resolve<ConfigurationDependencyResolver>().Dependants.Any();
-        }
-    }
+		public static bool HasDependents(IConfiguration configuration)
+		{
+			return configuration.Resolve<ConfigurationDependencyResolver>().Dependents.Any();
+		}
+	}
 }

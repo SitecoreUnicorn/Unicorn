@@ -26,9 +26,19 @@ namespace Unicorn.ControlPanel
 			_activationUrl = activationUrl;
 		}
 
-	    protected IConfiguration[] Configurations { get; set; } = UnicornConfigurationManager.GetConfigurationsOrdererdByDependants();
+		protected bool IsOrderedByDependents(HttpContext context)
+		{
+			return context.Request.QueryString["order"] != "Config";
+		}
 
-	    public override void Process(HttpRequestArgs args)
+		protected IConfiguration[] GetConfigurations(HttpContext context)
+		{
+			if (IsOrderedByDependents(context))
+				return UnicornConfigurationManager.GetConfigurationsOrdererdByDependents();
+			return UnicornConfigurationManager.Configurations;
+		}
+
+		public override void Process(HttpRequestArgs args)
 		{
 			if (string.IsNullOrWhiteSpace(_activationUrl)) return;
 
@@ -44,10 +54,11 @@ namespace Unicorn.ControlPanel
 			context.Server.ScriptTimeout = 86400;
 
 			IEnumerable<IControlPanelControl> controls;
+			var configurations = GetConfigurations(context);
 
 			if (!Authorization.IsAllowed)
 			{
-				controls = GetDefaultControls();
+				controls = GetDefaultControls(context, configurations);
 			}
 			else
 			{
@@ -65,7 +76,7 @@ namespace Unicorn.ControlPanel
 							controls = GetReserializeControls(Authorization.IsAutomatedTool);
 							break;
 						default:
-							controls = GetDefaultControls();
+							controls = GetDefaultControls(context, configurations);
 							break;
 					}
 				}
@@ -82,33 +93,36 @@ namespace Unicorn.ControlPanel
 			}
 		}
 
-		protected virtual IEnumerable<IControlPanelControl> GetDefaultControls()
+		protected virtual IEnumerable<IControlPanelControl> GetDefaultControls(HttpContext context, IConfiguration[] configurations)
 		{
-			HttpContext.Current.Response.AddHeader("Content-Type", "text/html");
+			context.Response.AddHeader("Content-Type", "text/html");
 
-			var hasSerializedItems = Configurations.All(ControlPanelUtility.HasAnySerializedItems);
-			var hasAllRootPaths = Configurations.All(ControlPanelUtility.AllRootPathsExists);
-			var allowMultiSelect = hasSerializedItems && hasAllRootPaths && Configurations.Length > 1;
+			var hasSerializedItems = configurations.All(ControlPanelUtility.HasAnySerializedItems);
+			var hasAllRootPaths = configurations.All(ControlPanelUtility.AllRootPathsExists);
+			var allowMultiSelect = hasSerializedItems && hasAllRootPaths && configurations.Length > 1;
+			var anyConfigurationsWithDependencies = configurations.Any(ControlPanelUtility.HasDependents);
 
 			var isAuthorized = Authorization.IsAllowed;
 
 			yield return new Html5HeadAndStyles();
 
-			var heading = new Heading();
-			heading.HasSerializedItems = hasSerializedItems;
-			heading.HasAllRootPaths = hasAllRootPaths;
-			heading.IsAuthenticated = isAuthorized;
+			var heading = new Heading
+			              {
+				              HasSerializedItems = hasSerializedItems,
+				              HasAllRootPaths = hasAllRootPaths,
+				              IsAuthenticated = isAuthorized
+			              };
 			yield return heading;
 
 			if (isAuthorized)
 			{
-				if (Configurations.Length == 0)
+				if (configurations.Length == 0)
 				{
 					yield return new NoConfigurations();
 					yield break;
 				}
 
-				if (Configurations.Length > 1 && hasSerializedItems && hasAllRootPaths)
+				if (configurations.Length > 1 && hasSerializedItems && hasAllRootPaths)
 				{
 					yield return new BatchProcessingControls();
 				}
@@ -116,6 +130,28 @@ namespace Unicorn.ControlPanel
 				yield return new Literal(@"
 						<article>
 							<h2{0} Configurations</h2>".FormatWith(allowMultiSelect ? @" class=""fakebox fakebox-all""><span></span>" : ">"));
+
+				if (anyConfigurationsWithDependencies)
+				{
+					yield return new Literal(@"
+							<div class=""warning""><p>There are dependencies between the configurations and therefore the order of synchronization might be important.</p>");
+
+					if (IsOrderedByDependents(context))
+					{
+						yield return new Literal(@"
+								<p><em>The configurations are shown in order of dependencies.</em></p>
+								<a class=""button"" href=""?order=Config"">Order by configuration</a>");
+					}
+					else
+					{
+						yield return new Literal(@"
+								<p><em>The configurations are listed as they are in the configuration file.</em></p>
+								<a class=""button"" href =""?order="">Order by dependencies</a>");
+					}
+
+					yield return new Literal(@"
+							</div>");
+				}
 
 				if (allowMultiSelect) yield return new Literal(@"
 							<p class=""help"">Check 'Configurations' above to select all configurations, or individually select as many as you like below.</p>");
@@ -127,7 +163,7 @@ namespace Unicorn.ControlPanel
 							<table>
 								<tbody>");
 
-				foreach (var configuration in Configurations)
+				foreach (var configuration in configurations)
 				{
 					yield return new ConfigurationInfo(configuration) { MultipleConfigurationsExist = allowMultiSelect };
 				}

@@ -17,9 +17,9 @@ namespace Unicorn.Configuration
 
 		public static IConfiguration[] Configurations => Instance.Configurations;
 
-	    public static IConfiguration[] GetConfigurationsOrdererdByDependants()
-	    {
-	        return Configurations.OrderByDescending(configuration => configuration.Resolve<ConfigurationDependencyResolver>().Dependants.Length).ThenBy(configuration => configuration.Name).ToArray();
-        }
-    }
+		public static IConfiguration[] GetConfigurationsOrdererdByDependents()
+		{
+			return Configurations.OrderByDescending(configuration => configuration.Resolve<ConfigurationDependencyResolver>().Dependents.Length).ThenBy(configuration => configuration.Name).ToArray();
+		}
+	}
 }

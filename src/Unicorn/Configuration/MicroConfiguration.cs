@@ -16,14 +16,14 @@ namespace Unicorn.Configuration
 		{
 			Name = name;
 			Description = description;
-		    Dependencies = dependencies;
+			Dependencies = dependencies ?? new string[] {};
 		}
 
 		public string Name { get; }
 		public string Description { get; }
-	    public string[] Dependencies { get; set; }
+		public string[] Dependencies { get; set; }
 
-	    /// <summary>
+		/// <summary>
 		/// Resolves a registered type with its dependencies. Note: to activate unregistered types and inject dependencies use Activate() instead.
 		/// </summary>
 		/// <typeparam name="T">Type to resolve</typeparam>

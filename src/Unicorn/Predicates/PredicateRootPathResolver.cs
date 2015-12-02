@@ -11,7 +11,7 @@ namespace Unicorn.Predicates
 	public class PredicateRootPathResolver
 	{
 		private readonly IPredicate _predicate;
-	    private readonly ILogger _logger;
+		private readonly ILogger _logger;
 
 		public PredicateRootPathResolver(IPredicate predicate, ITargetDataStore targetDataStore, ISourceDataStore sourceDataStore, ILogger logger)
 		{
@@ -21,30 +21,32 @@ namespace Unicorn.Predicates
 			_logger = logger;
 		}
 
-	    public ISourceDataStore SourceDataStore { get; }
-	    public ITargetDataStore TargetDataStore { get; }
+		public ISourceDataStore SourceDataStore { get; }
+		public ITargetDataStore TargetDataStore { get; }
 
-	    public IItemData[] GetRootSourceItems()
+		public IItemData[] GetRootSourceItems()
 		{
-            var items = new List<IItemData>();
+			var items = new List<IItemData>();
 
-            foreach (var include in GetRootPaths())
-            {
-                var item = SourceDataStore.GetByPath(include.Path, include.DatabaseName).FirstOrDefault();
+			foreach (var include in GetRootPaths())
+			{
+				var item = SourceDataStore.GetByPath(include.Path, include.DatabaseName).FirstOrDefault();
 
-                if (item != null) items.Add(item);
-                else _logger.Error("Unable to resolve root source item for predicate root path {0}:{1}. It has been skipped.".FormatWith(include.DatabaseName, include.Path));
-            }
+				if (item != null)
+					items.Add(item);
+				else
+					_logger.Error("Unable to resolve root source item for predicate root path {0}:{1}. It has been skipped.".FormatWith(include.DatabaseName, include.Path));
+			}
 
-            return items.ToArray();
-        }
+			return items.ToArray();
+		}
 
-        public TreeRoot[] GetRootPaths()
-	    {
-	        return _predicate.GetRootPaths();
-	    }
+		public TreeRoot[] GetRootPaths()
+		{
+			return _predicate.GetRootPaths();
+		}
 
-	    public IItemData[] GetRootSerializedItems()
+		public IItemData[] GetRootSerializedItems()
 		{
 			var items = new List<IItemData>();
 
