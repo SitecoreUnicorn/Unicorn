@@ -28,7 +28,7 @@ namespace Unicorn.ControlPanel.VisualStudio.Responses
 				using (var streamWriter = new StreamWriter(outputStream))
 				{
 					var logger = new RemoteLogger(streamWriter);
-					var progress = new NullProgressStatus();
+					var progress = new RemoteProgressStatus(streamWriter);
 
 					using (new UnicornOperationContext())
 					{

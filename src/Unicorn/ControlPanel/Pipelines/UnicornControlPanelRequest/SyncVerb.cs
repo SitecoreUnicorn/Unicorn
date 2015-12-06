@@ -41,7 +41,6 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 				{
 					try
 					{
-						logger.Info(string.Empty);
 						logger.Info(configuration.Name + " is being synced.");
 
 						using (new TransparentSyncDisabler())

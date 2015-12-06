@@ -62,11 +62,13 @@
     <Compile Include="ControlPanel\Controls\GlobalWarnings.cs" />
     <Compile Include="ControlPanel\Controls\QuickReference.cs" />
     <Compile Include="ControlPanel\Controls\NoConfigurations.cs" />
+    <Compile Include="ControlPanel\Extensions\StreamWriterExtensions.cs" />
     <Compile Include="ControlPanel\Pipelines\UnicornControlPanelRequest\ChallengeVerb.cs" />
     <Compile Include="ControlPanel\Pipelines\UnicornControlPanelRequest\HandleAccessDenied.cs" />
     <Compile Include="ControlPanel\Pipelines\UnicornControlPanelRequest\RenderControlPanel.cs" />
     <Compile Include="ControlPanel\Pipelines\UnicornControlPanelRequest\ReserializeVerb.cs" />
     <Compile Include="ControlPanel\Pipelines\UnicornControlPanelRequest\SyncVerb.cs" />
+    <Compile Include="ControlPanel\VisualStudio\Logging\RemoteProgressStatus.cs" />
     <Compile Include="ControlPanel\VisualStudio\Pipelines\UnicornControlPanelRequest\ConfigurationsVerb.cs" />
     <Compile Include="ControlPanel\VisualStudio\Pipelines\UnicornControlPanelRequest\VersionVerb.cs" />
     <Compile Include="ControlPanel\Responses\ApiResponse.cs" />
