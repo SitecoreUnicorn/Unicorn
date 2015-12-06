@@ -22,7 +22,7 @@ namespace Unicorn.ControlPanel.Security
 			get
 			{
 				if (_server == null)
-					_server = new ChapServer(SignatureService);
+					_server = new ChapServer(SignatureService, ChallengeStore);
 				
 				return _server;
 			}
@@ -41,6 +41,14 @@ namespace Unicorn.ControlPanel.Security
 					_signatureService = new SignatureService(SharedSecret);
 
 				return _signatureService;
+			}
+		}
+
+		protected virtual IChallengeStore ChallengeStore
+		{
+			get
+			{
+				return new InMemoryChallengeStore();
 			}
 		}
 
