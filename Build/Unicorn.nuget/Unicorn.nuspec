@@ -26,7 +26,7 @@
 		<file src="..\..\src\Unicorn\Standard Config Files\Unicorn.Remote.config.disabled" target="content\App_Config\Include\Unicorn" />
 		<file src="..\..\src\Unicorn\Standard Config Files\Unicorn.Configs.Default.example" target="content\App_Config\Include\Unicorn" />
 		<file src="..\..\src\Unicorn\Standard Config Files\Unicorn.Configs.NewItemsOnly.example" target="content\App_Config\Include\Unicorn" />
-		<file src="..\..\src\Unicorn\Standard Config Files\Unicorn.SerializationFolder.config.disabled" target="content\App_Config\Include\Unicorn" />
+		<file src="..\..\src\Unicorn\Standard Config Files\Unicorn.Configs.SerializationFolder.config.example" target="content\App_Config\Include\Unicorn" />
 		<file src="readme.txt" target="" />
 	</files>
 </package>

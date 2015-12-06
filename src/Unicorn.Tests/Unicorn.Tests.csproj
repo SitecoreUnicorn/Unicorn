@@ -125,7 +125,6 @@
     <Compile Include="Configuration\MicroConfigurationTests.cs" />
     <None Include="app.config" />
     <None Include="App_Config\FieldTypes.config" />
-    <Compile Include="Data\DataProvider\PathRebasingItemDataTests.cs" />
     <Compile Include="Data\DataProvider\UnicornDataProviderTests.AddVersion.cs" />
     <Compile Include="Data\DataProvider\UnicornDataProviderTests.SaveItem.cs" />
     <Compile Include="Evaluator\SerializedAsMasterEvaluatorTests.cs" />
@@ -159,10 +158,6 @@
     <ProjectReference Include="..\..\..\Rainbow\src\Rainbow.Storage.Sc\Rainbow.Storage.Sc.csproj">
       <Project>{956afe8b-51cd-4d61-b8c1-bffdc749fd82}</Project>
       <Name>Rainbow.Storage.Sc</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\Rainbow\src\Rainbow.Tests\Rainbow.Tests.csproj">
-      <Project>{3a8495ae-e286-44a2-8bbb-ee9911f5ba43}</Project>
-      <Name>Rainbow.Tests</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\..\Rainbow\src\Rainbow\Rainbow.csproj">
       <Project>{8ff75c8b-2a9e-4d95-91ad-333071813199}</Project>

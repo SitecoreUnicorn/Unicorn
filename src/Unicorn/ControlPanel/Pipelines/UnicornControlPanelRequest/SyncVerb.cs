@@ -8,6 +8,7 @@ using Unicorn.ControlPanel.Responses;
 using Unicorn.Logging;
 using Unicorn.Pipelines.UnicornSyncEnd;
 using Unicorn.Predicates;
+using Sitecore.Diagnostics;
 
 namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 {
@@ -58,6 +59,11 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 							}, roots);
 						}
 					}
+					catch (DeserializationSoftFailureAggregateException ex)
+					{
+						logger.Error(ex);
+						// allow execution to continue, because the exception was non-fatal
+					}
 					catch (Exception ex)
 					{
 						logger.Error(ex);
@@ -68,7 +74,15 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 				taskNumber++;
 			}
 
-			CorePipeline.Run("unicornSyncEnd", new UnicornSyncEndPipelineArgs(configurations));
+			try
+			{
+				CorePipeline.Run("unicornSyncEnd", new UnicornSyncEndPipelineArgs(progress, configurations));
+			}
+			catch (Exception exception)
+			{
+				Log.Error("Error occurred in unicornSyncEnd pipeline.", exception);
+				progress.ReportException(exception);
+			}
 		}
 
 		protected virtual IConfiguration[] ResolveConfigurations()

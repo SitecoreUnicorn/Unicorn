@@ -8,7 +8,6 @@ using Rainbow.Model;
 using Rainbow.Storage;
 using Rainbow.Storage.Sc;
 using Rainbow.Storage.Sc.Deserialization;
-using Rainbow.Tests;
 using Sitecore.Data.Items;
 using Sitecore.FakeDb;
 using Unicorn.Configuration;
@@ -81,7 +80,7 @@ namespace Unicorn.Tests.Evaluator
 		{
 			var evaluator = CreateTestEvaluator();
 
-			Assert.Throws<ArgumentNullException>(() => evaluator.EvaluateUpdate(null, new FakeItem()));
+			Assert.Throws<ArgumentNullException>(() => evaluator.EvaluateUpdate(null, CreateTestItem()));
 		}
 
 		[Fact]
@@ -89,20 +88,20 @@ namespace Unicorn.Tests.Evaluator
 		{
 			var evaluator = CreateTestEvaluator();
 
-			Assert.Throws<ArgumentNullException>(() => evaluator.EvaluateUpdate(new FakeItem(), null));
+			Assert.Throws<ArgumentNullException>(() => evaluator.EvaluateUpdate(CreateTestItem(), null));
 		}
 
 		[Fact]
 		public void EvaluateUpdate_Deserializes_ComparerReturnsNotEqual()
 		{
 			var comparer = Substitute.For<IItemComparer>();
-			comparer.FastCompare(Arg.Any<IItemData>(), Arg.Any<IItemData>()).Returns(new ItemComparisonResult(new FakeItem(), new FakeItem(), true));
+			comparer.FastCompare(Arg.Any<IItemData>(), Arg.Any<IItemData>()).Returns(new ItemComparisonResult(CreateTestItem(), CreateTestItem(), true));
 
 			var deserializer = Substitute.For<IDeserializer>();
 
 			var evaluator = CreateTestEvaluator(deserializer: deserializer, comparer: comparer);
 
-			evaluator.EvaluateUpdate(new FakeItem(), new FakeItem());
+			evaluator.EvaluateUpdate(CreateTestItem(), CreateTestItem());
 
 			deserializer.Received().Deserialize(Arg.Any<IItemData>());
 		}
@@ -111,13 +110,13 @@ namespace Unicorn.Tests.Evaluator
 		public void EvaluateUpdate_DoesNotDeserialize_ComparerReturnsEqual()
 		{
 			var comparer = Substitute.For<IItemComparer>();
-			comparer.FastCompare(Arg.Any<IItemData>(), Arg.Any<IItemData>()).Returns(new ItemComparisonResult(new FakeItem(), new FakeItem()));
+			comparer.FastCompare(Arg.Any<IItemData>(), Arg.Any<IItemData>()).Returns(new ItemComparisonResult(CreateTestItem(), CreateTestItem()));
 
 			var deserializer = Substitute.For<IDeserializer>();
 
 			var evaluator = CreateTestEvaluator(deserializer: deserializer, comparer: comparer);
 
-			evaluator.EvaluateUpdate(new FakeItem(), new FakeItem());
+			evaluator.EvaluateUpdate(CreateTestItem(), CreateTestItem());
 
 			deserializer.DidNotReceive().Deserialize(Arg.Any<IItemData>());
 		}
@@ -131,7 +130,7 @@ namespace Unicorn.Tests.Evaluator
 			if (comparer == null)
 			{
 				comparer = Substitute.For<IItemComparer>();
-				comparer.FastCompare(Arg.Any<IItemData>(), Arg.Any<IItemData>()).Returns(new ItemComparisonResult(new FakeItem(), new FakeItem()));
+				comparer.FastCompare(Arg.Any<IItemData>(), Arg.Any<IItemData>()).Returns(new ItemComparisonResult(CreateTestItem(), CreateTestItem()));
 			}
 
 			return new SerializedAsMasterEvaluator(Substitute.For<ILogger>(), logger ?? Substitute.For<ISerializedAsMasterEvaluatorLogger>(), comparer, CreateTestFieldFilter(), dataStore, Substitute.For<ITargetDataStore>(), Substitute.For<IConfiguration>());
@@ -143,6 +142,11 @@ namespace Unicorn.Tests.Evaluator
 			trueFilter.Includes(Arg.Any<Guid>()).Returns(true);
 
 			return trueFilter;
+		}
+
+		private IItemData CreateTestItem()
+		{
+			return new ProxyItem { Path = "/sitecore/content/test" };
 		}
 	}
 }

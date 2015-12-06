@@ -11,8 +11,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rainbow", "..\Rainbow\src\R
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rainbow.Storage.Sc", "..\Rainbow\src\Rainbow.Storage.Sc\Rainbow.Storage.Sc.csproj", "{956AFE8B-51CD-4D61-B8C1-BFFDC749FD82}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rainbow.Tests", "..\Rainbow\src\Rainbow.Tests\Rainbow.Tests.csproj", "{3A8495AE-E286-44A2-8BBB-EE9911F5BA43}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rainbow.Storage.Yaml", "..\Rainbow\src\Rainbow.Storage.Yaml\Rainbow.Storage.Yaml.csproj", "{371181C9-45DC-4885-8894-43FFC235D124}"
 EndProject
 Global
@@ -36,9 +34,6 @@ Global
 		{956AFE8B-51CD-4D61-B8C1-BFFDC749FD82}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{956AFE8B-51CD-4D61-B8C1-BFFDC749FD82}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{956AFE8B-51CD-4D61-B8C1-BFFDC749FD82}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3A8495AE-E286-44A2-8BBB-EE9911F5BA43}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3A8495AE-E286-44A2-8BBB-EE9911F5BA43}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3A8495AE-E286-44A2-8BBB-EE9911F5BA43}.Release|Any CPU.Build.0 = Release|Any CPU
 		{371181C9-45DC-4885-8894-43FFC235D124}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{371181C9-45DC-4885-8894-43FFC235D124}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{371181C9-45DC-4885-8894-43FFC235D124}.Release|Any CPU.ActiveCfg = Release|Any CPU

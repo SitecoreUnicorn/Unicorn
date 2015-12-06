@@ -30,64 +30,72 @@ namespace Unicorn
 			set { _threads = value; }
 		}
 
-		public virtual IConfiguration GetConfigurationForItem(IItemData item)
+		public virtual IConfiguration[] GetConfigurationsForItem(IItemData item)
 		{
-			return UnicornConfigurationManager.Configurations.FirstOrDefault(configuration => configuration.Resolve<IPredicate>().Includes(item).IsIncluded);
+			return UnicornConfigurationManager.Configurations.Where(configuration => configuration.Resolve<IPredicate>().Includes(item).IsIncluded).ToArray();
 		}
 
 		/// <returns>True if the tree was dumped, false if the root item was not included</returns>
-		public virtual bool DumpTree(IItemData item, IConfiguration configuration = null)
+		public virtual bool DumpTree(IItemData item, IConfiguration[] configurations = null)
 		{
 			using (new TransparentSyncDisabler())
 			{
-				if (configuration == null) configuration = GetConfigurationForItem(item);
+				if (configurations == null) configurations = GetConfigurationsForItem(item);
 
-				if (configuration == null) return false;
-
-				var logger = configuration.Resolve<ILogger>();
-
-				var predicate = configuration.Resolve<IPredicate>();
-				var serializationStore = configuration.Resolve<ITargetDataStore>();
-				var sourceStore = configuration.Resolve<ISourceDataStore>();
-
-				var rootReference = serializationStore.GetByPathAndId(item.Path, item.Id, item.DatabaseName);
-				if (rootReference != null)
+				foreach (var configuration in configurations)
 				{
-					logger.Warn("[D] existing serialized items under {0}".FormatWith(rootReference.GetDisplayIdentifier()));
-					serializationStore.Remove(rootReference);
+					if (configuration == null) return false;
+
+					var logger = configuration.Resolve<ILogger>();
+
+					var predicate = configuration.Resolve<IPredicate>();
+					var serializationStore = configuration.Resolve<ITargetDataStore>();
+					var sourceStore = configuration.Resolve<ISourceDataStore>();
+
+					var rootReference = serializationStore.GetByPathAndId(item.Path, item.Id, item.DatabaseName);
+					if (rootReference != null)
+					{
+						logger.Warn("[D] existing serialized items under {0}".FormatWith(rootReference.GetDisplayIdentifier()));
+						serializationStore.Remove(rootReference);
+					}
+
+					logger.Info("[U] Serializing included items under root {0}".FormatWith(item.GetDisplayIdentifier()));
+
+					if (!predicate.Includes(item).IsIncluded) return false;
+
+					DumpTreeInternal(item, predicate, serializationStore, sourceStore, logger);
 				}
-
-				logger.Info("[U] Serializing included items under root {0}".FormatWith(item.GetDisplayIdentifier()));
-
-				if (!predicate.Includes(item).IsIncluded) return false;
-
-				DumpTreeInternal(item, predicate, serializationStore, sourceStore, logger);
 			}
 			return true;
 		}
 
 		/// <returns>True if the item was dumped, false if it was not included</returns>
-		public virtual bool DumpItem(IItemData item, IConfiguration configuration = null)
+		public virtual bool DumpItem(IItemData item, IConfiguration[] configurations = null)
 		{
 			using (new TransparentSyncDisabler())
 			{
-				if (configuration == null) configuration = GetConfigurationForItem(item);
+				if (configurations == null) configurations = GetConfigurationsForItem(item);
 
-				if (configuration == null) return false;
+				foreach(var configuration in configurations)
+				{
+					if (configuration == null) return false;
 
-				var predicate = configuration.Resolve<IPredicate>();
-				var serializationStore = configuration.Resolve<ITargetDataStore>();
+					var predicate = configuration.Resolve<IPredicate>();
+					var serializationStore = configuration.Resolve<ITargetDataStore>();
 
-				CacheManager.ClearAllCaches(); // BOOM! This clears all caches before we begin; 
-											   // because for a TpSync configuration we could have TpSync items in the data cache which 'taint' the reserialize
-											   // from being purely database
+					CacheManager.ClearAllCaches(); // BOOM! This clears all caches before we begin; 
+												   // because for a TpSync configuration we could have TpSync items in the data cache which 'taint' the reserialize
+												   // from being purely database
 
-				var result = DumpItemInternal(item, predicate, serializationStore).IsIncluded;
+					var result = DumpItemInternal(item, predicate, serializationStore).IsIncluded;
 
-				CacheManager.ClearAllCaches(); // BOOM! And we clear everything again at the end, because now
-											   // for a TpSync configuration we might have DATABASE items in cache where we want TpSync.
+					CacheManager.ClearAllCaches(); // BOOM! And we clear everything again at the end, because now
+												   // for a TpSync configuration we might have DATABASE items in cache where we want TpSync.
 
-				return result;
+					if (!result) return false;
+				}
+
+				return true;
 			}
 		}
 

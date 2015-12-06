@@ -77,6 +77,12 @@ namespace Unicorn.Evaluators
 			return new Warning("This item was created by Unicorn.".FormatWith(_parentConfiguration.Name), "You may edit this item, but deleting it may result in its return next time code is deployed. Ask a developer to help if you need to delete this item. Configuration: '{0}'".FormatWith(_parentConfiguration.Name));
 		}
 
+		public virtual bool ShouldPerformConflictCheck(Item item)
+		{
+			// we don't care about conflicts because items may be edited after creation and are expected to not necessarily match serialized versions
+			return false;
+		}
+
 		public virtual string FriendlyName
 		{
 			get { return "New Item Only Evaluator"; }

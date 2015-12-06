@@ -61,7 +61,7 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 							int index = 1;
 							foreach (var root in roots)
 							{
-								helper.DumpTree(root, configuration);
+								helper.DumpTree(root, new[] { configuration });
 								WebConsoleUtility.SetTaskProgress(progress, taskNumber, configurations.Length, (int)((index / (double)roots.Length) * 100));
 								index++;
 							}
