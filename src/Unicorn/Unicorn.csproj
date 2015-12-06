@@ -40,6 +40,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\packages\Kamsar.WebConsole.1.2.2.0\lib\net40\Kamsar.WebConsole.dll</HintPath>
     </Reference>
+    <Reference Include="MicroCHAP, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\MicroCHAP.1.2.0.0\lib\net45\MicroCHAP.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Sitecore.Kernel, Version=7.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\lib\Sitecore\v7\Sitecore.Kernel.dll</HintPath>
@@ -61,6 +65,10 @@
     <Compile Include="ControlPanel\Remote\Logging\RemoteLogger.cs" />
     <Compile Include="ControlPanel\Remote\Logging\ReportType.cs" />
     <Compile Include="ControlPanel\Remote\UnicornRemotePipelineProcessor.cs" />
+    <Compile Include="ControlPanel\Security\IUnicornAuthenticationProvider.cs" />
+    <Compile Include="ControlPanel\Security\ChapAuthenticationProvider.cs" />
+    <Compile Include="ControlPanel\Security\LegacyAuthenticationProvider.cs" />
+    <Compile Include="ControlPanel\Security\SecurityState.cs" />
     <Compile Include="Data\DataProvider\DefaultUnicornDataProviderConfiguration.cs" />
     <Compile Include="Data\DataProvider\ItemChangesFilteredItemData.cs" />
     <Compile Include="Data\DataProvider\IUnicornDataProviderConfiguration.cs" />

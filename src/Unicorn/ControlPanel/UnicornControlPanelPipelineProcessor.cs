@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Linq;
 using System.Web;
 using System.Web.UI;
+using Sitecore.Configuration;
 using Sitecore.Pipelines.HttpRequest;
-using Sitecore.Security.Authentication;
 using Sitecore.SecurityModel;
 using Sitecore.StringExtensions;
 using Unicorn.Configuration;
 using Unicorn.ControlPanel.Controls;
+using Unicorn.ControlPanel.Security;
+using SecurityState = Unicorn.ControlPanel.Security.SecurityState;
 
 namespace Unicorn.ControlPanel
 {
@@ -20,6 +21,7 @@ namespace Unicorn.ControlPanel
 	public class UnicornControlPanelPipelineProcessor : HttpRequestProcessor
 	{
 		private readonly string _activationUrl;
+		private static readonly IUnicornAuthenticationProvider AuthenticationProvider = (IUnicornAuthenticationProvider)Factory.CreateObject("/sitecore/unicorn/authenticationProvider", true);
 
 		public UnicornControlPanelPipelineProcessor(string activationUrl)
 		{
@@ -48,10 +50,28 @@ namespace Unicorn.ControlPanel
 		{
 			context.Server.ScriptTimeout = 86400;
 
+			var verb = context.Request.QueryString["verb"];
+
+			if (verb == "Challenge")
+			{
+				context.Response.ContentType = "text/plain";
+				context.Response.Write(AuthenticationProvider.GetChallengeToken());
+				context.Response.End();
+				return;
+			}
+			
 			IEnumerable<IControlPanelControl> controls;
 
 			if (!Authorization.IsAllowed)
 			{
+				if (Authorization.IsAutomatedTool)
+				{
+					context.Response.Write("Automated tool authentication failed.");
+					context.Response.TrySkipIisCustomErrors = true;
+					context.Response.StatusCode = 401;
+					return;
+				}
+
 				controls = GetDefaultControls();
 			}
 			else
@@ -59,7 +79,7 @@ namespace Unicorn.ControlPanel
 				// this securitydisabler allows the control panel to execute unfettered when debug compilation is enabled but you are not signed into Sitecore
 				using (new SecurityDisabler())
 				{
-					var verb = context.Request.QueryString["verb"];
+					
 
 					switch (verb)
 					{
@@ -166,43 +186,15 @@ namespace Unicorn.ControlPanel
 		{
 			get
 			{
-				var user = AuthenticationManager.GetActiveUser();
+				const string Key = "UNICORN_AUTHORIZATION";
 
-				if (user.IsAdministrator)
+				if (HttpContext.Current.Items[Key] == null)
 				{
-					return new SecurityState(true, false);
+					HttpContext.Current.Items[Key] = AuthenticationProvider.ValidateRequest(new HttpRequestWrapper(HttpContext.Current.Request));
 				}
 
-				var authToken = HttpContext.Current.Request.Headers["Authenticate"];
-				var correctAuthToken = ConfigurationManager.AppSettings["DeploymentToolAuthToken"];
-
-				if (!string.IsNullOrWhiteSpace(correctAuthToken) &&
-					!string.IsNullOrWhiteSpace(authToken) &&
-					authToken.Equals(correctAuthToken, StringComparison.Ordinal))
-				{
-					return new SecurityState(true, true);
-				}
-
-				// if dynamic debug compilation is enabled, you can use it without auth (eg local dev)
-				if (HttpContext.Current.IsDebuggingEnabled)
-					return new SecurityState(true, false);
-
-				return new SecurityState(false, false);
+				return (SecurityState)HttpContext.Current.Items[Key];
 			}
 		}
-
-		protected class SecurityState
-		{
-			public SecurityState(bool allowed, bool automated)
-			{
-				IsAllowed = allowed;
-				IsAutomatedTool = automated;
-			}
-
-			public bool IsAllowed { get; private set; }
-			public bool IsAutomatedTool { get; private set; }
-		}
-
-
 	}
 }

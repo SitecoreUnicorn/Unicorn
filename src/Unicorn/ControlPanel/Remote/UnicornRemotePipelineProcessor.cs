@@ -4,9 +4,11 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Web;
+using Sitecore.Configuration;
 using Sitecore.StringExtensions;
 using Unicorn.Configuration;
 using Unicorn.ControlPanel.Remote.Logging;
+using Unicorn.ControlPanel.Security;
 using Unicorn.Data;
 using Unicorn.Logging;
 using Unicorn.Predicates;
@@ -16,6 +18,7 @@ namespace Unicorn.ControlPanel.Remote
 	public class UnicornRemotePipelineProcessor : UnicornControlPanelPipelineProcessor
 	{
 		protected static readonly string CurrentVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+		private static readonly IUnicornAuthenticationProvider AuthenticationProvider = (IUnicornAuthenticationProvider)Factory.CreateObject("/sitecore/unicorn/authenticationProvider", true);
 
 		public UnicornRemotePipelineProcessor(string activationUrl) : base(activationUrl)
 		{
@@ -25,6 +28,16 @@ namespace Unicorn.ControlPanel.Remote
 		{
 			context.Server.ScriptTimeout = 86400;
 
+			var verb = (context.Request.QueryString["verb"] ?? string.Empty).ToLowerInvariant();
+
+			if (verb == "challenge")
+			{
+				context.Response.ContentType = "text/plain";
+				context.Response.Write(AuthenticationProvider.GetChallengeToken());
+				context.Response.End();
+				return;
+			}
+
 			if (!Authorization.IsAllowed)
 			{
 				context.Response.StatusCode = 401;
@@ -32,7 +45,6 @@ namespace Unicorn.ControlPanel.Remote
 			}
 			else
 			{
-				var verb = (context.Request.QueryString["verb"] ?? string.Empty).ToLowerInvariant();
 				switch (verb)
 				{
 					case "sync":
