@@ -62,7 +62,7 @@
     <Compile Include="ControlPanel\Controls\GlobalWarnings.cs" />
     <Compile Include="ControlPanel\Controls\QuickReference.cs" />
     <Compile Include="ControlPanel\Controls\NoConfigurations.cs" />
-    <Compile Include="ControlPanel\Extensions\StreamWriterExtensions.cs" />
+    <Compile Include="ControlPanel\VisualStudio\StreamWriterExtensions.cs" />
     <Compile Include="ControlPanel\Pipelines\UnicornControlPanelRequest\ChallengeVerb.cs" />
     <Compile Include="ControlPanel\Pipelines\UnicornControlPanelRequest\HandleAccessDenied.cs" />
     <Compile Include="ControlPanel\Pipelines\UnicornControlPanelRequest\RenderControlPanel.cs" />
@@ -76,7 +76,6 @@
     <Compile Include="ControlPanel\Responses\IResponse.cs" />
     <Compile Include="ControlPanel\Responses\PlainTextResponse.cs" />
     <Compile Include="ControlPanel\VisualStudio\Logging\MessageLevel.cs" />
-    <Compile Include="ControlPanel\VisualStudio\Logging\NullProgressStatus.cs" />
     <Compile Include="ControlPanel\VisualStudio\Logging\RemoteLogger.cs" />
     <Compile Include="ControlPanel\VisualStudio\Logging\ReportType.cs" />
     <Compile Include="ControlPanel\VisualStudio\Pipelines\UnicornControlPanelRequest\VSReserializeVerb.cs" />

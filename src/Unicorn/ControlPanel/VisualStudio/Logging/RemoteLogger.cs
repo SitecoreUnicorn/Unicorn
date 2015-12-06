@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using Unicorn.ControlPanel.Extensions;
 using Unicorn.Logging;
 
 namespace Unicorn.ControlPanel.VisualStudio.Logging
@@ -44,7 +43,7 @@ namespace Unicorn.ControlPanel.VisualStudio.Logging
 
 		public void Flush()
 		{
-			
+
 		}
 
 		public void ReportProgress(int progress)
@@ -57,9 +56,9 @@ namespace Unicorn.ControlPanel.VisualStudio.Logging
 			SendMessage(ReportType.Operation, level, message);
 		}
 
-	    private void SendMessage(ReportType type, MessageLevel level, string message)
-	    {
-	        _output.SendMessage(type, level, message);
-	    }
+		private void SendMessage(ReportType type, MessageLevel level, string message)
+		{
+			_output.SendMessage(type, level, message);
+		}
 	}
 }
