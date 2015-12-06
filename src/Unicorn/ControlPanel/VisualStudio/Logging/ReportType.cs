@@ -1,4 +1,4 @@
-namespace Unicorn.ControlPanel.Remote.Logging
+namespace Unicorn.ControlPanel.VisualStudio.Logging
 {
 	public enum ReportType
 	{

@@ -5,27 +5,29 @@ using Kamsar.WebConsole;
 using Sitecore.StringExtensions;
 using Unicorn.Configuration;
 using Unicorn.ControlPanel.Headings;
+using Unicorn.ControlPanel.Responses;
 using Unicorn.Data;
 using Unicorn.Logging;
 using Unicorn.Predicates;
 
-namespace Unicorn.ControlPanel
+namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 {
-	/// <summary>
-	/// Renders a WebConsole that handles reserialize - or initial serialize - for Unicorn configurations
-	/// </summary>
-	public class ReserializeConsole : ControlPanelConsole
+	public class ReserializeVerb : UnicornControlPanelRequestPipelineProcessor
 	{
-		public ReserializeConsole(bool isAutomatedTool) : base(isAutomatedTool, new HeadingService())
+		public ReserializeVerb() : this("Reserialize")
 		{
 		}
 
-		protected override string Title
+		protected ReserializeVerb(string verb) : base(verb)
 		{
-			get { return "Reserialize Unicorn"; }
 		}
 
-		protected override void Process(IProgressStatus progress)
+		protected override IResponse CreateResponse(UnicornControlPanelRequestPipelineArgs args)
+		{
+			return new WebConsoleResponse("Reserialize Unicorn", args.SecurityState.IsAutomatedTool, new HeadingService(), progress => Process(progress, new WebConsoleLogger(progress)));
+		}
+
+		protected virtual void Process(IProgressStatus progress, ILogger additionalLogger)
 		{
 			var configurations = ResolveConfigurations();
 			int taskNumber = 1;
@@ -34,7 +36,7 @@ namespace Unicorn.ControlPanel
 			{
 				var logger = configuration.Resolve<ILogger>();
 
-				using (new LoggingContext(new WebConsoleLogger(progress), configuration))
+				using (new LoggingContext(additionalLogger, configuration))
 				{
 					try
 					{
@@ -60,7 +62,7 @@ namespace Unicorn.ControlPanel
 							foreach (var root in roots)
 							{
 								helper.DumpTree(root, new[] { configuration });
-								SetTaskProgress(progress, taskNumber, configurations.Length, (int)((index / (double)roots.Length) * 100));
+								WebConsoleUtility.SetTaskProgress(progress, taskNumber, configurations.Length, (int)((index / (double)roots.Length) * 100));
 								index++;
 							}
 						}

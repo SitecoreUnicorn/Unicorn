@@ -1,10 +1,8 @@
 using System;
 using System.IO;
-using System.Text;
-using Sitecore.StringExtensions;
 using Unicorn.Logging;
 
-namespace Unicorn.ControlPanel.Remote.Logging
+namespace Unicorn.ControlPanel.VisualStudio.Logging
 {
 	/// <summary>
 	/// Logger implementation used for streaming remote API (used by Visual Studio control panel)
@@ -18,39 +16,34 @@ namespace Unicorn.ControlPanel.Remote.Logging
 			_output = output;
 		}
 
-		public void ReportSimple(string text, MessageLevel level)
-		{
-			SendOpeartionMessage(level, text);
-		}
-
 		public void Info(string message)
 		{
-			SendOpeartionMessage(MessageLevel.Info, message);
+			SendOperationMessage(MessageLevel.Info, message);
 		}
 
 		public void Debug(string message)
 		{
-			SendOpeartionMessage(MessageLevel.Debug, message);
+			SendOperationMessage(MessageLevel.Debug, message);
 		}
 
 		public void Warn(string message)
 		{
-			SendOpeartionMessage(MessageLevel.Warning, message);
+			SendOperationMessage(MessageLevel.Warning, message);
 		}
 
 		public void Error(string message)
 		{
-			SendOpeartionMessage(MessageLevel.Error, message);
+			SendOperationMessage(MessageLevel.Error, message);
 		}
 
 		public void Error(Exception exception)
 		{
-			SendOpeartionMessage(MessageLevel.Error, exception.ToString());
+			SendOperationMessage(MessageLevel.Error, exception.ToString());
 		}
 
 		public void Flush()
 		{
-			
+
 		}
 
 		public void ReportProgress(int progress)
@@ -58,17 +51,14 @@ namespace Unicorn.ControlPanel.Remote.Logging
 			SendMessage(ReportType.Progress, MessageLevel.Info, progress.ToString());
 		}
 
-		private void SendOpeartionMessage(MessageLevel level, string message)
+		private void SendOperationMessage(MessageLevel level, string message)
 		{
 			SendMessage(ReportType.Operation, level, message);
 		}
 
 		private void SendMessage(ReportType type, MessageLevel level, string message)
 		{
-			var encodedMessage = Convert.ToBase64String(Encoding.UTF8.GetBytes(message));
-			var report = "{0}|{1}|{2}".FormatWith(type, level, encodedMessage);
-			_output.WriteLine(report);
-			_output.Flush();
+			_output.SendMessage(type, level, message);
 		}
 	}
 }

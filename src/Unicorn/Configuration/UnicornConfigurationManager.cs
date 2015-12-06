@@ -1,4 +1,5 @@
 ﻿using Sitecore.Configuration;
+using Unicorn.ControlPanel.Security;
 
 namespace Unicorn.Configuration
 {
@@ -8,11 +9,16 @@ namespace Unicorn.Configuration
 	public static class UnicornConfigurationManager
 	{
 		private static readonly IConfigurationProvider Instance;
+		private static readonly IUnicornAuthenticationProvider AuthenticationProviderInstance;
+
 		static UnicornConfigurationManager()
 		{
 			Instance = (IConfigurationProvider) Factory.CreateObject("/sitecore/unicorn/configurationProvider", true);
+			AuthenticationProviderInstance = (IUnicornAuthenticationProvider)Factory.CreateObject("/sitecore/unicorn/authenticationProvider", true);
 		}
 
 		public static IConfiguration[] Configurations { get { return Instance.Configurations; } }
+
+		public static IUnicornAuthenticationProvider AuthenticationProvider { get { return AuthenticationProviderInstance; } }
 	}
 }
