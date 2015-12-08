@@ -1,5 +1,4 @@
-﻿using System;
-using Rainbow.Model;
+﻿using Rainbow.Model;
 using Sitecore.Data.Items;
 
 namespace Unicorn.Data.DataProvider
@@ -16,7 +15,7 @@ namespace Unicorn.Data.DataProvider
 		void MovedItemToNonIncludedLocation(string providerName, IItemData existingItemData);
 
 		void MovedItem(string providerName, IItemData sourceItemData, IItemData destinationItemData);
-		void CopiedItem(string providerName, Func<IItemData> sourceItem, IItemData copiedItemData);
+		void CopiedItem(string providerName, IItemData sourceItem, IItemData copiedItemData);
 
 		void DeletedItem(string providerName, IItemData existingItemData);
 

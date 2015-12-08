@@ -210,17 +210,31 @@ namespace Unicorn.Data.DataProvider
 		{
 			if (DisableSerialization) return;
 
-			// copying is easy - all we have to do is serialize the copyID. Copied children will all result in multiple calls to CopyItem so we don't even need to worry about them.
-			var existingItem = Database.GetItem(copyId);
+			// copying is easy - all we have to do is serialize the item using the copyID and new target destination as the parent. 
+			// Copied children will all result in multiple calls to CopyItem so we don't even need to worry about them.
+			var existingItem = GetSourceFromId(source.ID, true);
 
 			Assert.IsNotNull(existingItem, "Existing item to copy was not in the database!");
 
-			var copiedItem = new ItemData(existingItem, _sourceDataStore);
+			var destinationItem = GetSourceFromId(destination.ID);
 
-			if (!_predicate.Includes(copiedItem).IsIncluded) return; // destination parent is not in a path that we are serializing, so skip out
+			Assert.IsNotNull(existingItem, "Copy destination was not in the database!");
 
-			_targetDataStore.Save(copiedItem);
-			_logger.CopiedItem(_targetDataStore.FriendlyName, () => GetSourceFromId(source.ID), copiedItem);
+			// rebase the item's path to the new destination item, then proxy it so we can mutate in the copy ID and copy name
+			var repathedCopyItem = new PathRebasingProxyItem(existingItem, destinationItem.Path, destinationItem.Id);
+
+			// wrap the existing item in a proxy so we can mutate it into a copy
+			var copyTargetItem = new ProxyItem(existingItem);
+
+			copyTargetItem.Path = $"{destinationItem.Path}/{copyName}";
+			copyTargetItem.Name = copyName;
+			copyTargetItem.Id = copyId.Guid;
+
+			if (!_predicate.Includes(copyTargetItem).IsIncluded) return; // destination parent is not in a path that we are serializing, so skip out
+
+
+			_targetDataStore.Save(copyTargetItem);
+			_logger.CopiedItem(_targetDataStore.FriendlyName, existingItem, copyTargetItem);
 		}
 
 		public virtual void AddVersion(ItemDefinition itemDefinition, VersionUri baseVersion, CallContext context)

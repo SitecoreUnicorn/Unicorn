@@ -37,7 +37,7 @@ namespace Unicorn.Data.DataProvider
 			_logger.Info(string.Format("{0}: Moved serialized item {1} ({2}) to {3}", providerName, sourceItemData.Path, sourceItemData.Id, destinationItemData.Path));
 		}
 
-		public virtual void CopiedItem(string providerName, Func<IItemData> sourceItem, IItemData copiedItemData)
+		public virtual void CopiedItem(string providerName, IItemData sourceItem, IItemData copiedItemData)
 		{
 		}
 
