@@ -53,7 +53,13 @@ namespace Unicorn.ControlPanel
 
 			var verb = context.Request.QueryString["verb"];
 
-			var securityState = UnicornConfigurationManager.AuthenticationProvider.ValidateRequest(new HttpRequestWrapper(HttpContext.Current.Request));
+			var authProvider = UnicornConfigurationManager.AuthenticationProvider;
+			SecurityState securityState;
+			if (authProvider != null)
+			{
+				securityState = UnicornConfigurationManager.AuthenticationProvider.ValidateRequest(new HttpRequestWrapper(HttpContext.Current.Request));
+			}
+			else securityState = new SecurityState(false, false);
 
 			// this securitydisabler allows the control panel to execute unfettered when debug compilation is enabled but you are not signed into Sitecore
 			using (new SecurityDisabler())

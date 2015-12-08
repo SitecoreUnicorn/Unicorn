@@ -14,7 +14,7 @@ namespace Unicorn.Configuration
 		static UnicornConfigurationManager()
 		{
 			Instance = (IConfigurationProvider) Factory.CreateObject("/sitecore/unicorn/configurationProvider", true);
-			AuthenticationProviderInstance = (IUnicornAuthenticationProvider)Factory.CreateObject("/sitecore/unicorn/authenticationProvider", true);
+			AuthenticationProviderInstance = (IUnicornAuthenticationProvider)Factory.CreateObject("/sitecore/unicorn/authenticationProvider", false);
 		}
 
 		public static IConfiguration[] Configurations { get { return Instance.Configurations; } }
