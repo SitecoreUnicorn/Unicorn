@@ -1,15 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Web;
-using System.Web.UI;
 using Sitecore.Pipelines;
 using Sitecore.Pipelines.HttpRequest;
 using Sitecore.SecurityModel;
-using Sitecore.StringExtensions;
 using Unicorn.Configuration;
-using Unicorn.ControlPanel.Controls;
 using Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest;
 using Unicorn.ControlPanel.Responses;
 using SecurityState = Unicorn.ControlPanel.Security.SecurityState;
@@ -32,13 +27,6 @@ namespace Unicorn.ControlPanel
 		protected bool IsOrderedByDependents(HttpContext context)
 		{
 			return context.Request.QueryString["order"] != "Config";
-		}
-
-		protected IConfiguration[] GetConfigurations(HttpContext context)
-		{
-			if (IsOrderedByDependents(context))
-				return UnicornConfigurationManager.GetConfigurationsOrdererdByDependents();
-			return UnicornConfigurationManager.Configurations;
 		}
 
 		public override void Process(HttpRequestArgs args)

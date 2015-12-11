@@ -19,7 +19,7 @@ namespace Unicorn.Configuration
 		string Description { get; }
 
 		/// <summary>
-		/// A list of configurations on which this configuration depends
+		/// A list of configuration names on which this configuration depends
 		/// </summary>
 		string[] Dependencies { get; }
 

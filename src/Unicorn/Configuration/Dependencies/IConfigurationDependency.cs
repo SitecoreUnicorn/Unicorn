@@ -1,7 +1,8 @@
-﻿using Rainbow.Storage;
-
-namespace Unicorn.Configuration
+﻿namespace Unicorn.Configuration.Dependencies
 {
+	/// <summary>
+	/// Defines a dependency between two Unicorn configurations
+	/// </summary>
 	public interface IConfigurationDependency
 	{
 		/// <summary>
@@ -12,7 +13,6 @@ namespace Unicorn.Configuration
 		/// <summary>
 		/// Returns a human readable string describing the dependency 
 		/// </summary>
-		/// <returns></returns>
 		string GetLogMessage();
 	}
 }
