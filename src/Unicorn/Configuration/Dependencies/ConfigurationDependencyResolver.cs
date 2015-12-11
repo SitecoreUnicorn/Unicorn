@@ -92,6 +92,9 @@ namespace Unicorn.Configuration.Dependencies
 			{
 				var parentPath = GetParentPath(rootPath.Path);
 
+				// if the include was of /sitecore parent has no meaning, ignore it
+				if (string.IsNullOrEmpty(parentPath)) continue;
+
 				// If the parent is found in the source data store, then we do not need to check for implicit dependencies
 				// (e.g. this config's load will not fail due to a missing parent item)
 				var item = sourceDataStore.GetByPath(parentPath, rootPath.DatabaseName).FirstOrDefault();
