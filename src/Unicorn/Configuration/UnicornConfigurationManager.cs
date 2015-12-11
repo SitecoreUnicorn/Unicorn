@@ -1,7 +1,4 @@
-﻿using System.Configuration;
-using System.Linq;
-using Sitecore.Configuration;
-using Unicorn.Configuration.Dependencies;
+﻿using Sitecore.Configuration;
 using Unicorn.ControlPanel.Security;
 
 namespace Unicorn.Configuration

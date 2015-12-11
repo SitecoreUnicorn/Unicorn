@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Configuration;
 using System.Linq;
 using System.Xml;
 using Rainbow.Storage;
@@ -27,8 +26,7 @@ namespace Unicorn.Configuration
 		{
 			get
 			{
-				if (_configurations == null)
-					LoadConfigurations();
+				if (_configurations == null) LoadConfigurations();
 				return _configurations;
 			}
 		}

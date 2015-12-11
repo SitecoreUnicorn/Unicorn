@@ -36,10 +36,9 @@ namespace Unicorn.ControlPanel.Controls
 
 		public void Render(HtmlTextWriter writer)
 		{
-			var collapse = !string.IsNullOrWhiteSpace(ModalId);
+			bool collapse = !string.IsNullOrWhiteSpace(ModalId);
 
-			if (collapse)
-				writer.Write(@"
+			if (collapse) writer.Write(@"
 				<div id=""{0}"" class=""overlay"">", ModalId);
 
 			writer.Write(@"
@@ -146,8 +145,8 @@ namespace Unicorn.ControlPanel.Controls
 					<h4>{0}</h4>", DocumentationUtility.GetFriendlyName(type));
 
 			var description = DocumentationUtility.GetDescription(type);
-			if (!string.IsNullOrWhiteSpace(description))
-				writer.Write(@"
+
+			if (!string.IsNullOrWhiteSpace(description)) writer.Write(@"
 					<p>{0}</p>", description);
 
 			var configuration = DocumentationUtility.GetConfigurationDetails(type);
