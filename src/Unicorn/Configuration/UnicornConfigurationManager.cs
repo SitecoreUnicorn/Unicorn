@@ -1,4 +1,6 @@
-﻿using Sitecore.Configuration;
+﻿using System.Configuration;
+using System.Linq;
+using Sitecore.Configuration;
 using Unicorn.ControlPanel.Security;
 
 namespace Unicorn.Configuration
@@ -17,8 +19,13 @@ namespace Unicorn.Configuration
 			AuthenticationProviderInstance = (IUnicornAuthenticationProvider)Factory.CreateObject("/sitecore/unicorn/authenticationProvider", false);
 		}
 
-		public static IConfiguration[] Configurations { get { return Instance.Configurations; } }
+		public static IConfiguration[] Configurations => Instance.Configurations;
 
+		public static IConfiguration[] GetConfigurationsOrdererdByDependents()
+		{
+			return Configurations.OrderByDescending(configuration => configuration.Resolve<ConfigurationDependencyResolver>().Dependents.Length).ThenBy(configuration => configuration.Name).ToArray();
+		}
+	
 		public static IUnicornAuthenticationProvider AuthenticationProvider { get { return AuthenticationProviderInstance; } }
 	}
 }

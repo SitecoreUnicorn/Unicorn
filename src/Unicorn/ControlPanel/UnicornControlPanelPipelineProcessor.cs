@@ -29,11 +29,16 @@ namespace Unicorn.ControlPanel
 			_activationUrl = activationUrl;
 		}
 
-		private IConfiguration[] _configurations = UnicornConfigurationManager.Configurations;
-		protected IConfiguration[] Configurations
+		protected bool IsOrderedByDependents(HttpContext context)
 		{
-			get { return _configurations; }
-			set { _configurations = value; }
+			return context.Request.QueryString["order"] != "Config";
+		}
+
+		protected IConfiguration[] GetConfigurations(HttpContext context)
+		{
+			if (IsOrderedByDependents(context))
+				return UnicornConfigurationManager.GetConfigurationsOrdererdByDependents();
+			return UnicornConfigurationManager.Configurations;
 		}
 
 		public override void Process(HttpRequestArgs args)

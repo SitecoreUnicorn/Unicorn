@@ -9,7 +9,7 @@ namespace Unicorn.Tests.Configuration
 		[Fact]
 		public void ResolvesType()
 		{
-			var micro = new MicroConfiguration("Test", null);
+			var micro = new MicroConfiguration("Test", null, null);
 
 			micro.Register(typeof(ITest), () => new Test(), true);
 
@@ -21,7 +21,7 @@ namespace Unicorn.Tests.Configuration
 		[Fact]
 		public void Throws_WhenConstructingUnregisteredType()
 		{
-			var micro = new MicroConfiguration("Test", null);
+			var micro = new MicroConfiguration("Test", null, null);
 
 			Assert.Throws<MicroResolutionException>(() => micro.Resolve<ITest>());
 		}
@@ -29,7 +29,7 @@ namespace Unicorn.Tests.Configuration
 		[Fact]
 		public void ResolvesType_AsInstance()
 		{
-			var micro = new MicroConfiguration("Test", null);
+			var micro = new MicroConfiguration("Test", null, null);
 
 			micro.Register(typeof(IInstance), () => new TestInstance(), false);
 			
@@ -45,7 +45,7 @@ namespace Unicorn.Tests.Configuration
 		[Fact]
 		public void ResolvesType_AsSingleton()
 		{
-			var micro = new MicroConfiguration("Test", null);
+			var micro = new MicroConfiguration("Test", null, null);
 
 			micro.Register(typeof(IInstance), () => new TestInstance(), true);
 			
