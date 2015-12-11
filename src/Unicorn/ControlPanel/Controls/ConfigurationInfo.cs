@@ -24,7 +24,7 @@ namespace Unicorn.ControlPanel.Controls
 		{
 			var configurationHasAnySerializedItems = ControlPanelUtility.HasAnySerializedItems(_configuration);
 			var configurationHasValidRootPaths = ControlPanelUtility.AllRootPathsExists(_configuration);
-			var dependents = _configuration.Resolve<ConfigurationDependencyResolver>().Dependents;
+			var dependents = _configuration.Resolve<ConfigurationDependencyResolver>().Dependencies;
 
 			var modalId = "m" + Guid.NewGuid();
 
@@ -39,16 +39,16 @@ namespace Unicorn.ControlPanel.Controls
 				writer.Write(@"
 					<p>{0}</p>", _configuration.Description);
 
+			if (dependents.Any())
+			{
+				writer.Write(@"
+					<p class=""help"">This configuration depends on {0}, which should sync before it.</p>", string.Join(", ", dependents.Select(dep => dep.Configuration.Name)));
+			}
+
 			if (configurationHasAnySerializedItems)
 			{
 				writer.Write(@"
 					<p><a href=""#"" data-modal=""{0}"" class=""info"">Detailed configuration information</a></p>", modalId);
-			}
-
-			if (dependents.Any())
-			{
-				writer.Write(@"
-					<p class=""help"">This configuration depends on {0}, which should sync before it.</p>", string.Join(", ", dependents.Select(dep => dep.Name)));
 			}
 
 			if (!configurationHasValidRootPaths)
