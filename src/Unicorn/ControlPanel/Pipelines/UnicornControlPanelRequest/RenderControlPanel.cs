@@ -83,6 +83,8 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 
 		protected virtual IConfiguration[] GetConfigurations(UnicornControlPanelRequestPipelineArgs args)
 		{
+			// TODO: this logic is half-assed and does not account for an actual dependency tree, only the count of dependents
+			// TODO: while this may work most of the time it is not correct for what it is meant to do.
 			return UnicornConfigurationManager.Configurations
 				.OrderByDescending(configuration => configuration.Resolve<ConfigurationDependencyResolver>().Dependents.Length)
 				.ThenBy(configuration => configuration.Name)
