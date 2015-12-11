@@ -80,7 +80,7 @@ namespace Unicorn.Configuration
 			var description = GetAttributeValue(configuration, "description");
 
 			var attributeValue = GetAttributeValue(configuration, "dependencies");
-			var dependencies = !string.IsNullOrEmpty(attributeValue) ? attributeValue.Split("|;, ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries) : null;
+			var dependencies = !string.IsNullOrEmpty(attributeValue) ? attributeValue.Split(",".ToCharArray(), StringSplitOptions.RemoveEmptyEntries) : null;
 
 			var registry = new MicroConfiguration(name, description, dependencies);
 
