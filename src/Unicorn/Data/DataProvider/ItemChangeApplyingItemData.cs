@@ -33,7 +33,7 @@ namespace Unicorn.Data.DataProvider
 			{
 				if (!_changes.HasFieldsChanged) return base.SharedFields;
 
-				return new FieldChangeParser().ParseFieldChanges(_changes.FieldChanges.Cast<FieldChange>().Where(change => change.Definition.IsShared), base.SharedFields);
+				return new FieldChangeParser().ParseFieldChanges(_changes.FieldChanges.Cast<FieldChange>().Where(FieldChangeHelper.IsShared), base.SharedFields);
 			}
 		}
 
@@ -72,17 +72,30 @@ namespace Unicorn.Data.DataProvider
 				_changes = changes;
 			}
 
-			public IEnumerable<IItemFieldValue> Fields
-			{
-				get
-				{
-					return new FieldChangeParser().ParseFieldChanges(_changes.FieldChanges.Cast<FieldChange>().Where(change => change.Definition.IsVersioned), _innerVersion.Fields);
-				}
-			}
+			public IEnumerable<IItemFieldValue> Fields => new FieldChangeParser().ParseFieldChanges(_changes.FieldChanges.Cast<FieldChange>().Where(FieldChangeHelper.IsVersioned), _innerVersion.Fields);
 
 			public CultureInfo Language => _innerVersion.Language;
 
 			public int VersionNumber => _innerVersion.VersionNumber;
+		}
+
+		private static class FieldChangeHelper
+		{
+			public static bool IsShared(FieldChange change)
+			{
+				var def = change.Definition;
+				if (def == null) return false;
+
+				return def.IsShared;
+			}
+
+			public static bool IsVersioned(FieldChange change)
+			{
+				var def = change.Definition;
+				if (def == null) return false;
+
+				return def.IsVersioned;
+			}
 		}
 	}
 }
