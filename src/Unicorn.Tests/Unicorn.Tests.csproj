@@ -125,6 +125,7 @@
     <Compile Include="Configuration\MicroConfigurationTests.cs" />
     <None Include="app.config" />
     <None Include="App_Config\FieldTypes.config" />
+    <Compile Include="Data\DataProvider\ItemChangeApplyingItemDataTests.cs" />
     <Compile Include="Data\DataProvider\UnicornDataProviderTests.AddVersion.cs" />
     <Compile Include="Data\DataProvider\UnicornDataProviderTests.SaveItem.cs" />
     <Compile Include="Evaluator\SerializedAsMasterEvaluatorTests.cs" />

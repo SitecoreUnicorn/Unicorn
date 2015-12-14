@@ -89,7 +89,8 @@
     <Compile Include="ControlPanel\Pipelines\UnicornControlPanelRequest\UnicornControlPanelRequestPipelineArgs.cs" />
     <Compile Include="ControlPanel\WebConsoleUtility.cs" />
     <Compile Include="Data\DataProvider\DefaultUnicornDataProviderConfiguration.cs" />
-    <Compile Include="Data\DataProvider\ItemChangesFilteredItemData.cs" />
+    <Compile Include="Data\DataProvider\FieldChangeParser.cs" />
+    <Compile Include="Data\DataProvider\ItemChangeApplyingItemData.cs" />
     <Compile Include="Data\DataProvider\IUnicornDataProviderConfiguration.cs" />
     <Compile Include="DeserializationSoftFailureAggregateException.cs" />
     <Compile Include="Deserialization\UnicornDeserializer.cs" />

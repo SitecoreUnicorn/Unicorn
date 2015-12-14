@@ -136,9 +136,10 @@ namespace Unicorn.Data.DataProvider
 			Assert.ArgumentNotNull(itemDefinition, "itemDefinition");
 			Assert.ArgumentNotNull(changes, "changes");
 
-			// get the item we're saving from the item changes
-			// this lets us detect standard values resets, among other things
-			var sourceItem = new ItemChangesFilteredItemData(changes);
+			// get the item we're saving to evaluate with the predicate
+			// NOTE: the item in this state may be incomplete as Sitecore can sometimes send partial item data and rely on changes to do the save
+			// e.g. during package installations. So we have to merge the changes with any existing item data if we save it later, to keep it consistent.
+			IItemData sourceItem = new ItemData(changes.Item);
 
 			if (!_predicate.Includes(sourceItem).IsIncluded) return;
 
@@ -161,6 +162,12 @@ namespace Unicorn.Data.DataProvider
 			else if (HasConsequentialChanges(changes))
 			// it's a simple update - but we reject it if only inconsequential fields (last updated, revision) were changed - again, template builder FTW
 			{
+				var existingSerializedItem = _targetDataStore.GetByPathAndId(sourceItem.Path, sourceItem.Id, sourceItem.DatabaseName);
+
+				// generated an IItemData from the item changes we received, and apply those changes to the existing serialized item if any
+				if (existingSerializedItem != null) sourceItem = new ItemChangeApplyingItemData(existingSerializedItem, changes);
+				else sourceItem = new ItemChangeApplyingItemData(changes);
+
 				_targetDataStore.Save(sourceItem);
 
 				AddBlobsToCache(sourceItem);
@@ -220,9 +227,6 @@ namespace Unicorn.Data.DataProvider
 
 			Assert.IsNotNull(existingItem, "Copy destination was not in the database!");
 
-			// rebase the item's path to the new destination item, then proxy it so we can mutate in the copy ID and copy name
-			var repathedCopyItem = new PathRebasingProxyItem(existingItem, destinationItem.Path, destinationItem.Id);
-
 			// wrap the existing item in a proxy so we can mutate it into a copy
 			var copyTargetItem = new ProxyItem(existingItem);
 
@@ -231,7 +235,6 @@ namespace Unicorn.Data.DataProvider
 			copyTargetItem.Id = copyId.Guid;
 
 			if (!_predicate.Includes(copyTargetItem).IsIncluded) return; // destination parent is not in a path that we are serializing, so skip out
-
 
 			_targetDataStore.Save(copyTargetItem);
 			_logger.CopiedItem(_targetDataStore.FriendlyName, existingItem, copyTargetItem);
@@ -533,7 +536,9 @@ namespace Unicorn.Data.DataProvider
 
 			foreach (FieldChange change in changes.FieldChanges)
 			{
-				if (change.OriginalValue == change.Value) continue;
+				// NOTE: we do not check for old and new value equality here
+				// because during package installation Sitecore will set item fields using
+				// identical old and new values in the changes - for fields that have never been set before.
 				if (change.FieldID == FieldIDs.Revision) continue;
 				if (change.FieldID == FieldIDs.Updated) continue;
 				if (change.FieldID == FieldIDs.UpdatedBy) continue;
