@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using Rainbow.Storage;
 using Unicorn.Configuration;
+using Unicorn.Configuration.Dependencies;
 using Unicorn.Data;
 using Unicorn.Predicates;
 
@@ -56,7 +57,9 @@ namespace Unicorn.ControlPanel
 				.Where(conf => conf != null)
 				.ToArray();
 
-			return targetConfigurations;
+			var resolver = new InterconfigurationDependencyResolver();
+
+			return resolver.OrderByDependencies(targetConfigurations);
 		}
 	}
 }

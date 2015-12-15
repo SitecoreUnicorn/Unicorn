@@ -57,6 +57,7 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configuration\Dependencies\InterconfigurationDependencyResolver.cs" />
     <Compile Include="Configuration\Dependencies\ConfigurationDependencyResolver.cs" />
     <Compile Include="Configuration\Dependencies\ExplicitConfigurationDependency.cs" />
     <Compile Include="Configuration\Dependencies\IConfigurationDependency.cs" />
