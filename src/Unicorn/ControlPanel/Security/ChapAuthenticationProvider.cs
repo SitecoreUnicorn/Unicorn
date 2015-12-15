@@ -67,7 +67,7 @@ namespace Unicorn.ControlPanel.Security
 				return new SecurityState(true, false);
 			}
 
-			var authToken = request.Headers["Authorization"];
+			var authToken = request.Headers["X-MC-MAC"];
 
 			if (!string.IsNullOrWhiteSpace(authToken))
 			{
@@ -98,10 +98,10 @@ namespace Unicorn.ControlPanel.Security
 			var challenge = client.DownloadString(remoteUri.GetLeftPart(UriPartial.Path) + "?verb=Challenge");
 
 			// then we sign the request using our shared secret combined with the challenge and the URL, providing a unique verifiable hash for the request
-			client.Headers.Add("Authorization", _signatureService.CreateSignature(challenge, remoteUnicornUrl, Enumerable.Empty<SignatureFactor>()));
+			client.Headers.Add("X-MC-MAC", _signatureService.CreateSignature(challenge, remoteUnicornUrl, Enumerable.Empty<SignatureFactor>()));
 			
 			// the Unicorn server needs to know the challenge we are using. It makes sure that it issued the challenge before validating it.
-			client.Headers.Add("X-Nonce", challenge);
+			client.Headers.Add("X-MC-Nonce", challenge);
 
 			return client;
 		}

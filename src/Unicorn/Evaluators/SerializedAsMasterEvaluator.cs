@@ -133,14 +133,34 @@ namespace Unicorn.Evaluators
 			{
 				deferredUpdateLog.AddEntry(log => log.Renamed(sourceItem, targetItem));
 			}
+
 			if (comparison.IsTemplateChanged)
 			{
 				deferredUpdateLog.AddEntry(log => log.TemplateChanged(sourceItem, targetItem));
 			}
+
 			foreach (var sharedChange in comparison.ChangedSharedFields)
 			{
-				deferredUpdateLog.AddEntry(log => log.SharedFieldIsChanged(targetItem, (sharedChange.TargetField ?? sharedChange.SourceField).FieldId, ((sharedChange.TargetField != null) ? sharedChange.TargetField.Value : null), ((sharedChange.SourceField != null) ? sharedChange.SourceField.Value : null)));
+				deferredUpdateLog.AddEntry(log => log.SharedFieldIsChanged(
+					targetItem, 
+					(sharedChange.TargetField ?? sharedChange.SourceField).FieldId, 
+					sharedChange.TargetField?.Value, 
+					sharedChange.SourceField?.Value));
 			}
+
+			foreach (var unversionedChange in comparison.ChangedUnversionedFields)
+			{
+				foreach (var uvField in unversionedChange.ChangedFields)
+				{
+					deferredUpdateLog.AddEntry(log => log.UnversionedFieldIsChanged(
+						targetItem, 
+						unversionedChange.Language.Language, 
+						(uvField.TargetField ?? uvField.SourceField).FieldId, 
+						uvField.TargetField?.Value, 
+						uvField.SourceField?.Value));
+				}
+			}
+
 			foreach (var versionChange in comparison.ChangedVersions)
 			{
 				if (versionChange.SourceVersion == null) deferredUpdateLog.AddEntry(log => log.NewTargetVersion(versionChange.TargetVersion, targetItem, sourceItem));

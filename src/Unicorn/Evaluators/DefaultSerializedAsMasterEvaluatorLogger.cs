@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Web;
 using Rainbow.Model;
@@ -50,6 +51,26 @@ namespace Unicorn.Evaluators
 			else
 			{
 				_logger.Debug("> Field {0} - Value mismatch (values too long to display)".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId)));
+			}
+		}
+
+		public void UnversionedFieldIsChanged(IItemData targetItem, CultureInfo language, Guid fieldId, string targetValue, string sourceValue)
+		{
+			Assert.ArgumentNotNull(targetItem, "targetItem");
+
+			if (targetValue == null)
+			{
+				_logger.Debug("> Field {0} - {1} - Reset to standard value".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId), language.Name));
+			}
+			else if (targetValue.Length < MaxFieldLengthToDisplayValue && (sourceValue == null || sourceValue.Length < MaxFieldLengthToDisplayValue))
+			{
+				var encodedTarget = HttpUtility.HtmlEncode(targetValue);
+				var encodedSource = sourceValue == null ? string.Empty : HttpUtility.HtmlEncode(sourceValue);
+				_logger.Debug("> Field {0} - {1} - Serialized {2}, Source {3}".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId), language.Name, encodedTarget, encodedSource));
+			}
+			else
+			{
+				_logger.Debug("> Field {0} - {1} - Value mismatch (values too long to display)".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId), language.Name));
 			}
 		}
 
