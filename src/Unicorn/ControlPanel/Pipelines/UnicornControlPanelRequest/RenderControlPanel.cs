@@ -2,6 +2,7 @@
 using System.Linq;
 using Sitecore.StringExtensions;
 using Unicorn.Configuration;
+using Unicorn.Configuration.Dependencies;
 using Unicorn.ControlPanel.Controls;
 using Unicorn.ControlPanel.Responses;
 
@@ -20,17 +21,19 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 
 		protected virtual IEnumerable<IControlPanelControl> CreateBodyControls(UnicornControlPanelRequestPipelineArgs args)
 		{
-			var configurations = UnicornConfigurationManager.Configurations;
+			var configurations = GetConfigurations(args);
 
 			var hasSerializedItems = configurations.All(ControlPanelUtility.HasAnySerializedItems);
-			var hasValidSerializedItems = configurations.All(ControlPanelUtility.HasAnySourceItems);
-			var allowMultiSelect = hasSerializedItems && hasValidSerializedItems && configurations.Length > 1;
+			var hasAllRootPaths = configurations.All(ControlPanelUtility.AllRootPathsExists);
+			var allowMultiSelect = hasSerializedItems && hasAllRootPaths && configurations.Length > 1;
+			// note that we don't just check dependencies property here to catch implicit dependencies
+			var anyConfigurationsWithDependencies = configurations.Any(config => config.Resolve<ConfigurationDependencyResolver>().Dependents.Any());
 
 			var isAuthorized = args.SecurityState.IsAllowed;
 
 			if (!hasSerializedItems)
 			{
-				yield return new GlobalWarnings(hasValidSerializedItems);
+				yield return new GlobalWarnings(hasAllRootPaths, anyConfigurationsWithDependencies);
 			}
 
 			if (isAuthorized)
@@ -41,7 +44,7 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 					yield break;
 				}
 
-				if (configurations.Length > 1 && hasSerializedItems && hasValidSerializedItems)
+				if (configurations.Length > 1 && hasSerializedItems && hasAllRootPaths)
 				{
 					yield return new BatchProcessingControls();
 				}
@@ -76,6 +79,11 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 			{
 				yield return new AccessDenied();
 			}
+		}
+
+		protected virtual IConfiguration[] GetConfigurations(UnicornControlPanelRequestPipelineArgs args)
+		{
+			return new InterconfigurationDependencyResolver().OrderByDependencies(UnicornConfigurationManager.Configurations);
 		}
 	}
 }

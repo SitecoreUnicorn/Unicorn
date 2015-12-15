@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Rainbow.Model;
+using Rainbow.Storage;
 using Sitecore.StringExtensions;
 using Unicorn.Data;
 using Unicorn.Logging;
@@ -26,15 +27,22 @@ namespace Unicorn.Predicates
 		{
 			var items = new List<IItemData>();
 
-			foreach (var include in _predicate.GetRootPaths())
+			foreach (var include in GetRootPaths())
 			{
 				var item = _sourceDataStore.GetByPath(include.Path, include.DatabaseName).FirstOrDefault();
 
-				if (item != null) items.Add(item);
-				else _logger.Error("Unable to resolve root source item for predicate root path {0}:{1}. It has been skipped.".FormatWith(include.DatabaseName, include.Path));
+				if (item != null)
+					items.Add(item);
+				else
+					_logger.Error("Unable to resolve root source item for predicate root path {0}:{1}. It has been skipped.".FormatWith(include.DatabaseName, include.Path));
 			}
 
 			return items.ToArray();
+		}
+
+		public TreeRoot[] GetRootPaths()
+		{
+			return _predicate.GetRootPaths();
 		}
 
 		public IItemData[] GetRootSerializedItems()

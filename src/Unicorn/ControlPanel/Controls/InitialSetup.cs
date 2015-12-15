@@ -20,7 +20,7 @@ namespace Unicorn.ControlPanel.Controls
 		{
 			writer.Write("<h4>Initial Setup</h4>");
 
-			if (ControlPanelUtility.HasAnySourceItems(_configuration))
+			if (ControlPanelUtility.AllRootPathsExists(_configuration))
 			{
 				writer.Write("<p>Would you like to perform an initial serialization of all configured items using the options outlined above now? This is required to start using this configuration.</p>");
 

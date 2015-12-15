@@ -1,5 +1,4 @@
-﻿
-namespace Unicorn.Configuration
+﻿namespace Unicorn.Configuration
 {
 	internal static class ConfigurationUtility
 	{

@@ -1,5 +1,8 @@
 ﻿using System.Linq;
+using Rainbow.Storage;
 using Unicorn.Configuration;
+using Unicorn.Configuration.Dependencies;
+using Unicorn.Data;
 using Unicorn.Predicates;
 
 namespace Unicorn.ControlPanel
@@ -17,9 +20,27 @@ namespace Unicorn.ControlPanel
 		/// <summary>
 		/// Checks if any of the current predicate's root paths exist in the source provider
 		/// </summary>
-		public static bool HasAnySourceItems(IConfiguration configuration)
+		public static bool AllRootPathsExists(IConfiguration configuration)
 		{
-			return configuration.Resolve<PredicateRootPathResolver>().GetRootSourceItems().Length > 0;
+			var predicate = configuration.Resolve<PredicateRootPathResolver>();
+			var sourceDataStore = configuration.Resolve<ISourceDataStore>();
+
+			return predicate.GetRootPaths().All(include => RootPathsExists(sourceDataStore, include));
+		}
+
+		private static bool RootPathsExists(IDataStore dataStore, TreeRoot include)
+		{
+			if (dataStore.GetByPath(include.Path, include.DatabaseName).FirstOrDefault() != null)
+				return true;
+
+			return ParentPathExists(dataStore, include);
+		}
+
+		private static bool ParentPathExists(IDataStore dataStore, TreeRoot include)
+		{
+			var path = include.Path.TrimEnd('/');
+			var parentPath = path.Substring(0, path.LastIndexOf('/'));
+			return dataStore.GetByPath(parentPath, include.DatabaseName).FirstOrDefault() != null;
 		}
 
 		public static IConfiguration[] ResolveConfigurationsFromQueryParameter(string queryParameter)
@@ -36,7 +57,9 @@ namespace Unicorn.ControlPanel
 				.Where(conf => conf != null)
 				.ToArray();
 
-			return targetConfigurations;
+			var resolver = new InterconfigurationDependencyResolver();
+
+			return resolver.OrderByDependencies(targetConfigurations);
 		}
 	}
 }

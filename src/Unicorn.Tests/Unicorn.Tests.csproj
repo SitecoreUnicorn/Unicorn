@@ -122,6 +122,9 @@
   <ItemGroup>
     <Compile Include="AutoDbData.cs" />
     <Compile Include="Configuration\ConfigurationUtilityTests.cs" />
+    <Compile Include="Configuration\Dependencies\ConfigurationDependencyResolverTests.cs" />
+    <Compile Include="Configuration\Dependencies\DepTestHelper.cs" />
+    <Compile Include="Configuration\Dependencies\InterconfigurationDependencyResolverTests.cs" />
     <Compile Include="Configuration\MicroConfigurationTests.cs" />
     <None Include="app.config" />
     <None Include="App_Config\FieldTypes.config" />
