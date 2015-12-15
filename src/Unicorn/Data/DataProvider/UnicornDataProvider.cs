@@ -394,8 +394,8 @@ namespace Unicorn.Data.DataProvider
 
 			foreach (var sharedField in item.SharedFields)
 			{
-				if(sharedField.BlobId.HasValue || sharedField.Value != null)
-					fields.Add(new ID(sharedField.FieldId), sharedField.BlobId.HasValue ? sharedField.BlobId.ToString() : sharedField.Value);
+				if (sharedField.BlobId.HasValue || sharedField.Value != null)
+					fields.Add(new ID(sharedField.FieldId), sharedField.BlobId?.ToString() ?? sharedField.Value);
 			}
 
 			var version = item.Versions.FirstOrDefault(v => v.VersionNumber == versionUri.Version.Number && v.Language.Name == versionUri.Language.Name);
@@ -405,7 +405,16 @@ namespace Unicorn.Data.DataProvider
 			foreach (var versionedField in version.Fields)
 			{
 				if (versionedField.BlobId.HasValue || versionedField.Value != null)
-					fields.Add(new ID(versionedField.FieldId), versionedField.BlobId.HasValue ? versionedField.BlobId.ToString() : versionedField.Value);
+					fields.Add(new ID(versionedField.FieldId), versionedField.BlobId?.ToString() ?? versionedField.Value);
+			}
+
+			var unversionedFields = item.UnversionedFields.FirstOrDefault(language => language.Language.Name == versionUri.Language.Name);
+			if (unversionedFields != null)
+			{
+				foreach (var unversionedField in unversionedFields.Fields)
+				{
+					fields.Add(new ID(unversionedField.FieldId), unversionedField.BlobId?.ToString() ?? unversionedField.Value);
+				}
 			}
 
 			fields.Add(FieldIDs.UpdatedBy, TransparentSyncUpdatedByValue);
