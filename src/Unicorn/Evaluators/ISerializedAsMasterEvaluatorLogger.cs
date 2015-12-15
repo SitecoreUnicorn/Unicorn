@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using Rainbow.Model;
 
 namespace Unicorn.Evaluators
@@ -25,6 +26,12 @@ namespace Unicorn.Evaluators
 		/// </summary>
 		/// <remarks>Note that the sourceValue may be null</remarks>
 		void SharedFieldIsChanged(IItemData targetItem, Guid fieldId, string targetValue, string sourceValue);
+
+		/// <summary>
+		/// Fired when an unversioned field value is different between serialized and source
+		/// </summary>
+		/// <remarks>Note that the sourceValue may be null</remarks>
+		void UnversionedFieldIsChanged(IItemData targetItem, CultureInfo language, Guid fieldId, string targetValue, string sourceValue);
 
 		/// <summary>
 		/// Fired when a version's field value is different between serialized and source

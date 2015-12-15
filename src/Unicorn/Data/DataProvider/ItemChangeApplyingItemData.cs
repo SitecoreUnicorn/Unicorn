@@ -37,6 +37,31 @@ namespace Unicorn.Data.DataProvider
 			}
 		}
 
+		public override IEnumerable<IItemLanguage> UnversionedFields
+		{
+			get
+			{
+				// get base languages
+				var baseLanguages = base.UnversionedFields.ToDictionary(language => language.Language.Name);
+
+				// merge with any languages found in the item changes
+				foreach (FieldChange field in _changes.FieldChanges)
+				{
+					// if the base languages does not contain the specified language from the changes, we have to infer its addition
+					if (!baseLanguages.ContainsKey(field.Language.Name) && field.Definition.IsUnversioned)
+					{
+						baseLanguages.Add(field.Language.Name, new ProxyItemLanguage(field.Language.CultureInfo));
+					}
+				}
+
+				// merge fields between matching languages
+				return baseLanguages.Values.Select(language => new ProxyItemLanguage(language)
+				{
+					Fields = new FieldChangeParser().ParseFieldChanges(_changes.FieldChanges.Cast<FieldChange>().Where(FieldChangeHelper.IsUnversioned), language.Fields)
+				});
+			}
+		}
+
 		public override IEnumerable<IItemVersion> Versions
 		{
 			get
@@ -57,16 +82,16 @@ namespace Unicorn.Data.DataProvider
 					}
 				}
 
-				return baseVersions.Values.Select(version => new ItemChangApplyingItemVersion(version, _changes));
+				return baseVersions.Values.Select(version => new ItemChangeApplyingItemVersion(version, _changes));
 			}
 		}
 
-		protected class ItemChangApplyingItemVersion : IItemVersion
+		protected class ItemChangeApplyingItemVersion : IItemVersion
 		{
 			private readonly IItemVersion _innerVersion;
 			private readonly ItemChanges _changes;
 
-			public ItemChangApplyingItemVersion(IItemVersion innerVersion, ItemChanges changes)
+			public ItemChangeApplyingItemVersion(IItemVersion innerVersion, ItemChanges changes)
 			{
 				_innerVersion = innerVersion;
 				_changes = changes;
@@ -95,6 +120,14 @@ namespace Unicorn.Data.DataProvider
 				if (def == null) return false;
 
 				return def.IsVersioned;
+			}
+
+			public static bool IsUnversioned(FieldChange change)
+			{
+				var def = change.Definition;
+				if (def == null) return false;
+
+				return def.IsUnversioned;
 			}
 		}
 	}
