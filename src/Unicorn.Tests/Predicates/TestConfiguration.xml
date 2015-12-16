@@ -1,11 +1,53 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 
-<preset name="test">
-	<include database="master" path="/sitecore/layout/Simulators">
+<predicate>
+	<!-- 
+		BASIC: Basic include/exclude test 
+	-->
+	<include name="Basic" database="master" path="/sitecore/layout/Simulators">
 		<exclude path="/sitecore/layout/Simulators/Android Phone" />
+		<exclude path="iPhone" /> <!-- relative path exclusion based on parent include path -->
+		<exclude path="iPhone Apps/1.0" /> <!-- exclude where name starts with a different include -->
 	</include>
-	<include database="core" path="/sitecore/content" />
-	<include database="master" path="/test">
-		<exclude path="/test/" />
+
+	<!-- 
+		EXPLICIT NO-CHILDREN: Include parent, but exclude children test
+	-->
+	<include name="No children" database="master" path="/nochildren">
+		<exclude children="true" /> <!-- include /nochildren, exclude all of /nochildren's children -->
 	</include>
-</preset>
+	
+	<!-- 
+		IMPLICIT NO-CHILDREN: Include parent, but exclude children test
+		NOTE: this works and has a test but favor EXPLICIT exclusion of children instead
+	-->
+	<include name="Implicit no children" database="master" path="/implicit-nochildren">
+		<exclude path="/implicit-nochildren/" /> <!-- implicit exclusion of a child path. NOTE: does not work for paths under the root (e.g. /implicit-nochildren/foo/) -->
+	</include>
+
+	<!-- 
+		SOME-CHILDREN: Include parent, exclude all children EXCEPT for specific ones
+	-->
+	<include name="Some children" database="master" path="/somechildren">
+		<exclude children="true">
+			<except name="tests" />
+			<except name="fests" />
+		</exclude>
+	</include>
+
+	<!-- 
+		CHILDREN-OF-CHILDREN: Exclusion that includes its specified path but excludes all children of the exclude
+	-->
+	<include name="Children of children" database="master" path="/CoC">
+		<exclude childrenOfPath="/CoC/stuff" />
+		<exclude childrenOfPath="morestuff" /> <!-- relative path to parent include -->
+		<exclude childrenOfPath="yetmorestuff">
+			<except name="monkey" />
+		</exclude>
+	</include>
+
+	<!-- 
+		DB TEST: Checks that the database specified in the include is respected
+	-->
+	<include name="DB test" database="core" path="/sitecore/coredb" />
+</predicate>

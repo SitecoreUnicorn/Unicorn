@@ -2,6 +2,7 @@
 using System.IO;
 using System.Reflection;
 using System.Xml;
+using FluentAssertions;
 using NSubstitute;
 using Rainbow.Model;
 using Rainbow.Storage;
@@ -12,8 +13,6 @@ namespace Unicorn.Tests.Predicates
 {
 	public class SitecorePresetPredicateTests
 	{
-		private const string ExcludedPath = "/sitecore/layout/Simulators/Android Phone";
-		private const string IncludedPath = "/sitecore/layout/Simulators/iPad";
 		private const string ExcludedDatabase = "fake";
 		private const string IncludedDatabase = "master";
 
@@ -27,118 +26,84 @@ namespace Unicorn.Tests.Predicates
 		// PATH INCLUSION/EXCLUSION
 		//
 
-		[Fact]
-		public void Includes_ExcludesSerializedItemByPath()
+		[Theory]
+		// BASIC test config
+		[InlineData("/sitecore/layout/Simulators/iPad", true)]
+		[InlineData("/sitecore/layout/Simulators/Android Phone", false)]
+		[InlineData("/sitecore/layout/Simulators/iPhone", false)]
+		[InlineData("/sitecore/layout/Simulators/iPhone Apps", true)] // path starts with excluded iPhone path but is not equal
+		[InlineData("/sitecore/layout/Simulators/iPhone Apps/1.0", false)]
+		// EXPLICIT NO-CHILDREN test config
+		[InlineData("/nochildren", true)]
+		[InlineData("/nochildren/ignoredchild", false)]
+		[InlineData("/nochildren/ignored/stillignored", false)]
+		// IMPLICIT NO-CHILDREN test config
+		[InlineData("/implicit-nochildren", true)]
+		[InlineData("/implicit-nochildren/ignoredchild", false)]
+		[InlineData("/implicit-nochildren/ignored/stillignored", false)]
+		[InlineData("/implicit-nochildrenwithextrachars", true)]
+		// SOME-CHILDREN test config
+		[InlineData("/somechildren", true)]
+		[InlineData("/somechildren/ignoredchild", false)]
+		[InlineData("/somechildren/tests", true)]
+		[InlineData("/somechildren/tests/testschild", true)]
+		[InlineData("/somechildren/testswithextrachars", false)]
+		[InlineData("/somechildren/fests", true)]
+		// CHILDREN-OF-CHILDREN test config
+		[InlineData("/CoC", true)]
+		[InlineData("/CoC/stuff", true)]
+		[InlineData("/CoC/stuff/child", false)]
+		[InlineData("/CoC/stuffwithextrachars", true)]
+		[InlineData("/CoC/morestuff", true)]
+		[InlineData("/CoC/morestuff/child/exclusion", false)]
+		[InlineData("/CoC/yetmorestuff", true)]
+		[InlineData("/CoC/yetmorestuff/gorilla", false)]
+		[InlineData("/CoC/yetmorestuff/monkey", true)]
+		public void Includes_MatchesExpectedPathResult(string testPath, bool expectedResult)
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
 
-			var item = CreateTestItem(ExcludedPath);
-			var includes = predicate.Includes(item);
+			var item = CreateTestItem(testPath);
 
-			Assert.False(includes.IsIncluded, "Exclude serialized item by path failed.");
-		}
+			// all test cases should handle mismatching path casing so we use uppercase paths too as a check on that
+			var mismatchedCasePathItem = CreateTestItem(testPath.ToUpperInvariant());
 
-		[Fact]
-		public void Includes_ExcludesSerializedItemByPath_WhenCaseDoesNotMatch()
-		{
-			var predicate = CreateTestPredicate(CreateTestConfiguration());
-
-			var item = CreateTestItem(ExcludedPath.ToUpperInvariant());
-			var includes = predicate.Includes(item);
-
-			Assert.False(includes.IsIncluded, "Exclude serialized item by path failed.");
-		}
-
-		[Fact]
-		public void Includes_IncludesSerializedItemByPath_WhenChildrenOfRootAreExcluded_AndPathIsRootItem()
-		{
-			var predicate = CreateTestPredicate(CreateTestConfiguration());
-
-			var item = CreateTestItem("/test");
-			var includes = predicate.Includes(item);
-
-			Assert.True(includes.IsIncluded, "Included parent serialized item when all children excluded failed.");
-		}
-
-		[Fact]
-		public void Includes_ExcludesSerializedItemByPath_WhenChildrenOfRootAreExcluded()
-		{
-			var predicate = CreateTestPredicate(CreateTestConfiguration());
-
-			var item = CreateTestItem("/test/child");
-			var includes = predicate.Includes(item);
-
-			Assert.False(includes.IsIncluded, "Exclude serialized item by all children failed.");
-		}
-
-		[Fact]
-		public void Includes_IncludesSerializedItemByPath()
-		{
-			var predicate = CreateTestPredicate(CreateTestConfiguration());
-
-			var item = CreateTestItem(IncludedPath);
-			var includes = predicate.Includes(item);
-
-			Assert.True(includes.IsIncluded, "Include serialized item by path failed.");
-		}
-
-		[Fact]
-		public void Includes_IncludesSerializedItemByPath_WhenCaseDoesNotMatch()
-		{
-			var predicate = CreateTestPredicate(CreateTestConfiguration());
-
-			var item = CreateTestItem(IncludedPath.ToUpperInvariant());
-			var includes = predicate.Includes(item);
-
-			Assert.True(includes.IsIncluded, "Include serialized item by path failed.");
+			predicate.Includes(item).IsIncluded.Should().Be(expectedResult);
+			predicate.Includes(mismatchedCasePathItem).IsIncluded.Should().Be(expectedResult);
 		}
 
 		//
 		// DATABASE INCLUSION/EXCLUSION
 		//
 
-		[Fact]
-		public void Includes_ExcludesSerializedItemByDatabase()
+		[Theory]
+		// DB TEST test config
+		[InlineData("/sitecore/coredb", "core", true)]
+		[InlineData("/sitecore/coredb", "master", false)]
+		public void Includes_MatchesExpectedDatabaseResult(string testPath, string databaseName, bool expectedResult)
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
 
-			var item = CreateTestItem(IncludedPath, ExcludedDatabase);
-			var includes = predicate.Includes(item);
+			var item = CreateTestItem(testPath, databaseName);
+			var mismatchedDbCaseTestItem = CreateTestItem(testPath, databaseName.ToUpperInvariant());
 
-			Assert.False(includes.IsIncluded, "Exclude serialized item by database failed.");
+			predicate.Includes(item).IsIncluded.Should().Be(expectedResult);
+			predicate.Includes(mismatchedDbCaseTestItem).IsIncluded.Should().Be(expectedResult);
 		}
 
 		[Fact]
-		public void Includes_IncludesSerializedItemByDatabase()
-		{
-			var predicate = CreateTestPredicate(CreateTestConfiguration());
-
-			// ReSharper disable once RedundantArgumentDefaultValue
-			var item = CreateTestItem(IncludedPath, IncludedDatabase);
-			var includes = predicate.Includes(item);
-
-			Assert.True(includes.IsIncluded, "Include serialized item by database failed.");
-		}
-
-		[Fact]
+		// Deps: BASIC and DB TEST test configs
 		public void GetRootItems_ReturnsExpectedRootValues()
 		{
-			var sourceItem1 = CreateTestItem("/sitecore/layout/Simulators");
-			var sourceItem2 = CreateTestItem("/sitecore/content", "core");
-
-			var sourceDataProvider = Substitute.For<IDataStore>();
-			sourceDataProvider.GetByPath("master", "/sitecore/layout/Simulators").Returns(new[] { sourceItem1 });
-			sourceDataProvider.GetByPath("core", "/sitecore/content").Returns(new[] { sourceItem2 });
-
 			var predicate = new SerializationPresetPredicate(CreateTestConfiguration());
 
 			var roots = predicate.GetRootPaths();
 
-			Assert.True(roots.Length == 3, "Expected three root paths from test config");
-			Assert.Equal(roots[0].DatabaseName, "master");
-			Assert.Equal(roots[0].Path, "/sitecore/layout/Simulators");
-			Assert.Equal(roots[1].DatabaseName, "core");
-			Assert.Equal(roots[1].Path, "/sitecore/content");
+			roots.Length.Should().Be(6);
+			roots[0].DatabaseName.Should().Be("master");
+			roots[0].Path.Should().Be("/sitecore/layout/Simulators");
+			roots[5].DatabaseName.Should().Be("core");
+			roots[5].Path.Should().Be("/sitecore/coredb");
 		}
 
 		private SerializationPresetPredicate CreateTestPredicate(XmlNode configNode)

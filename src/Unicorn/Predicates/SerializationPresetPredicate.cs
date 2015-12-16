@@ -6,21 +6,21 @@ using System.Linq;
 using System.Xml;
 using Rainbow.Model;
 using Rainbow.Storage;
-using Sitecore.Data.Serialization.Presets;
 using Sitecore.Diagnostics;
 using Sitecore.StringExtensions;
+using Unicorn.Predicates.Exclusions;
 
 namespace Unicorn.Predicates
 {
 	public class SerializationPresetPredicate : IPredicate, ITreeRootFactory
 	{
-		private readonly IList<PresetTreeRoot> _preset;
+		private readonly IList<PresetTreeRoot> _includeEntries;
 
 		public SerializationPresetPredicate(XmlNode configNode)
 		{
 			Assert.ArgumentNotNull(configNode, "configNode");
 
-			_preset = ParsePreset(configNode);
+			_includeEntries = ParsePreset(configNode);
 		}
 
 		public PredicateResult Includes(IItemData itemData)
@@ -28,11 +28,13 @@ namespace Unicorn.Predicates
 			Assert.ArgumentNotNull(itemData, "itemData");
 
 			// no entries = include everything
-			if (_preset.FirstOrDefault() == null) return new PredicateResult(true);
+			if (_includeEntries.Count == 0) return new PredicateResult(true);
 
 			var result = new PredicateResult(true);
+
 			PredicateResult priorityResult = null;
-			foreach (var entry in _preset)
+
+			foreach (var entry in _includeEntries)
 			{
 				result = Includes(entry, itemData);
 
@@ -45,7 +47,7 @@ namespace Unicorn.Predicates
 
 		public TreeRoot[] GetRootPaths()
 		{
-			return _preset.ToArray<TreeRoot>();
+			return _includeEntries.ToArray<TreeRoot>();
 		}
 
 		/// <summary>
@@ -54,7 +56,7 @@ namespace Unicorn.Predicates
 		protected PredicateResult Includes(PresetTreeRoot entry, IItemData itemData)
 		{
 			// check for db match
-			if (itemData.DatabaseName != entry.DatabaseName) return new PredicateResult(false);
+			if (!itemData.DatabaseName.Equals(entry.DatabaseName, StringComparison.OrdinalIgnoreCase)) return new PredicateResult(false);
 
 			// check for path match
 			if (!itemData.Path.StartsWith(entry.Path, StringComparison.OrdinalIgnoreCase)) return new PredicateResult(false);
@@ -65,42 +67,27 @@ namespace Unicorn.Predicates
 
 		protected virtual PredicateResult ExcludeMatches(PresetTreeRoot entry, IItemData itemData)
 		{
-			PredicateResult result = ExcludeMatchesPath(entry.Exclude, itemData.Path);
+			foreach (var exclude in entry.Exclusions)
+			{
+				var result = exclude.Evaluate(itemData.Path);
 
-			if (!result.IsIncluded) return result;
-
-			return result;
-		}
-
-		/// <summary>
-		/// Checks if a given list of excludes matches a specific Serialization path
-		/// </summary>
-		protected virtual PredicateResult ExcludeMatchesPath(IEnumerable<ExcludeEntry> entries, string sitecorePath)
-		{
-			bool match = entries.Any(entry => entry.Type.Equals("path", StringComparison.Ordinal) && sitecorePath.StartsWith(entry.Value, StringComparison.OrdinalIgnoreCase));
-
-			return match
-						? new PredicateResult("Item path exclusion rule")
-						: new PredicateResult(true);
+				if (!result.IsIncluded) return result;
+			}
+			
+			return new PredicateResult(true);
 		}
 
 		[ExcludeFromCodeCoverage]
-		public string FriendlyName
-		{
-			get { return "Serialization Preset Predicate"; }
-		}
+		public string FriendlyName => "Serialization Preset Predicate";
 
 		[ExcludeFromCodeCoverage]
-		public string Description
-		{
-			get { return "Defines what to include in Unicorn based on Sitecore's built in serialization preset system (documented in the Serialization Guide). This is the default predicate."; }
-		}
+		public string Description => "Defines what to include in Unicorn based on .";
 
 		[ExcludeFromCodeCoverage]
 		public KeyValuePair<string, string>[] GetConfigurationDetails()
 		{
 			var configs = new Collection<KeyValuePair<string, string>>();
-			foreach (var entry in _preset)
+			foreach (var entry in _includeEntries)
 			{
 				string basePath = entry.DatabaseName + ":" + entry.Path;
 				string excludes = GetExcludeDescription(entry);
@@ -114,9 +101,10 @@ namespace Unicorn.Predicates
 		[ExcludeFromCodeCoverage]
 		private string GetExcludeDescription(PresetTreeRoot entry)
 		{
-			if (entry.Exclude.Count == 0) return string.Empty;
+			if (entry.Exclusions.Count == 0) return string.Empty;
 
-			return string.Format(" (except {0})", string.Join(", ", entry.Exclude.Select(x => x.Type + ":" + x.Value)));
+			// ReSharper disable once UseStringInterpolation
+			return string.Format(" (except {0})", string.Join(", ", entry.Exclusions.Select(exclude => exclude.Description)));
 		}
 
 		private IList<PresetTreeRoot> ParsePreset(XmlNode configuration)
@@ -142,35 +130,58 @@ namespace Unicorn.Predicates
 			return presets;
 		}
 
-		private static PresetTreeRoot CreateIncludeEntry(XmlNode configuration)
+		protected virtual PresetTreeRoot CreateIncludeEntry(XmlNode configuration)
 		{
-			var name = configuration.Attributes["name"];
 			string database = GetExpectedAttribute(configuration, "database");
 			string path = GetExpectedAttribute(configuration, "path");
-			var exclude = configuration.ChildNodes
-				.OfType<XmlElement>()
-				.Where(node => node.Name == "exclude")
-				.Select(CreateExcludeEntry)
-				.ToList();
 
+			// ReSharper disable once PossibleNullReferenceException
+			var name = configuration.Attributes["name"];
 			string nameValue = name == null ? path.Substring(path.LastIndexOf('/') + 1) : name.Value;
 
-			return new PresetTreeRoot(nameValue, path, database, exclude);
+			var root = new PresetTreeRoot(nameValue, path, database);
+
+			root.Exclusions = configuration.ChildNodes
+				.OfType<XmlElement>()
+				.Where(element => element.Name.Equals("exclude"))
+				.Select(excludeNode => CreateExcludeEntry(excludeNode, root))
+				.ToList();
+
+			return root;
 		}
 
-		private static ExcludeEntry CreateExcludeEntry(XmlNode configuration)
+		protected virtual IPresetTreeExclusion CreateExcludeEntry(XmlElement excludeNode, PresetTreeRoot root)
 		{
-			ExcludeEntry excludeEntry = new ExcludeEntry();
-			excludeEntry.Type = configuration.Attributes[0].Name;
-			excludeEntry.Value = configuration.Attributes[0].Value;
-			return excludeEntry;
+			if (excludeNode.HasAttribute("path"))
+			{
+				return new PathBasedPresetTreeExclusion(GetExpectedAttribute(excludeNode, "path"), root);
+			}
+
+			var exclusions = excludeNode.ChildNodes
+				.OfType<XmlElement>()
+				.Where(element => element.Name.Equals("except") && element.HasAttribute("name"))
+				.Select(element => GetExpectedAttribute(element, "name"))
+				.ToArray();
+
+			if (excludeNode.HasAttribute("children"))
+			{
+				return new ChildrenOfPathBasedPresetTreeExclusion(root.Path, exclusions, root);
+			}
+
+			if (excludeNode.HasAttribute("childrenOfPath"))
+			{
+				return new ChildrenOfPathBasedPresetTreeExclusion(GetExpectedAttribute(excludeNode, "childrenOfPath"), exclusions, root);
+			}
+
+			throw new InvalidOperationException($"Unable to parse invalid exclusion value: {excludeNode.InnerXml}");
 		}
 
 		private static string GetExpectedAttribute(XmlNode node, string attributeName)
 		{
+			// ReSharper disable once PossibleNullReferenceException
 			var attribute = node.Attributes[attributeName];
 
-			if(attribute == null) throw new InvalidOperationException("Missing expected '{0}' attribute on '{1}' node while processing predicate: {2}".FormatWith(attributeName, node.Name, node.OuterXml));
+			if (attribute == null) throw new InvalidOperationException("Missing expected '{0}' attribute on '{1}' node while processing predicate: {2}".FormatWith(attributeName, node.Name, node.OuterXml));
 
 			return attribute.Value;
 		}
