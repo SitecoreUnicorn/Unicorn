@@ -16,6 +16,7 @@ namespace Unicorn.ControlPanel.Security
 		private static ISignatureService _signatureService;
 
 		public string SharedSecret { get; set; }
+		public string ChallengeDatabase { get; set; } = "web";
 
 		protected virtual IChapServer Server
 		{
@@ -44,13 +45,7 @@ namespace Unicorn.ControlPanel.Security
 			}
 		}
 
-		protected virtual IChallengeStore ChallengeStore
-		{
-			get
-			{
-				return new InMemoryChallengeStore();
-			}
-		}
+		protected virtual IChallengeStore ChallengeStore => new SitecoreDatabaseChallengeStore(ChallengeDatabase);
 
 		public string GetChallengeToken()
 		{
@@ -106,10 +101,7 @@ namespace Unicorn.ControlPanel.Security
 			return client;
 		}
 
-		protected virtual int RequestTimeoutInMs
-		{
-			get { return 1000 * 7200; /* 1000ms * 7200sec = 2 hours */ }
-		}
+		protected virtual int RequestTimeoutInMs => 1000 * 60 * 120; // 2h in msec
 
 		protected virtual void ValidateSharedSecret()
 		{

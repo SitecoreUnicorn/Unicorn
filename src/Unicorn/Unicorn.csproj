@@ -66,6 +66,8 @@
     <Compile Include="ControlPanel\Controls\GlobalWarnings.cs" />
     <Compile Include="ControlPanel\Controls\QuickReference.cs" />
     <Compile Include="ControlPanel\Controls\NoConfigurations.cs" />
+    <Compile Include="ControlPanel\UnicornStringConsole.cs" />
+    <Compile Include="ControlPanel\Security\SitecoreDatabaseChallengeStore.cs" />
     <Compile Include="ControlPanel\VisualStudio\StreamWriterExtensions.cs" />
     <Compile Include="ControlPanel\Pipelines\UnicornControlPanelRequest\ChallengeVerb.cs" />
     <Compile Include="ControlPanel\Pipelines\UnicornControlPanelRequest\HandleAccessDenied.cs" />
