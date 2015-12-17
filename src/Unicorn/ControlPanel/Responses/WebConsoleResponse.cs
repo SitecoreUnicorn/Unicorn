@@ -38,7 +38,7 @@ namespace Unicorn.ControlPanel.Responses
 		{
 			if (_isAutomatedTool)
 			{
-				var console = new StringProgressStatus();
+				var console = new UnicornStringConsole();
 				ProcessInternal(console);
 
 				response.ContentType = "text/plain";
@@ -107,7 +107,7 @@ namespace Unicorn.ControlPanel.Responses
 			progress.Report(100);
 			progress.ReportTransientStatus("Completed.");
 			progress.ReportStatus(_isAutomatedTool ? "\r\n" : "<br>");
-			progress.ReportStatus("Completed. Want to <a href=\"?verb=\">return to the control panel?</a>");
+			progress.ReportStatus(_isAutomatedTool ? "Completed." : "Completed. Want to <a href=\"?verb=\">return to the control panel?</a>");
 		}
 
 		private class CustomStyledHtml5WebConsole : Html5WebConsole
