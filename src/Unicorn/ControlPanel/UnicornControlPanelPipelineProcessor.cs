@@ -24,11 +24,6 @@ namespace Unicorn.ControlPanel
 			_activationUrl = activationUrl;
 		}
 
-		protected bool IsOrderedByDependents(HttpContext context)
-		{
-			return context.Request.QueryString["order"] != "Config";
-		}
-
 		public override void Process(HttpRequestArgs args)
 		{
 			if (string.IsNullOrWhiteSpace(_activationUrl)) return;
