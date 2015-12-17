@@ -1,5 +1,6 @@
 ﻿using System;
 using FluentAssertions;
+using NSubstitute;
 using Unicorn.Configuration.Dependencies;
 using Xunit;
 
@@ -138,7 +139,5 @@ namespace Unicorn.Tests.Configuration.Dependencies
 
 			Assert.Throws<InvalidOperationException>(() => sut.OrderByDependencies(configs));
 		}
-
-		
 	}
 }

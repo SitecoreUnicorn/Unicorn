@@ -10,7 +10,7 @@ namespace Unicorn.Configuration.Dependencies
 
 		public virtual IConfiguration[] OrderByDependencies(IEnumerable<IConfiguration> configurations)
 		{
-			var processQueue = new Queue<ConfigItem>(configurations.Select(config => new ConfigItem(config)));
+			var processQueue = new Queue<ConfigItem>(configurations.Select(config => new ConfigItem(config, configurations)));
 
 			var added = new HashSet<string>();
 			List<IConfiguration> result = new List<IConfiguration>();
@@ -40,10 +40,14 @@ namespace Unicorn.Configuration.Dependencies
 
 		private class ConfigItem
 		{
-			public ConfigItem(IConfiguration config)
+			public ConfigItem(IConfiguration config, IEnumerable<IConfiguration> possibleConfigurations)
 			{
 				Config = config;
-				Dependencies = config.Resolve<ConfigurationDependencyResolver>().Dependencies.Select(dep => dep.Configuration).ToArray();
+				Dependencies = config.Resolve<ConfigurationDependencyResolver>()
+					.Dependencies
+					.Select(dep => dep.Configuration)
+					.Where(dep => possibleConfigurations.Any(conf => conf.Name.Equals(dep.Name)))
+					.ToArray();
 			}
 
 			public IConfiguration Config { get; }
