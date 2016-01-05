@@ -150,7 +150,7 @@ namespace Unicorn.Data.DataProvider
 				var def = change.Definition;
 				if (def == null) return false;
 
-				return def.IsUnversioned;
+				return def.IsUnversioned && !def.IsShared;
 			}
 		}
 	}
