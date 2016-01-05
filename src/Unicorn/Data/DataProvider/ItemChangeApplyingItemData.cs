@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Rainbow.Model;
 using System.Globalization;
@@ -41,7 +42,7 @@ namespace Unicorn.Data.DataProvider
 		{
 			get
 			{
-				// get base languages
+				// PHASE 1: Make sure all languages exist that need to
 				var baseLanguages = base.UnversionedFields.ToDictionary(language => language.Language.Name);
 
 				// merge with any languages found in the item changes
@@ -54,10 +55,19 @@ namespace Unicorn.Data.DataProvider
 					}
 				}
 
-				// merge fields between matching languages
-				return baseLanguages.Values.Select(language => new ProxyItemLanguage(language)
+				// PHASE 2: merge fields between matching languages
+				return baseLanguages.Values.Select(language =>
 				{
-					Fields = new FieldChangeParser().ParseFieldChanges(_changes.FieldChanges.Cast<FieldChange>().Where(FieldChangeHelper.IsUnversioned), language.Fields)
+					var targetLanguage = language.Language.Name;
+					var targetFieldChanges = _changes.FieldChanges
+						.Cast<FieldChange>()
+						.Where(change => change.Language.Name.Equals(targetLanguage, StringComparison.Ordinal))
+						.Where(FieldChangeHelper.IsUnversioned);
+
+					return new ProxyItemLanguage(language)
+					{
+						Fields = new FieldChangeParser().ParseFieldChanges(targetFieldChanges, language.Fields)
+					};
 				});
 			}
 		}
@@ -68,13 +78,14 @@ namespace Unicorn.Data.DataProvider
 			{
 				// Inexplicably during package installation Sitecore can actually IMPLICITLY create versions,
 				// by calling SaveItem() in the DP and passing in language and version combos that have NOT
-				// had the DP's AddVersion() called for them yet. So when adapting to ItemChanges we must infer any nonexistant versions,
+				// had the DataProvider's AddVersion() called for them yet. So when adapting to ItemChanges we must infer any nonexistant versions,
 				// and create them implicitly as well
-				var baseVersions = base.Versions.ToDictionary(version => version.Language.Name + version.VersionNumber);
+				var baseVersions = base.Versions.ToDictionary(version => $"{version.Language.Name}#{version.VersionNumber}");
 
 				foreach (FieldChange field in _changes.FieldChanges)
 				{
-					string key = field.Language.Name + field.Version.Number;
+					string key = $"{field.Language.Name}#{field.Version.Number}";
+
 					// if the base versions does not contain the specified version from the changes, and the field is versioned, we have to infer its addition
 					if (!baseVersions.ContainsKey(key) && field.Definition.IsVersioned)
 					{
@@ -97,7 +108,19 @@ namespace Unicorn.Data.DataProvider
 				_changes = changes;
 			}
 
-			public IEnumerable<IItemFieldValue> Fields => new FieldChangeParser().ParseFieldChanges(_changes.FieldChanges.Cast<FieldChange>().Where(FieldChangeHelper.IsVersioned), _innerVersion.Fields);
+			public IEnumerable<IItemFieldValue> Fields
+			{
+				get
+				{
+					var targetLanguage = Language.Name;
+					var targetFieldChanges = _changes.FieldChanges
+						.Cast<FieldChange>()
+						.Where(change => change.Language.Name.Equals(targetLanguage, StringComparison.Ordinal) && change.Version.Number.Equals(VersionNumber))
+						.Where(FieldChangeHelper.IsVersioned);
+					
+					return new FieldChangeParser().ParseFieldChanges(targetFieldChanges, _innerVersion.Fields);
+				}
+			}
 
 			public CultureInfo Language => _innerVersion.Language;
 
