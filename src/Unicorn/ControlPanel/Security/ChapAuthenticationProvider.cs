@@ -5,6 +5,7 @@ using System.Net;
 using System.Web;
 using MicroCHAP;
 using MicroCHAP.Server;
+using Sitecore.Diagnostics;
 using Sitecore.Exceptions;
 using AuthenticationManager = Sitecore.Security.Authentication.AuthenticationManager;
 
@@ -55,9 +56,11 @@ namespace Unicorn.ControlPanel.Security
 
 		public SecurityState ValidateRequest(HttpRequestBase request)
 		{
+			Assert.ArgumentNotNull(request, nameof(request));
+
 			var user = AuthenticationManager.GetActiveUser();
 
-			if (user.IsAdministrator)
+			if (user != null && user.IsAdministrator)
 			{
 				return new SecurityState(true, false);
 			}
