@@ -71,7 +71,7 @@ namespace Unicorn.ControlPanel.Security
 			{
 				ValidateSharedSecret();
 
-				if (_server.ValidateRequest(request))
+				if (Server.ValidateRequest(request))
 				{
 					return new SecurityState(true, true);
 				}
