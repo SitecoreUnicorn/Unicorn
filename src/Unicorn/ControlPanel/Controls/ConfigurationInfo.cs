@@ -23,7 +23,7 @@ namespace Unicorn.ControlPanel.Controls
 		public void Render(HtmlTextWriter writer)
 		{
 			var configurationHasAnySerializedItems = ControlPanelUtility.HasAnySerializedItems(_configuration);
-			var configurationHasValidRootPaths = ControlPanelUtility.AllRootPathsExists(_configuration);
+			var configurationHasValidRootPaths = ControlPanelUtility.AllRootPathsExist(_configuration);
 			var dependents = _configuration.Resolve<ConfigurationDependencyResolver>().Dependencies;
 
 			var modalId = "m" + Guid.NewGuid();
@@ -51,12 +51,12 @@ namespace Unicorn.ControlPanel.Controls
 					<p><a href=""#"" data-modal=""{0}"" class=""info"">Detailed configuration information</a></p>", modalId);
 			}
 
-			if (!configurationHasValidRootPaths)
+			if (!configurationHasValidRootPaths && !configurationHasAnySerializedItems)
 				writer.Write(@"
-					<p class=""warning"">This configuration's predicate cannot resolve any valid root items. This usually means it is configured to look for nonexistent paths or GUIDs. Please review your predicate configuration.</p>");
+					<p class=""warning"">This configuration's predicate cannot resolve any valid root items. This usually means the predicate is configured to look for nonexistent paths in the database. Please review your predicate configuration.</p>");
 			else if (!configurationHasAnySerializedItems)
 				writer.Write(@"
-					<p class=""warning"">This configuration does not currently have any valid serialized items. You cannot sync it until you perform an initial serialization.</p>");
+					<p class=""warning"">This configuration does not currently have any valid serialized items. You cannot sync it until you perform an initial serialization, which will write the current state of Sitecore to serialized items.</p>");
 
 			var dpConfig = _configuration.Resolve<IUnicornDataProviderConfiguration>();
 			if (dpConfig != null && dpConfig.EnableTransparentSync)
@@ -65,20 +65,24 @@ namespace Unicorn.ControlPanel.Controls
 
 			var configDetails = _configuration.Resolve<ConfigurationDetails>();
 			configDetails.ConfigurationName = _configuration.Name;
-			configDetails.ModalId = modalId;
-			configDetails.Render(writer);
 
 			if (!configurationHasAnySerializedItems)
+			{
+				configDetails.Render(writer);
 				new InitialSetup(_configuration).Render(writer);
+			}
 			else
 			{
+				configDetails.ModalId = modalId;
+				configDetails.Render(writer);
+
 				writer.Write(@"
 				</td>
 				<td class=""controls"">");
 
 				var htmlConfigName = HttpUtility.UrlEncode(_configuration.Name ?? string.Empty);
 
-				var blurb = _configuration.Resolve<IUnicornDataProviderConfiguration>().EnableTransparentSync 
+				var blurb = _configuration.Resolve<IUnicornDataProviderConfiguration>().EnableTransparentSync
 					? "DANGER: This configuration uses Transparent Sync. Items may not actually exist in the database, and if they do not reserializing will DELETE THEM from serialized. Continue?"
 					: "This will reset the serialized state to match Sitecore. This normally is not needed after initial setup unless changing path configuration. Continue?";
 

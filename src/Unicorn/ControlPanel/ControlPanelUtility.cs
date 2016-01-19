@@ -20,27 +20,17 @@ namespace Unicorn.ControlPanel
 		/// <summary>
 		/// Checks if any of the current predicate's root paths exist in the source provider
 		/// </summary>
-		public static bool AllRootPathsExists(IConfiguration configuration)
+		public static bool AllRootPathsExist(IConfiguration configuration)
 		{
 			var predicate = configuration.Resolve<PredicateRootPathResolver>();
 			var sourceDataStore = configuration.Resolve<ISourceDataStore>();
 
-			return predicate.GetRootPaths().All(include => RootPathsExists(sourceDataStore, include));
+			return predicate.GetRootPaths().All(include => RootPathExists(sourceDataStore, include));
 		}
 
-		private static bool RootPathsExists(IDataStore dataStore, TreeRoot include)
+		private static bool RootPathExists(IDataStore dataStore, TreeRoot include)
 		{
-			if (dataStore.GetByPath(include.Path, include.DatabaseName).FirstOrDefault() != null)
-				return true;
-
-			return ParentPathExists(dataStore, include);
-		}
-
-		private static bool ParentPathExists(IDataStore dataStore, TreeRoot include)
-		{
-			var path = include.Path.TrimEnd('/');
-			var parentPath = path.Substring(0, path.LastIndexOf('/'));
-			return dataStore.GetByPath(parentPath, include.DatabaseName).FirstOrDefault() != null;
+			return dataStore.GetByPath(include.Path, include.DatabaseName).FirstOrDefault() != null;
 		}
 
 		public static IConfiguration[] ResolveConfigurationsFromQueryParameter(string queryParameter)

@@ -16,7 +16,7 @@ namespace Unicorn.ControlPanel.Controls
 
 			writer.Write("<section>");
 			writer.Write("<h3>What is Sync?</h3>");
-			writer.Write("<p>Runs a synchronization operation, which will sync serialized items into Sitecore.</p>");
+			writer.Write("<p>Runs a synchronization operation, which will sync serialized items into Sitecore. The serialized state is merged into the database state, making additions, modifications, and deletions (in some cases) as needed.</p>");
 			writer.Write("<p class=\"help\">Note: if you only need to sync part of a configuration, you can use the <em>Update Tree</em> command on the Developer tab of the Sitecore ribbon. When used on a Unicorn item, it performs a partial sync.");
 			writer.Write("</section>");
 

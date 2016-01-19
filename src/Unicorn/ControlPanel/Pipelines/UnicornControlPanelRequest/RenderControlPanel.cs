@@ -24,7 +24,7 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 			var configurations = GetConfigurations(args);
 
 			var hasSerializedItems = configurations.All(ControlPanelUtility.HasAnySerializedItems);
-			var hasAllRootPaths = configurations.All(ControlPanelUtility.AllRootPathsExists);
+			var hasAllRootPaths = configurations.All(ControlPanelUtility.AllRootPathsExist);
 			var allowMultiSelect = hasSerializedItems && hasAllRootPaths && configurations.Length > 1;
 			// note that we don't just check dependencies property here to catch implicit dependencies
 			var anyConfigurationsWithDependencies = configurations.Any(config => config.Resolve<ConfigurationDependencyResolver>().Dependents.Any());
