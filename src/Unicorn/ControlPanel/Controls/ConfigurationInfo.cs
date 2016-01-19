@@ -53,7 +53,7 @@ namespace Unicorn.ControlPanel.Controls
 
 			if (!configurationHasValidRootPaths && !configurationHasAnySerializedItems)
 				writer.Write(@"
-					<p class=""warning"">This configuration's predicate cannot resolve any valid root items. This usually means the predicate is configured to look for nonexistent paths in the database. Please review your predicate configuration.</p>");
+					<p class=""warning"">This configuration's predicate cannot resolve any valid root items. This usually means the predicate is configured to include paths that do not exist in the Sitecore database.</p>");
 			else if (!configurationHasAnySerializedItems)
 				writer.Write(@"
 					<p class=""warning"">This configuration does not currently have any valid serialized items. You cannot sync it until you perform an initial serialization, which will write the current state of Sitecore to serialized items.</p>");
