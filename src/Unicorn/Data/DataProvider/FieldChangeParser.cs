@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using Rainbow.Model;
+using Sitecore.Configuration;
 using Sitecore.Data.Items;
+using Sitecore.Data.Managers;
+using Sitecore.Diagnostics;
 
 namespace Unicorn.Data.DataProvider
 {
@@ -18,7 +21,7 @@ namespace Unicorn.Data.DataProvider
 	/// </remarks>
 	public class FieldChangeParser
 	{
-		public IEnumerable<IItemFieldValue> ParseFieldChanges(IEnumerable<FieldChange> applicableFieldChanges, IEnumerable<IItemFieldValue> baseFieldValues)
+		public IEnumerable<IItemFieldValue> ParseFieldChanges(IEnumerable<FieldChange> applicableFieldChanges, IEnumerable<IItemFieldValue> baseFieldValues, string databaseName)
 		{
 			var fields = baseFieldValues?.ToDictionary(value => value.FieldId) ?? new Dictionary<Guid, IItemFieldValue>();
 
@@ -32,18 +35,43 @@ namespace Unicorn.Data.DataProvider
 
 				IItemFieldValue targetField;
 				ProxyFieldValue newChangeValue;
-
+			
 				if(fields.TryGetValue(change.FieldID.Guid, out targetField)) newChangeValue = new ProxyFieldValue(targetField);
 				else newChangeValue = new ProxyFieldValue(change.FieldID.Guid, change.Value);
 
 				newChangeValue.FieldType = change.Definition.Type;
 				newChangeValue.NameHint = change.Definition.Name;
-				newChangeValue.Value = change.Value;
+
+				if (!change.IsBlob)
+				{
+					newChangeValue.Value = change.Value;
+				}
+				else
+				{
+					newChangeValue.BlobId = Guid.Parse(change.Value);
+					newChangeValue.Value = GetBlobValue(newChangeValue.BlobId.Value, databaseName);
+				}
 
 				fields[change.FieldID.Guid] = newChangeValue;
 			}
 
 			return fields.Values;
+		}
+
+		protected string GetBlobValue(Guid blobId, string database)
+		{
+			var db = Factory.GetDatabase(database);
+
+			Assert.IsNotNull(db, "Database {0} does not exist!", database);
+
+			using (var stream = ItemManager.GetBlobStream(blobId, db))
+			{
+				var buf = new byte[stream.Length];
+
+				stream.Read(buf, 0, (int)stream.Length);
+
+				return Convert.ToBase64String(buf);
+			}
 		}
 	}
 }

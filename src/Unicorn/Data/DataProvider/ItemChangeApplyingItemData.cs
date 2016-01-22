@@ -34,7 +34,7 @@ namespace Unicorn.Data.DataProvider
 			{
 				if (!_changes.HasFieldsChanged) return base.SharedFields;
 
-				return new FieldChangeParser().ParseFieldChanges(_changes.FieldChanges.Cast<FieldChange>().Where(FieldChangeHelper.IsShared), base.SharedFields);
+				return new FieldChangeParser().ParseFieldChanges(_changes.FieldChanges.Cast<FieldChange>().Where(FieldChangeHelper.IsShared), base.SharedFields, DatabaseName);
 			}
 		}
 
@@ -66,7 +66,7 @@ namespace Unicorn.Data.DataProvider
 
 					return new ProxyItemLanguage(language)
 					{
-						Fields = new FieldChangeParser().ParseFieldChanges(targetFieldChanges, language.Fields)
+						Fields = new FieldChangeParser().ParseFieldChanges(targetFieldChanges, language.Fields, DatabaseName)
 					};
 				});
 			}
@@ -118,7 +118,7 @@ namespace Unicorn.Data.DataProvider
 						.Where(change => change.Language.Name.Equals(targetLanguage, StringComparison.Ordinal) && change.Version.Number.Equals(VersionNumber))
 						.Where(FieldChangeHelper.IsVersioned);
 					
-					return new FieldChangeParser().ParseFieldChanges(targetFieldChanges, _innerVersion.Fields);
+					return new FieldChangeParser().ParseFieldChanges(targetFieldChanges, _innerVersion.Fields, _changes.Item.Database.Name);
 				}
 			}
 
