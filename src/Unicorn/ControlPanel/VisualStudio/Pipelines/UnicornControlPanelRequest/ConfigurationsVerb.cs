@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using Unicorn.Configuration;
 using Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest;
 using Unicorn.ControlPanel.Responses;
