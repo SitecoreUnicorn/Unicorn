@@ -2,12 +2,15 @@
 using System.Diagnostics;
 using System.Web;
 using Kamsar.WebConsole;
+using Sitecore.Pipelines;
 using Sitecore.StringExtensions;
 using Unicorn.Configuration;
 using Unicorn.ControlPanel.Headings;
 using Unicorn.ControlPanel.Responses;
 using Unicorn.Data;
 using Unicorn.Logging;
+using Unicorn.Pipelines.UnicornReserializeComplete;
+using Unicorn.Pipelines.UnicornSyncComplete;
 using Unicorn.Predicates;
 
 namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
@@ -68,6 +71,8 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 						}
 
 						timer.Stop();
+
+						CorePipeline.Run("unicornReserializeComplete", new UnicornReserializeCompletePipelineArgs(configuration));
 
 						logger.Info("{0} reserialization complete in {1}ms.".FormatWith(configuration.Name, timer.ElapsedMilliseconds));
 					}
