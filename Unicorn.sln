@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unicorn", "src\Unicorn\Unicorn.csproj", "{82C4441B-E11E-4601-B6B7-C5AD71B2AB70}"
 EndProject
@@ -12,6 +12,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rainbow.Storage.Sc", "..\Rainbow\src\Rainbow.Storage.Sc\Rainbow.Storage.Sc.csproj", "{956AFE8B-51CD-4D61-B8C1-BFFDC749FD82}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rainbow.Storage.Yaml", "..\Rainbow\src\Rainbow.Storage.Yaml\Rainbow.Storage.Yaml.csproj", "{371181C9-45DC-4885-8894-43FFC235D124}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unicorn.Roles", "src\Unicorn.Roles\Unicorn.Roles.csproj", "{CEF534B3-AB68-45CE-AFEA-810D0E4A6613}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{371181C9-45DC-4885-8894-43FFC235D124}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{371181C9-45DC-4885-8894-43FFC235D124}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{371181C9-45DC-4885-8894-43FFC235D124}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CEF534B3-AB68-45CE-AFEA-810D0E4A6613}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CEF534B3-AB68-45CE-AFEA-810D0E4A6613}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CEF534B3-AB68-45CE-AFEA-810D0E4A6613}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CEF534B3-AB68-45CE-AFEA-810D0E4A6613}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

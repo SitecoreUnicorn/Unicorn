@@ -1,0 +1,31 @@
+<!--
+	Unicorn.Configs.Default.Roles.config
+
+	This is an example of how to configure a basic Unicorn configuration to include a set of security roles to sync.
+
+	See Unicorn.config for commentary on how configurations operate, or https://github.com/kamsar/Unicorn/blob/master/README.md
+-->
+<configuration xmlns:patch="http://www.sitecore.net/xmlconfig/">
+	<sitecore>
+		<unicorn>
+			<configurations>
+				<!--
+					Regular Unicorn configurations can be extended to include roles via the RolePredicate
+				-->
+				<configuration name="Default Configuration">
+					<rolePredicate type="Unicorn.Roles.RolePredicates.ConfigurationRolePredicate, Unicorn.Roles" singleInstance="true">
+						<!--
+							Each include must either include a domain, which includes all roles under that domain,
+							or a domain with a role regex pattern to determine specific roles to include under the domain.
+							
+							For regex pattern rules, note that the regex applies to the role not including the domain,
+							e.g. for "sitecore\foo" the regex pattern is checked against "foo" if the domain is set to "sitecore"
+						-->
+						<include domain="sitecore" />
+						<include domain="extranet" pattern="^MySite.*$" />
+					</rolePredicate>
+				</configuration>
+			</configurations>
+		</unicorn>
+	</sitecore>
+</configuration>

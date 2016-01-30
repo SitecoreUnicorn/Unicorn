@@ -1,0 +1,6 @@
+﻿- Syncing/loading
+	- Disable event handlers during load
+	- Hitch to regular unicorn sync via pipelines
+- Initial serialize logic? ReserializeEnd pipeline?
+- Logging classes
+- Tests
