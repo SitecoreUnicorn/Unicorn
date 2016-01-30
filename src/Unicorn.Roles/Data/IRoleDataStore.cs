@@ -8,5 +8,6 @@ namespace Unicorn.Roles.Data
 		IEnumerable<SyncRoleFile> GetAll();
 		void Save(Role role);
 		void Remove(Role role);
+		void Clear();
 	}
 }

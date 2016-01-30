@@ -11,6 +11,10 @@
 			<configurations>
 				<!--
 					Regular Unicorn configurations can be extended to include roles via the RolePredicate
+					
+					NOTE: Configurations which include roles should probably not be using transparent sync. Roles do not sync transparently.
+					
+					TODO: evaluation rules for roles. e.g. nothing deleted only added or updated
 				-->
 				<configuration name="Default Configuration">
 					<rolePredicate type="Unicorn.Roles.RolePredicates.ConfigurationRolePredicate, Unicorn.Roles" singleInstance="true">
@@ -20,6 +24,13 @@
 							
 							For regex pattern rules, note that the regex applies to the role not including the domain,
 							e.g. for "sitecore\foo" the regex pattern is checked against "foo" if the domain is set to "sitecore"
+							
+							NOTE: if you make a role a member of a role that is not serialized, that will not be recorded because roles serialize
+							only with THEIR members, not what other roles include them. This means for example that if you serialize sitecore\foo,
+							but add sitecore\foo to sitecore\Sitecore Client Users without serializing the system role that linkage will not be 
+							deserialized. You can still add it manually after the role exists and it won't go away, but Unicorn cannot keep it updated.
+							However the roles need not be included in the same Unicorn configuration, because roles are only tied by name.
+							So you can keep dependent system roles in a system config and add site specific roles to a site config, for example.
 						-->
 						<include domain="sitecore" />
 						<include domain="extranet" pattern="^MySite.*$" />

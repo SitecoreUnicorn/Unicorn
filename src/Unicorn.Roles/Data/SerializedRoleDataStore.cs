@@ -45,6 +45,15 @@ namespace Unicorn.Roles.Data
 			if(File.Exists(path)) File.Delete(path);
 		}
 
+		public void Clear()
+		{
+			if (!Directory.Exists(_physicalRootPath)) return;
+
+			Directory.Delete(_physicalRootPath, true);
+
+			Directory.CreateDirectory(_physicalRootPath);
+		}
+
 		protected virtual string GetPathForRole(Role role)
 		{
 			return Path.Combine(_physicalRootPath, role.LocalName + ".role");

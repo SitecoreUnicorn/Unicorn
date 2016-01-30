@@ -52,7 +52,13 @@
     <Compile Include="Data\SerializedRoleDataStore.cs" />
     <Compile Include="Events\UnicornConfigurationRolesEventHandler.cs" />
     <Compile Include="Events\UnicornRolesEventHandler.cs" />
+    <Compile Include="Loader\DefaultRoleLoaderLogger.cs" />
+    <Compile Include="Loader\IRoleLoader.cs" />
+    <Compile Include="Loader\IRoleLoaderLogger.cs" />
+    <Compile Include="Pipelines\UnicornReserializeComplete\ReserializeRoles.cs" />
+    <Compile Include="Pipelines\UnicornSyncComplete\SyncRoles.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Loader\RoleLoader.cs" />
     <Compile Include="RolePredicates\IRolePredicate.cs" />
     <Compile Include="RolePredicates\ConfigurationRolePredicate.cs" />
   </ItemGroup>

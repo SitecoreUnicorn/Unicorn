@@ -1,6 +1,4 @@
-﻿- Syncing/loading
-	- Disable event handlers during load
-	- Hitch to regular unicorn sync via pipelines
-- Initial serialize logic? ReserializeEnd pipeline?
-- Logging classes
-- Tests
+﻿- Tests
+- Commenting and docs (e.g. unicorn readme), make some methods virtual (eg data store)
+- NuGet package
+- Don't forget to increment unicorn version due to reserialize complete pipeline
