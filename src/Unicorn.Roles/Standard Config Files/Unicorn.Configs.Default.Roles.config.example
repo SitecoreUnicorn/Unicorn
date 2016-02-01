@@ -29,7 +29,9 @@
 				<configuration name="Default Configuration">
 					<!-- 
 						Add the optional role predicate. Adding a role predicate tells Unicorn you want to sync roles with this configuration.
-						Note: the configuration must also include items. Role-only configurations are currently not supported.
+						Note: the configuration must also define a predicate (e.g. to include items). You can either include items,
+						or use the empty predicate, which includes nothing:
+						<predicate type="Unicorn.Roles.Predicates.EmptyPredicate, Unicorn.Roles" singleInstance="true" />
 					-->
 					<rolePredicate type="Unicorn.Roles.RolePredicates.ConfigurationRolePredicate, Unicorn.Roles" singleInstance="true">
 						<!--

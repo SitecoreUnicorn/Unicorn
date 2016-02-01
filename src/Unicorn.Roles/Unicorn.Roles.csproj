@@ -57,6 +57,7 @@
     <Compile Include="Loader\IRoleLoaderLogger.cs" />
     <Compile Include="Pipelines\UnicornReserializeComplete\ReserializeRoles.cs" />
     <Compile Include="Pipelines\UnicornSyncComplete\SyncRoles.cs" />
+    <Compile Include="Predicates\EmptyPredicate.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Loader\RoleLoader.cs" />
     <Compile Include="RolePredicates\IRolePredicate.cs" />
