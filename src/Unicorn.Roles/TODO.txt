@@ -1,4 +1,3 @@
-﻿- Tests
-- Commenting and docs (e.g. unicorn readme), make some methods virtual (eg data store)
-- NuGet package
-- Don't forget to increment unicorn version due to reserialize complete pipeline
+﻿- Show roles in control panel details
+	- May require making the control panel details a pipeline
+- Tests
