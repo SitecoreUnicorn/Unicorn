@@ -3,6 +3,9 @@ using Unicorn.Roles.Data;
 
 namespace Unicorn.Roles.Loader
 {
+	/// <summary>
+	/// Handles logging for the role loader
+	/// </summary>
 	public class DefaultRoleLoaderLogger : IRoleLoaderLogger
 	{
 		private readonly ILogger _baseLogger;

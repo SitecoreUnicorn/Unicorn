@@ -3,7 +3,7 @@
 
 	This is an example of how to configure a basic Unicorn configuration to include a set of security roles to sync.
 
-	See Unicorn.config for commentary on how configurations operate, or https://github.com/kamsar/Unicorn/blob/master/README.md
+	http://github.com/kamsar/Unicorn
 -->
 <configuration xmlns:patch="http://www.sitecore.net/xmlconfig/">
 	<sitecore>
@@ -12,11 +12,25 @@
 				<!--
 					Regular Unicorn configurations can be extended to include roles via the RolePredicate
 					
-					NOTE: Configurations which include roles should probably not be using transparent sync. Roles do not sync transparently.
+					NOTE: Configurations which include roles should not be using transparent sync. Roles do not sync transparently.
 					
-					TODO: evaluation rules for roles. e.g. nothing deleted only added or updated
+					How do roles sync?
+					Roles sync a bit differently from items, because they are a much simpler construct - essentially they are just a string,
+					and a set of strings for roles that are also in that role. You also cannot rename roles, which further simplifies things.
+					
+					So for role syncing:
+					- Roles that are serialized but are not in Sitecore are added
+					- Roles that are serialized and in Sitecore but have different roles-in-roles are updated
+					- Roles that are only in Sitecore are NOT MODIFIED. This is different from regular item sync where they would be deleted
+					
+					Note that because roles are just strings and have no internal ID (such as NTFS' SIDs), if a role is ever accidentally removed,
+					simply creating a new role of the same name will restore all permissions previously held by that role.
 				-->
 				<configuration name="Default Configuration">
+					<!-- 
+						Add the optional role predicate. Adding a role predicate tells Unicorn you want to sync roles with this configuration.
+						Note: the configuration must also include items. Role-only configurations are currently not supported.
+					-->
 					<rolePredicate type="Unicorn.Roles.RolePredicates.ConfigurationRolePredicate, Unicorn.Roles" singleInstance="true">
 						<!--
 							Each include must either include a domain, which includes all roles under that domain,

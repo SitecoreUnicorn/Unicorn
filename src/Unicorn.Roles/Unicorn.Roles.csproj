@@ -79,7 +79,7 @@
     <None Include="Standard Config Files\Unicorn.Roles.DataProvider.config">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Standard Config Files\Unicorn.Configs.Default.Roles.example">
+    <None Include="Standard Config Files\Unicorn.Configs.Default.Roles.config.example">
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>

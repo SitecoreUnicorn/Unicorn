@@ -6,6 +6,9 @@ using Unicorn.Roles.RolePredicates;
 
 namespace Unicorn.Roles.Events
 {
+	/// <summary>
+	/// Handles role change events for a specific Unicorn configuration
+	/// </summary>
 	public class UnicornConfigurationRolesEventHandler
 	{
 		private readonly IRolePredicate _predicate;
@@ -19,7 +22,7 @@ namespace Unicorn.Roles.Events
 			_dataStore = configuration.Resolve<IRoleDataStore>();
 		}
 
-		public void RoleAlteredOrCreated(string roleName)
+		public virtual void RoleAlteredOrCreated(string roleName)
 		{
 			if (!Role.Exists(roleName)) return;
 
@@ -30,7 +33,7 @@ namespace Unicorn.Roles.Events
 			_dataStore.Save(role);
 		}
 
-		public void RoleDeleted(string roleName)
+		public virtual void RoleDeleted(string roleName)
 		{
 			var role = Role.FromName(roleName);
 
