@@ -49,7 +49,7 @@ namespace Unicorn.Data.DataProvider
 				foreach (FieldChange field in _changes.FieldChanges)
 				{
 					// if the base languages does not contain the specified language from the changes, we have to infer its addition
-					if (!baseLanguages.ContainsKey(field.Language.Name) && field.Definition.IsUnversioned)
+					if (!baseLanguages.ContainsKey(field.Language.Name) && field.Definition != null && field.Definition.IsUnversioned)
 					{
 						baseLanguages.Add(field.Language.Name, new ProxyItemLanguage(field.Language.CultureInfo));
 					}

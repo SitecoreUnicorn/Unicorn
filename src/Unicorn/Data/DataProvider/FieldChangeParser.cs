@@ -66,6 +66,8 @@ namespace Unicorn.Data.DataProvider
 
 			using (var stream = ItemManager.GetBlobStream(blobId, db))
 			{
+				Assert.IsNotNull(stream, $"Expected media blob {blobId} did not exist in {database}. Unable to serialize media.");
+
 				var buf = new byte[stream.Length];
 
 				stream.Read(buf, 0, (int)stream.Length);
