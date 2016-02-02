@@ -23,7 +23,7 @@ namespace Unicorn.ControlPanel.Controls
 		public void Render(HtmlTextWriter writer)
 		{
 			var configurationHasAnySerializedItems = ControlPanelUtility.HasAnySerializedItems(_configuration);
-			var configurationHasValidRootPaths = ControlPanelUtility.AllRootPathsExist(_configuration);
+			var configurationHasValidRootPathParents = ControlPanelUtility.AllRootParentPathsExist(_configuration);
 			var dependents = _configuration.Resolve<ConfigurationDependencyResolver>().Dependencies;
 
 			var modalId = "m" + Guid.NewGuid();
@@ -33,7 +33,7 @@ namespace Unicorn.ControlPanel.Controls
 				<td{0}>", configurationHasAnySerializedItems ? string.Empty : " colspan=\"2\"");
 
 			writer.Write(@"
-					<h3{0}{1}</h3>".FormatWith(MultipleConfigurationsExist && configurationHasAnySerializedItems && configurationHasValidRootPaths ? @" class=""fakebox""><span></span>" : ">", _configuration.Name));
+					<h3{0}{1}</h3>".FormatWith(MultipleConfigurationsExist && configurationHasAnySerializedItems && configurationHasValidRootPathParents ? @" class=""fakebox""><span></span>" : ">", _configuration.Name));
 
 			if (!string.IsNullOrWhiteSpace(_configuration.Description))
 				writer.Write(@"
@@ -51,7 +51,7 @@ namespace Unicorn.ControlPanel.Controls
 					<p><a href=""#"" data-modal=""{0}"" class=""info"">Detailed configuration information</a></p>", modalId);
 			}
 
-			if (!configurationHasValidRootPaths && !configurationHasAnySerializedItems)
+			if (!configurationHasValidRootPathParents && !configurationHasAnySerializedItems)
 				writer.Write(@"
 					<p class=""warning"">This configuration's predicate cannot resolve any valid root items. This usually means the predicate is configured to include paths that do not exist in the Sitecore database.</p>");
 			else if (!configurationHasAnySerializedItems)

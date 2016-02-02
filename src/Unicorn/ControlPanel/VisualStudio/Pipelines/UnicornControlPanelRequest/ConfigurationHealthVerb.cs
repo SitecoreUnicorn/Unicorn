@@ -27,12 +27,18 @@ namespace Unicorn.ControlPanel.VisualStudio.Pipelines.UnicornControlPanelRequest
 		private string GetHealthStatus(IConfiguration configuration)
 		{
 			var configurationHasAnySerializedItems = ControlPanelUtility.HasAnySerializedItems(configuration);
-			var configurationHasValidRootPaths = ControlPanelUtility.AllRootPathsExist(configuration);
+
+			var configurationHasValidRootParentPaths = ControlPanelUtility.AllRootParentPathsExist(configuration);
+
 			var unicornDataProviderConfiguration = configuration.Resolve<IUnicornDataProviderConfiguration>();
+
 			var configurationHasTransparentSync = unicornDataProviderConfiguration != null && unicornDataProviderConfiguration.EnableTransparentSync;
+
 			var dependents = configuration.Resolve<ConfigurationDependencyResolver>().Dependencies;
+
 			var dependentsData = string.Join(", ", dependents.Select(d => d.Configuration.Name));
-			return $"{configuration.Name}|{configurationHasAnySerializedItems}|{configurationHasValidRootPaths}|{configurationHasTransparentSync}|{dependentsData}";
+
+			return $"{configuration.Name}|{configurationHasAnySerializedItems}|{configurationHasValidRootParentPaths}|{configurationHasTransparentSync}|{dependentsData}";
 		}
 	}
 }

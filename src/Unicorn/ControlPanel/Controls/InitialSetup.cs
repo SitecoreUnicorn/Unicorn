@@ -28,7 +28,7 @@ namespace Unicorn.ControlPanel.Controls
 			}
 			else
 			{
-				writer.Write("<p>Cannot perform initial serialization until the predicate configuration includes valid root items.</p>");
+				writer.Write("<p class=\"warning\">Cannot perform initial serialization because the predicate configuration is including item paths which do not exist in the database.</p>");
 			}
 		}
 	}
