@@ -14,6 +14,7 @@
 		<tags>sitecore serialization</tags>
 	<dependencies>
 		<dependency id="Unicorn" version="$version$" />
+		<dependency id="Unicorn.Roles.Core" version="$version$" />
 	</dependencies>
 	</metadata>
 	<files>
