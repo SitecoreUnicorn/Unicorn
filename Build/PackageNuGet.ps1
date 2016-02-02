@@ -18,3 +18,7 @@ $rainbowVersion = Read-Host 'Enter Rainbow version to depend on'
 & $nuGet pack "$scriptRoot\Unicorn.nuget\Unicorn.nuspec" -version $targetAssemblyVersion -Prop "rainbowversion=$rainbowVersion"
 
 & $nuGet pack "$scriptRoot\..\src\Unicorn\Unicorn.csproj" -Symbols -Prop "Configuration=Release;rainbowversion=$rainbowVersion"
+
+& $nuGet pack "$scriptRoot\Unicorn.Roles.nuget\Unicorn.Roles.nuspec" -version $targetAssemblyVersion -Prop "rainbowversion=$rainbowVersion"
+
+& $nuGet pack "$scriptRoot\..\src\Unicorn.Roles\Unicorn.Roles.csproj" -Symbols -Prop "Configuration=Release;rainbowversion=$rainbowVersion"

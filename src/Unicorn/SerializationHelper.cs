@@ -127,7 +127,14 @@ namespace Unicorn
 				var consistencyChecker = configuration.Resolve<IConsistencyChecker>();
 				var loader = configuration.Resolve<SerializationLoader>();
 
-				loader.LoadAll(roots, retryer, consistencyChecker, rootLoadedCallback);
+				if (roots.Length > 0)
+				{
+					loader.LoadAll(roots, retryer, consistencyChecker, rootLoadedCallback);
+				}
+				else
+				{
+					logger.Warn($"{configuration.Name} had no root paths included to sync. If you're only syncing roles, this is expected. Otherwise it indicates that your predicate has no included items and you need to add some.");
+				}
 			}
 
 			CorePipeline.Run("unicornSyncComplete", new UnicornSyncCompletePipelineArgs(configuration, syncStartTimestamp));

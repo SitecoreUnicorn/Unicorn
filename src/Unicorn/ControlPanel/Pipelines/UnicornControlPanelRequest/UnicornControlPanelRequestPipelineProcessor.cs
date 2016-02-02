@@ -27,13 +27,17 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 			if(_abortPipelineIfHandled) args.AbortPipeline();
 		}
 
+		/// <summary>
+		/// Verbs note: passing an empty string to _verbHandled makes you the default page when no verb is passed
+		/// Passing null as _verbHandled makes you the catch-all page for every request not handled by previous pipeline handlers
+		/// </summary>
 		protected virtual bool HandlesVerb(UnicornControlPanelRequestPipelineArgs args)
 		{
 			if (_requireAuthentication && !args.SecurityState.IsAllowed) return false;
 
-			if (string.IsNullOrWhiteSpace(_verbHandled)) return true;
+			if (_verbHandled == null) return true;
 
-			return _verbHandled.Equals(args.Verb, StringComparison.OrdinalIgnoreCase);
+			return _verbHandled.Equals(args.Verb ?? string.Empty, StringComparison.OrdinalIgnoreCase);
 		}
 
 		protected abstract IResponse CreateResponse(UnicornControlPanelRequestPipelineArgs args);

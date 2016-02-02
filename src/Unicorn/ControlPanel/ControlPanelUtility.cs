@@ -14,7 +14,13 @@ namespace Unicorn.ControlPanel
 		/// </summary>
 		public static bool HasAnySerializedItems(IConfiguration configuration)
 		{
-			return configuration.Resolve<PredicateRootPathResolver>().GetRootSerializedItems().Length > 0;
+			var pathResolver = configuration.Resolve<PredicateRootPathResolver>();
+
+			// if you have no root paths at all that's actually cool. You might just be serializing roles.
+			// either way there are no missing root items to worry about, since there are no roots.
+			if (pathResolver.GetRootPaths().Length == 0) return true;
+
+			return pathResolver.GetRootSerializedItems().Length > 0;
 		}
 
 		/// <summary>

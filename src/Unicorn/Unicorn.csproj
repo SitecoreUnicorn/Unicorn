@@ -57,6 +57,9 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\SharedAssemblyInfo.cs">
+      <Link>Properties\SharedAssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="Configuration\Dependencies\InterconfigurationDependencyResolver.cs" />
     <Compile Include="Configuration\Dependencies\ConfigurationDependencyResolver.cs" />
     <Compile Include="Configuration\Dependencies\ExplicitConfigurationDependency.cs" />
@@ -107,6 +110,8 @@
     <Compile Include="Logging\Formatting\IExceptionFormatter.cs" />
     <Compile Include="Logging\Formatting\TemplateMissingFieldExceptionFormatter.cs" />
     <Compile Include="Logging\LogTransaction.cs" />
+    <Compile Include="Pipelines\UnicornReserializeComplete\IUnicornReserializeCompleteProcessor.cs" />
+    <Compile Include="Pipelines\UnicornReserializeComplete\UnicornReserializeCompletePipelineArgs.cs" />
     <Compile Include="Pipelines\UnicornSyncComplete\DictionaryCacheClearer.cs" />
     <Compile Include="Predicates\Exclusions\ChildrenOfPathBasedPresetTreeExclusion.cs" />
     <Compile Include="Predicates\Exclusions\PathBasedPresetTreeExclusion.cs" />

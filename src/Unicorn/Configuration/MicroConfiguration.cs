@@ -36,7 +36,10 @@ namespace Unicorn.Configuration
 
 			if (result == null)
 			{
-				return (T)Activate(typeOfT, new KeyValuePair<string, object>[] { });
+				if(typeOfT.IsClass)
+					return (T)Activate(typeOfT, new KeyValuePair<string, object>[] { });
+
+				return null;
 			}
 
 			return (T)result;

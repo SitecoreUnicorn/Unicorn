@@ -1,0 +1,98 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{CEF534B3-AB68-45CE-AFEA-810D0E4A6613}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Unicorn.Roles</RootNamespace>
+    <AssemblyName>Unicorn.Roles</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Sitecore.Kernel">
+      <HintPath>..\..\lib\Sitecore\v7\Sitecore.Kernel.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\SharedAssemblyInfo.cs">
+      <Link>Properties\SharedAssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Include="Data\IRoleDataStore.cs" />
+    <Compile Include="Data\SyncRoleFile.cs" />
+    <Compile Include="Data\SerializedRoleDataStore.cs" />
+    <Compile Include="Events\UnicornConfigurationRolesEventHandler.cs" />
+    <Compile Include="Events\UnicornRolesEventHandler.cs" />
+    <Compile Include="Loader\DefaultRoleLoaderLogger.cs" />
+    <Compile Include="Loader\IRoleLoader.cs" />
+    <Compile Include="Loader\IRoleLoaderLogger.cs" />
+    <Compile Include="Pipelines\UnicornReserializeComplete\ReserializeRoles.cs" />
+    <Compile Include="Pipelines\UnicornSyncComplete\SyncRoles.cs" />
+    <Compile Include="Predicates\EmptyPredicate.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Loader\RoleLoader.cs" />
+    <Compile Include="RolePredicates\IRolePredicate.cs" />
+    <Compile Include="RolePredicates\ConfigurationRolePredicate.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Rainbow\src\Rainbow\Rainbow.csproj">
+      <Project>{8ff75c8b-2a9e-4d95-91ad-333071813199}</Project>
+      <Name>Rainbow</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Unicorn\Unicorn.csproj">
+      <Project>{82c4441b-e11e-4601-b6b7-c5ad71b2ab70}</Project>
+      <Name>Unicorn</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Standard Config Files\Unicorn.Roles.config">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Standard Config Files\Unicorn.Roles.DataProvider.config">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Standard Config Files\Unicorn.Configs.Default.Roles.config.example">
+      <SubType>Designer</SubType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="TODO.txt" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
