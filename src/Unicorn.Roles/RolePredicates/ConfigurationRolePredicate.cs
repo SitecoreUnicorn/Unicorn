@@ -49,7 +49,7 @@ namespace Unicorn.Roles.RolePredicates
 		protected PredicateResult Includes(ConfigurationRolePredicateEntry entry, Role role)
 		{
 			// domain match
-			if(!role.Domain.Name.Equals(entry.Domain, StringComparison.OrdinalIgnoreCase)) return new PredicateResult(false);
+			if(role.Domain == null || !role.Domain.Name.Equals(entry.Domain, StringComparison.OrdinalIgnoreCase)) return new PredicateResult(false);
 
 			// pattern match
 			if(!string.IsNullOrWhiteSpace(entry.Pattern) && !Regex.IsMatch(role.Name.Split('\\').Last(), entry.Pattern, RegexOptions.IgnoreCase | RegexOptions.Compiled)) return new PredicateResult(false);
