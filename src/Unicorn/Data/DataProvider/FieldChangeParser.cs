@@ -66,7 +66,11 @@ namespace Unicorn.Data.DataProvider
 
 			using (var stream = ItemManager.GetBlobStream(blobId, db))
 			{
-				Assert.IsNotNull(stream, $"Expected media blob {blobId} did not exist in {database}. Unable to serialize media.");
+				// during package installs the blob might not yet be in the database.
+				// so if it does not yet exist we'll act like the value is blank.
+				// this works out because the blob is actually written in a later data push from the package installer
+				// so the blob actually does end up in the item
+				if (stream == null) return string.Empty;
 
 				var buf = new byte[stream.Length];
 

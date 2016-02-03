@@ -87,7 +87,7 @@ namespace Unicorn.Data.DataProvider
 					string key = $"{field.Language.Name}#{field.Version.Number}";
 
 					// if the base versions does not contain the specified version from the changes, and the field is versioned, we have to infer its addition
-					if (!baseVersions.ContainsKey(key) && field.Definition.IsVersioned)
+					if (!baseVersions.ContainsKey(key) && field.Definition != null && field.Definition.IsVersioned)
 					{
 						baseVersions.Add(key, new ProxyItemVersion(field.Language.CultureInfo, field.Version.Number));
 					}
