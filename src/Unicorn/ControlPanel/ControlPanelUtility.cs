@@ -80,7 +80,7 @@ namespace Unicorn.ControlPanel
 
 			rootPathParent = rootPathParent.Substring(0, rootPathParent.LastIndexOf('/'));
 
-			if (rootPathParent.Equals("/")) rootPathParent = "/sitecore";
+			if (rootPathParent.Equals(string.Empty)) rootPathParent = "/sitecore";
 
 			return dataStore.GetByPath(rootPathParent, include.DatabaseName).FirstOrDefault() != null;
 		}
