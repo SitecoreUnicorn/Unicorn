@@ -1,4 +1,5 @@
 ﻿using System.Web.UI;
+using Sitecore.Configuration;
 
 namespace Unicorn.ControlPanel.Controls
 {
@@ -36,9 +37,9 @@ namespace Unicorn.ControlPanel.Controls
 	<li><a href=""https://github.com/kamsar/Unicorn/tree/master/src/Unicorn/Standard%20Config%20Files"">Default Configuration Files</a></li>
 	<li><a href=""http://kamsar.net/index.php/category/Unicorn/"">Unicorn Blog Posts</a></li>
 	<li><a href=""https://visualstudiogallery.msdn.microsoft.com/64439022-f470-422a-b663-fbb89aaf6e86"">Unicorn Control Panel for Visual Studio</a></li>
-	<li><a href=""https://github.com/kamsar/Unicorn/issues/new"">Found a problem? Report an issue on GitHub.</a></li>
+	<li><a href=""https://github.com/kamsar/Unicorn/issues/new?title=Issue with Unicorn {0} on Sitecore {1}&amp;body=Please include what you were doing before the issue occurred, complete text of any error messages, and if appropriate your Unicorn configuration setup. Thanks!"">Found a problem? Report an issue on GitHub.</a></li>
 </ul>
-");
+", UnicornVersion.Current, About.Version);
 			writer.Write("</section>");
 
 			writer.Write(@"
