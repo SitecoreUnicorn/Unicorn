@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using Kamsar.WebConsole;
 using Sitecore.Data;
 using Sitecore.Data.Items;
-using Sitecore.Jobs;
 using Sitecore.Publishing;
 using Sitecore.Publishing.Pipelines.Publish;
 
@@ -35,7 +34,7 @@ namespace Unicorn.Publishing
 
 				var publishOptions = new PublishOptions(triggerItem.Database, database, PublishMode.SingleItem, triggerItem.Language, DateTime.UtcNow) { RootItem = triggerItem };
 
-				var result = new Publisher(publishOptions).PublishWithResult();
+				var result = new Publisher(publishOptions, triggerItem.Languages).PublishWithResult();
 
 				if (progress != null) progress.ReportStatus("> Published synced items to {0} (New: {1}, Updated: {2}, Deleted: {3} Skipped: {4})", MessageType.Debug, database.Name, result.Statistics.Created, result.Statistics.Updated, result.Statistics.Deleted, result.Statistics.Skipped);
 			}
