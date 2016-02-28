@@ -223,9 +223,9 @@ namespace Unicorn.Data.DataProvider
 
 			Assert.IsNotNull(existingItem, "Existing item to copy was not in the database!");
 
-			var destinationItem = GetSourceFromId(destination.ID);
+			var destinationItem = GetSourceFromId(destination.ID, true);
 
-			Assert.IsNotNull(existingItem, "Copy destination was not in the database!");
+			Assert.IsNotNull(destinationItem, "Copy destination was not in the database!");
 
 			// wrap the existing item in a proxy so we can mutate it into a copy
 			var copyTargetItem = new ProxyItem(existingItem);
