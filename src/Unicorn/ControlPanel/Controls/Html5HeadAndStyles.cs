@@ -90,6 +90,14 @@ namespace Unicorn.ControlPanel.Controls
 					td > * { position: relative; }
 
 					/* specific styles */
+					.badge {
+						color: #FFF;
+						font-weight: bold;
+						background: rgba(227, 81, 49, .4);
+						padding: 3px 8px;
+					}
+						.badge a { color: #FFF; }
+
 					.batch {
 						display: none;
 						position: fixed;
@@ -206,11 +214,6 @@ namespace Unicorn.ControlPanel.Controls
 						.overlay.shown {
 						  opacity: 1;
 						}
-
-					.transparent-sync {
-						color: #E35131;
-						font-weight: bold;
-					}
 	
 					.version {
 						font-style: italic;

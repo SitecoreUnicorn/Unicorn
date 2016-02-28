@@ -1,8 +1,6 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Web.UI;
 using Rainbow;
-using Unicorn.Configuration;
 using Unicorn.Configuration.Dependencies;
 using Unicorn.Data;
 using Unicorn.Evaluators;

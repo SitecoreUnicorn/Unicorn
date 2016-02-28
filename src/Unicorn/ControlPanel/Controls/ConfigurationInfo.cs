@@ -39,16 +39,21 @@ namespace Unicorn.ControlPanel.Controls
 				writer.Write(@"
 					<p>{0}</p>", _configuration.Description);
 
-			if (dependents.Any())
-			{
-				writer.Write(@"
-					<p class=""help"">This configuration depends on {0}, which should sync before it.</p>", string.Join(", ", dependents.Select(dep => dep.Configuration.Name)));
-			}
-
 			if (configurationHasAnySerializedItems)
 			{
 				writer.Write(@"
-					<p><a href=""#"" data-modal=""{0}"" class=""info"">Detailed configuration information</a></p>", modalId);
+					<span class=""badge""><a href=""#"" data-modal=""{0}"" class=""info"">Show Config</a></span>", modalId);
+			}
+
+			var dpConfig = _configuration.Resolve<IUnicornDataProviderConfiguration>();
+			if (dpConfig != null && dpConfig.EnableTransparentSync)
+				writer.Write(@"
+					<span class=""badge"">Transparent Sync</span>");
+
+			if (dependents.Any())
+			{
+				writer.Write(@"
+					<span class=""badge"">Dependent ({0})</span>", dependents.Length);
 			}
 
 			if (!configurationHasValidRootPathParents && !configurationHasAnySerializedItems)
@@ -57,11 +62,6 @@ namespace Unicorn.ControlPanel.Controls
 			else if (!configurationHasAnySerializedItems)
 				writer.Write(@"
 					<p class=""warning"">This configuration does not currently have any valid serialized items. You cannot sync it until you perform an initial serialization, which will write the current state of Sitecore to serialized items.</p>");
-
-			var dpConfig = _configuration.Resolve<IUnicornDataProviderConfiguration>();
-			if (dpConfig != null && dpConfig.EnableTransparentSync)
-				writer.Write(@"
-					<p class=""transparent-sync"">Transparent sync is enabled for this configuration.</p>");
 
 			var configDetails = _configuration.Resolve<ConfigurationDetails>();
 			configDetails.ConfigurationName = _configuration.Name;
