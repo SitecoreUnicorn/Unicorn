@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Web;
 using Kamsar.WebConsole;
 
 namespace Unicorn.Logging
@@ -12,37 +11,43 @@ namespace Unicorn.Logging
 	public class WebConsoleLogger : ILogger
 	{
 		private readonly IProgressStatus _progress;
+		private readonly MessageType _logLevel;
 
-		protected bool Quiet
-		{
-			get
-			{
-				if (HttpContext.Current == null) return false;
-				return HttpContext.Current.Request.QueryString["quiet"] == "1";
-			}
-		}
-
-		public WebConsoleLogger(IProgressStatus progress)
+		public WebConsoleLogger(IProgressStatus progress, string logLevelValue)
 		{
 			_progress = progress;
+			MessageType type;
+
+			if(logLevelValue == null || !Enum.TryParse(logLevelValue, true, out type))
+				type = MessageType.Debug;
+
+			_logLevel = type;
+		}
+
+		public WebConsoleLogger(IProgressStatus progress, MessageType logLevel)
+		{
+			_progress = progress;
+			_logLevel = logLevel;
 		}
 
 		public void Info(string message)
 		{
-			if (Quiet) return;
+			if (_logLevel == MessageType.Warning || _logLevel == MessageType.Error) return;
 
 			_progress.ReportStatus(message, MessageType.Info);
 		}
 
 		public void Debug(string message)
 		{
-			if (Quiet) return;
+			if (_logLevel != MessageType.Debug) return;
 
 			_progress.ReportStatus(message, MessageType.Debug);
 		}
 
 		public void Warn(string message)
 		{
+			if (_logLevel != MessageType.Error) return;
+
 			_progress.ReportStatus(message, MessageType.Warning);
 		}
 

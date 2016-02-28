@@ -87,10 +87,10 @@ namespace Unicorn.ControlPanel.Controls
 					: "This will reset the serialized state to match Sitecore. This normally is not needed after initial setup unless changing path configuration. Continue?";
 
 				writer.Write(@"
-					<a class=""button"" href=""?verb=Reserialize&amp;configuration={0}"" onclick=""return confirm('{1}')"">Reserialize</a>", htmlConfigName, blurb);
+					<a class=""button"" data-basehref=""?verb=Reserialize&amp;configuration={0}"" href=""?verb=Reserialize&amp;configuration={0}"" onclick=""return confirm('{1}')"">Reserialize</a>", htmlConfigName, blurb);
 
 				writer.Write(@"
-					<a class=""button"" href=""?verb=Sync&amp;configuration={0}"">Sync</a>", htmlConfigName);
+					<a class=""button"" data-basehref=""?verb=Sync&amp;configuration={0}"" href=""?verb=Sync&amp;configuration={0}"">Sync</a>", htmlConfigName);
 			}
 
 			writer.Write(@"

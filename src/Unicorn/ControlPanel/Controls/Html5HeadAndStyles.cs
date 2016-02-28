@@ -55,10 +55,21 @@ namespace Unicorn.ControlPanel.Controls
 						display: block;
 					}
 
+					label {
+						font-weight: bold;
+					}
+
 					li {
 						list-style-type: none;
 						margin: 0;
 						padding: 0 0 8px 0;
+					}
+
+					select {
+						border: 2px solid #E35131;
+						color: #E35131;
+						font-size: 1em;
+						padding: 3px;
 					}
 
 					svg {
@@ -87,7 +98,7 @@ namespace Unicorn.ControlPanel.Controls
 					}
 
 					/* allows clicking when sidebar active */
-					td > * { position: relative; }
+					td > *, .verbosity-wrapper { position: relative; }
 
 					/* specific styles */
 					.badge {

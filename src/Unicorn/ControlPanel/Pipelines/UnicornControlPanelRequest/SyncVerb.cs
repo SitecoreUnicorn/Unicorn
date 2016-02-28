@@ -25,7 +25,7 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 
 		protected override IResponse CreateResponse(UnicornControlPanelRequestPipelineArgs args)
 		{
-			return new WebConsoleResponse("Sync Unicorn", args.SecurityState.IsAutomatedTool, new HeadingService(), progress => Process(progress, new WebConsoleLogger(progress)));
+			return new WebConsoleResponse("Sync Unicorn", args.SecurityState.IsAutomatedTool, new HeadingService(), progress => Process(progress, new WebConsoleLogger(progress, args.Context.Request.QueryString["log"])));
 		}
 
 		protected virtual void Process(IProgressStatus progress, ILogger additionalLogger)
