@@ -233,6 +233,7 @@ namespace Unicorn.Data.DataProvider
 			copyTargetItem.Path = $"{destinationItem.Path}/{copyName}";
 			copyTargetItem.Name = copyName;
 			copyTargetItem.Id = copyId.Guid;
+			copyTargetItem.ParentId = destination.ID.Guid;
 
 			if (!_predicate.Includes(copyTargetItem).IsIncluded) return; // destination parent is not in a path that we are serializing, so skip out
 
