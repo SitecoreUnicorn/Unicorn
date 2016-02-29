@@ -19,14 +19,6 @@ namespace Unicorn.Tests.Configuration
 		}
 
 		[Fact]
-		public void Throws_WhenConstructingUnregisteredType()
-		{
-			var micro = new MicroConfiguration("Test", null, null);
-
-			Assert.Throws<MicroResolutionException>(() => micro.Resolve<ITest>());
-		}
-
-		[Fact]
 		public void ResolvesType_AsInstance()
 		{
 			var micro = new MicroConfiguration("Test", null, null);
