@@ -19,8 +19,8 @@ You can also automate doing a sync as part of a CI deployment process; see the r
 Want deeper documentation? The README.md on GitHub is your friend: https://github.com/kamsar/Unicorn/blob/master/README.md, as well as the comments in all the config files.
 
 TFS USERS
-- Make sure to make a copy of App_Config\Include\Rainbow.TFS.config.example and rename it to .config so that Unicorn won't use '$' in filenames.
-- Looking for TFS 2010/Server Workspace support? Follow the instructions on the TFS Plug-In for Rainbow README.md: https://github.com/PetersonDave/Rainbow.Tfs.
+- Unicorn should work fine with TFS versions later than 2010, though the experience is not as optimal as better SCMs :D
+- Looking for TFS 2010 or server workspace support? Follow the instructions on the TFS Plug-In for Rainbow README.md: https://github.com/PetersonDave/Rainbow.Tfs.
 
 Have questions? Tweet @kamsar.
 
