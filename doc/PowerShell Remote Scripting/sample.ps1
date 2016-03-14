@@ -1,4 +1,3 @@
-param([string]$url = 'https://localhost/unicorn.aspx')
 $ErrorActionPreference = 'Stop'
 
 $ScriptPath = Split-Path $MyInvocation.MyCommand.Path
@@ -7,7 +6,7 @@ $ScriptPath = Split-Path $MyInvocation.MyCommand.Path
 
 Import-Module $ScriptPath\Unicorn.psm1
 
-Sync-Unicorn -ControlPanelUrl $url -SharedSecret 'your-sharedsecret-here' -Configurations @('Test1', 'Test2')
+Sync-Unicorn -ControlPanelUrl 'https://localhost/unicorn.aspx' -SharedSecret 'your-sharedsecret-here' -Configurations @('Test1', 'Test2')
 
 # Note: you may pass -Configurations @(' ') to syncronize all configurations.
 # Note: you may pass -Verb 'Reserialize' for remote reserialize. Usually not needed though.
