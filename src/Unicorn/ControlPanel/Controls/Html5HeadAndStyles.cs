@@ -19,7 +19,6 @@ namespace Unicorn.ControlPanel.Controls
 		
 					/* vertical rhythms */
 					article { margin: 30px 0; }
-					td { padding: 0 0 30px 10px; }
 					article > * { margin: 20px 0 0 0; }
 					td > *, 
 					section > * { margin: 0 0 8px 0; }
@@ -166,6 +165,10 @@ namespace Unicorn.ControlPanel.Controls
 							display: block;
 							float: left;
 							margin: .35em .4em 0 0;
+						}
+
+						h2.fakebox {
+							width: calc(100% - 200px);
 						}
 
 						h2.fakebox > span {
