@@ -56,7 +56,7 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 								<select id=""verbosity"">
 									<option value=""Debug"">Items synced + detailed info</option>
 									<option value=""Info"" selected>Items synced</option>
-									<option value=""Warn"">Warnings and errors only</option>
+									<option value=""Warning"">Warnings and errors only</option>
 									<option value=""Error"">Errors only</option>
 								</select> 
 								<br>
