@@ -63,6 +63,8 @@ namespace Unicorn.Deserialization
 			var itemField = item.Fields[new ID(field.FieldId)];
 			if (itemField.Shared)
 				_logger.Debug("* [U] {0}".FormatWith(itemField.Name));
+			else if(itemField.Unversioned)
+				_logger.Debug("* [U] {0}: {1}".FormatWith(item.Language.Name, itemField.Name));
 			else
 				_logger.Debug("* [U] {0}#{1}: {2}".FormatWith(item.Language.Name, item.Version.Number, itemField.Name));
 		}
