@@ -257,6 +257,17 @@ namespace Unicorn.Loader
 			{
 				try
 				{
+					// Because the load order is breadth-first, standard values will be loaded PRIOR TO THEIR TEMPLATE FIELDS
+					// That's bad because it defeats various checks on fields, like significant empty field values
+					// So if we find a standard values item, we throw it straight onto the retry list, which will make it load last
+					// after everything else, ensuring its fields all exist first. (This is also how Sitecore serialization does it...)
+					if (serializedChild.Path.EndsWith("__Standard Values", StringComparison.OrdinalIgnoreCase))
+					{
+						retryer.AddItemRetry(serializedChild, new Exception("Pushing standard values item to the end of loading."));
+						orphanCandidates.Remove(serializedChild.Id);
+						continue;
+					}
+
 					// load a child item
 					var loadedSourceItem = DoLoadItem(serializedChild, consistencyChecker);
 					if (loadedSourceItem.ItemData != null)
