@@ -14,6 +14,7 @@ using Sitecore.Data.Archiving;
 using Sitecore.Data.DataProviders;
 using Sitecore.Data.Items;
 using Sitecore.Data.Serialization;
+using Sitecore.Data.Templates;
 using Sitecore.Diagnostics;
 using Sitecore.Eventing;
 using Sitecore.Globalization;
@@ -108,7 +109,7 @@ namespace Unicorn.Data.DataProvider
 
 		public Sitecore.Data.DataProviders.DataProvider ParentDataProvider { get; set; }
 
-		protected Database Database { get { return ParentDataProvider.Database; } }
+		protected Database Database => ParentDataProvider.Database;
 
 		public virtual void CreateItem(ItemDefinition newItem, ID templateId, ItemDefinition parent, CallContext context)
 		{
@@ -239,6 +240,27 @@ namespace Unicorn.Data.DataProvider
 
 			_targetDataStore.Save(copyTargetItem);
 			_logger.CopiedItem(_targetDataStore.FriendlyName, existingItem, copyTargetItem);
+		}
+
+		public void ChangeTemplate(ItemDefinition itemDefinition, TemplateChangeList changeList, CallContext context)
+		{
+			if (DisableSerialization) return;
+
+			Assert.ArgumentNotNull(itemDefinition, nameof(itemDefinition));
+			Assert.ArgumentNotNull(changeList, nameof(changeList));
+
+			var sourceItem = GetSourceFromId(itemDefinition.ID);
+
+			var existingSerializedItem = _targetDataStore.GetByPathAndId(sourceItem.Path, sourceItem.Id, sourceItem.DatabaseName);
+
+			if (existingSerializedItem == null) return;
+
+			var newItem = new ProxyItem(sourceItem); // note: sourceItem gets dumped. Because it has field changes made to it.
+			newItem.TemplateId = changeList.Target.ID.Guid;
+
+			_targetDataStore.Save(newItem);
+
+			_logger.SavedItem(_targetDataStore.FriendlyName, sourceItem, "TemplateChanged");
 		}
 
 		public virtual void AddVersion(ItemDefinition itemDefinition, VersionUri baseVersion, CallContext context)

@@ -8,6 +8,7 @@ using Sitecore.Data;
 using Sitecore.Data.DataProviders;
 using Sitecore.Data.Items;
 using Sitecore.Data.SqlServer;
+using Sitecore.Data.Templates;
 using Sitecore.Globalization;
 using Unicorn.Configuration;
 
@@ -92,6 +93,16 @@ namespace Unicorn.Data.DataProvider
 
 			foreach (var provider in _unicornDataProviders)
 				provider.CopyItem(source, destination, copyName, copyID, context);
+
+			return true;
+		}
+
+		public override bool ChangeTemplate(ItemDefinition itemDefinition, TemplateChangeList changeList, CallContext context)
+		{
+			if (!base.ChangeTemplate(itemDefinition, changeList, context)) return false;
+
+			foreach (var provider in _unicornDataProviders)
+				provider.ChangeTemplate(itemDefinition, changeList, context);
 
 			return true;
 		}
