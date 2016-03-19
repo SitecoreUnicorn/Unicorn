@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Sitecore.Caching;
 using Sitecore.Configuration;
 using Sitecore.Diagnostics;
 using Unicorn.Publishing;
@@ -26,10 +27,15 @@ namespace Unicorn.Pipelines.UnicornSyncEnd
 
 			if (_targetDatabases == null || _targetDatabases.Count == 0) return;
 
+			if (!ManualPublishQueueHandler.HasItemsToPublish) return;
+
+			// this occurs prior to the SerializationComplete event, which clears caches
+			// if this is not done here, old content can be published that is out of date
+			// particularly unversioned fields
+			CacheManager.ClearAllCaches();
+
 			var dbs = _targetDatabases.Select(Factory.GetDatabase).ToArray();
 			var trigger = Factory.GetDatabase("master").GetItem(PublishTriggerItemId);
-
-			if (!ManualPublishQueueHandler.HasItemsToPublish) return;
 
 			Assert.IsTrue(dbs.Length > 0, "No valid databases specified to publish to.");
 			Assert.IsNotNull(trigger, "Invalid trigger item ID");

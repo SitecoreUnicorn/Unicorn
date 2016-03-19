@@ -32,7 +32,7 @@ namespace Unicorn.Publishing
 			{
 				if (progress != null) progress.ReportStatus("> Publishing {0} synced item{2} in queue to {1}", MessageType.Debug, ManuallyAddedCandidates.Count, database.Name, ManuallyAddedCandidates.Count == 1 ? string.Empty : "s");
 
-				var publishOptions = new PublishOptions(triggerItem.Database, database, PublishMode.SingleItem, triggerItem.Language, DateTime.UtcNow) { RootItem = triggerItem };
+				var publishOptions = new PublishOptions(triggerItem.Database, database, PublishMode.SingleItem, triggerItem.Language, DateTime.UtcNow) { RootItem = triggerItem, CompareRevisions = false };
 
 				var result = new Publisher(publishOptions, triggerItem.Languages).PublishWithResult();
 
