@@ -691,6 +691,9 @@ namespace Unicorn.Data.DataProvider
 			Database.Caches.ItemCache.Clear();
 			Database.Caches.ItemPathsCache.Clear();
 			Database.Caches.PathCache.Clear();
+
+			if(metadata.TemplateId == TemplateIDs.Template.Guid || metadata.TemplateId == TemplateIDs.TemplateField.Guid || metadata.Path.EndsWith("__Standard Values", StringComparison.OrdinalIgnoreCase))
+				Database.Engines.TemplateEngine.Reset();
 		}
 
 		/// <summary>
