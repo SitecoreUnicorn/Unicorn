@@ -46,7 +46,7 @@ namespace Unicorn.Logging
 
 		public void Warn(string message)
 		{
-			if (_logLevel != MessageType.Error) return;
+			if (_logLevel == MessageType.Error) return;
 
 			_progress.ReportStatus(message, MessageType.Warning);
 		}
