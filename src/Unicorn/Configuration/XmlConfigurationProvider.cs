@@ -211,6 +211,9 @@ namespace Unicorn.Configuration
 					bool boolean;
 					if (bool.TryParse(attr.InnerText, out boolean)) return new KeyValuePair<string, object>(attr.Name, boolean);
 
+					int integer;
+					if(int.TryParse(attr.InnerText, out integer)) return new KeyValuePair<string, object>(attr.Name, integer);
+
 					var value = attr.InnerText.Replace("$(configurationName)", GetAttributeValue(configuration, "name"));
 
 					return new KeyValuePair<string, object>(attr.Name, value);
