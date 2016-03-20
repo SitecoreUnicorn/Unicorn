@@ -289,8 +289,12 @@ namespace Unicorn.Data.DataProvider
 			// if the base version is 0 or less, that means add a blank version (per SC DP behavior). If 1 or more we should copy all fields on that version into the new version.
 			if (baseVersion.Version.Number > 0)
 			{
-				newVersion = versionAddProxy.Versions.First(v => v.Language.Equals(baseVersion.Language.CultureInfo) && v.VersionNumber.Equals(baseVersion.Version.Number));
-				newVersion = new ProxyItemVersion(newVersion) { VersionNumber = newVersionNumber }; // creating a new proxyversion essentially clones the existing version
+				newVersion = versionAddProxy.Versions.FirstOrDefault(v => v.Language.Equals(baseVersion.Language.CultureInfo) && v.VersionNumber.Equals(baseVersion.Version.Number));
+
+				// the new version may not exist if we are using language fallback and adding a new version. If that's the case we should create a blank version, as that's what Sitecore does.
+				if (newVersion != null)
+					newVersion = new ProxyItemVersion(newVersion) { VersionNumber = newVersionNumber }; // creating a new proxyversion essentially clones the existing version
+				else newVersion = new ProxyItemVersion(baseVersion.Language.CultureInfo, newVersionNumber);
 			}
 			else newVersion = new ProxyItemVersion(baseVersion.Language.CultureInfo, newVersionNumber);
 
@@ -692,7 +696,7 @@ namespace Unicorn.Data.DataProvider
 			Database.Caches.ItemPathsCache.Clear();
 			Database.Caches.PathCache.Clear();
 
-			if(metadata.TemplateId == TemplateIDs.Template.Guid || metadata.TemplateId == TemplateIDs.TemplateField.Guid || metadata.Path.EndsWith("__Standard Values", StringComparison.OrdinalIgnoreCase))
+			if (metadata.TemplateId == TemplateIDs.Template.Guid || metadata.TemplateId == TemplateIDs.TemplateField.Guid || metadata.Path.EndsWith("__Standard Values", StringComparison.OrdinalIgnoreCase))
 				Database.Engines.TemplateEngine.Reset();
 		}
 
