@@ -113,6 +113,7 @@
     <Compile Include="Pipelines\UnicornReserializeComplete\IUnicornReserializeCompleteProcessor.cs" />
     <Compile Include="Pipelines\UnicornReserializeComplete\UnicornReserializeCompletePipelineArgs.cs" />
     <Compile Include="Pipelines\UnicornSyncComplete\DictionaryCacheClearer.cs" />
+    <Compile Include="Pipelines\UnicornSyncComplete\RebuildLinkDatabaseForSyncedItems.cs" />
     <Compile Include="Predicates\Exclusions\ChildrenOfPathBasedPresetTreeExclusion.cs" />
     <Compile Include="Predicates\Exclusions\PathBasedPresetTreeExclusion.cs" />
     <Compile Include="Predicates\Exclusions\PathTool.cs" />
@@ -212,6 +213,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="Standard Config Files\Unicorn.LinkDatabase.config" />
     <None Include="Standard Config Files\Unicorn.Configs.NewItemsOnly.example">
       <SubType>Designer</SubType>
     </None>
