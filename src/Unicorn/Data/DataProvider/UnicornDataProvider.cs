@@ -696,8 +696,11 @@ namespace Unicorn.Data.DataProvider
 			Database.Caches.ItemPathsCache.Clear();
 			Database.Caches.PathCache.Clear();
 
-			if (metadata.TemplateId == TemplateIDs.Template.Guid || metadata.TemplateId == TemplateIDs.TemplateField.Guid || metadata.Path.EndsWith("__Standard Values", StringComparison.OrdinalIgnoreCase))
-				Database.Engines.TemplateEngine.Reset();
+			if (metadata != null)
+			{
+				if(metadata.TemplateId == TemplateIDs.Template.Guid || metadata.TemplateId == TemplateIDs.TemplateField.Guid || metadata.Path.EndsWith("__Standard Values", StringComparison.OrdinalIgnoreCase))
+					Database.Engines.TemplateEngine.Reset();
+			}
 		}
 
 		/// <summary>
@@ -744,7 +747,7 @@ namespace Unicorn.Data.DataProvider
 			{
 				// ReSharper disable once SuspiciousTypeConversion.Global
 				var targetAsDisposable = _targetDataStore as IDisposable;
-				if (targetAsDisposable != null) targetAsDisposable.Dispose();
+				targetAsDisposable?.Dispose();
 			}
 		}
 	}
