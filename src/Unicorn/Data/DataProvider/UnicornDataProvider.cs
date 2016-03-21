@@ -9,6 +9,8 @@ using Rainbow.Filtering;
 using Rainbow.Model;
 using Sitecore;
 using Sitecore.Collections;
+using Sitecore.ContentSearch;
+using Sitecore.ContentSearch.Maintenance;
 using Sitecore.Data;
 using Sitecore.Data.Archiving;
 using Sitecore.Data.DataProviders;
@@ -18,6 +20,7 @@ using Sitecore.Data.Templates;
 using Sitecore.Diagnostics;
 using Sitecore.Eventing;
 using Sitecore.Globalization;
+using Unicorn.Loader;
 using Unicorn.Predicates;
 using ItemData = Rainbow.Storage.Sc.ItemData;
 
@@ -37,6 +40,7 @@ namespace Unicorn.Data.DataProvider
 		private readonly IFieldFilter _fieldFilter;
 		private readonly IUnicornDataProviderLogger _logger;
 		private readonly IUnicornDataProviderConfiguration _dataProviderConfiguration;
+		private readonly ISyncConfiguration _syncConfiguration;
 		private readonly PredicateRootPathResolver _rootPathResolver;
 		private static bool _disableSerialization;
 		private bool _disableTransparentSync;
@@ -44,18 +48,20 @@ namespace Unicorn.Data.DataProvider
 		protected IReadOnlyDictionary<Guid, IReadOnlyList<ID>> RootIds;
 		private readonly object _rootIdInitLock = new object();
 
-		public UnicornDataProvider(ITargetDataStore targetDataStore, ISourceDataStore sourceDataStore, IPredicate predicate, IFieldFilter fieldFilter, IUnicornDataProviderLogger logger, IUnicornDataProviderConfiguration dataProviderConfiguration, PredicateRootPathResolver rootPathResolver)
+		public UnicornDataProvider(ITargetDataStore targetDataStore, ISourceDataStore sourceDataStore, IPredicate predicate, IFieldFilter fieldFilter, IUnicornDataProviderLogger logger, IUnicornDataProviderConfiguration dataProviderConfiguration, ISyncConfiguration syncConfiguration, PredicateRootPathResolver rootPathResolver)
 		{
-			Assert.ArgumentNotNull(targetDataStore, "serializationProvider");
-			Assert.ArgumentNotNull(predicate, "predicate");
-			Assert.ArgumentNotNull(fieldFilter, "fieldPredicate");
-			Assert.ArgumentNotNull(logger, "logger");
-			Assert.ArgumentNotNull(sourceDataStore, "sourceDataStore");
-			Assert.ArgumentNotNull(dataProviderConfiguration, "configuration");
-			Assert.ArgumentNotNull(rootPathResolver, "rootPathResolver");
+			Assert.ArgumentNotNull(targetDataStore, nameof(targetDataStore));
+			Assert.ArgumentNotNull(predicate, nameof(predicate));
+			Assert.ArgumentNotNull(fieldFilter, nameof(fieldFilter));
+			Assert.ArgumentNotNull(logger, nameof(logger));
+			Assert.ArgumentNotNull(sourceDataStore, nameof(sourceDataStore));
+			Assert.ArgumentNotNull(dataProviderConfiguration, nameof(dataProviderConfiguration));
+			Assert.ArgumentNotNull(rootPathResolver, nameof(rootPathResolver));
+			Assert.ArgumentNotNull(syncConfiguration, nameof(syncConfiguration));
 
 			_logger = logger;
 			_dataProviderConfiguration = dataProviderConfiguration;
+			_syncConfiguration = syncConfiguration;
 			_rootPathResolver = rootPathResolver;
 			_predicate = predicate;
 			_fieldFilter = fieldFilter;
@@ -696,10 +702,29 @@ namespace Unicorn.Data.DataProvider
 			Database.Caches.ItemPathsCache.Clear();
 			Database.Caches.PathCache.Clear();
 
-			if (metadata != null)
+			if (metadata == null) return;
+			
+			if(metadata.TemplateId == TemplateIDs.Template.Guid || metadata.TemplateId == TemplateIDs.TemplateField.Guid || metadata.Path.EndsWith("__Standard Values", StringComparison.OrdinalIgnoreCase))
+				Database.Engines.TemplateEngine.Reset();
+
+			if (_syncConfiguration.UpdateLinkDatabase || _syncConfiguration.UpdateSearchIndex)
 			{
-				if(metadata.TemplateId == TemplateIDs.Template.Guid || metadata.TemplateId == TemplateIDs.TemplateField.Guid || metadata.Path.EndsWith("__Standard Values", StringComparison.OrdinalIgnoreCase))
-					Database.Engines.TemplateEngine.Reset();
+				var item = GetItemFromId(new ID(metadata.Id), true);
+
+				if (item == null) return;
+
+				if (_syncConfiguration.UpdateLinkDatabase)
+				{
+					Globals.LinkDatabase.UpdateReferences(item);
+				}
+
+				if (_syncConfiguration.UpdateSearchIndex)
+				{
+					foreach (var index in ContentSearchManager.Indexes)
+					{
+						IndexCustodian.UpdateItem(index, new SitecoreItemUniqueId(item.Uri));
+					}
+				}
 			}
 		}
 
