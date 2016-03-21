@@ -44,6 +44,9 @@
       <HintPath>..\..\packages\MicroCHAP.1.2.1.0\lib\net45\MicroCHAP.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Sitecore.ContentSearch">
+      <HintPath>..\..\lib\Sitecore\v7\Sitecore.ContentSearch.dll</HintPath>
+    </Reference>
     <Reference Include="Sitecore.Kernel, Version=7.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\lib\Sitecore\v7\Sitecore.Kernel.dll</HintPath>
@@ -106,6 +109,8 @@
     <Compile Include="Deserialization\UnicornDeserializer.cs" />
     <Compile Include="Evaluators\INewItemOnlyEvaluatorLogger.cs" />
     <Compile Include="Evaluators\NewItemOnlyEvaluator.cs" />
+    <Compile Include="Loader\DefaultSyncConfiguration.cs" />
+    <Compile Include="Loader\ISyncConfiguration.cs" />
     <Compile Include="Logging\Formatting\DeserializationExceptionFormatter.cs" />
     <Compile Include="Logging\Formatting\IExceptionFormatter.cs" />
     <Compile Include="Logging\Formatting\TemplateMissingFieldExceptionFormatter.cs" />
@@ -113,6 +118,7 @@
     <Compile Include="Pipelines\UnicornReserializeComplete\IUnicornReserializeCompleteProcessor.cs" />
     <Compile Include="Pipelines\UnicornReserializeComplete\UnicornReserializeCompletePipelineArgs.cs" />
     <Compile Include="Pipelines\UnicornSyncComplete\DictionaryCacheClearer.cs" />
+    <Compile Include="Pipelines\UnicornSyncComplete\SyncedItemPostProcessor.cs" />
     <Compile Include="Predicates\Exclusions\ChildrenOfPathBasedPresetTreeExclusion.cs" />
     <Compile Include="Predicates\Exclusions\PathBasedPresetTreeExclusion.cs" />
     <Compile Include="Predicates\Exclusions\PathTool.cs" />

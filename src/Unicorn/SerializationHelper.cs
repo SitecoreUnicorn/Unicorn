@@ -22,13 +22,7 @@ namespace Unicorn
 	/// </summary>
 	public class SerializationHelper
 	{
-		private int _threads = Settings.GetIntSetting("Unicorn.MaximumConcurrency", 16);
-
-		public int ThreadCount
-		{
-			get { return _threads; }
-			set { _threads = value; }
-		}
+		public int ThreadCount { get; set; } = Settings.GetIntSetting("Unicorn.MaximumWriteConcurrency", 16);
 
 		public virtual IConfiguration[] GetConfigurationsForItem(IItemData item)
 		{

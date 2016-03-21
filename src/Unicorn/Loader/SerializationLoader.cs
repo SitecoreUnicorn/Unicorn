@@ -27,26 +27,21 @@ namespace Unicorn.Loader
 		protected readonly IEvaluator Evaluator;
 		protected readonly ISourceDataStore SourceDataStore;
 		protected readonly ISerializationLoaderLogger Logger;
+		protected  readonly ISyncConfiguration SyncConfiguration;
 		protected readonly PredicateRootPathResolver PredicateRootPathResolver;
 
-		private int _threads = Settings.GetIntSetting("Unicorn.MaximumConcurrency", 16);
-
-		public int ThreadCount
+		public SerializationLoader(ISourceDataStore sourceDataStore, ITargetDataStore targetDataStore, IPredicate predicate, IEvaluator evaluator, ISerializationLoaderLogger logger, ISyncConfiguration syncConfiguration, PredicateRootPathResolver predicateRootPathResolver)
 		{
-			get { return _threads; }
-			set { _threads = value; }
-		}
-
-		public SerializationLoader(ISourceDataStore sourceDataStore, ITargetDataStore targetDataStore, IPredicate predicate, IEvaluator evaluator, ISerializationLoaderLogger logger, PredicateRootPathResolver predicateRootPathResolver)
-		{
-			Assert.ArgumentNotNull(targetDataStore, "serializationProvider");
-			Assert.ArgumentNotNull(sourceDataStore, "sourceDataStore");
-			Assert.ArgumentNotNull(predicate, "predicate");
-			Assert.ArgumentNotNull(evaluator, "evaluator");
-			Assert.ArgumentNotNull(logger, "logger");
-			Assert.ArgumentNotNull(predicateRootPathResolver, "predicateRootPathResolver");
+			Assert.ArgumentNotNull(targetDataStore, nameof(targetDataStore));
+			Assert.ArgumentNotNull(sourceDataStore, nameof(sourceDataStore));
+			Assert.ArgumentNotNull(predicate, nameof(predicate));
+			Assert.ArgumentNotNull(evaluator, nameof(evaluator));
+			Assert.ArgumentNotNull(logger, nameof(logger));
+			Assert.ArgumentNotNull(predicateRootPathResolver, nameof(predicateRootPathResolver));
+			Assert.ArgumentNotNull(syncConfiguration, nameof(syncConfiguration));
 
 			Logger = logger;
+			SyncConfiguration = syncConfiguration;
 			PredicateRootPathResolver = predicateRootPathResolver;
 			Evaluator = evaluator;
 			Predicate = predicate;
@@ -161,7 +156,7 @@ namespace Unicorn.Loader
 			// put the root in the queue
 			processQueue.Enqueue(root);
 
-			Thread[] pool = Enumerable.Range(0, ThreadCount).Select(i => new Thread(() =>
+			Thread[] pool = Enumerable.Range(0, SyncConfiguration.MaxConcurrency).Select(i => new Thread(() =>
 			{
 				Process:
 				Interlocked.Increment(ref activeThreads);
