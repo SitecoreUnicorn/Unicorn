@@ -5,11 +5,13 @@ using Sitecore.Data.Serialization;
 using Sitecore.Data.Serialization.ObjectModel;
 using Sitecore.Diagnostics;
 using Sitecore.Security.Accounts;
-using Sitecore.Security.Serialization.ObjectModel;
 
 namespace Unicorn.Roles.Data
 {
-	/// <summary>
+  using Unicorn.Roles.Model;
+  using Unicorn.Roles.Serealizer;
+
+  /// <summary>
 	/// Stores roles on disk using Sitecore's built in role serialization APIs.
 	/// </summary>
 	public class SerializedRoleDataStore : IRoleDataStore
@@ -42,7 +44,9 @@ namespace Unicorn.Roles.Data
 		{
 			var path = GetPathForRole(role);
 
-			Manager.DumpRole(path, role);
+			//Manager.DumpRole(path, role);
+      var serializer = new RoleSerializer();
+      serializer.DumpRole(path, role);
 		}
 
 		public virtual void Remove(Role role)

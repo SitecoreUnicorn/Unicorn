@@ -45,32 +45,32 @@ namespace Unicorn.Roles.Loader
 
 		protected virtual bool EvaluateRole(SyncRoleFile role)
 		{
-			if (!Role.Exists(role.Role.Name))
-			{
-				_loaderLogger.EvaluatedNewRole(role);
-				return true;
-			}
+			//if (!Role.Exists(role.Role.Name))
+			//{
+			//	_loaderLogger.EvaluatedNewRole(role);
+			//	return true;
+			//}
 
-			var targetRole = Role.FromName(role.Role.Name);
+			//var targetRole = Role.FromName(role.Role.Name);
 
-			var rolesInRole = RolesInRolesManager.GetRolesInRole(targetRole, false).ToLookup(key => key.Name);
+			//var rolesInRole = RolesInRolesManager.GetRolesInRole(targetRole, false).ToLookup(key => key.Name);
 
-			var addedRolesInRoles = role.Role.RolesInRole.Where(rir => !rolesInRole.Contains(rir)).ToArray();
+			//var addedRolesInRoles = role.Role.RolesInRole.Where(rir => !rolesInRole.Contains(rir)).ToArray();
 
-			var removedRolesInRoles = rolesInRole.Where(rir => !role.Role.RolesInRole.Contains(rir.Key)).Select(rir => rir.Key).ToArray();
+			//var removedRolesInRoles = rolesInRole.Where(rir => !role.Role.RolesInRole.Contains(rir.Key)).Select(rir => rir.Key).ToArray();
 
-			if (addedRolesInRoles.Length > 0 || removedRolesInRoles.Length > 0)
-			{
-				_loaderLogger.RolesInRolesChanged(role, addedRolesInRoles, removedRolesInRoles);
-				return true;
-			}
+			//if (addedRolesInRoles.Length > 0 || removedRolesInRoles.Length > 0)
+			//{
+			//	_loaderLogger.RolesInRolesChanged(role, addedRolesInRoles, removedRolesInRoles);
+			//	return true;
+			//}
 
 			return false;
 		}
 
 		protected virtual void DeserializeRole(SyncRoleFile role)
 		{
-			RoleSynchronization.PasteSyncRole(role.Role);
+			//RoleSynchronization.PasteSyncRole(role.Role);
 		}
 	}
 }

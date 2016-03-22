@@ -1,8 +1,8 @@
-﻿using Sitecore.Security.Serialization.ObjectModel;
-
-namespace Unicorn.Roles.Data
+﻿namespace Unicorn.Roles.Data
 {
-	/// <summary>
+  using Unicorn.Roles.Model;
+
+  /// <summary>
 	/// Wraps a Sitecore SyncRole object along with the source filename it's from
 	/// </summary>
 	public class SyncRoleFile

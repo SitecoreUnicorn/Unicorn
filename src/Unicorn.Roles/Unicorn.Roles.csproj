@@ -31,7 +31,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Sitecore.Kernel">
-      <HintPath>..\..\lib\Sitecore\v7\Sitecore.Kernel.dll</HintPath>
+      <HintPath>..\..\..\xerox\lib\Sitecore\Sitecore.Kernel.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -52,9 +52,11 @@
     <Compile Include="Data\SerializedRoleDataStore.cs" />
     <Compile Include="Events\UnicornConfigurationRolesEventHandler.cs" />
     <Compile Include="Events\UnicornRolesEventHandler.cs" />
+    <Compile Include="Loader\CustomRoleLoader.cs" />
     <Compile Include="Loader\DefaultRoleLoaderLogger.cs" />
     <Compile Include="Loader\IRoleLoader.cs" />
     <Compile Include="Loader\IRoleLoaderLogger.cs" />
+    <Compile Include="Model\SyncRole.cs" />
     <Compile Include="Pipelines\UnicornReserializeComplete\ReserializeRoles.cs" />
     <Compile Include="Pipelines\UnicornSyncComplete\SyncRoles.cs" />
     <Compile Include="Predicates\EmptyPredicate.cs" />
@@ -62,6 +64,7 @@
     <Compile Include="Loader\RoleLoader.cs" />
     <Compile Include="RolePredicates\IRolePredicate.cs" />
     <Compile Include="RolePredicates\ConfigurationRolePredicate.cs" />
+    <Compile Include="Serealizer\RoleSerializer.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\Rainbow\src\Rainbow\Rainbow.csproj">
@@ -86,6 +89,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="TODO.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Reader\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -6,7 +6,9 @@ using Unicorn.Roles.RolePredicates;
 
 namespace Unicorn.Roles.Events
 {
-	/// <summary>
+  using System.Linq;
+
+  /// <summary>
 	/// Handles role change events for a specific Unicorn configuration
 	/// </summary>
 	public class UnicornConfigurationRolesEventHandler
@@ -24,13 +26,23 @@ namespace Unicorn.Roles.Events
 
 		public virtual void RoleAlteredOrCreated(string roleName)
 		{
-			if (!Role.Exists(roleName)) return;
+      var role = Role.FromName(roleName);
 
-			var role = Role.FromName(roleName);
+      if (!Role.Exists(roleName))
+      {
+        var roles = RolesInRolesManager.GetAllRoles();
+        foreach (var role1 in roles)
+        {
+          if (_predicate == null || !_predicate.Includes(role1).IsIncluded) return;
 
-			if (_predicate == null || !_predicate.Includes(role).IsIncluded) return;
-
-			_dataStore.Save(role);
+          _dataStore.Save(role1);
+        }
+      }
+      else
+      {
+        if (_predicate == null || !_predicate.Includes(role).IsIncluded) return;
+        _dataStore.Save(role);
+      }
 		}
 
 		public virtual void RoleDeleted(string roleName)
