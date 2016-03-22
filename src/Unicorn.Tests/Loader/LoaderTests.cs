@@ -234,7 +234,7 @@ namespace Unicorn.Tests.Loader
 			predicate = predicate ?? CreateInclusiveTestPredicate();
 			evaluator = evaluator ?? Substitute.For<IEvaluator>();
 			logger = logger ?? Substitute.For<ISerializationLoaderLogger>();
-			syncConfiguration = syncConfiguration ?? Substitute.For<ISyncConfiguration>();
+			syncConfiguration = syncConfiguration ?? new TestSyncConfiguration();
 
 			var mockLogger2 = Substitute.For<ILogger>();
 
