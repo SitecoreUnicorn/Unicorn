@@ -148,6 +148,7 @@
     <Compile Include="Loader\DeserializeFailureRetryerTests.cs" />
     <Compile Include="Loader\DuplicateIdConsistencyCheckerTests.cs" />
     <Compile Include="Loader\LoaderTests.cs" />
+    <Compile Include="Loader\TestSyncConfiguration.cs" />
     <Compile Include="Logging\PubSubLoggerTests.cs" />
     <Compile Include="Predicates\PredicateFilteredItemDataTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

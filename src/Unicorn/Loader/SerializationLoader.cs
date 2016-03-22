@@ -6,7 +6,6 @@ using System.Linq;
 using System.Threading;
 using Rainbow.Model;
 using Sitecore.Caching;
-using Sitecore.Configuration;
 using Sitecore.Data.Events;
 using Sitecore.Diagnostics;
 using Unicorn.Data;
@@ -155,6 +154,8 @@ namespace Unicorn.Loader
 
 			// put the root in the queue
 			processQueue.Enqueue(root);
+
+			if(SyncConfiguration.MaxConcurrency < 1) throw new InvalidOperationException("Max concurrency is set to zero. Please set it to one or more threads.");
 
 			Thread[] pool = Enumerable.Range(0, SyncConfiguration.MaxConcurrency).Select(i => new Thread(() =>
 			{

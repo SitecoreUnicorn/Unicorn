@@ -1,4 +1,6 @@
-﻿namespace Unicorn.Loader
+﻿using System;
+
+namespace Unicorn.Loader
 {
 	public class DefaultSyncConfiguration : ISyncConfiguration
 	{
@@ -6,6 +8,9 @@
 		{
 			UpdateLinkDatabase = updateLinkDatabase;
 			UpdateSearchIndex = updateSearchIndex;
+
+			if (maxConcurrency < 1) throw new InvalidOperationException("Max concurrency is set to zero. Please set it to one or more threads.");
+
 			MaxConcurrency = maxConcurrency;
 		}
 
