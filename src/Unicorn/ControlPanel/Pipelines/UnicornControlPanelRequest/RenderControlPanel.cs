@@ -51,18 +51,6 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 
 				yield return new Literal(@"
 						<article>
-							<div class=""verbosity-wrapper"">
-								<label for=""verbosity"">Sync/reserialize console verbosity</label>
-								<select id=""verbosity"">
-									<option value=""Debug"">Items synced + detailed info</option>
-									<option value=""Info"" selected>Items synced</option>
-									<option value=""Warning"">Warnings and errors only</option>
-									<option value=""Error"">Errors only</option>
-								</select> 
-								<br>
-								<p class=""help"">Use lower verbosity when expecting many changes to avoid slowing down the browser.<br>Log files always get full verbosity.</p>
-							</div>
-
 							<h2{0} Configurations</h2>".FormatWith(allowMultiSelect ? @" class=""fakebox fakebox-all""><span></span>" : ">"));
 
 				if (allowMultiSelect) yield return new Literal(@"

@@ -30,6 +30,12 @@ namespace Unicorn.ControlPanel.Headings
 			return ReadResource("Unicorn.ControlPanel.Headings.ControlPanel.svg.html");
 		}
 
+		public string GetAllTheThings()
+		{
+			// http://nearby-pla.net/images/all-the-things-blank-clean-template.html FTW
+			return ReadResource("Unicorn.ControlPanel.Headings.Allthethings.svg.html");
+		}
+
 		protected virtual string ReadResource(string name)
 		{
 			var assembly = Assembly.GetExecutingAssembly();

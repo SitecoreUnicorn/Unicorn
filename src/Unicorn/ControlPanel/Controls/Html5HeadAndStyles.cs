@@ -71,12 +71,6 @@ namespace Unicorn.ControlPanel.Controls
 						padding: 3px;
 					}
 
-					svg {
-						margin: 1em 0 2em 0;
-						height: 200px;
-						display: block;
-					}
-
 					ul {
 						margin: 0;
 						padding: 0;
@@ -103,7 +97,7 @@ namespace Unicorn.ControlPanel.Controls
 					.badge {
 						color: #FFF;
 						font-weight: bold;
-						background: rgba(227, 81, 49, .4);
+						background: rgba(227, 81, 49, .2);
 						padding: 3px 8px;
 					}
 						.badge a { color: #FFF; }
@@ -111,7 +105,7 @@ namespace Unicorn.ControlPanel.Controls
 					.batch {
 						display: none;
 						position: fixed;
-						top: 270px;
+						top: 400px;
 						width: 100%;
 						max-width: 960px;
 					}
@@ -229,6 +223,14 @@ namespace Unicorn.ControlPanel.Controls
 						  opacity: 1;
 						}
 	
+					.syncall a, .syncall a:visited {
+						color: #E35131;
+						text-decoration: none;
+						display: inline-block;
+						line-height:110px;
+						height: 100px;
+					}
+
 					.version {
 						font-style: italic;
 						font-size: 0.9rem;
@@ -240,6 +242,21 @@ namespace Unicorn.ControlPanel.Controls
 						background: #E35131;
 						padding: 1em;
 						margin: 1em 0;
+					}
+
+					/* IMAGE STYLES */
+					svg {
+						margin: 1em 0 2em 0;
+						height: 200px;
+						display: block;
+					}
+
+					svg.allthethings {
+						margin: 0;
+						height: 70px;
+						display: inline-block;
+						vertical-align: middle;
+						padding: 0 0 18px 10px;
 					}
 				</style>
 			</head>
