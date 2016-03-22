@@ -9,6 +9,7 @@ using Sitecore.Data.DataProviders;
 using Sitecore.FakeDb;
 using Unicorn.Data;
 using Unicorn.Data.DataProvider;
+using Unicorn.Loader;
 using Unicorn.Logging;
 using Unicorn.Predicates;
 using Xunit;
@@ -39,7 +40,7 @@ namespace Unicorn.Tests.Data.DataProvider
 
 		// TODO
 
-		private UnicornDataProvider CreateTestProvider(Database db, ITargetDataStore targetDataStore = null, ISourceDataStore sourceDataStore = null, IPredicate predicate = null, IFieldFilter filter = null, IUnicornDataProviderLogger logger = null, bool enableTransparentSync = false)
+		private UnicornDataProvider CreateTestProvider(Database db, ITargetDataStore targetDataStore = null, ISourceDataStore sourceDataStore = null, IPredicate predicate = null, IFieldFilter filter = null, IUnicornDataProviderLogger logger = null, ISyncConfiguration syncConfiguration = null, bool enableTransparentSync = false)
 		{
 			if (predicate == null)
 			{
@@ -54,6 +55,7 @@ namespace Unicorn.Tests.Data.DataProvider
 
 			targetDataStore = targetDataStore ?? Substitute.For<ITargetDataStore>();
 			sourceDataStore = sourceDataStore ?? Substitute.For<ISourceDataStore>();
+			syncConfiguration = syncConfiguration ?? Substitute.For<ISyncConfiguration>();
 
 			var dp = new UnicornDataProvider(targetDataStore, 
 				sourceDataStore, 
@@ -61,6 +63,7 @@ namespace Unicorn.Tests.Data.DataProvider
 				filter, 
 				logger ?? Substitute.For<IUnicornDataProviderLogger>(), 
 				new DefaultUnicornDataProviderConfiguration(enableTransparentSync), 
+				syncConfiguration,
 				new PredicateRootPathResolver(predicate, targetDataStore, sourceDataStore, Substitute.For<ILogger>()));
 			
 			dp.ParentDataProvider = db.GetDataProviders().First();

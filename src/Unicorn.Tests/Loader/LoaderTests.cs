@@ -227,18 +227,20 @@ namespace Unicorn.Tests.Loader
 		//	Assert.Throws<ConsistencyException>((() => loader.LoadTree(serializedRootItem, Substitute.For<IDeserializeFailureRetryer>(), consistencyChecker)));
 		//}
 
-		private SerializationLoader CreateTestLoader(ISourceDataStore sourceDataStore = null, ITargetDataStore targetDataStore = null, IPredicate predicate = null, IEvaluator evaluator = null, ISerializationLoaderLogger logger = null)
+		private SerializationLoader CreateTestLoader(ISourceDataStore sourceDataStore = null, ITargetDataStore targetDataStore = null, IPredicate predicate = null, IEvaluator evaluator = null, ISyncConfiguration syncConfiguration = null, ISerializationLoaderLogger logger = null)
 		{
-			if (targetDataStore == null) targetDataStore = Substitute.For<ITargetDataStore>();
-			if (sourceDataStore == null) sourceDataStore = Substitute.For<ISourceDataStore>();
-			if (predicate == null) predicate = CreateInclusiveTestPredicate();
-			if (evaluator == null) evaluator = Substitute.For<IEvaluator>();
-			if (logger == null) logger = Substitute.For<ISerializationLoaderLogger>();
+			targetDataStore = targetDataStore ?? Substitute.For<ITargetDataStore>();
+			sourceDataStore = sourceDataStore ?? Substitute.For<ISourceDataStore>();
+			predicate = predicate ?? CreateInclusiveTestPredicate();
+			evaluator = evaluator ?? Substitute.For<IEvaluator>();
+			logger = logger ?? Substitute.For<ISerializationLoaderLogger>();
+			syncConfiguration = syncConfiguration ?? Substitute.For<ISyncConfiguration>();
+
 			var mockLogger2 = Substitute.For<ILogger>();
 
 			var pathResolver = new PredicateRootPathResolver(predicate, targetDataStore, sourceDataStore, mockLogger2);
 
-			return new SerializationLoader(sourceDataStore, targetDataStore, predicate, evaluator, logger, pathResolver);
+			return new SerializationLoader(sourceDataStore, targetDataStore, predicate, evaluator, logger, syncConfiguration, pathResolver);
 		}
 
 		//private IItemData CreateTestTree(int depth)
