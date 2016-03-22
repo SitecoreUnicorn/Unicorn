@@ -1,4 +1,5 @@
 ﻿using System.Web.UI;
+using Unicorn.ControlPanel.Headings;
 
 namespace Unicorn.ControlPanel.Controls
 {
@@ -6,6 +7,8 @@ namespace Unicorn.ControlPanel.Controls
 	{
 		public void Render(HtmlTextWriter writer)
 		{
+			writer.Write($@"<h2 class=""syncall""><a href=""?verb=Sync"">{new HeadingService().GetAllTheThings()} Sync all the things!</a></h2>");
+
 			writer.Write(@"
 						<article class=""batch"">
 							<section>

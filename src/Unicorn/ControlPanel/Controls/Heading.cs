@@ -32,8 +32,6 @@ namespace Unicorn.ControlPanel.Controls
 								<br>
 								<p class=""help"">Use lower verbosity when expecting many changes to avoid slowing down the browser.<br>Log files always get full verbosity.</p>
 							</div>");
-
-				writer.Write($@"<h2 class=""syncall""><a href=""?verb=Sync"">{new HeadingService().GetAllTheThings()} Sync all the things!</a></h2>");
 			}
 		}
 	}
