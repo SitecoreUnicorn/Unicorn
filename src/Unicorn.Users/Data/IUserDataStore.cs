@@ -1,12 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Unicorn.Users.Data
+﻿namespace Unicorn.Users.Data
 {
-  interface IUserDataStore
+  using System.Collections.Generic;
+  using Sitecore.Security.Accounts;
+
+  public interface IUserDataStore
   {
+    IEnumerable<SyncUserFile> GetAll();
+
+    void Save(User user);
+
+    /// <summary>
+    /// Removes a role from the data store, if it exists.
+    /// If it does not exist, does nothing.
+    /// </summary>
+    void Remove(User user);
+
+    /// <summary>
+    /// Removes all roles from the data store.
+    /// </summary>
+    void Clear();
   }
 }

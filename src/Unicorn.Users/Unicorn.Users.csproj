@@ -35,6 +35,8 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.ApplicationServices" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -44,17 +46,24 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Data\IUserDataStore.cs" />
+    <Compile Include="Data\SerializedUserDataStore.cs" />
     <Compile Include="Data\SyncUserFile.cs" />
     <Compile Include="Events\UnicornConfigurationUsersEventHandler.cs" />
     <Compile Include="Events\UnicornUsersEventHandler.cs" />
+    <Compile Include="Loader\IUserLoader.cs" />
+    <Compile Include="Loader\UserLoader.cs" />
+    <Compile Include="Pipelines\UnicornSyncComplete\SyncUsers.cs" />
+    <Compile Include="Predicates\ConfigurationUserPredicate.cs" />
     <Compile Include="Predicates\IUserPredicate.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Loader\" />
     <Folder Include="UserPredicates\" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Standard Config Files\Unicorn.Users.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Standard Config Files\Unicorn.Users.DataProvider.config">
       <SubType>Designer</SubType>
     </None>

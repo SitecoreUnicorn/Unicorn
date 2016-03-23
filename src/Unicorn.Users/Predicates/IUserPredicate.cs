@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Unicorn.Users.Predicates
+﻿namespace Unicorn.Users.Predicates
 {
-  interface IUserPredicate
+  using Sitecore.Security.Accounts;
+  using Unicorn.Predicates;
+
+  public interface IUserPredicate
   {
+    PredicateResult Includes(User user);
   }
 }
