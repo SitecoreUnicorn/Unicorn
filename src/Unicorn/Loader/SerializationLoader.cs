@@ -77,7 +77,7 @@ namespace Unicorn.Loader
 					foreach (var rootItem in rootItemsData)
 					{
 						LoadTree(rootItem, retryer, consistencyChecker);
-						if (rootLoadedCallback != null) rootLoadedCallback(rootItem);
+						rootLoadedCallback?.Invoke(rootItem);
 					}
 
 					retryer.RetryAll(SourceDataStore, item => DoLoadItem(item, null), item => LoadTreeInternal(item, retryer, null));

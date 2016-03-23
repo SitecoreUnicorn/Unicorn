@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Linq;
 using Sitecore;
 using Sitecore.Caching;
@@ -8,7 +7,6 @@ using Sitecore.ContentSearch;
 using Sitecore.ContentSearch.Maintenance;
 using Sitecore.Data;
 using Sitecore.Data.Items;
-using Sitecore.Data.Managers;
 using Unicorn.Configuration;
 using Unicorn.Loader;
 using Unicorn.Logging;
@@ -24,19 +22,28 @@ namespace Unicorn.Pipelines.UnicornSyncComplete
 		{
 			if (!NeedsPostProcessing(args)) return;
 
+			var logger = args.Configuration.Resolve<ILogger>();
+
+			logger.Debug(string.Empty);
+			logger.Debug("> Preparing to post-process synced items (links/indexes). May take some time depending on change count...");
+
 			// carpet bomb the cache since it can be out of date after a sync (before the serialization complete event has fired, which is after this happens)
 			CacheManager.ClearAllCaches();
 			var dbs = Factory.GetDatabases();
 			foreach(var db in dbs) db.Engines.TemplateEngine.Reset();
+
+			logger.Debug("> Caches have been cleared and template engine reset. Resolving items...");
 
 			// resolve changed items from the sync. Note: this may not perform the most awesome with huge syncs.
 			// but it's better than keeping stale items in memory during the sync. Note also that deleted items
 			// from the sync will not resolve, because...they are gone. So the post processing here will not occur.
 			var items = args.Changes
 				.Where(change => change.ChangeType != ChangeType.Deleted && change.Id.HasValue)
-				.Select(change => Factory.GetDatabase(change.DatabaseName).GetItem(new ID(change.Id.Value)))
+				.Select(change => dbs.FirstOrDefault(db => db.Name.Equals(change.DatabaseName))?.GetItem(new ID(change.Id.Value)))
 				.Where(item => item != null)
 				.ToArray();
+
+			logger.Debug("> Post process items resolved.");
 
 			PostProcessItems(items, args.Configuration);
 		}

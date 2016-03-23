@@ -22,7 +22,7 @@ namespace Unicorn.Publishing
 			ManuallyAddedCandidates.Enqueue(new ID(itemId));
 		}
 
-		public static bool HasItemsToPublish { get { return ManuallyAddedCandidates.Count > 0; } }
+		public static bool HasItemsToPublish => ManuallyAddedCandidates.Count > 0;
 
 		public static bool PublishQueuedItems(Item triggerItem, Database[] targets, IProgressStatus progress = null)
 		{
@@ -30,13 +30,13 @@ namespace Unicorn.Publishing
 
 			foreach (var database in targets)
 			{
-				if (progress != null) progress.ReportStatus("> Publishing {0} synced item{2} in queue to {1}", MessageType.Debug, ManuallyAddedCandidates.Count, database.Name, ManuallyAddedCandidates.Count == 1 ? string.Empty : "s");
+				progress?.ReportStatus("> Publishing {0} synced item{2} in queue to {1}", MessageType.Debug, ManuallyAddedCandidates.Count, database.Name, ManuallyAddedCandidates.Count == 1 ? string.Empty : "s");
 
-				var publishOptions = new PublishOptions(triggerItem.Database, database, PublishMode.SingleItem, triggerItem.Language, DateTime.UtcNow) { RootItem = triggerItem, CompareRevisions = false };
+				var publishOptions = new PublishOptions(triggerItem.Database, database, PublishMode.SingleItem, triggerItem.Language, DateTime.UtcNow) { RootItem = triggerItem, CompareRevisions = false, RepublishAll = true };
 
 				var result = new Publisher(publishOptions, triggerItem.Languages).PublishWithResult();
 
-				if (progress != null) progress.ReportStatus("> Published synced items to {0} (New: {1}, Updated: {2}, Deleted: {3} Skipped: {4})", MessageType.Debug, database.Name, result.Statistics.Created, result.Statistics.Updated, result.Statistics.Deleted, result.Statistics.Skipped);
+				progress?.ReportStatus("> Published synced items to {0} (New: {1}, Updated: {2}, Deleted: {3} Skipped: {4})", MessageType.Debug, database.Name, result.Statistics.Created, result.Statistics.Updated, result.Statistics.Deleted, result.Statistics.Skipped);
 			}
 
 			return true;
