@@ -10,13 +10,13 @@
     void Save(User user);
 
     /// <summary>
-    /// Removes a role from the data store, if it exists.
+    /// Removes a user from the data store, if it exists.
     /// If it does not exist, does nothing.
     /// </summary>
     void Remove(User user);
 
     /// <summary>
-    /// Removes all roles from the data store.
+    /// Removes all users from the data store.
     /// </summary>
     void Clear();
   }

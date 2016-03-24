@@ -47,12 +47,16 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Data\DefaultSyncRole.cs" />
     <Compile Include="Data\IRoleDataStore.cs" />
+    <Compile Include="Data\ISyncRole.cs" />
+    <Compile Include="Data\ReverseHierarchyRoleDataStore.cs" />
+    <Compile Include="Data\ReverseHierarchySyncRole.cs" />
     <Compile Include="Data\SyncRoleFile.cs" />
     <Compile Include="Data\SerializedRoleDataStore.cs" />
     <Compile Include="Events\UnicornConfigurationRolesEventHandler.cs" />
     <Compile Include="Events\UnicornRolesEventHandler.cs" />
-    <Compile Include="Loader\CustomRoleLoader.cs" />
+    <Compile Include="Loader\ReverseHierarchyRoleLoader.cs" />
     <Compile Include="Loader\DefaultRoleLoaderLogger.cs" />
     <Compile Include="Loader\IRoleLoader.cs" />
     <Compile Include="Loader\IRoleLoaderLogger.cs" />
@@ -64,7 +68,6 @@
     <Compile Include="Loader\RoleLoader.cs" />
     <Compile Include="RolePredicates\IRolePredicate.cs" />
     <Compile Include="RolePredicates\ConfigurationRolePredicate.cs" />
-    <Compile Include="Serealizer\RoleSerializer.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\Rainbow\src\Rainbow\Rainbow.csproj">
@@ -90,9 +93,7 @@
   <ItemGroup>
     <None Include="TODO.txt" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Reader\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -55,11 +55,11 @@
 
       foreach (var configuration in _configurations)
       {
-        configuration.RoleDeleted(userName);
+        configuration.UserDeleted(userName);
       }
     }
 
-    public virtual void RoleAdded(object sender, EventArgs e)
+    public virtual void RoleReferenceUpdated(object sender, EventArgs e)
     {
       if (EventDisabler.IsActive)
       {

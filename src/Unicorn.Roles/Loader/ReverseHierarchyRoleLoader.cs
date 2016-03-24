@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Unicorn.Roles.Loader
+﻿namespace Unicorn.Roles.Loader
 {
+  using System.Collections.Generic;
+  using System.Linq;
   using System.Web.Security;
   using Sitecore.Diagnostics;
   using Sitecore.Security.Accounts;
@@ -13,13 +9,13 @@ namespace Unicorn.Roles.Loader
   using Unicorn.Roles.Data;
   using Unicorn.Roles.RolePredicates;
 
-  class CustomRoleLoader : IRoleLoader
+  class ReverseHierarchyRoleLoader : IRoleLoader
   {
     private readonly IRolePredicate _rolePredicate;
     private readonly IRoleDataStore _roleDataStore;
     private readonly IRoleLoaderLogger _loaderLogger;
 
-    public CustomRoleLoader(IRolePredicate rolePredicate, IRoleDataStore roleDataStore, IRoleLoaderLogger loaderLogger)
+    public ReverseHierarchyRoleLoader(IRolePredicate rolePredicate, IRoleDataStore roleDataStore, IRoleLoaderLogger loaderLogger)
     {
       Assert.ArgumentNotNull(rolePredicate, nameof(rolePredicate));
       Assert.ArgumentNotNull(roleDataStore, nameof(roleDataStore));
@@ -54,24 +50,28 @@ namespace Unicorn.Roles.Loader
 
       Role targetRole = Role.FromName(name);
       var currentParents = this.GetCurrentParents(targetRole);
-
-      foreach (var parentRoleName in role.Role.ParentRoles)
+      var syncRole = role.Role as ReverseHierarchySyncRole;
+      if (syncRole != null)
       {
-        if (!Role.Exists(parentRoleName))
+        var innerSyncRole = syncRole.InnerSyncRole;
+
+        foreach (var parentRoleName in innerSyncRole.ParentRoles)
         {
-          Roles.CreateRole(parentRoleName);
+          if (!Role.Exists(parentRoleName))
+          {
+            Roles.CreateRole(parentRoleName);
+          }
+
+          var parentRole = Role.FromName(parentRoleName);
+          RolesInRolesManager.AddRoleToRole(targetRole, parentRole);
         }
 
-        var parentRole = Role.FromName(parentRoleName);
-        RolesInRolesManager.AddRoleToRole(targetRole, parentRole);
+        var parentsToRemove = currentParents.Where(parent => !innerSyncRole.ParentRoles.Contains(parent.Name));
+        foreach (var parentToRemove in parentsToRemove)
+        {
+          RolesInRolesManager.RemoveRoleFromRole(targetRole, parentToRemove);
+        }
       }
-
-      var parentsToRemove = currentParents.Where(parent => !role.Role.ParentRoles.Contains(parent.Name));
-      foreach (var parentToRemove in parentsToRemove)
-      {
-        RolesInRolesManager.RemoveRoleFromRole(targetRole, parentToRemove);
-      }
-
     }
 
     private IEnumerable<Role> GetCurrentParents(Role role)

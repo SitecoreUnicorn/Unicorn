@@ -31,7 +31,7 @@
       this._dataStore.Save(user);
     }
 
-    public void RoleDeleted(string userName)
+    public void UserDeleted(string userName)
     {
       var user = User.FromName(userName, false);
 

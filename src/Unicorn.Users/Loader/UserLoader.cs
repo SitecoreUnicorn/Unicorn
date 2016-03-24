@@ -12,13 +12,13 @@
 		private readonly IUserPredicate _userPredicate;
 		private readonly IUserDataStore _userDataStore;
 
-		public UserLoader(IUserPredicate rolePredicate, IUserDataStore roleDataStore)
+		public UserLoader(IUserPredicate userPredicate, IUserDataStore userDataStore)
 		{
-			Assert.ArgumentNotNull(rolePredicate, nameof(rolePredicate));
-			Assert.ArgumentNotNull(roleDataStore, nameof(roleDataStore));
+			Assert.ArgumentNotNull(userPredicate, nameof(userPredicate));
+			Assert.ArgumentNotNull(userDataStore, nameof(userDataStore));
 
-		  this._userPredicate = rolePredicate;
-		  this._userDataStore = roleDataStore;
+		  this._userPredicate = userPredicate;
+		  this._userDataStore = userDataStore;
 		}
 
 		public void Load(IConfiguration configuration)

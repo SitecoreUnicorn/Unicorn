@@ -3,6 +3,7 @@
   using Unicorn.Pipelines.UnicornSyncComplete;
   using Loader;
   using Predicates;
+  using Unicorn.Logging;
 
   public class SyncUsers : IUnicornSyncCompleteProcessor
   {
@@ -10,17 +11,18 @@
     {
       var userPredicate = args.Configuration.Resolve<IUserPredicate>();
 
-      // no predicate = configuration doesn't include any roles
+      // no predicate = configuration doesn't include any users
       if (userPredicate == null) return;
 
       var loader = args.Configuration.Resolve<IUserLoader>();
+      var logger = args.Configuration.Resolve<ILogger>();
 
-      //logger.Info(string.Empty);
-      //logger.Info($"{args.Configuration.Name} roles are being synced.");
+      logger.Info(string.Empty);
+      logger.Info($"{args.Configuration.Name} users are being synced.");
 
       loader.Load(args.Configuration);
 
-      //logger.Info($"{args.Configuration.Name} role sync complete.");
+      logger.Info($"{args.Configuration.Name} user sync complete.");
     }
   }
 }

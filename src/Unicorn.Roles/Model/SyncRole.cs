@@ -1,13 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Unicorn.Roles.Model
+﻿namespace Unicorn.Roles.Model
 {
-  using System.Runtime.CompilerServices;
+  using System;
+  using System.Collections.Generic;
+  using System.IO;
+  using System.Linq;
+  using Sitecore.Data.Serialization;
   using Sitecore.Data.Serialization.ObjectModel;
+  using Sitecore.Security.Accounts;
 
   public class SyncRole
   {
@@ -28,7 +27,6 @@ namespace Unicorn.Roles.Model
         throw new Exception("Format error: serialized stream does not start with ----role----");
       var syncRole = new SyncRole();
       reader.NextLine();
-      //Dictionary<string, string> dictionary = SerializationUtils.ReadHeaders(reader);
       var entry = ReadEntry(reader);
       syncRole.Name = entry.Item2;
       reader.NextLine();
@@ -46,10 +44,47 @@ namespace Unicorn.Roles.Model
         reader.NextLine();
       }
       
+      return syncRole;
+    }
 
+    public static SyncRole Create(Role role)
+    {
+      var syncRole = new SyncRole
+      {
+        Name = role.Name,
+        ParentRoles = RolesInRolesManager.GetRolesForRole(role, false).Select(parentRole => parentRole.Name).ToList()
+      };
 
       return syncRole;
     }
+
+    public void Serialize(string path)
+    {
+      if (!Role.Exists(this.Name))
+      {
+        return;
+      }
+
+      var role = Role.FromName(this.Name);
+
+      Manager.DumpRole(path, role);
+      this.AppendParrentRoles(path, role);
+    }
+
+    protected void AppendParrentRoles(string path, Role role)
+    {
+      var roleFile = new FileInfo(path);
+      var writer = roleFile.AppendText();
+      writer.WriteLine("----parent-roles----");
+      foreach (var parentRole in this.ParentRoles)
+      {
+        var roleName = $"rolename: {parentRole}";
+        writer.WriteLine(roleName);
+      }
+
+      writer.Close();
+    }
+
 
     protected static Tuple<string, string> ReadEntry(Tokenizer reader)
     {

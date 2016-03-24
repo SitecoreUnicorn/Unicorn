@@ -52,14 +52,13 @@
     <Compile Include="Events\UnicornUsersEventHandler.cs" />
     <Compile Include="Loader\IUserLoader.cs" />
     <Compile Include="Loader\UserLoader.cs" />
+    <Compile Include="Pipelines\UnicornReserializeComplete\ReserializeUsers.cs" />
     <Compile Include="Pipelines\UnicornSyncComplete\SyncUsers.cs" />
     <Compile Include="Predicates\ConfigurationUserPredicate.cs" />
     <Compile Include="Predicates\IUserPredicate.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="UserPredicates\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <None Include="Standard Config Files\Unicorn.Users.config">
       <SubType>Designer</SubType>

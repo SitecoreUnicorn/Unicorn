@@ -5,6 +5,7 @@
   using System.Collections.ObjectModel;
   using System.Diagnostics.CodeAnalysis;
   using System.Linq;
+  using System.Text.RegularExpressions;
   using System.Xml;
   using Sitecore.Diagnostics;
   using Sitecore.Security.Accounts;
@@ -52,7 +53,7 @@
       if (user.Domain == null || !user.Domain.Name.Equals(entry.Domain, StringComparison.OrdinalIgnoreCase)) return new PredicateResult(false);
 
       // pattern match
-      //if (!string.IsNullOrWhiteSpace(entry.Pattern) && !Regex.IsMatch(role.Name.Split('\\').Last(), entry.Pattern, RegexOptions.IgnoreCase | RegexOptions.Compiled)) return new PredicateResult(false);
+      if (!string.IsNullOrWhiteSpace(entry.Pattern) && !Regex.IsMatch(user.Name.Split('\\').Last(), entry.Pattern, RegexOptions.IgnoreCase | RegexOptions.Compiled)) return new PredicateResult(false);
 
       // pattern is either null or white space, or it matches
       return new PredicateResult(true);

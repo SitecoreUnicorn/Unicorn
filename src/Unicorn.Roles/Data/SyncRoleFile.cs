@@ -7,13 +7,13 @@
 	/// </summary>
 	public class SyncRoleFile
 	{
-		public SyncRoleFile(SyncRole role, string physicalPath)
+		public SyncRoleFile(ISyncRole role, string physicalPath)
 		{
 			Role = role;
 			PhysicalPath = physicalPath;
 		}
 
-		public SyncRole Role { get; }
+		public ISyncRole Role { get; }
 		public string PhysicalPath { get; }
 	}
 }
