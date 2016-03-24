@@ -1,15 +1,15 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Web.Hosting;
-using Sitecore.Data.Serialization;
-using Sitecore.Data.Serialization.ObjectModel;
-using Sitecore.Diagnostics;
-using Sitecore.Security.Accounts;
-using Sitecore.Security.Serialization.ObjectModel;
-
-namespace Unicorn.Roles.Data
+﻿namespace Unicorn.Roles.Data
 {
-	/// <summary>
+  using System.Collections.Generic;
+  using System.IO;
+  using System.Web.Hosting;
+  using Sitecore.Data.Serialization;
+  using Sitecore.Data.Serialization.ObjectModel;
+  using Sitecore.Diagnostics;
+  using Sitecore.Security.Accounts;
+  using Sitecore.Security.Serialization.ObjectModel;
+
+  /// <summary>
 	/// Stores roles on disk using Sitecore's built in role serialization APIs.
 	/// </summary>
 	public class SerializedRoleDataStore : IRoleDataStore
@@ -40,8 +40,7 @@ namespace Unicorn.Roles.Data
 
 		public virtual void Save(Role role)
 		{
-			var path = GetPathForRole(role);
-
+			var path = this.GetPathForRole(role);
 			Manager.DumpRole(path, role);
 		}
 
@@ -72,7 +71,9 @@ namespace Unicorn.Roles.Data
 
 			using (TextReader reader = new StreamReader(File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read)))
 			{
-				return new SyncRoleFile(SyncRole.ReadRole(new Tokenizer(reader)), path);
+        var syncRole = new DefaultSyncRole();
+			  syncRole.InnerSyncRole = SyncRole.ReadRole(new Tokenizer(reader));
+        return new SyncRoleFile(syncRole, path);
 			}
 		}
 
