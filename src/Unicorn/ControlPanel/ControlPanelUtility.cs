@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using Rainbow.Storage;
 using Unicorn.Configuration;
 using Unicorn.Configuration.Dependencies;
@@ -55,21 +56,34 @@ namespace Unicorn.ControlPanel
 		/// </summary>
 		public static IConfiguration[] ResolveConfigurationsFromQueryParameter(string queryParameter)
 		{
-			var config = (queryParameter ?? string.Empty)
+			// parse query string value
+			var configNames = (queryParameter ?? string.Empty)
 				.Split('^')
 				.Where(key => !string.IsNullOrWhiteSpace(key))
 				.ToList();
 
-			var configurations = UnicornConfigurationManager.Configurations;
-			if (config.Count == 0) return configurations;
+			var allConfigurations = UnicornConfigurationManager.Configurations;
 
-			var targetConfigurations = config.Select(name => configurations.FirstOrDefault(conf => conf.Name.Equals(name)))
-				.Where(conf => conf != null)
-				.ToArray();
+			// determine which configurations the query string resolves to
+			IEnumerable<IConfiguration> selectedConfigurations;
 
+			if (configNames.Count == 0)
+			{
+				// query string specified no configs. This means sync all.
+				// but we still have to set in dependency order.
+				selectedConfigurations = allConfigurations;
+			}
+			else
+			{
+				selectedConfigurations = configNames
+					.Select(name => allConfigurations.FirstOrDefault(conf => conf.Name.Equals(name)))
+					.Where(conf => conf != null);
+			}
+
+			// order the selected configurations in dependency order
 			var resolver = new InterconfigurationDependencyResolver();
 
-			return resolver.OrderByDependencies(targetConfigurations);
+			return resolver.OrderByDependencies(selectedConfigurations);
 		}
 
 		private static bool RootPathParentExists(IDataStore dataStore, TreeRoot include)
