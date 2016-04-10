@@ -10,5 +10,6 @@ namespace Unicorn.Roles.Loader
 		void AddedNewParentRole(IRoleData role);
 
 		void RolesInRolesChanged(IRoleData role, string[] updatedParentRoles, string[] removedParentRoles);
+		void RemovedOrphanRole(IRoleData orphan);
 	}
 }

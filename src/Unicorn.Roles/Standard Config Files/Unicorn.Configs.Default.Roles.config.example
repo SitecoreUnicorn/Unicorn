@@ -51,6 +51,12 @@
 						<include domain="sitecore" />
 						<include domain="extranet" pattern="^MySite.*$" />
 					</rolePredicate>
+
+					<!-- 
+						If you set RemoveOrphans to true, role syncing will delete matching roles that are not serialized, like item syncing does.
+						If set to false, roles are only ever added or updated (similar to New Items Only item syncing but updates are also synced)
+					-->
+					<roleSyncConfiguration type="Unicorn.Roles.Loader.DefaultRoleSyncConfiguration, Unicorn.Roles" singleInstance="true" removeOrphans="true" />
 				</configuration>
 			</configurations>
 		</unicorn>

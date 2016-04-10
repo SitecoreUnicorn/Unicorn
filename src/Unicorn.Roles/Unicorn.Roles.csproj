@@ -47,6 +47,8 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Loader\DefaultRoleSyncConfiguration.cs" />
+    <Compile Include="Loader\IRoleSyncConfiguration.cs" />
     <Compile Include="Model\SerializedRoleData.cs" />
     <Compile Include="Data\IRoleDataStore.cs" />
     <Compile Include="Model\SitecoreRoleData.cs" />

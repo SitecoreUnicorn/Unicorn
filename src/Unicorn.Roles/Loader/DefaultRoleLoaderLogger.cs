@@ -15,17 +15,17 @@ namespace Unicorn.Roles.Loader
 			_baseLogger = baseLogger;
 		}
 
-		public void AddedNewRole(IRoleData role)
+		public virtual void AddedNewRole(IRoleData role)
 		{
 			_baseLogger.Info($"[A] Role {role.RoleName}");
 		}
 
-		public void AddedNewParentRole(IRoleData role)
+		public virtual void AddedNewParentRole(IRoleData role)
 		{
 			_baseLogger.Info($"> [A] Nonexistent parent role {role.RoleName}");
 		}
 
-		public void RolesInRolesChanged(IRoleData role, string[] updatedParentRoles, string[] removedParentRoles)
+		public virtual void RolesInRolesChanged(IRoleData role, string[] updatedParentRoles, string[] removedParentRoles)
 		{
 			_baseLogger.Info($"[U] Role {role.RoleName}");
 			foreach (var addedRole in updatedParentRoles)
@@ -36,6 +36,11 @@ namespace Unicorn.Roles.Loader
 			{
 				_baseLogger.Debug($"* [D] Removed membership in {removedRole}");
 			}
+		}
+
+		public virtual void RemovedOrphanRole(IRoleData orphan)
+		{
+			_baseLogger.Warn($"[D] Deleted role {orphan.RoleName} because it was not in the serialization store. If deleted by mistake, you can recreate the role by name to restore it.");
 		}
 	}
 }

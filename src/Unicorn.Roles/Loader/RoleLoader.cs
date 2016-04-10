@@ -16,8 +16,9 @@ namespace Unicorn.Roles.Loader
 		private readonly IRolePredicate _rolePredicate;
 		private readonly IRoleDataStore _roleDataStore;
 		private readonly IRoleLoaderLogger _loaderLogger;
+		private readonly IRoleSyncConfiguration _syncConfiguration;
 
-		public RoleLoader(IRolePredicate rolePredicate, IRoleDataStore roleDataStore, IRoleLoaderLogger loaderLogger)
+		public RoleLoader(IRolePredicate rolePredicate, IRoleDataStore roleDataStore, IRoleLoaderLogger loaderLogger, IRoleSyncConfiguration syncConfiguration)
 		{
 			Assert.ArgumentNotNull(rolePredicate, nameof(rolePredicate));
 			Assert.ArgumentNotNull(roleDataStore, nameof(roleDataStore));
@@ -26,19 +27,26 @@ namespace Unicorn.Roles.Loader
 			_rolePredicate = rolePredicate;
 			_roleDataStore = roleDataStore;
 			_loaderLogger = loaderLogger;
+			_syncConfiguration = syncConfiguration;
 		}
 
-		public void Load(IConfiguration configuration)
+		public virtual void Load(IConfiguration configuration)
 		{
 			using (new UnicornOperationContext())
 			{
 				var roles = _roleDataStore
 					.GetAll()
-					.Where(role => _rolePredicate.Includes(role).IsIncluded);
+					.Where(role => _rolePredicate.Includes(role).IsIncluded)
+					.ToArray();
 
 				foreach (var role in roles)
 				{
 					DeserializeRole(role);
+				}
+
+				if (_syncConfiguration.RemoveOrphans)
+				{
+					EvaluateOrphans(roles);
 				}
 			}
 		}
@@ -98,6 +106,23 @@ namespace Unicorn.Roles.Loader
 			}
 
 			deferredUpdateLog.ExecuteDeferredActions(_loaderLogger);
+		}
+
+		protected virtual void EvaluateOrphans(IRoleData[] roles)
+		{
+			var knownRoles = roles.ToLookup(key => key.RoleName);
+
+			var allOrphanRoles = RolesInRolesManager.GetAllRoles(false)
+				.Select(role => new SitecoreRoleData(role))
+				.Where(role => _rolePredicate.Includes(role).IsIncluded)
+				.Where(role => !knownRoles.Contains(role.RoleName))
+				.ToArray();
+
+			foreach (var orphan in allOrphanRoles)
+			{
+				_loaderLogger.RemovedOrphanRole(orphan);
+				System.Web.Security.Roles.DeleteRole(orphan.RoleName);
+			}
 		}
 	}
 }
