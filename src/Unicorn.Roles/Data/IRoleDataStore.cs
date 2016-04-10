@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Sitecore.Security.Accounts;
+using Unicorn.Roles.Model;
 
 namespace Unicorn.Roles.Data
 {
@@ -8,18 +8,18 @@ namespace Unicorn.Roles.Data
 		/// <summary>
 		/// Gets all roles in the data store
 		/// </summary>
-		IEnumerable<SyncRoleFile> GetAll();
+		IEnumerable<IRoleData> GetAll();
 
 		/// <summary>
 		/// Saves a role into the data store
 		/// </summary>
-		void Save(Role role);
+		void Save(IRoleData role);
 
 		/// <summary>
 		/// Removes a role from the data store, if it exists.
 		/// If it does not exist, does nothing.
 		/// </summary>
-		void Remove(Role role);
+		void Remove(IRoleData role);
 
 		/// <summary>
 		/// Removes all roles from the data store.

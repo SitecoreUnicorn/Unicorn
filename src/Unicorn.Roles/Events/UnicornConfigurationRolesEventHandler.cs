@@ -2,13 +2,12 @@
 using Sitecore.Security.Accounts;
 using Unicorn.Configuration;
 using Unicorn.Roles.Data;
+using Unicorn.Roles.Model;
 using Unicorn.Roles.RolePredicates;
 
 namespace Unicorn.Roles.Events
 {
-  using System.Linq;
-
-  /// <summary>
+	/// <summary>
 	/// Handles role change events for a specific Unicorn configuration
 	/// </summary>
 	public class UnicornConfigurationRolesEventHandler
@@ -26,28 +25,16 @@ namespace Unicorn.Roles.Events
 
 		public virtual void RoleAlteredOrCreated(string roleName)
 		{
-      var role = Role.FromName(roleName);
+			var role = new SitecoreRoleData(Role.FromName(roleName));
 
-      if (!Role.Exists(roleName))
-      {
-        var roles = RolesInRolesManager.GetAllRoles();
-        foreach (var role1 in roles)
-        {
-          if (_predicate == null || !_predicate.Includes(role1).IsIncluded) return;
+			if (_predicate == null || !_predicate.Includes(role).IsIncluded) return;
 
-          _dataStore.Save(role1);
-        }
-      }
-      else
-      {
-        if (_predicate == null || !_predicate.Includes(role).IsIncluded) return;
-        _dataStore.Save(role);
-      }
+			_dataStore.Save(role);
 		}
 
 		public virtual void RoleDeleted(string roleName)
 		{
-			var role = Role.FromName(roleName);
+			var role = new SitecoreRoleData(Role.FromName(roleName));
 
 			if (_predicate == null || !_predicate.Includes(role).IsIncluded) return;
 

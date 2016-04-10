@@ -1,8 +1,11 @@
-﻿using System.Linq;
+﻿using System;
+using Unicorn.Roles.Model;
+using System.Collections.Generic;
+using System.Linq;
 using Sitecore.Diagnostics;
 using Sitecore.Security.Accounts;
-using Sitecore.Security.Serialization;
 using Unicorn.Configuration;
+using Unicorn.Logging;
 using Unicorn.Roles.Data;
 using Unicorn.Roles.RolePredicates;
 
@@ -31,55 +34,71 @@ namespace Unicorn.Roles.Loader
 			{
 				var roles = _roleDataStore
 					.GetAll()
-					.Where(role => _rolePredicate.Includes(Role.FromName(role.Role.Name)).IsIncluded);
+					.Where(role => _rolePredicate.Includes(role).IsIncluded);
 
 				foreach (var role in roles)
 				{
-					if (EvaluateRole(role))
-					{
-						DeserializeRole(role);
-					}
+					DeserializeRole(role);
 				}
 			}
 		}
 
-		protected virtual bool EvaluateRole(SyncRoleFile role)
-    {
-      if (!Role.Exists(role.Role.Name))
-      {
-        _loaderLogger.EvaluatedNewRole(role);
-        return true;
-      }
-		  var syncRole = role.Role as DefaultSyncRole;
-		  if (syncRole != null)
-		  {
-		    var innerSyncRole = syncRole.InnerSyncRole;
-
-		    var targetRole = Role.FromName(role.Role.Name);
-
-		    var rolesInRole = RolesInRolesManager.GetRolesInRole(targetRole, false).ToLookup(key => key.Name);
-
-		    var addedRolesInRoles = innerSyncRole.RolesInRole.Where(rir => !rolesInRole.Contains(rir)).ToArray();
-
-		    var removedRolesInRoles = rolesInRole.Where(rir => !innerSyncRole.RolesInRole.Contains(rir.Key)).Select(rir => rir.Key).ToArray();
-
-		    if (addedRolesInRoles.Length > 0 || removedRolesInRoles.Length > 0)
-		    {
-		      this._loaderLogger.RolesInRolesChanged(role, addedRolesInRoles, removedRolesInRoles);
-		      return true;
-		    }
-		  }
-
-		  return false;
-		}
-
-		protected virtual void DeserializeRole(SyncRoleFile role)
+		protected virtual void DeserializeRole(IRoleData role)
 		{
-		  var syncRole = role.Role as DefaultSyncRole;
-		  if (syncRole != null)
-		  {
-		    RoleSynchronization.PasteSyncRole(syncRole.InnerSyncRole);
-		  }
+			bool addedRole = false;
+
+			// Add role if needed
+			var name = role.RoleName;
+			if (!System.Web.Security.Roles.RoleExists(name))
+			{
+				_loaderLogger.AddedNewRole(role);
+				addedRole = true;
+				System.Web.Security.Roles.CreateRole(name);
+			}
+
+			Role targetRole = Role.FromName(name);
+			var currentSourceParents = new SitecoreRoleData(targetRole).ParentRoleNames;
+			var currentTargetParents = role.ParentRoleNames;
+
+			var addedParentRoles = new List<string>();
+			var removedParentRoles = new List<string>();
+			var deferredUpdateLog = new DeferredLogWriter<IRoleLoaderLogger>();
+
+			// Loop over the serialized parent roles and set db roles if needed
+			foreach (var serializedParentRoleName in currentTargetParents)
+			{
+				var parentRole = Role.FromName(serializedParentRoleName);
+
+				// add nonexistant parent role if needed. NOTE: parent role need not be one we have serialized or included.
+				if (!Role.Exists(serializedParentRoleName))
+				{
+					deferredUpdateLog.AddEntry(log => log.AddedNewParentRole(new SitecoreRoleData(parentRole)));
+					System.Web.Security.Roles.CreateRole(serializedParentRoleName);
+				}
+
+				// Add membership if not already in the parent role
+				if (!RolesInRolesManager.IsRoleInRole(targetRole, parentRole, false))
+				{
+					addedParentRoles.Add(parentRole.Name);
+					RolesInRolesManager.AddRoleToRole(targetRole, parentRole);
+				}
+			}
+
+			// Loop over parent roles that exist in the database but not in serialized and remove them
+			var parentsToRemove = currentSourceParents.Where(parent => !currentTargetParents.Contains(parent, StringComparer.OrdinalIgnoreCase));
+			foreach (var parentToRemove in parentsToRemove)
+			{
+				removedParentRoles.Add(parentToRemove);
+				RolesInRolesManager.RemoveRoleFromRole(targetRole, Role.FromName(parentToRemove));
+			}
+
+			if (!addedRole && (addedParentRoles.Count > 0 || removedParentRoles.Count > 0))
+			{
+				_loaderLogger.RolesInRolesChanged(role, addedParentRoles.ToArray(), removedParentRoles.ToArray());
+			}
+
+			deferredUpdateLog.ExecuteDeferredActions(_loaderLogger);
 		}
 	}
 }
+

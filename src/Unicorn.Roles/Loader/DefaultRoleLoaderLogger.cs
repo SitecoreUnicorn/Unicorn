@@ -1,5 +1,5 @@
 ﻿using Unicorn.Logging;
-using Unicorn.Roles.Data;
+using Unicorn.Roles.Model;
 
 namespace Unicorn.Roles.Loader
 {
@@ -15,21 +15,26 @@ namespace Unicorn.Roles.Loader
 			_baseLogger = baseLogger;
 		}
 
-		public void EvaluatedNewRole(SyncRoleFile role)
+		public void AddedNewRole(IRoleData role)
 		{
-			_baseLogger.Info($"[A] Role {role.Role.Name}");
+			_baseLogger.Info($"[A] Role {role.RoleName}");
 		}
 
-		public void RolesInRolesChanged(SyncRoleFile role, string[] addedRolesInRoles, string[] removedRolesInRoles)
+		public void AddedNewParentRole(IRoleData role)
 		{
-			_baseLogger.Info($"[U] Role {role.Role.Name}");
-			foreach (var addedRole in addedRolesInRoles)
+			_baseLogger.Info($"> [A] Nonexistent parent role {role.RoleName}");
+		}
+
+		public void RolesInRolesChanged(IRoleData role, string[] updatedParentRoles, string[] removedParentRoles)
+		{
+			_baseLogger.Info($"[U] Role {role.RoleName}");
+			foreach (var addedRole in updatedParentRoles)
 			{
-				_baseLogger.Debug($"* [A] Role member {addedRole}");
+				_baseLogger.Debug($"* [A] Added membership in {addedRole}");
 			}
-			foreach (var removedRole in removedRolesInRoles)
+			foreach (var removedRole in removedParentRoles)
 			{
-				_baseLogger.Debug($"* [D] Role member {removedRole}");
+				_baseLogger.Debug($"* [D] Removed membership in {removedRole}");
 			}
 		}
 	}

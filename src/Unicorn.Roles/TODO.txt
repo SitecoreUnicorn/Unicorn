@@ -1,3 +1,0 @@
-﻿- Show roles in control panel details
-	- May require making the control panel details a pipeline
-- Tests

@@ -47,29 +47,31 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="Data\DefaultSyncRole.cs" />
+    <Compile Include="Model\SerializedRoleData.cs" />
     <Compile Include="Data\IRoleDataStore.cs" />
-    <Compile Include="Data\ISyncRole.cs" />
-    <Compile Include="Data\ReverseHierarchyRoleDataStore.cs" />
-    <Compile Include="Data\ReverseHierarchySyncRole.cs" />
-    <Compile Include="Data\SyncRoleFile.cs" />
-    <Compile Include="Data\SerializedRoleDataStore.cs" />
+    <Compile Include="Model\SitecoreRoleData.cs" />
+    <Compile Include="Formatting\IRoleSerializationFormatter.cs" />
+    <Compile Include="Model\IRoleData.cs" />
+    <Compile Include="Data\FilesystemRoleDataStore.cs" />
     <Compile Include="Events\UnicornConfigurationRolesEventHandler.cs" />
     <Compile Include="Events\UnicornRolesEventHandler.cs" />
-    <Compile Include="Loader\ReverseHierarchyRoleLoader.cs" />
+    <Compile Include="Formatting\YamlRoleSerializationFormatter.cs" />
+    <Compile Include="Loader\RoleLoader.cs" />
     <Compile Include="Loader\DefaultRoleLoaderLogger.cs" />
     <Compile Include="Loader\IRoleLoader.cs" />
     <Compile Include="Loader\IRoleLoaderLogger.cs" />
-    <Compile Include="Model\SyncRole.cs" />
     <Compile Include="Pipelines\UnicornReserializeComplete\ReserializeRoles.cs" />
     <Compile Include="Pipelines\UnicornSyncComplete\SyncRoles.cs" />
     <Compile Include="Predicates\EmptyPredicate.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Loader\RoleLoader.cs" />
     <Compile Include="RolePredicates\IRolePredicate.cs" />
     <Compile Include="RolePredicates\ConfigurationRolePredicate.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\Rainbow\src\Rainbow.Storage.Yaml\Rainbow.Storage.Yaml.csproj">
+      <Project>{371181c9-45dc-4885-8894-43ffc235d124}</Project>
+      <Name>Rainbow.Storage.Yaml</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\Rainbow\src\Rainbow\Rainbow.csproj">
       <Project>{8ff75c8b-2a9e-4d95-91ad-333071813199}</Project>
       <Name>Rainbow</Name>
@@ -89,9 +91,6 @@
     <None Include="Standard Config Files\Unicorn.Configs.Default.Roles.config.example">
       <SubType>Designer</SubType>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="TODO.txt" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

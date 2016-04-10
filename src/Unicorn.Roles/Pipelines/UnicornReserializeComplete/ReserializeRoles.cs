@@ -3,6 +3,7 @@ using Sitecore.Security.Accounts;
 using Unicorn.Logging;
 using Unicorn.Pipelines.UnicornReserializeComplete;
 using Unicorn.Roles.Data;
+using Unicorn.Roles.Model;
 using Unicorn.Roles.RolePredicates;
 
 namespace Unicorn.Roles.Pipelines.UnicornReserializeComplete
@@ -25,7 +26,9 @@ namespace Unicorn.Roles.Pipelines.UnicornReserializeComplete
 
 			dataStore.Clear();
 
-			var roles = RolesInRolesManager.GetAllRoles().Where(role => rolePredicate.Includes(role).IsIncluded);
+			var roles = RolesInRolesManager.GetAllRoles()
+				.Select(role => new SitecoreRoleData(role))
+				.Where(role => rolePredicate.Includes(role).IsIncluded);
 
 			int roleCount = 0;
 
