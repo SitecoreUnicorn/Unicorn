@@ -1,13 +1,14 @@
-﻿namespace Unicorn.Users.Loader
+﻿using System.Linq;
+using Sitecore.Diagnostics;
+using Sitecore.Security.Accounts;
+using Sitecore.Security.Serialization;
+using Unicorn.Configuration;
+using Unicorn.Users.Data;
+using Unicorn.Users.Predicates;
+
+namespace Unicorn.Users.Loader
 {
-  using System.Linq;
-  using Sitecore.Diagnostics;
-  using Sitecore.Security.Accounts;
-  using Sitecore.Security.Serialization;
-  using Unicorn.Configuration;
-  using Unicorn.Users.Data;
-  using Unicorn.Users.Predicates;
-  public class UserLoader : IUserLoader
+	public class UserLoader : IUserLoader
 	{
 		private readonly IUserPredicate _userPredicate;
 		private readonly IUserDataStore _userDataStore;
@@ -17,28 +18,28 @@
 			Assert.ArgumentNotNull(userPredicate, nameof(userPredicate));
 			Assert.ArgumentNotNull(userDataStore, nameof(userDataStore));
 
-		  this._userPredicate = userPredicate;
-		  this._userDataStore = userDataStore;
+			_userPredicate = userPredicate;
+			_userDataStore = userDataStore;
 		}
 
 		public void Load(IConfiguration configuration)
 		{
 			using (new UnicornOperationContext())
 			{
-				var users = this._userDataStore
+				var users = _userDataStore
 					.GetAll()
-					.Where(user => this._userPredicate.Includes(User.FromName(user.User.UserName, false)).IsIncluded);
+					.Where(user => _userPredicate.Includes(User.FromName(user.User.UserName, false)).IsIncluded);
 
 				foreach (var user in users)
 				{
-				  this.DeserializeUser(user);
-        }
+					DeserializeUser(user);
+				}
 			}
 		}
 
 		protected virtual void DeserializeUser(SyncUserFile user)
 		{
-		  UserSynchronization.PasteSyncUser(user.User);
+			UserSynchronization.PasteSyncUser(user.User);
 		}
 	}
 }

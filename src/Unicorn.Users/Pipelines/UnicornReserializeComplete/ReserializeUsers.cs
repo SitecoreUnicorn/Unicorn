@@ -1,15 +1,16 @@
-﻿namespace Unicorn.Users.Pipelines.UnicornReserializeComplete
-{
-  using System.Linq;
-  using Sitecore.Security.Accounts;
-  using Unicorn.Logging;
-  using Unicorn.Pipelines.UnicornReserializeComplete;
-  using Unicorn.Users.Data;
-  using Unicorn.Users.Predicates;
+﻿using System.Linq;
+using Sitecore.Security.Accounts;
+using Unicorn.Logging;
+using Unicorn.Pipelines.UnicornReserializeComplete;
+using Unicorn.Users.Data;
+using Unicorn.Users.Predicates;
 
-  public class ReserializeUsers : IUnicornReserializeCompleteProcessor
+
+namespace Unicorn.Users.Pipelines.UnicornReserializeComplete
+{
+	public class ReserializeUsers : IUnicornReserializeCompleteProcessor
 	{
-		public void Process(UnicornReserializeCompletePipelineArgs args)
+		public virtual void Process(UnicornReserializeCompletePipelineArgs args)
 		{
 
 			var userPredicate = args.Configuration.Resolve<IUserPredicate>();
