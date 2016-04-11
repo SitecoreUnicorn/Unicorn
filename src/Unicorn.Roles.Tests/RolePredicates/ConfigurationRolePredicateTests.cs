@@ -19,6 +19,7 @@ namespace Unicorn.Roles.Tests.RolePredicates
 		[InlineData(@"haha", false)]
 		// Pattern tests
 		[InlineData(@"some\gonk droid", true)]
+		[InlineData(@"some\snorky", true)]
 		[InlineData(@"some\fake", false)]
 		public void Includes_MatchesExpectedPathResult(string testPath, bool expectedResult)
 		{

@@ -50,6 +50,7 @@
 						-->
 						<include domain="sitecore" />
 						<include domain="extranet" pattern="^MySite.*$" />
+						<!-- Note: you may include the same domain in multiple include elements, with different patterns -->
 					</rolePredicate>
 
 					<!-- 
