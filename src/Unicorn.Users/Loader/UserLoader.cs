@@ -176,17 +176,14 @@ namespace Unicorn.Users.Loader
 			}
 
 			// load standard properties
-			var knownStandardProperties = new HashSet<string>();
 			foreach (var standardProperty in serializedUser.ProfileProperties.Where(property => !property.IsCustomProperty))
 			{
-				knownStandardProperties.Add(standardProperty.Name);
-
 				// check if we need to change the value
 				var existingValue = user.Profile.GetPropertyValue(standardProperty.Name);
 
 				if (existingValue != null && (existingValue.GetType().IsPrimitive || existingValue is string))
 				{
-					if (existingValue.Equals(standardProperty.Content)) continue;
+					if (existingValue.Equals(standardProperty.Content)) continue; // no changes, skip
 
 					propertiesAreUpdated = true;
 					user.Profile.SetPropertyValue(standardProperty.Name, standardProperty.Content);
@@ -201,6 +198,8 @@ namespace Unicorn.Users.Loader
 					if (existingValue == null) changes.Add(new UserUpdate(standardProperty.Name, "null", standardProperty.Content.ToString()));
 				}
 			}
+
+			// note: we cannot cull orphan standard properties because we cannot enumerate the keys
 
 			if (propertiesAreUpdated)
 			{
