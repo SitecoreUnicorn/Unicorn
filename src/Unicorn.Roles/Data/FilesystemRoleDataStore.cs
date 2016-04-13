@@ -16,10 +16,12 @@ namespace Unicorn.Roles.Data
 		/// Default constructor
 		/// </summary>
 		/// <param name="physicalRootPath">The physical root path. May be site-root-relative by using "~/" as the prefix.</param>
-		/// <param name="formatter"></param>
-		public FilesystemRoleDataStore(string physicalRootPath, IRoleSerializationFormatter formatter)
+		/// <param name="roleFormatter"></param>
+		public FilesystemRoleDataStore(string physicalRootPath, IRoleSerializationFormatter roleFormatter)
 		{
-			_formatter = formatter;
+			Assert.ArgumentNotNull(roleFormatter, nameof(roleFormatter));
+			
+			_formatter = roleFormatter;
 
 			// ReSharper disable once DoNotCallOverridableMethodsInConstructor
 			_physicalRootPath = InitializeRootPath(physicalRootPath);
