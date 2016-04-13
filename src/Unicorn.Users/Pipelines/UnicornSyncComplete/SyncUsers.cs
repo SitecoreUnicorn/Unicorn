@@ -1,7 +1,7 @@
 ﻿using Unicorn.Pipelines.UnicornSyncComplete;
 using Unicorn.Logging;
 using Unicorn.Users.Loader;
-using Unicorn.Users.Predicates;
+using Unicorn.Users.UserPredicates;
 
 namespace Unicorn.Users.Pipelines.UnicornSyncComplete
 {

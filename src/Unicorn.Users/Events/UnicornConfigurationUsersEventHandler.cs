@@ -1,8 +1,10 @@
-﻿using Sitecore.Diagnostics;
+﻿using System.Web.Security;
+using Sitecore.Diagnostics;
 using Sitecore.Security.Accounts;
+using Sitecore.Security.Serialization;
 using Unicorn.Configuration;
 using Unicorn.Users.Data;
-using Unicorn.Users.Predicates;
+using Unicorn.Users.UserPredicates;
 
 namespace Unicorn.Users.Events
 {
@@ -28,7 +30,7 @@ namespace Unicorn.Users.Events
 				return;
 			}
 
-			_dataStore.Save(user);
+			_dataStore.Save(UserSynchronization.BuildSyncUser(Membership.GetUser(user.Name)));
 		}
 
 		public void UserDeleted(string userName)
@@ -37,7 +39,7 @@ namespace Unicorn.Users.Events
 
 			if (_predicate == null || !_predicate.Includes(user).IsIncluded) return;
 
-			_dataStore.Remove(user);
+			_dataStore.Remove(user.Name);
 		}
 	}
 }

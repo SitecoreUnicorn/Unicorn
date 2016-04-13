@@ -1,9 +1,12 @@
 ﻿using System.Linq;
+using System.Web.Security;
+using Sitecore.Diagnostics;
 using Sitecore.Security.Accounts;
+using Sitecore.Security.Serialization;
 using Unicorn.Logging;
 using Unicorn.Pipelines.UnicornReserializeComplete;
 using Unicorn.Users.Data;
-using Unicorn.Users.Predicates;
+using Unicorn.Users.UserPredicates;
 
 
 namespace Unicorn.Users.Pipelines.UnicornReserializeComplete
@@ -21,6 +24,9 @@ namespace Unicorn.Users.Pipelines.UnicornReserializeComplete
 			var dataStore = args.Configuration.Resolve<IUserDataStore>();
 			var logger = args.Configuration.Resolve<ILogger>();
 
+			Assert.IsNotNull(dataStore, $"The IUserDataStore was not registered for the {args.Configuration.Name} configuration.");
+			Assert.IsNotNull(logger, $"The ILogger was not registered for the {args.Configuration.Name} configuration.");
+
 			logger.Info(string.Empty);
 			logger.Info($"{args.Configuration.Name} users are being reserialized.");
 
@@ -32,7 +38,7 @@ namespace Unicorn.Users.Pipelines.UnicornReserializeComplete
 
 			foreach (var user in users)
 			{
-				dataStore.Save(user);
+				dataStore.Save(UserSynchronization.BuildSyncUser(Membership.GetUser(user.Name)));
 				userCount++;
 			}
 

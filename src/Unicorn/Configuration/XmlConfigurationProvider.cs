@@ -167,7 +167,7 @@ namespace Unicorn.Configuration
 			}
 
 			if (!resultType.IsAssignableFrom(type.Type))
-				throw new InvalidOperationException("Invalid type for Unicorn config node {0} (expected {1} implementation)".FormatWith(elementName, typeof(TResultType).FullName));
+				throw new InvalidOperationException("Invalid type for Unicorn config node '{0}' (expected '{1}' implementation)".FormatWith(elementName, typeof(TResultType).FullName));
 
 			RegisterGenericConfigTypeByInterfaces(configuration, defaults, elementName, registry);
 		}
@@ -185,11 +185,11 @@ namespace Unicorn.Configuration
 
 			var isSingleInstance = "true".Equals(GetAttributeValue(typeNode, "singleInstance"));
 
-			Assert.IsNotNullOrEmpty(typeString, "Missing value for Unicorn config node {0}, type attribute (type expected).".FormatWith(elementName));
+			Assert.IsNotNullOrEmpty(typeString, $"Missing value for Unicorn config node '{elementName}', 'type' attribute (type expected).");
 
 			var type = Type.GetType(typeString, false);
 
-			Assert.IsNotNull(type, "Invalid type {0} for Unicorn config node {1}, attribute type".FormatWith(typeString, elementName));
+			Assert.IsNotNull(type, $"Invalid type {typeString} for Unicorn config node '{elementName}', attribute 'type'");
 
 			return new TypeRegistration { Type = type, SingleInstance = isSingleInstance };
 		}
