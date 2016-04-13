@@ -139,9 +139,6 @@ namespace Unicorn.Users.Loader
 
 		protected virtual void PasteProfileValues(MembershipUser updatedUser, SyncUser serializedUser, bool addedUser, List<UserUpdate> changes)
 		{
-			// TODO: cannot currently detect changes here, so nothing will get logged
-			ProfileManager.DeleteProfile(updatedUser.UserName);
-
 			foreach (string name in SiteContextFactory.GetSiteNames())
 			{
 				SiteContext siteContext = SiteContextFactory.GetSiteContext(name);
@@ -150,19 +147,67 @@ namespace Unicorn.Users.Loader
 
 			User user = User.FromName(serializedUser.UserName, true);
 
-			foreach (string propertyName in user.Profile.GetCustomPropertyNames())
-				user.Profile.RemoveCustomProperty(propertyName);
+			bool propertiesAreUpdated = false;
 
-			foreach (SyncProfileProperty syncProfileProperty in serializedUser.ProfileProperties)
+			// load custom properties
+			var knownCustomProperties = new HashSet<string>();
+			foreach (var customProperty in serializedUser.ProfileProperties.Where(property => property.IsCustomProperty))
 			{
-				if (syncProfileProperty.IsCustomProperty)
-					user.Profile.SetCustomProperty(syncProfileProperty.Name, (string)syncProfileProperty.Content);
-				else
-					user.Profile.SetPropertyValue(syncProfileProperty.Name, syncProfileProperty.Content);
+				knownCustomProperties.Add(customProperty.Name);
+
+				// check if we need to change the value
+				var existingValue = user.Profile.GetCustomProperty(customProperty.Name);
+				if (existingValue != null && existingValue.Equals((string) customProperty.Content, StringComparison.Ordinal)) continue;
+
+				propertiesAreUpdated = true;
+				user.Profile.SetCustomProperty(customProperty.Name, (string)customProperty.Content);
+				changes.Add(new UserUpdate(customProperty.Name, existingValue, (string)customProperty.Content));
 			}
 
-			user.Profile.Save();
-			CacheManager.GetUserProfileCache().RemoveUser(updatedUser.UserName);
+			// cull orphan custom properties
+			foreach (var existingCustomProperty in user.Profile.GetCustomPropertyNames())
+			{
+				if (!knownCustomProperties.Contains(existingCustomProperty))
+				{
+					propertiesAreUpdated = true;
+					changes.Add(new UserUpdate(existingCustomProperty, user.Profile.GetCustomProperty(existingCustomProperty), "Deleted", true));
+					user.Profile.RemoveCustomProperty(existingCustomProperty);
+				}
+			}
+
+			// load standard properties
+			var knownStandardProperties = new HashSet<string>();
+			foreach (var standardProperty in serializedUser.ProfileProperties.Where(property => !property.IsCustomProperty))
+			{
+				knownStandardProperties.Add(standardProperty.Name);
+
+				// check if we need to change the value
+				var existingValue = user.Profile.GetPropertyValue(standardProperty.Name);
+
+				if (existingValue != null && (existingValue.GetType().IsPrimitive || existingValue is string))
+				{
+					if (existingValue.Equals(standardProperty.Content)) continue;
+
+					propertiesAreUpdated = true;
+					user.Profile.SetPropertyValue(standardProperty.Name, standardProperty.Content);
+					changes.Add(new UserUpdate(standardProperty.Name, existingValue.ToString(), standardProperty.Content.ToString()));
+				}
+				else
+				{
+					// a custom serialized type. No good way to compare as we don't know if it is at all comparable.
+					// we'll go with a quiet always update here
+					propertiesAreUpdated = true;
+					user.Profile.SetPropertyValue(standardProperty.Name, standardProperty.Content);
+					if (existingValue == null) changes.Add(new UserUpdate(standardProperty.Name, "null", standardProperty.Content.ToString()));
+				}
+			}
+
+			if (propertiesAreUpdated)
+			{
+				user.Profile.Save();
+
+				CacheManager.GetUserProfileCache().RemoveUser(updatedUser.UserName);
+			}
 		}
 
 		protected virtual void PasteRoles(SyncUser serializedUser, User sitecoreUser, bool addedUser, List<UserUpdate> changes)

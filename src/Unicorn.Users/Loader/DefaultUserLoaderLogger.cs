@@ -34,10 +34,15 @@ namespace Unicorn.Users.Loader
 			{
 				var role = updatedProperty as UserRoleUpdate;
 				if (role == null)
-					_baseLogger.Debug($"* [U] {updatedProperty.Property} updated from {updatedProperty.OriginalValue} to {updatedProperty.NewValue}.");
+				{
+					if(!updatedProperty.Deleted)
+						_baseLogger.Debug($"* [U] {updatedProperty.Property} updated from {updatedProperty.OriginalValue} to {updatedProperty.NewValue}.");
+					else
+						_baseLogger.Debug($"* [D] {updatedProperty.Property} was removed.");
+				}
 				else
 				{
-					if(role.Removed) _baseLogger.Debug($"* [D] {role.RoleName} role was removed.");
+					if (role.Removed) _baseLogger.Debug($"* [D] {role.RoleName} role was removed.");
 					else _baseLogger.Debug($"* [A] {role.RoleName} role was added.");
 				}
 			}
