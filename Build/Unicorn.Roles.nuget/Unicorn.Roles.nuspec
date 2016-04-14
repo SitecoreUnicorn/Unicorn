@@ -20,7 +20,7 @@
 	<files>
 		<file src="..\..\src\Unicorn.Roles\Standard Config Files\Unicorn.Roles.config" target="content\App_Config\Include\Unicorn" />
 		<file src="..\..\src\Unicorn.Roles\Standard Config Files\Unicorn.Roles.DataProvider.config" target="content\App_Config\Include\Unicorn" />
-		<file src="..\..\src\Unicorn.Roles\Standard Config Files\Unicorn.Configs.Default.Roles.config.example" target="content\App_Config\Include\Unicorn" />\
+		<file src="..\..\src\Unicorn.Roles\Standard Config Files\Unicorn.Configs.Default.Roles.config.example" target="content\App_Config\Include\Unicorn" />
 		<file src="readme.txt" target="" />
 	</files>
 </package>

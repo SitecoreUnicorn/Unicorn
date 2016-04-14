@@ -18,16 +18,9 @@
 	</dependencies>
 	</metadata>
 	<files>
-		<file src="..\..\src\Unicorn\Standard Config Files\Unicorn.config" target="content\App_Config\Include\Unicorn" />
-		<file src="..\..\src\Unicorn\Standard Config Files\Unicorn.AutoPublish.config" target="content\App_Config\Include\Unicorn" />
-		<file src="..\..\src\Unicorn\Standard Config Files\Unicorn.UI.config" target="content\App_Config\Include\Unicorn" />
-		<file src="..\..\src\Unicorn\Standard Config Files\Unicorn.DataProvider.config" target="content\App_Config\Include\Unicorn" />
-		<file src="..\..\src\Unicorn\Standard Config Files\Unicorn.Deployed.config.disabled" target="content\App_Config\Include\Unicorn" />
-		<file src="..\..\src\Unicorn\Standard Config Files\Unicorn.Remote.config.disabled" target="content\App_Config\Include\Unicorn" />
-		<file src="..\..\src\Unicorn\Standard Config Files\Unicorn.Configs.Default.example" target="content\App_Config\Include\Unicorn" />
-		<file src="..\..\src\Unicorn\Standard Config Files\Unicorn.Configs.NewItemsOnly.example" target="content\App_Config\Include\Unicorn" />
-		<file src="..\..\src\Unicorn\Standard Config Files\Unicorn.CustomSerializationFolder.config.example" target="content\App_Config\Include\Unicorn" />
-		<file src="..\..\src\Unicorn\Standard Config Files\Unicorn.Configs.Dependency.config.example" target="content\App_Config\Include\Unicorn" />
+		<file src="..\..\src\Unicorn\Standard Config Files\*.config" target="content\App_Config\Include\Unicorn" />
+		<file src="..\..\src\Unicorn\Standard Config Files\*.disabled" target="content\App_Config\Include\Unicorn" />
+		<file src="..\..\src\Unicorn\Standard Config Files\*.example" target="content\App_Config\Include\Unicorn" />
 		<file src="readme.txt" target="" />
 	</files>
 </package>
