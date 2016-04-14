@@ -8,19 +8,19 @@ namespace Unicorn.Roles.Model
 	/// </summary>
 	public class SerializedRoleData : IRoleData
 	{
-		public SerializedRoleData(string roleName, string[] parentRoleNames, string serializedItemId)
+		public SerializedRoleData(string roleName, string[] memberOfRoles, string serializedItemId)
 		{
 			Assert.ArgumentNotNullOrEmpty(roleName, nameof(roleName));
-			Assert.ArgumentNotNull(parentRoleNames, nameof(parentRoleNames));
+			Assert.ArgumentNotNull(memberOfRoles, nameof(memberOfRoles));
 			Assert.ArgumentNotNullOrEmpty(serializedItemId, nameof(serializedItemId));
 
 			RoleName = roleName;
-			ParentRoleNames = parentRoleNames;
+			MemberOfRoles = memberOfRoles;
 			SerializedItemId = serializedItemId;
 		}
 
 		public string RoleName { get; }
-		public string[] ParentRoleNames { get; }
+		public string[] MemberOfRoles { get; }
 		public string SerializedItemId { get; }
 	}
 }

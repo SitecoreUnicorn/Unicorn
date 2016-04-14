@@ -6,7 +6,7 @@
 	public interface IRoleData
 	{
 		string RoleName { get; }
-		string[] ParentRoleNames { get; }
+		string[] MemberOfRoles { get; }
 		string SerializedItemId { get; }
 	}
 }

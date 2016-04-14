@@ -20,24 +20,24 @@ namespace Unicorn.Roles.Formatting
 				{
 					string roleName = reader.ReadExpectedMap("Role");
 
-					var parentRoles = new List<string>();
+					var memberOfRoles = new List<string>();
 					
-					var parentRoleNode = reader.PeekMap();
-					if (parentRoleNode.HasValue && parentRoleNode.Value.Key.Equals("MemberOf"))
+					var roleMembershipNode = reader.PeekMap();
+					if (roleMembershipNode.HasValue && roleMembershipNode.Value.Key.Equals("MemberOf"))
 					{
 						reader.ReadMap();
 						while (true)
 						{
-							var parentRole = reader.PeekMap();
-							if (!parentRole.HasValue || !parentRole.Value.Key.Equals("Role", StringComparison.Ordinal)) break;
+							var memberOfRole = reader.PeekMap();
+							if (!memberOfRole.HasValue || !memberOfRole.Value.Key.Equals("Role", StringComparison.Ordinal)) break;
 
 							reader.ReadMap();
 
-							parentRoles.Add(parentRole.Value.Value);
+							memberOfRoles.Add(memberOfRole.Value.Value);
 						}
 					}
 
-					return new SerializedRoleData(roleName, parentRoles.ToArray(), serializedItemId);
+					return new SerializedRoleData(roleName, memberOfRoles.ToArray(), serializedItemId);
 				}
 			}
 			catch (Exception exception)
@@ -51,20 +51,20 @@ namespace Unicorn.Roles.Formatting
 			Assert.ArgumentNotNull(roleData, nameof(roleData));
 			Assert.ArgumentNotNull(outputStream, "outputStream");
 
-			var parentRoles = roleData.ParentRoleNames;
+			var memberOfRoles = roleData.MemberOfRoles;
 
 			using (var writer = new YamlWriter(outputStream, 4096, true))
 			{
 				writer.WriteMap("Role", roleData.RoleName);
 
-				if (parentRoles.Any())
+				if (memberOfRoles.Any())
 				{
 					writer.WriteMap("MemberOf");
 					writer.IncreaseIndent();
 
-					foreach (var parentRole in parentRoles)
+					foreach (var memberOfRole in memberOfRoles)
 					{
-						writer.WriteMap("Role", parentRole);
+						writer.WriteMap("Role", memberOfRole);
 					}
 
 					writer.DecreaseIndent();

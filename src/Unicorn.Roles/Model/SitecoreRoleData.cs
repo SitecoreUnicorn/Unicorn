@@ -13,7 +13,7 @@ namespace Unicorn.Roles.Model
 		}
 
 		public string RoleName => _role.Name;
-		public string[] ParentRoleNames => RolesInRolesManager.GetRolesForRole(_role, false).Select(parentRole => parentRole.Name).ToArray();
+		public string[] MemberOfRoles => RolesInRolesManager.GetRolesForRole(_role, false).Select(memberRole => memberRole.Name).ToArray();
 		public string SerializedItemId => "[DB ROLE]";
 	}
 }

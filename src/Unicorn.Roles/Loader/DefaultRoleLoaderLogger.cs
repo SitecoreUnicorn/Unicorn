@@ -20,19 +20,19 @@ namespace Unicorn.Roles.Loader
 			_baseLogger.Info($"[A] Role {role.RoleName}");
 		}
 
-		public virtual void AddedNewParentRole(IRoleData role)
+		public virtual void AddedNewRoleMembership(IRoleData role)
 		{
 			_baseLogger.Info($"> [A] Nonexistent parent role {role.RoleName}");
 		}
 
-		public virtual void RolesInRolesChanged(IRoleData role, string[] updatedParentRoles, string[] removedParentRoles)
+		public virtual void RoleMembershipChanged(IRoleData role, string[] updatedRoleMembership, string[] removedRoleMembership)
 		{
 			_baseLogger.Info($"[U] Role {role.RoleName}");
-			foreach (var addedRole in updatedParentRoles)
+			foreach (var addedRole in updatedRoleMembership)
 			{
 				_baseLogger.Debug($"* [A] Added membership in {addedRole}");
 			}
-			foreach (var removedRole in removedParentRoles)
+			foreach (var removedRole in removedRoleMembership)
 			{
 				_baseLogger.Debug($"* [D] Removed membership in {removedRole}");
 			}

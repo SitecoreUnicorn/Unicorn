@@ -1,5 +1,4 @@
-﻿using Unicorn.Roles.Data;
-using Unicorn.Roles.Model;
+﻿using Unicorn.Roles.Model;
 
 namespace Unicorn.Roles.Loader
 {
@@ -7,9 +6,9 @@ namespace Unicorn.Roles.Loader
 	{
 		void AddedNewRole(IRoleData role);
 
-		void AddedNewParentRole(IRoleData role);
+		void AddedNewRoleMembership(IRoleData role);
 
-		void RolesInRolesChanged(IRoleData role, string[] updatedParentRoles, string[] removedParentRoles);
+		void RoleMembershipChanged(IRoleData role, string[] updatedRoleMembership, string[] removedRoleMembership);
 		void RemovedOrphanRole(IRoleData orphan);
 	}
 }

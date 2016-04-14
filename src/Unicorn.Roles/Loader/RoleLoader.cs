@@ -65,44 +65,44 @@ namespace Unicorn.Roles.Loader
 			}
 
 			Role targetRole = Role.FromName(name);
-			var currentSourceParents = new SitecoreRoleData(targetRole).ParentRoleNames;
-			var currentTargetParents = role.ParentRoleNames;
+			var currentSourceParents = new SitecoreRoleData(targetRole).MemberOfRoles;
+			var currentTargetParents = role.MemberOfRoles;
 
-			var addedParentRoles = new List<string>();
-			var removedParentRoles = new List<string>();
+			var addedRoleMembership = new List<string>();
+			var removedRoleMembership = new List<string>();
 			var deferredUpdateLog = new DeferredLogWriter<IRoleLoaderLogger>();
 
 			// Loop over the serialized parent roles and set db roles if needed
-			foreach (var serializedParentRoleName in currentTargetParents)
+			foreach (var serializedMemberRoleName in currentTargetParents)
 			{
-				var parentRole = Role.FromName(serializedParentRoleName);
+				var memberRole = Role.FromName(serializedMemberRoleName);
 
 				// add nonexistant parent role if needed. NOTE: parent role need not be one we have serialized or included.
-				if (!Role.Exists(serializedParentRoleName))
+				if (!Role.Exists(serializedMemberRoleName))
 				{
-					deferredUpdateLog.AddEntry(log => log.AddedNewParentRole(new SitecoreRoleData(parentRole)));
-					System.Web.Security.Roles.CreateRole(serializedParentRoleName);
+					deferredUpdateLog.AddEntry(log => log.AddedNewRoleMembership(new SitecoreRoleData(memberRole)));
+					System.Web.Security.Roles.CreateRole(serializedMemberRoleName);
 				}
 
 				// Add membership if not already in the parent role
-				if (!RolesInRolesManager.IsRoleInRole(targetRole, parentRole, false))
+				if (!RolesInRolesManager.IsRoleInRole(targetRole, memberRole, false))
 				{
-					addedParentRoles.Add(parentRole.Name);
-					RolesInRolesManager.AddRoleToRole(targetRole, parentRole);
+					addedRoleMembership.Add(memberRole.Name);
+					RolesInRolesManager.AddRoleToRole(targetRole, memberRole);
 				}
 			}
 
 			// Loop over parent roles that exist in the database but not in serialized and remove them
-			var parentsToRemove = currentSourceParents.Where(parent => !currentTargetParents.Contains(parent, StringComparer.OrdinalIgnoreCase));
-			foreach (var parentToRemove in parentsToRemove)
+			var membershipToRemove = currentSourceParents.Where(parent => !currentTargetParents.Contains(parent, StringComparer.OrdinalIgnoreCase));
+			foreach (var roleToRemove in membershipToRemove)
 			{
-				removedParentRoles.Add(parentToRemove);
-				RolesInRolesManager.RemoveRoleFromRole(targetRole, Role.FromName(parentToRemove));
+				removedRoleMembership.Add(roleToRemove);
+				RolesInRolesManager.RemoveRoleFromRole(targetRole, Role.FromName(roleToRemove));
 			}
 
-			if (!addedRole && (addedParentRoles.Count > 0 || removedParentRoles.Count > 0))
+			if (!addedRole && (addedRoleMembership.Count > 0 || removedRoleMembership.Count > 0))
 			{
-				_loaderLogger.RolesInRolesChanged(role, addedParentRoles.ToArray(), removedParentRoles.ToArray());
+				_loaderLogger.RoleMembershipChanged(role, addedRoleMembership.ToArray(), removedRoleMembership.ToArray());
 			}
 
 			deferredUpdateLog.ExecuteDeferredActions(_loaderLogger);
