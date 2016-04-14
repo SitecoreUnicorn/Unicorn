@@ -45,9 +45,30 @@
 			<except name="monkey" />
 		</exclude>
 	</include>
-
+	
+	<!--
+		WILDCARD CHILDREN-OF-CHILDREN: Include all children of the specified path but none of those items' children
+		NOTE: Wildcards are only allowed as the last character of childrenOfPath.
+	-->
+	<include database="master" path="/Wild">
+		<exclude childrenOfPath="*" />
+	</include>
+	<include database="master" path="/ChildWild">
+		<exclude childrenOfPath="Mike/*" />
+	</include>
+	
 	<!-- 
 		DB TEST: Checks that the database specified in the include is respected
 	-->
 	<include name="DB test" database="core" path="/sitecore/coredb" />
+	
+	<!--
+		COMPOSITE EXAMPLE: Include parent item, one child, but no children of that child
+	-->
+	<include name="Composite" database="master" path="/sitecore/0xDEADBEEF/Example">
+		<exclude children="true">
+			<except name="Home" />
+		</exclude>
+		<exclude childrenOfPath="Home" />
+	</include>
 </predicate>

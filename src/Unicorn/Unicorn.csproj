@@ -219,6 +219,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="Standard Config Files\Unicorn.SharedSecret.config.example">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Standard Config Files\Unicorn.Configs.NewItemsOnly.example">
       <SubType>Designer</SubType>
     </None>

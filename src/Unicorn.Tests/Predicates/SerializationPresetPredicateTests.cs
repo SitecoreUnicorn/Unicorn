@@ -59,6 +59,17 @@ namespace Unicorn.Tests.Predicates
 		[InlineData("/CoC/yetmorestuff", true)]
 		[InlineData("/CoC/yetmorestuff/gorilla", false)]
 		[InlineData("/CoC/yetmorestuff/monkey", true)]
+		// WILDCARD CHILDREN-OF-CHILREN test config
+		[InlineData("/Wild", true)]
+		[InlineData("/Wild/Wild Woozles", true)]
+		[InlineData("/Wild/MikesBeers", true)]
+		[InlineData("/Wild/MikesBeers/Unopened", false)]
+		// WILDCARD CHILDREN-OF-CHILREN subitem test config
+		[InlineData("/ChildWild", true)]
+		[InlineData("/ChildWild/Wild Woozles", true)]
+		[InlineData("/ChildWild/Mike", true)]
+		[InlineData("/ChildWild/Mike/Fridge", true)]
+		[InlineData("/ChildWild/Mike/Fridge/Beers", false)]
 		public void Includes_MatchesExpectedPathResult(string testPath, bool expectedResult)
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
@@ -99,11 +110,11 @@ namespace Unicorn.Tests.Predicates
 
 			var roots = predicate.GetRootPaths();
 
-			roots.Length.Should().Be(6);
+			roots.Length.Should().Be(9);
 			roots[0].DatabaseName.Should().Be("master");
 			roots[0].Path.Should().Be("/sitecore/layout/Simulators");
-			roots[5].DatabaseName.Should().Be("core");
-			roots[5].Path.Should().Be("/sitecore/coredb");
+			roots[7].DatabaseName.Should().Be("core");
+			roots[7].Path.Should().Be("/sitecore/coredb");
 		}
 
 		private SerializationPresetPredicate CreateTestPredicate(XmlNode configNode)

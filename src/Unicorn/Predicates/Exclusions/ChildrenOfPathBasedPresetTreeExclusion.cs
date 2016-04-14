@@ -40,10 +40,21 @@ namespace Unicorn.Predicates.Exclusions
 			}
 
 			// if the path isn't under the exclusion, it's included
-			if (!itemPath.StartsWith(_excludeChildrenOfPath, StringComparison.OrdinalIgnoreCase)) return new PredicateResult(true);
+			var wildcardFreePath = _excludeChildrenOfPath.EndsWith("/*/") ? _excludeChildrenOfPath.Substring(0, _excludeChildrenOfPath.Length - 2) : _excludeChildrenOfPath;
+			if (!itemPath.StartsWith(wildcardFreePath, StringComparison.OrdinalIgnoreCase)) return new PredicateResult(true);
 
 			// if the path EQUALS the exclusion path it's included. Because we're including the root, and excluding the children.
-			if (itemPath.Equals(_excludeChildrenOfPath, StringComparison.OrdinalIgnoreCase)) return new PredicateResult(true);
+			if (itemPath.Equals(wildcardFreePath, StringComparison.OrdinalIgnoreCase)) return new PredicateResult(true);
+
+			// if the path EQUALS a wildcarded exclusion path it's included.
+			// we accomplish this by doing an equals on the parent path of both the item path and the exclusion
+			// /foo/bar => /foo, then match against COP = /foo/* => /foo/ == TRUE, so we include it
+			// but, /foo/bar/baz => /foo/bar, match against COP /foo/* => /foo/ == FALSE, so it is excluded
+			if (_excludeChildrenOfPath.EndsWith("/*/"))
+			{
+				var itemParentPath = itemPath.Substring(0, itemPath.TrimEnd('/').LastIndexOf('/') + 1); // /foo/bar/ => /foo/
+				if (itemParentPath.Equals(wildcardFreePath, StringComparison.OrdinalIgnoreCase)) return new PredicateResult(true);
+			}
 
 			// the item is part of the exclusion
 			return new PredicateResult($"Children of {_excludeChildrenOfPath} excluded");
