@@ -2,6 +2,6 @@
 using System.Runtime.CompilerServices;
 
 [assembly: AssemblyTitle("Unicorn")]
-[assembly: AssemblyDescription("Sitecore serialization helper framework")]
+[assembly: AssemblyDescription("Sitecore Item Serialization Framework")]
 
 [assembly: InternalsVisibleTo("Unicorn.Tests")]

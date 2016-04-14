@@ -46,6 +46,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\SharedAssemblyInfo.cs">
+      <Link>Properties\SharedAssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="Data\IUserDataStore.cs" />
     <Compile Include="Data\FilesystemUserDataStore.cs" />
     <Compile Include="Data\SyncUserFile.cs" />
@@ -68,7 +71,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="TODO.txt" />
+    <None Include="TODO.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Standard Config Files\Unicorn.Configs.Default.Users.config.example">
