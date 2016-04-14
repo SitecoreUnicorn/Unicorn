@@ -10,12 +10,12 @@
 		<unicorn>
 			<configurations>
 				<!--
-						This is an example of how to configure a Unicorn configuration that, when synced along with Default Configuration,
-						will always sync after it because it is a dependency.
+					This is an example of how to configure a Unicorn configuration that, when synced along with Default Configuration,
+					will always sync after it because it is a dependency.
 						
-						Dependencies do NOT force additional configurations to sync. So if you chose to sync only Sample Dependent Configuration,
-						it would not automatically sync Default Configuration. Dependency only comes into play when all dependencies are syncing at once,
-						or when all configurations sync together.
+					Dependencies do NOT force additional configurations to sync. So if you chose to sync only Sample Dependent Configuration,
+					it would not automatically sync Default Configuration. Dependency only comes into play when all dependencies are syncing at once,
+					or when all configurations sync together.
 				-->
 				<configuration name="Sample Dependent Configuration" dependencies="Default Configuration">
 				</configuration>

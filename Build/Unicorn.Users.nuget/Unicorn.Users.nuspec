@@ -20,5 +20,6 @@
 		<file src="..\..\src\Unicorn.Users\Standard Config Files\Unicorn.Users.config" target="content\App_Config\Include\Unicorn" />
 		<file src="..\..\src\Unicorn.Users\Standard Config Files\Unicorn.Users.DataProvider.config" target="content\App_Config\Include\Unicorn" />
 		<file src="..\..\src\Unicorn.Users\Standard Config Files\Unicorn.Configs.Default.Users.config.example" target="content\App_Config\Include\Unicorn" />
+		<file src="readme.txt" target="" />
 	</files>
 </package>

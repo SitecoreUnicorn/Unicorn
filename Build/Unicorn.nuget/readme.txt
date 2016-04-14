@@ -7,7 +7,8 @@ Make a copy of App_Config/Include/Unicorn/Unicorn.Configs.Default.example and re
 Review the comments in the example configuration file and edit the values as you see fit (especially the predicate settings, which control what is included).
 
 It's probably also worth it to review the other App_Config\Include\Unicorn\*.config files too: make sure they're to your liking.
-In particular, the TargetDataStore in Unicorn.config controls where serialized items are written to (it defaults to $(dataFolder)\Unicorn)
+In particular, the TargetDataStore in Unicorn.config controls where serialized items are written to (it defaults to $(dataFolder)\Unicorn).
+If you alter any of the defaults, do it in config patches so that you leave the default configuration intact.
 
 Run a build, so that the Unicorn assemblies are copied to your bin folder. If you develop out of webroot you may need to deploy or something as well.
 Open the Unicorn control panel (defaults to /unicorn.aspx)
@@ -18,11 +19,7 @@ You can also automate doing a sync as part of a CI deployment process; see the r
 
 Want deeper documentation? The README.md on GitHub is your friend: https://github.com/kamsar/Unicorn/blob/master/README.md, as well as the comments in all the config files.
 
-TFS USERS
-- Unicorn should work fine with TFS versions later than 2010, though the experience is not as optimal as better SCMs :D
-- Looking for TFS 2010 or server workspace support? Follow the instructions on the TFS Plug-In for Rainbow README.md: https://github.com/PetersonDave/Rainbow.Tfs.
-
-Have questions? Tweet @kamsar.
+Have questions? Tweet @kamsar, or join Sitecore Community Slack and ask in #unicorn
 
 Found a bug? Send me a pull request on GitHub if you're feeling awesome: https://github.com/kamsar/Unicorn
 (or an issue if you're feeling lazy)
