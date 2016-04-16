@@ -64,7 +64,7 @@
 						Transparent Sync (preferred) updates the state of Sitecore instantly as soon as changes to files occur. It is optimal for development purposes, but has a few limitations.
 						See the guide to help decide: https://github.com/kamsar/Unicorn/wiki/The-Transparent-Sync-Guide
 					-->
-					<dataProviderConfiguration type="Unicorn.Data.DataProvider.DefaultUnicornDataProviderConfiguration, Unicorn" enableTransparentSync="false" />
+					<dataProviderConfiguration enableTransparentSync="false" type="Unicorn.Data.DataProvider.DefaultUnicornDataProviderConfiguration, Unicorn" singleInstance="true" />
 
 					<!-- 
 						SYNC CONFIGURATION
@@ -85,7 +85,7 @@
 						
 						NOTE: UpdateLinkDatabase and UpdateSearchIndex also apply to items that are reloaded from disk when using Transparent Sync, as well as normal Sync.
 					-->
-					<syncConfiguration type="Unicorn.Loader.DefaultSyncConfiguration, Unicorn" singleInstance="true" updateLinkDatabase="false" updateSearchIndex="false" maxConcurrency="1" />
+					<syncConfiguration updateLinkDatabase="false" updateSearchIndex="false" maxConcurrency="1" type="Unicorn.Loader.DefaultSyncConfiguration, Unicorn" singleInstance="true" />
 				</configuration>
 			</configurations>
 		</unicorn>
