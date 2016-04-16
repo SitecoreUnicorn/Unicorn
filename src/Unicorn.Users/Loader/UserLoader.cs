@@ -106,11 +106,11 @@ namespace Unicorn.Users.Loader
 
 			Membership.UpdateUser(updatedUser);
 
-			PasteProfileValues(updatedUser, syncUser, addedUser, changes);
+			PasteProfileValues(updatedUser, syncUser, changes);
 
 			PasteRoles(syncUser, User.FromName(serializedUser.User.UserName, true), addedUser, changes);
 
-			if (changes.Count > 0)
+			if (changes.Count > 0 && !addedUser)
 				_logger.UpdatedUser(serializedUser, changes);
 		}
 
@@ -142,7 +142,7 @@ namespace Unicorn.Users.Loader
 			return password;
 		}
 
-		protected virtual void PasteProfileValues(MembershipUser updatedUser, SyncUser serializedUser, bool addedUser, List<UserUpdate> changes)
+		protected virtual void PasteProfileValues(MembershipUser updatedUser, SyncUser serializedUser, List<UserUpdate> changes)
 		{
 			foreach (string name in SiteContextFactory.GetSiteNames())
 			{
