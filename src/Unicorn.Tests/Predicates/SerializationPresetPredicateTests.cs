@@ -19,7 +19,7 @@ namespace Unicorn.Tests.Predicates
 		[Fact]
 		public void ctor_ThrowsArgumentNullException_WhenNodeIsNull()
 		{
-			Assert.Throws<ArgumentNullException>(() => new SerializationPresetPredicate(null));
+			Assert.Throws<ArgumentNullException>(() => new SerializationPresetPredicate(null, null, null));
 		}
 
 		//
@@ -106,7 +106,7 @@ namespace Unicorn.Tests.Predicates
 		// Deps: BASIC and DB TEST test configs
 		public void GetRootItems_ReturnsExpectedRootValues()
 		{
-			var predicate = new SerializationPresetPredicate(CreateTestConfiguration());
+			var predicate = new SerializationPresetPredicate(CreateTestConfiguration(), null, null);
 
 			var roots = predicate.GetRootPaths();
 
@@ -119,7 +119,7 @@ namespace Unicorn.Tests.Predicates
 
 		private SerializationPresetPredicate CreateTestPredicate(XmlNode configNode)
 		{
-			return new SerializationPresetPredicate(configNode);
+			return new SerializationPresetPredicate(configNode, null, null);
 		}
 
 		private XmlNode CreateTestConfiguration()

@@ -24,8 +24,8 @@ namespace Unicorn.Predicates
 
 			_includeEntries = ParsePreset(configNode);
 
-			EnsureEntriesExist(configuration.Name);
-			ValidateExclusionConfiguration(configuration.Name, dataProviderConfiguration.EnableTransparentSync);
+			EnsureEntriesExist(configuration?.Name ?? "Unknown");
+			ValidateExclusionConfiguration(configuration?.Name ?? "Unknown", dataProviderConfiguration?.EnableTransparentSync ?? false);
 		}
 
 		public PredicateResult Includes(IItemData itemData)
