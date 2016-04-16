@@ -21,14 +21,15 @@ namespace Unicorn.Predicates
 			Assert.ArgumentNotNull(configNode, "configNode");
 
 			_includeEntries = ParsePreset(configNode);
+
+			EnsureEntriesExist();
 		}
 
 		public PredicateResult Includes(IItemData itemData)
 		{
 			Assert.ArgumentNotNull(itemData, "itemData");
 
-			// no entries = include everything
-			if (_includeEntries.Count == 0) return new PredicateResult(true);
+			EnsureEntriesExist();
 
 			var result = new PredicateResult(true);
 
@@ -128,6 +129,12 @@ namespace Unicorn.Predicates
 			}
 
 			return presets;
+		}
+
+		private void EnsureEntriesExist()
+		{
+			// no entries = throw!
+			if (_includeEntries.Count == 0) throw new InvalidOperationException("No include entries were present on the predicate. You must explicitly specify the items you want to include.");
 		}
 
 		protected virtual PresetTreeRoot CreateIncludeEntry(XmlNode configuration)
