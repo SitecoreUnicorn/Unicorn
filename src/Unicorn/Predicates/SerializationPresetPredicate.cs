@@ -82,7 +82,7 @@ namespace Unicorn.Predicates
 		public string FriendlyName => "Serialization Preset Predicate";
 
 		[ExcludeFromCodeCoverage]
-		public string Description => "Defines what to include in Unicorn based on .";
+		public string Description => "Defines what to include in Unicorn based on XML configuration entries.";
 
 		[ExcludeFromCodeCoverage]
 		public KeyValuePair<string, string>[] GetConfigurationDetails()
