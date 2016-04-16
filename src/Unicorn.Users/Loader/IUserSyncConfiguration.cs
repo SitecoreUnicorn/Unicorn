@@ -10,5 +10,11 @@ namespace Unicorn.Users.Loader
 		/// This is similar to SerializedAsMasterEvaluator for Unicorn.
 		/// </summary>
 		bool RemoveOrphans { get; }
+
+		/// <summary>
+		/// When NEW users are deserialized, their passwords will be set to this value. 
+		/// If the value is set to "random," the password will be set to a long randomly generated value, otherwise the literal value is used.
+		/// </summary>
+		string DefaultPassword { get; }
 	}
 }

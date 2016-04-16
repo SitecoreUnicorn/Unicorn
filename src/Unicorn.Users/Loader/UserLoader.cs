@@ -21,8 +21,9 @@ namespace Unicorn.Users.Loader
 		private readonly IUserPredicate _userPredicate;
 		private readonly IUserDataStore _userDataStore;
 		private readonly IUserLoaderLogger _logger;
+		private readonly IUserSyncConfiguration _syncConfiguration;
 
-		public UserLoader(IUserPredicate userPredicate, IUserDataStore userDataStore, IUserLoaderLogger logger)
+		public UserLoader(IUserPredicate userPredicate, IUserDataStore userDataStore, IUserLoaderLogger logger, IUserSyncConfiguration syncConfiguration)
 		{
 			Assert.ArgumentNotNull(userPredicate, nameof(userPredicate));
 			Assert.ArgumentNotNull(userDataStore, nameof(userDataStore));
@@ -31,6 +32,7 @@ namespace Unicorn.Users.Loader
 			_userPredicate = userPredicate;
 			_userDataStore = userDataStore;
 			_logger = logger;
+			_syncConfiguration = syncConfiguration;
 		}
 
 		public void Load(IConfiguration configuration)
@@ -46,15 +48,18 @@ namespace Unicorn.Users.Loader
 					DeserializeUser(user);
 				}
 
-				var existingOrphanUsers = UserManager.GetUsers()
-					.GetAll()
-					.Where(user => _userPredicate.Includes(user).IsIncluded)
-					.Where(includedUser => !users.Any(user => user.User.UserName.Equals(includedUser.Name, StringComparison.OrdinalIgnoreCase)));
-
-				foreach (var orphan in existingOrphanUsers)
+				if (_syncConfiguration.RemoveOrphans)
 				{
-					_logger.RemovedUser(orphan);
-					Membership.DeleteUser(orphan.Name);
+					var existingOrphanUsers = UserManager.GetUsers()
+						.GetAll()
+						.Where(user => _userPredicate.Includes(user).IsIncluded)
+						.Where(includedUser => !users.Any(user => user.User.UserName.Equals(includedUser.Name, StringComparison.OrdinalIgnoreCase)));
+
+					foreach (var orphan in existingOrphanUsers)
+					{
+						_logger.RemovedUser(orphan);
+						Membership.DeleteUser(orphan.Name);
+					}
 				}
 			}
 		}
@@ -125,14 +130,14 @@ namespace Unicorn.Users.Loader
 
 		protected virtual string CreateNewUserPassword(SyncUserFile user)
 		{
-			var password = Settings.GetSetting("Unicorn.Users.DefaultPassword");
+			var password = _syncConfiguration.DefaultPassword;
 
 			if (password.Equals("random", StringComparison.OrdinalIgnoreCase))
 			{
 				return Membership.GeneratePassword(32, 0);
 			}
 
-			if (password.Length < 8) throw new InvalidOperationException("I will not set the default user password to anything less than 8 characters. Change your Unicorn.Users.DefaultPassword setting to something more secure.");
+			if (password.Length < 8) throw new InvalidOperationException("I will not set the default user password to anything less than 8 characters. Change your userSyncConfiguration's defaultPassword setting to something more secure.");
 
 			return password;
 		}
