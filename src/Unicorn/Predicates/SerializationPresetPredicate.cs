@@ -8,6 +8,8 @@ using Rainbow.Model;
 using Rainbow.Storage;
 using Sitecore.Diagnostics;
 using Sitecore.StringExtensions;
+using Unicorn.Configuration;
+using Unicorn.Data.DataProvider;
 using Unicorn.Predicates.Exclusions;
 
 namespace Unicorn.Predicates
@@ -16,20 +18,19 @@ namespace Unicorn.Predicates
 	{
 		private readonly IList<PresetTreeRoot> _includeEntries;
 
-		public SerializationPresetPredicate(XmlNode configNode)
+		public SerializationPresetPredicate(XmlNode configNode, IUnicornDataProviderConfiguration dataProviderConfiguration, IConfiguration configuration)
 		{
 			Assert.ArgumentNotNull(configNode, "configNode");
 
 			_includeEntries = ParsePreset(configNode);
 
-			EnsureEntriesExist();
+			EnsureEntriesExist(configuration.Name);
+			ValidateExclusionConfiguration(configuration.Name, dataProviderConfiguration.EnableTransparentSync);
 		}
 
 		public PredicateResult Includes(IItemData itemData)
 		{
 			Assert.ArgumentNotNull(itemData, "itemData");
-
-			EnsureEntriesExist();
 
 			var result = new PredicateResult(true);
 
@@ -131,10 +132,17 @@ namespace Unicorn.Predicates
 			return presets;
 		}
 
-		private void EnsureEntriesExist()
+		protected virtual void EnsureEntriesExist(string configurationName)
 		{
 			// no entries = throw!
-			if (_includeEntries.Count == 0) throw new InvalidOperationException("No include entries were present on the predicate. You must explicitly specify the items you want to include.");
+			if (_includeEntries.Count == 0) throw new InvalidOperationException($"No include entries were present on the predicate for the {configurationName} Unicorn configuration. You must explicitly specify the items you want to include.");
+		}
+
+		protected virtual void ValidateExclusionConfiguration(string configurationName, bool isTransparentSync)
+		{
+			if (!isTransparentSync) return;
+
+			if(_includeEntries.Any(entry => entry.Exclusions.Any())) throw new InvalidOperationException($"The predicate for the Unicorn Transparent Sync configuration {configurationName} contains exclusions. Exclusions are incompatible with Transparent Sync and could cause corruption. Refactor your configuration to only include whole paths, or do not use Transparent Sync.");
 		}
 
 		protected virtual PresetTreeRoot CreateIncludeEntry(XmlNode configuration)
