@@ -78,6 +78,10 @@ namespace Unicorn.Roles.Events
 
 			Assert.IsNotNullOrEmpty(roleName, "Role name was null or empty!");
 
+			// Sitecore can remove Roles In Roles from deleted roles
+			// without this we'd re-save a deleted role :)
+			if (!Role.Exists(roleName)) return;
+
 			foreach (var configuration in _configurations)
 			{
 				configuration.RoleAlteredOrCreated(roleName);
