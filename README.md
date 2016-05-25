@@ -81,6 +81,8 @@ Ok, ok. Shut up about crypto and tell me how to set it up.
 
 NOTE: When deploying to a Content Editing or Content Delivery server, the Unicorn configuration should be trimmed down from development. Each config file in `App_Config/Include/Unicorn` has comments at the top designating what environment(s) it should live on. If you opt to use Transparent Sync as a deployment mechanism, make sure you do not disable the data provider config file.
 
+[Darren Guy](https://twitter.com/DarrenGuy) has written a practical dissertation on his experiences setting up [Unicorn 3 with TeamCity and Octopus Deploy](https://thesoftwaredudeblog.wordpress.com/2016/05/24/building-a-continuous-integration-environment-for-sitecore-part-8-using-unicorn-for-sitecore-item-syncronization/) that goes all the way from install to automated deployment. A recommended read if you're wanting to use a similar setup.
+
 [Andrew Lansdowne](https://twitter.com/Rangler2) has also written a post _(for version 1, so some of it is outdated but the concepts still apply)_ about [setting up Unicorn with TeamCity and WebDeploy](http://andrew.lansdowne.me/2013/06/07/auto-deploy-sitecore-items-using-unicorn-and-teamcity/) that may be useful when setting up automated deployments.
 
 ## Unicorn's Sync Rules
