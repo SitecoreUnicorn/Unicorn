@@ -90,11 +90,11 @@ namespace Unicorn.ControlPanel.Controls
 			if(allSelected) $('.fakebox-all').addClass('checked');
 
 			if(checked.length > 0) {
-				$('.batch').slideDown();
+				$('.batch').finish().slideDown();
 				$('td + td').css('visibility', 'hidden');
 			}
 			else {
-				$('.batch').slideUp(function() {
+				$('.batch').finish().slideUp(function() {
 					$('td + td').css('visibility', 'visible');
 				});	
 			}
