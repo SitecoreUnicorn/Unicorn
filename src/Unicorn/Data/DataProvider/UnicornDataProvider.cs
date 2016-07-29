@@ -195,8 +195,12 @@ namespace Unicorn.Data.DataProvider
 
 			if (destinationItem == null) return; // can occur with TpSync on, when this isn't the configuration we're moving for the data store will return null
 
-			if (!_predicate.Includes(destinationItem).IsIncluded) // if the destination we are moving to is NOT included for serialization, we delete the existing item
+			// rebase the path to the new destination path (this handles children too)
+			var rebasedSourceItem = new PathRebasingProxyItem(sourceItem, destinationItem.Path, destinationItem.Id);
+
+			if (!_predicate.Includes(rebasedSourceItem).IsIncluded) 
 			{
+				// if the destination we are moving to is NOT included for serialization, we delete the existing item from serialization
 				var existingItem = _targetDataStore.GetByPathAndId(sourceItem.Path, sourceItem.Id, sourceItem.DatabaseName);
 
 				if (existingItem != null)
@@ -207,9 +211,6 @@ namespace Unicorn.Data.DataProvider
 
 				return;
 			}
-
-			// rebase the path to the new destination path (this handles children too)
-			var rebasedSourceItem = new PathRebasingProxyItem(sourceItem, destinationItem.Path, destinationItem.Id);
 
 			// this allows us to filter out any excluded children by predicate when the data store moves children
 			var predicatedItem = new PredicateFilteredItemData(rebasedSourceItem, _predicate);
