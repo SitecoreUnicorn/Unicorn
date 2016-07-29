@@ -40,7 +40,7 @@ namespace Unicorn.Deserialization
 
 		public virtual void ChangedBranchTemplate(Item targetItem, string oldBranchId)
 		{
-
+			_logger.Debug("* [B] from {0} to {1}".FormatWith(oldBranchId, targetItem.BranchId));
 		}
 
 		public virtual void ChangedTemplate(Item targetItem, TemplateItem oldTemplate)
