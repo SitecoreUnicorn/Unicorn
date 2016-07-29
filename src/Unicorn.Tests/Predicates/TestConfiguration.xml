@@ -71,4 +71,16 @@
 		</exclude>
 		<exclude childrenOfPath="Home" />
 	</include>
+
+	<!--
+		WILDCARD ESCAPING: Literal matching of Sitecore wildcard items (named '*', escaped as \*)
+		Including literal exclusion of a child wildcard item.
+		Escape literals with a backslash. Note that technically escaping is not REQUIRED for 
+		a path inclusion (<include path="/foo/*"), but is supported and recommended for consistency's sake.
+	-->
+	<include name="Wildcard" database="master" path="/LiteralWild/\*">
+		<exclude children="true">
+			<except name="\*" />
+		</exclude>
+	</include>
 </predicate>

@@ -36,15 +36,19 @@ namespace Unicorn.Predicates.Exclusions
 			// you may preserve certain children from exclusion
 			foreach (var exception in _exceptions)
 			{
-				if (itemPath.StartsWith(exception, StringComparison.OrdinalIgnoreCase)) return new PredicateResult(true);
+				var unescapedException = exception.Replace(@"\*", "*");
+				if (itemPath.StartsWith(unescapedException, StringComparison.OrdinalIgnoreCase)) return new PredicateResult(true);
 			}
 
 			// if the path isn't under the exclusion, it's included
-			var wildcardFreePath = _excludeChildrenOfPath.EndsWith("/*/") ? _excludeChildrenOfPath.Substring(0, _excludeChildrenOfPath.Length - 2) : _excludeChildrenOfPath;
-			if (!itemPath.StartsWith(wildcardFreePath, StringComparison.OrdinalIgnoreCase)) return new PredicateResult(true);
+			var unescapedWildcardFreePath = _excludeChildrenOfPath.EndsWith("/*/") ? _excludeChildrenOfPath.Substring(0, _excludeChildrenOfPath.Length - 2) : _excludeChildrenOfPath;
+			// unescape any "\*" escapes to match a literal wildcard item so we can compare the path (we don't check this variable for * later)
+			unescapedWildcardFreePath = unescapedWildcardFreePath.Replace(@"\*", "*");
+
+			if (!itemPath.StartsWith(unescapedWildcardFreePath, StringComparison.OrdinalIgnoreCase)) return new PredicateResult(true);
 
 			// if the path EQUALS the exclusion path it's included. Because we're including the root, and excluding the children.
-			if (itemPath.Equals(wildcardFreePath, StringComparison.OrdinalIgnoreCase)) return new PredicateResult(true);
+			if (itemPath.Equals(unescapedWildcardFreePath, StringComparison.OrdinalIgnoreCase)) return new PredicateResult(true);
 
 			// if the path EQUALS a wildcarded exclusion path it's included.
 			// we accomplish this by doing an equals on the parent path of both the item path and the exclusion
@@ -53,7 +57,7 @@ namespace Unicorn.Predicates.Exclusions
 			if (_excludeChildrenOfPath.EndsWith("/*/"))
 			{
 				var itemParentPath = itemPath.Substring(0, itemPath.TrimEnd('/').LastIndexOf('/') + 1); // /foo/bar/ => /foo/
-				if (itemParentPath.Equals(wildcardFreePath, StringComparison.OrdinalIgnoreCase)) return new PredicateResult(true);
+				if (itemParentPath.Equals(unescapedWildcardFreePath, StringComparison.OrdinalIgnoreCase)) return new PredicateResult(true);
 			}
 
 			// the item is part of the exclusion

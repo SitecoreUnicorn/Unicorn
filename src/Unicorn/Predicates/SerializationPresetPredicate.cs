@@ -61,7 +61,8 @@ namespace Unicorn.Predicates
 			if (!itemData.DatabaseName.Equals(entry.DatabaseName, StringComparison.OrdinalIgnoreCase)) return new PredicateResult(false);
 
 			// check for path match
-			if (!itemData.Path.StartsWith(entry.Path, StringComparison.OrdinalIgnoreCase)) return new PredicateResult(false);
+			var unescapedPath = entry.Path.Replace(@"\*", "*");
+			if (!itemData.Path.StartsWith(unescapedPath, StringComparison.OrdinalIgnoreCase)) return new PredicateResult(false);
 
 			// check excludes
 			return ExcludeMatches(entry, itemData);

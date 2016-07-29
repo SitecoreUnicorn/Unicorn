@@ -70,6 +70,11 @@ namespace Unicorn.Tests.Predicates
 		[InlineData("/ChildWild/Mike", true)]
 		[InlineData("/ChildWild/Mike/Fridge", true)]
 		[InlineData("/ChildWild/Mike/Fridge/Beers", false)]
+		// LITERAL WILDCARDS (root/child)
+		[InlineData("/LiteralWild", false)]
+		[InlineData("/LiteralWild/*", true)]
+		[InlineData("/LiteralWild/*/Foo", false)]
+		[InlineData("/LiteralWild/*/*", true)]
 		public void Includes_MatchesExpectedPathResult(string testPath, bool expectedResult)
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
@@ -110,7 +115,7 @@ namespace Unicorn.Tests.Predicates
 
 			var roots = predicate.GetRootPaths();
 
-			roots.Length.Should().Be(9);
+			roots.Length.Should().Be(10);
 			roots[0].DatabaseName.Should().Be("master");
 			roots[0].Path.Should().Be("/sitecore/layout/Simulators");
 			roots[7].DatabaseName.Should().Be("core");
