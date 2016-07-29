@@ -41,10 +41,11 @@ namespace Unicorn.ControlPanel.Security
 				EnsureTemplateExists();
 
 				var challengeItem = RootItem.Add("AUTH" + challenge, ChallengeTemplateId);
-				using (new EditContext(challengeItem))
-				{
-					challengeItem["Expires"] = DateTime.UtcNow.AddMilliseconds(expirationTimeInMsec).Ticks.ToString();
-				}
+				challengeItem.Editing.BeginEdit();
+				
+				challengeItem["Expires"] = DateTime.UtcNow.AddMilliseconds(expirationTimeInMsec).Ticks.ToString();
+
+				challengeItem.Editing.EndEdit();
 			}
 		}
 
@@ -114,10 +115,11 @@ namespace Unicorn.ControlPanel.Security
 				var section = template.Add("Challenge", new TemplateID(TemplateIDs.TemplateSection));
 				var expirationField = section.Add("Expires", new TemplateID(TemplateIDs.TemplateField));
 
-				using (new EditContext(expirationField))
-				{
-					expirationField[TemplateFieldIDs.Shared] = "1";
-				}
+				expirationField.Editing.BeginEdit();
+				
+				expirationField[TemplateFieldIDs.Shared] = "1";
+
+				expirationField.Editing.EndEdit();
 
 				ChallengeTemplateId = new TemplateID(template.ID);
 			}
