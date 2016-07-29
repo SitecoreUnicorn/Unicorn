@@ -39,6 +39,9 @@ namespace Unicorn.ControlPanel
 		{
 			context.Server.ScriptTimeout = 86400;
 
+			// workaround to allow streaming output without an exception in Sitecore 8.1 Update-3 and later
+			context.Response.Headers["X-Frame-Options"] = "SAMEORIGIN";
+
 			var verb = context.Request.QueryString["verb"];
 
 			var authProvider = UnicornConfigurationManager.AuthenticationProvider;
