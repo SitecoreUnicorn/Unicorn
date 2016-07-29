@@ -164,7 +164,7 @@ namespace Unicorn.Data.DataProvider
 			if (results.Count == 0)
 			{
 				// get database children
-				var baseIds = base.GetChildIDs(itemDefinition, context) ?? new IDList();
+				var baseIds = base.GetChildIDs(itemDefinition, context);
 
 				// get additional children from Unicorn providers
 				// e.g. for TpSync if the root item of a tree is not in the database
@@ -174,6 +174,8 @@ namespace Unicorn.Data.DataProvider
 					var providerResult = provider.GetAdditionalChildIds(itemDefinition, context);
 					foreach (var result in providerResult)
 					{
+						if(baseIds == null) baseIds = new IDList();
+
 						if (!baseIds.Contains(result)) baseIds.Add(result);
 					}
 				}
