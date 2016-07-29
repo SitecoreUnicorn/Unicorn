@@ -3,9 +3,7 @@ using System.IO;
 using System.Reflection;
 using System.Xml;
 using FluentAssertions;
-using NSubstitute;
 using Rainbow.Model;
-using Rainbow.Storage;
 using Unicorn.Predicates;
 using Xunit;
 
@@ -13,9 +11,6 @@ namespace Unicorn.Tests.Predicates
 {
 	public class SitecorePresetPredicateTests
 	{
-		private const string ExcludedDatabase = "fake";
-		private const string IncludedDatabase = "master";
-
 		[Fact]
 		public void ctor_ThrowsArgumentNullException_WhenNodeIsNull()
 		{
@@ -41,7 +36,7 @@ namespace Unicorn.Tests.Predicates
 		[InlineData("/implicit-nochildren", true)]
 		[InlineData("/implicit-nochildren/ignoredchild", false)]
 		[InlineData("/implicit-nochildren/ignored/stillignored", false)]
-		[InlineData("/implicit-nochildrenwithextrachars", true)]
+		[InlineData("/implicit-nochildrenwithextrachars", false)]
 		// SOME-CHILDREN test config
 		[InlineData("/somechildren", true)]
 		[InlineData("/somechildren/ignoredchild", false)]
@@ -75,6 +70,9 @@ namespace Unicorn.Tests.Predicates
 		[InlineData("/LiteralWild/*", true)]
 		[InlineData("/LiteralWild/*/Foo", false)]
 		[InlineData("/LiteralWild/*/*", true)]
+		// PATH PREFIX
+		[InlineData("/somechildrenofmine", true)]
+		[InlineData("/somechildrenofmine/somegrandchild", true)]
 		public void Includes_MatchesExpectedPathResult(string testPath, bool expectedResult)
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
@@ -115,7 +113,7 @@ namespace Unicorn.Tests.Predicates
 
 			var roots = predicate.GetRootPaths();
 
-			roots.Length.Should().Be(10);
+			roots.Length.Should().Be(11);
 			roots[0].DatabaseName.Should().Be("master");
 			roots[0].Path.Should().Be("/sitecore/layout/Simulators");
 			roots[7].DatabaseName.Should().Be("core");

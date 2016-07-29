@@ -83,4 +83,10 @@
 			<except name="\*" />
 		</exclude>
 	</include>
+
+	<!--
+		PATH PREFIX TEST
+		Makes sure nothing bad happens when both /foo and /foot are included by path
+	-->
+	<include name="Prefix" database="master" path="/somechildrenofmine" />
 </predicate>

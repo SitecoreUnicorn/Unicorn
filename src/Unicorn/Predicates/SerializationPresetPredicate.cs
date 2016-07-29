@@ -62,8 +62,10 @@ namespace Unicorn.Predicates
 
 			// check for path match
 			var unescapedPath = entry.Path.Replace(@"\*", "*");
-			if (!itemData.Path.StartsWith(unescapedPath + "/", StringComparison.OrdinalIgnoreCase) 
-                && !itemData.Path.Equals(unescapedPath, StringComparison.OrdinalIgnoreCase)) return new PredicateResult(false);
+			if (!itemData.Path.StartsWith(unescapedPath + "/", StringComparison.OrdinalIgnoreCase) && !itemData.Path.Equals(unescapedPath, StringComparison.OrdinalIgnoreCase))
+			{
+				return new PredicateResult(false);
+			}
 
 			// check excludes
 			return ExcludeMatches(entry, itemData);
@@ -77,7 +79,7 @@ namespace Unicorn.Predicates
 
 				if (!result.IsIncluded) return result;
 			}
-			
+
 			return new PredicateResult(true);
 		}
 
@@ -144,7 +146,7 @@ namespace Unicorn.Predicates
 		{
 			if (!isTransparentSync) return;
 
-			if(_includeEntries.Any(entry => entry.Exclusions.Any())) throw new InvalidOperationException($"The predicate for the Unicorn Transparent Sync configuration {configurationName} contains exclusions. Exclusions are incompatible with Transparent Sync and could cause corruption. Refactor your configuration to only include whole paths, or do not use Transparent Sync.");
+			if (_includeEntries.Any(entry => entry.Exclusions.Any())) throw new InvalidOperationException($"The predicate for the Unicorn Transparent Sync configuration {configurationName} contains exclusions. Exclusions are incompatible with Transparent Sync and could cause corruption. Refactor your configuration to only include whole paths, or do not use Transparent Sync.");
 		}
 
 		protected virtual PresetTreeRoot CreateIncludeEntry(XmlNode configuration)
