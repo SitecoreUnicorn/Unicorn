@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
+using System.Linq;
 using Kamsar.WebConsole;
 using Sitecore.Data;
 using Sitecore.Data.Items;
@@ -34,9 +34,16 @@ namespace Unicorn.Publishing
 
 				var publishOptions = new PublishOptions(triggerItem.Database, database, PublishMode.SingleItem, triggerItem.Language, DateTime.UtcNow) { RootItem = triggerItem, CompareRevisions = false, RepublishAll = true };
 
-				var result = new Publisher(publishOptions, triggerItem.Languages).PublishWithResult();
+				var result = new Publisher(publishOptions, triggerItem.Database.Languages).PublishWithResult();
 
 				progress?.ReportStatus("> Published synced items to {0} (New: {1}, Updated: {2}, Deleted: {3} Skipped: {4})", MessageType.Debug, database.Name, result.Statistics.Created, result.Statistics.Updated, result.Statistics.Deleted, result.Statistics.Skipped);
+			}
+
+			// clear the queue after we publish
+			while (ManuallyAddedCandidates.Count > 0)
+			{
+				ID fake;
+				ManuallyAddedCandidates.TryDequeue(out fake);
 			}
 
 			return true;
@@ -44,15 +51,9 @@ namespace Unicorn.Publishing
 
 		public override void Process(PublishContext context)
 		{
-			var candidates = new List<PublishingCandidate>();
-
-			ID candidate;
-			do
-			{
-				if (!ManuallyAddedCandidates.TryDequeue(out candidate)) break;
-
-				candidates.Add(new PublishingCandidate(candidate, context.PublishOptions));
-			} while (candidate != (ID)null);
+			var candidates = ManuallyAddedCandidates
+				.ToArray()
+				.Select(id => new PublishingCandidate(id, context.PublishOptions));
 
 			context.Queue.Add(candidates);
 		}
