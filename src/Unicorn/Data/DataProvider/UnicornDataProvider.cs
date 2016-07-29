@@ -35,7 +35,6 @@ namespace Unicorn.Data.DataProvider
 		public const string TransparentSyncUpdatedByValue = "serialization\\UnicornDataProvider";
 
 		private readonly ITargetDataStore _targetDataStore;
-		private readonly ISourceDataStore _sourceDataStore;
 		private readonly IPredicate _predicate;
 		private readonly IFieldFilter _fieldFilter;
 		private readonly IUnicornDataProviderLogger _logger;
@@ -66,7 +65,6 @@ namespace Unicorn.Data.DataProvider
 			_predicate = predicate;
 			_fieldFilter = fieldFilter;
 			_targetDataStore = targetDataStore;
-			_sourceDataStore = sourceDataStore;
 
 			// enable capturing recycle bin and archive restores to serialize the target item if included
 			EventManager.Subscribe<RestoreItemCompletedEvent>(HandleItemRestored);
