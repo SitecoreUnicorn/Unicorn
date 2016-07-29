@@ -62,7 +62,8 @@ namespace Unicorn.Predicates
 
 			// check for path match
 			var unescapedPath = entry.Path.Replace(@"\*", "*");
-			if (!itemData.Path.StartsWith(unescapedPath, StringComparison.OrdinalIgnoreCase)) return new PredicateResult(false);
+			if (!itemData.Path.StartsWith(unescapedPath + "/", StringComparison.OrdinalIgnoreCase) 
+                && !itemData.Path.Equals(unescapedPath, StringComparison.OrdinalIgnoreCase)) return new PredicateResult(false);
 
 			// check excludes
 			return ExcludeMatches(entry, itemData);
