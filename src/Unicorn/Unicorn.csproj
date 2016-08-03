@@ -47,6 +47,12 @@
     <Reference Include="Sitecore.ContentSearch">
       <HintPath>..\..\lib\Sitecore\v7\Sitecore.ContentSearch.dll</HintPath>
     </Reference>
+    <Reference Include="Sitecore.ExperienceEditor.Speak">
+      <HintPath>..\..\lib\Sitecore\v7\Sitecore.ExperienceEditor.Speak.dll</HintPath>
+    </Reference>
+    <Reference Include="Sitecore.ExperienceEditor.Speak.Ribbon">
+      <HintPath>..\..\lib\Sitecore\v7\Sitecore.ExperienceEditor.Speak.Ribbon.dll</HintPath>
+    </Reference>
     <Reference Include="Sitecore.Kernel, Version=7.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\lib\Sitecore\v7\Sitecore.Kernel.dll</HintPath>
@@ -109,6 +115,7 @@
     <Compile Include="Deserialization\UnicornDeserializer.cs" />
     <Compile Include="Evaluators\INewItemOnlyEvaluatorLogger.cs" />
     <Compile Include="Evaluators\NewItemOnlyEvaluator.cs" />
+    <Compile Include="ExperienceEditor.Speak.Ribbon.Requests.SaveItem\CheckRevision.cs" />
     <Compile Include="Loader\DefaultSyncConfiguration.cs" />
     <Compile Include="Loader\ISyncConfiguration.cs" />
     <Compile Include="Logging\Formatting\DeserializationExceptionFormatter.cs" />

@@ -9,6 +9,7 @@ using Unicorn.Data.DataProvider;
 
 namespace Unicorn.Pipelines.SaveUi
 {
+	// Prevent fake 'overwrite?' warnings when using transparent sync due to how it handles revisions
 	public class TransparentSyncAwareCheckRevision
 	{
 		public virtual void Process(SaveArgs args)
