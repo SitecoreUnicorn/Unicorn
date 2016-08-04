@@ -115,7 +115,7 @@
     <Compile Include="Deserialization\UnicornDeserializer.cs" />
     <Compile Include="Evaluators\INewItemOnlyEvaluatorLogger.cs" />
     <Compile Include="Evaluators\NewItemOnlyEvaluator.cs" />
-    <Compile Include="ExperienceEditor.Speak.Ribbon.Requests.SaveItem\CheckRevision.cs" />
+    <Compile Include="ExperienceEditor.Speak.Ribbon.Requests.SaveItem\TransparentSyncAwareCheckRevision.cs" />
     <Compile Include="Loader\DefaultSyncConfiguration.cs" />
     <Compile Include="Loader\ISyncConfiguration.cs" />
     <Compile Include="Logging\Formatting\DeserializationExceptionFormatter.cs" />
