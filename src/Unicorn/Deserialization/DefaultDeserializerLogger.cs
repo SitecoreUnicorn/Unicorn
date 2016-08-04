@@ -4,7 +4,6 @@ using Rainbow.Storage.Sc.Deserialization;
 using Sitecore.Data;
 using Sitecore.Data.Fields;
 using Sitecore.Data.Items;
-using Sitecore.StringExtensions;
 using Unicorn.Logging;
 
 namespace Unicorn.Deserialization
