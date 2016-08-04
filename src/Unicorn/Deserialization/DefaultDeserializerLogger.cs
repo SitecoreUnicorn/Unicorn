@@ -25,32 +25,35 @@ namespace Unicorn.Deserialization
 
 		public virtual void MovedItemToNewParent(Item newParentItem, Item oldParentItem, Item movedItem)
 		{
-			_logger.Debug("* [M] from {0} to {1}".FormatWith(oldParentItem.ID, newParentItem.ID));
+			_logger.Debug($"* [M] from {oldParentItem.ID} to {newParentItem.ID}");
 		}
 
 		public virtual void RemovingOrphanedVersion(Item versionToRemove)
 		{
-			_logger.Debug("* [D] {0}#{1}".FormatWith(versionToRemove.Language.Name, versionToRemove.Version.Number));
+			_logger.Debug($"* [D] {versionToRemove.Language.Name}#{versionToRemove.Version.Number}");
 		}
 
 		public virtual void RenamedItem(Item targetItem, string oldName)
 		{
-			_logger.Debug("* [R] from {0} to {1}".FormatWith(oldName, targetItem.Name));
+			_logger.Debug($"* [R] from {oldName} to {targetItem.Name}");
 		}
 
 		public virtual void ChangedBranchTemplate(Item targetItem, string oldBranchId)
 		{
-			_logger.Debug("* [B] from {0} to {1}".FormatWith(oldBranchId, targetItem.BranchId));
+			_logger.Debug($"* [B] from {oldBranchId} to {targetItem.BranchId}");
 		}
 
 		public virtual void ChangedTemplate(Item targetItem, TemplateItem oldTemplate)
 		{
-			_logger.Debug("* [T] from {0} to {1}".FormatWith(oldTemplate.Name, targetItem.TemplateName));
+			if(oldTemplate != null)
+				_logger.Debug($"* [T] from {oldTemplate.Name} to {targetItem.TemplateName}");
+			else
+				_logger.Debug($"* [T] to {targetItem.TemplateName}");
 		}
 
 		public virtual void AddedNewVersion(Item newVersion)
 		{
-			_logger.Debug("* [A] version {0}#{1}".FormatWith(newVersion.Language.Name, newVersion.Version.Number));
+			_logger.Debug($"* [A] version {newVersion.Language.Name}#{newVersion.Version.Number}");
 		}
 
 		public virtual void WroteBlobStream(Item item, IItemFieldValue field)
@@ -62,11 +65,11 @@ namespace Unicorn.Deserialization
 		{
 			var itemField = item.Fields[new ID(field.FieldId)];
 			if (itemField.Shared)
-				_logger.Debug("* [U] {0}".FormatWith(itemField.Name));
+				_logger.Debug($"* [U] {itemField.Name}");
 			else if(itemField.Unversioned)
-				_logger.Debug("* [U] {0}: {1}".FormatWith(item.Language.Name, itemField.Name));
+				_logger.Debug($"* [U] {item.Language.Name}: {itemField.Name}");
 			else
-				_logger.Debug("* [U] {0}#{1}: {2}".FormatWith(item.Language.Name, item.Version.Number, itemField.Name));
+				_logger.Debug($"* [U] {item.Language.Name}#{item.Version.Number}: {itemField.Name}");
 		}
 
 		public virtual void ResetFieldThatDidNotExistInSerialized(Field field)
