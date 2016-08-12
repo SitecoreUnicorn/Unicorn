@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
+using Unicorn.Predicates;
 
 namespace Unicorn.Configuration.Dependencies
 {
@@ -60,10 +62,58 @@ namespace Unicorn.Configuration.Dependencies
 			if (configuration.Dependencies == null)
 				return new IConfigurationDependency[0];
 
+			return GetExplicitDependencies(configuration).Concat(GetImplicitDependencies(configuration)).ToArray();
+		}
+
+		protected virtual IEnumerable<IConfigurationDependency> GetExplicitDependencies(IConfiguration configuration)
+		{
 			return AllConfigurations
-				.Where(config => configuration.Dependencies.Any(dependency => dependency.Equals(config.Name, StringComparison.OrdinalIgnoreCase)))
-				.Select(config => (IConfigurationDependency)new ExplicitConfigurationDependency(config))
-				.ToArray();
+				.Where(config => configuration.Dependencies.Any(dependency => IsWildcardMatch(config.Name, dependency)))
+				.Select(config => (IConfigurationDependency) new ExplicitConfigurationDependency(config));
+		}
+
+		protected virtual IEnumerable<IConfigurationDependency> GetImplicitDependencies(IConfiguration configuration)
+		{
+			var configRootPaths = configuration.Resolve<IPredicate>().GetRootPaths();
+
+			foreach (var config in AllConfigurations)
+			{
+				if (config.Name.Equals(configuration.Name, StringComparison.OrdinalIgnoreCase)) continue; // don't depend on yourself :)
+
+				var candidateParentPaths = config.Resolve<IPredicate>().GetRootPaths();
+
+				bool match = false;
+
+				foreach (var candidateParent in candidateParentPaths)
+				{
+					foreach (var configRoot in configRootPaths)
+					{
+						// mismatching dbs = don't care about path
+						if (!configRoot.DatabaseName.Equals(candidateParent.DatabaseName)) continue;
+
+						var configRootPath = $"{configRoot.Path.TrimEnd('/')}/";
+						var candidateParentPath = $"{candidateParent.Path.TrimEnd('/')}/";
+						if (configRootPath.StartsWith(candidateParentPath) && !configRootPath.Equals(candidateParentPath, StringComparison.Ordinal))
+						{
+							match = true;
+							break;
+						}
+					}
+
+					if (match) break;
+				}
+
+				if (match) yield return new ImplicitConfigurationDependency(config);
+			}
+		}
+
+		/// <summary>
+		/// Checks if a string matches a wildcard argument (using regex)
+		/// </summary>
+		protected static bool IsWildcardMatch(string input, string wildcards)
+		{
+
+			return Regex.IsMatch(input, "^" + Regex.Escape(wildcards).Replace("\\*", ".*").Replace("\\?", ".") + "$", RegexOptions.IgnoreCase);
 		}
 	}
 }

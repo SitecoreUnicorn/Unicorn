@@ -126,7 +126,8 @@
   <ItemGroup>
     <Compile Include="AutoDbData.cs" />
     <Compile Include="Configuration\ConfigurationUtilityTests.cs" />
-    <Compile Include="Configuration\Dependencies\ConfigurationDependencyResolverTests.cs" />
+    <Compile Include="Configuration\Dependencies\ConfigurationDependencyResolverTests.Implicit.cs" />
+    <Compile Include="Configuration\Dependencies\ConfigurationDependencyResolverTests.Explicit.cs" />
     <Compile Include="Configuration\Dependencies\DepTestHelper.cs" />
     <Compile Include="Configuration\Dependencies\InterconfigurationDependencyResolverTests.cs" />
     <Compile Include="Configuration\MicroConfigurationTests.cs" />
@@ -155,7 +156,9 @@
     <Compile Include="Predicates\SerializationPresetPredicateTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Predicates\TestConfiguration.xml" />
+    <EmbeddedResource Include="Predicates\TestConfiguration.xml">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Data\DataProvider\UnicornDataProviderTests.CreateItem.cs" />

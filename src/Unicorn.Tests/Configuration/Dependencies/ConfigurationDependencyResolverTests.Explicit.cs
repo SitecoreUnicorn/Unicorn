@@ -4,7 +4,7 @@ using Xunit;
 
 namespace Unicorn.Tests.Configuration.Dependencies
 {
-	public class ConfigurationDependencyResolverTests
+	public partial class ConfigurationDependencyResolverTests
 	{
 		[Fact]
 		public void ShouldResolveNoDependencies()
@@ -23,7 +23,7 @@ namespace Unicorn.Tests.Configuration.Dependencies
 		}
 
 		[Fact]
-		public void ShouldResolveDependencies()
+		public void ShouldResolveExplicitDependencies()
 		{
 			var configs = new[]
 			{
@@ -40,7 +40,26 @@ namespace Unicorn.Tests.Configuration.Dependencies
 		}
 
 		[Fact]
-		public void ShouldResolveDependents()
+		public void ShouldResolveExplicitWildcardDependencies()
+		{
+			var configs = new[]
+			{
+				DepTestHelper.CreateTestConfiguration("Alpha"),
+				DepTestHelper.CreateTestConfiguration("Alpha One"),
+				DepTestHelper.CreateTestConfiguration("B", "Alpha*")
+			};
+
+			DepTestHelper.GroomConfigs(configs);
+
+			var sut = configs[2].Resolve<ConfigurationDependencyResolver>();
+
+			sut.Dependencies.Length.Should().Be(2);
+			sut.Dependencies.Should().Contain(dep => dep.Configuration.Name.Equals("Alpha"));
+			sut.Dependencies.Should().Contain(dep => dep.Configuration.Name.Equals("Alpha One"));
+		}
+
+		[Fact]
+		public void ShouldResolveExplicitDependents()
 		{
 			var configs = new[]
 			{
