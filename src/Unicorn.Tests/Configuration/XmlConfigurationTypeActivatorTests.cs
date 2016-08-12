@@ -9,7 +9,7 @@ namespace Unicorn.Tests.Configuration
 		[Fact]
 		public void Activator_ResolvesType_WithDependency()
 		{
-			var micro = new MicroConfiguration("Test", null, null);
+			var micro = new MicroConfiguration("Test", null, null, null);
 
 			micro.Register(typeof(ITest), () => new Test(), true);
 
@@ -23,7 +23,7 @@ namespace Unicorn.Tests.Configuration
 		[Fact]
 		public void Activator_ResolvesType_WithDependency_AndParameter()
 		{
-			var micro = new MicroConfiguration("Test", null, null);
+			var micro = new MicroConfiguration("Test", null, null, null);
 
 			micro.Register(typeof(ITest), () => new Test(), true);
 

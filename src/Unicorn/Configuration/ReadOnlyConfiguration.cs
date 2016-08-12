@@ -18,9 +18,10 @@ namespace Unicorn.Configuration
 			_innerConfiguration = innerConfiguration;
 		}
 
-		public string Name { get { return _innerConfiguration.Name; }}
-		public string Description { get { return _innerConfiguration.Description; } }
-		public string[] Dependencies { get { return _innerConfiguration.Dependencies; } }
+		public string Name => _innerConfiguration.Name;
+		public string Description => _innerConfiguration.Description;
+		public string[] Dependencies => _innerConfiguration.Dependencies;
+		public string[] IgnoredImplicitDependencies => _innerConfiguration.IgnoredImplicitDependencies;
 
 		public T Resolve<T>() where T : class
 		{

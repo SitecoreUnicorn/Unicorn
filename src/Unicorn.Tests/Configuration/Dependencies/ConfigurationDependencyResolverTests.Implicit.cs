@@ -63,7 +63,7 @@ namespace Unicorn.Tests.Configuration.Dependencies
 			{
 				DepTestHelper.CreateImplicitTestConfiguration("A", Tuple.Create("master", "/sitecore/content")),
 				DepTestHelper.CreateImplicitTestConfiguration("B", Tuple.Create("master", "/sitecore/content/Home")),
-				DepTestHelper.CreateImplicitTestConfiguration("C", Tuple.Create("master", "/sitecore/content/Home/Funky")),
+				DepTestHelper.CreateImplicitTestConfiguration("C", Tuple.Create("master", "/sitecore/content/Home/Funky"))
 			};
 
 			DepTestHelper.GroomConfigs(configs);
@@ -73,6 +73,38 @@ namespace Unicorn.Tests.Configuration.Dependencies
 			sut.Dependencies.Length.Should().Be(2);
 			sut.Dependencies[0].Configuration.Name.Should().Be("A");
 			sut.Dependencies[1].Configuration.Name.Should().Be("B");
+		}
+
+		[Fact]
+		public void ShouldNotResolveRejectedImplicitDependencies()
+		{
+			var configs = new[]
+			{
+				DepTestHelper.CreateImplicitTestConfiguration("A", Tuple.Create("master", "/sitecore/content")),
+				DepTestHelper.CreateImplicitTestConfiguration("B", new [] { "A" }, Tuple.Create("master", "/sitecore/content/Home"))
+			};
+
+			DepTestHelper.GroomConfigs(configs);
+
+			var sut = configs[1].Resolve<ConfigurationDependencyResolver>();
+
+			sut.Dependencies.Length.Should().Be(0);
+		}
+
+		[Fact]
+		public void ShouldNotResolveRejectedImplicitDependencies_WithWildcards()
+		{
+			var configs = new[]
+			{
+				DepTestHelper.CreateImplicitTestConfiguration("Alpha", Tuple.Create("master", "/sitecore/content")),
+				DepTestHelper.CreateImplicitTestConfiguration("Beta", new [] { "A*" }, Tuple.Create("master", "/sitecore/content/Home"))
+			};
+
+			DepTestHelper.GroomConfigs(configs);
+
+			var sut = configs[1].Resolve<ConfigurationDependencyResolver>();
+
+			sut.Dependencies.Length.Should().Be(0);
 		}
 
 		[Fact]

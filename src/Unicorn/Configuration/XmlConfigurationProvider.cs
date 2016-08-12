@@ -82,7 +82,10 @@ namespace Unicorn.Configuration
 			var attributeValue = GetAttributeValue(configuration, "dependencies");
 			var dependencies = !string.IsNullOrEmpty(attributeValue) ? attributeValue.Split(",".ToCharArray(), StringSplitOptions.RemoveEmptyEntries) : null;
 
-			var registry = new MicroConfiguration(name, description, dependencies);
+			var ignoredAttributeValue = GetAttributeValue(configuration, "ignoredImplicitDependencies");
+			var ignoredDependencies = !string.IsNullOrEmpty(ignoredAttributeValue) ? ignoredAttributeValue.Split(",".ToCharArray(), StringSplitOptions.RemoveEmptyEntries) : null;
+
+			var registry = new MicroConfiguration(name, description, dependencies, ignoredDependencies);
 
 			// these are config types we absolutely must have instances of to use Unicorn - an exception will throw if they don't exist
 			var configMapping = new Dictionary<string, Action<XmlElement, XmlElement, string, IConfiguration>>

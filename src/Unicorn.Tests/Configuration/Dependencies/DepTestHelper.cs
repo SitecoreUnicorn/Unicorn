@@ -31,6 +31,11 @@ namespace Unicorn.Tests.Configuration.Dependencies
 
 		public static IConfiguration CreateImplicitTestConfiguration(string name, params Tuple<string, string>[] includedDbsAndPaths)
 		{
+			return CreateImplicitTestConfiguration(name, new string[0], includedDbsAndPaths);
+		}
+
+		public static IConfiguration CreateImplicitTestConfiguration(string name, string[] rejectedConfigurations, params Tuple<string, string>[] includedDbsAndPaths)
+		{
 			var config = Substitute.For<IConfiguration>();
 
 			var fakePredicate = Substitute.For<IPredicate>();
@@ -39,6 +44,7 @@ namespace Unicorn.Tests.Configuration.Dependencies
 			config.Name.Returns(name);
 			config.Resolve<IPredicate>().Returns(fakePredicate);
 			config.Resolve<ConfigurationDependencyResolver>().Returns(new ConfigurationDependencyResolver(config));
+			config.IgnoredImplicitDependencies.Returns(rejectedConfigurations ?? new string[0]);
 
 			return config;
 		}

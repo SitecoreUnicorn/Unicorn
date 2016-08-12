@@ -42,6 +42,12 @@
 						<include database="master" path="/sitecore/content/Home" />
 					</predicate>
 				</configuration>
+				
+				<!-- 
+					Picked up an implicit dependency you don't want? You can reject specific implicit dependencies, including with wildcards:
+				-->
+				<configuration name="Sample Rejected Implicit Dependency Configuration" ignoredImplicitDependencies="Foundation.Serialization,Project.*">
+				</configuration>
 			</configurations>
 		</unicorn>
 	</sitecore>

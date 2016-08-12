@@ -24,6 +24,11 @@ namespace Unicorn.Configuration
 		string[] Dependencies { get; }
 
 		/// <summary>
+		/// A list of configuration names on which this configuration depends
+		/// </summary>
+		string[] IgnoredImplicitDependencies { get; }
+
+		/// <summary>
 		/// Resolves an instance of a type from a generic parameter. This should be an explicitly registered type.
 		/// </summary>
 		T Resolve<T>() where T : class;

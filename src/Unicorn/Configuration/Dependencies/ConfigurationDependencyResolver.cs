@@ -76,7 +76,12 @@ namespace Unicorn.Configuration.Dependencies
 		{
 			var configRootPaths = configuration.Resolve<IPredicate>().GetRootPaths();
 
-			foreach (var config in AllConfigurations)
+			var nonIgnoredConfigurations = AllConfigurations
+				.Where(config => configuration.IgnoredImplicitDependencies
+					.All(ignoredDep => !IsWildcardMatch(config.Name, ignoredDep)
+				));
+
+			foreach (var config in nonIgnoredConfigurations)
 			{
 				if (config.Name.Equals(configuration.Name, StringComparison.OrdinalIgnoreCase)) continue; // don't depend on yourself :)
 
