@@ -46,16 +46,20 @@
     </Reference>
     <Reference Include="Sitecore.ContentSearch">
       <HintPath>..\..\packages\Sitecore.ContentSearch.NoReferences.8.2.160729\lib\net452\Sitecore.ContentSearch.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Sitecore.ExperienceEditor.Speak">
       <HintPath>..\..\packages\Sitecore.ExperienceEditor.Speak.NoReferences.8.2.160729\lib\net452\Sitecore.ExperienceEditor.Speak.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Sitecore.ExperienceEditor.Speak.Ribbon">
       <HintPath>..\..\packages\Sitecore.ExperienceEditor.Speak.Ribbon.NoReferences.8.2.160729\lib\net452\Sitecore.ExperienceEditor.Speak.Ribbon.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Sitecore.Kernel, Version=7.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\packages\Sitecore.Kernel.NoReferences.8.2.160729\lib\net452\Sitecore.Kernel.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
