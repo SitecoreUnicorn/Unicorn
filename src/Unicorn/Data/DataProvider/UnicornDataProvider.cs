@@ -630,6 +630,8 @@ namespace Unicorn.Data.DataProvider
 		/// </summary>
 		protected virtual IItemData GetSourceItemDataFromId(ID id, bool useCache)
 		{
+			IItemData itemData;
+			ProxyItem proxyItem;
 			if (!useCache)
 			{
 				using (new TransparentSyncDisabler())
@@ -637,12 +639,19 @@ namespace Unicorn.Data.DataProvider
 					using (new DatabaseCacheDisabler())
 					{
 						// we wrap the ItemData in a ProxyItem to force all its versions to be immediately evaluated in the same database cache context as the original was loaded in
-						return new ProxyItem(new ItemData(Database.GetItem(id)));
+						itemData = new ItemData(Database.GetItem(id));
+						proxyItem = new ProxyItem(itemData);
+						proxyItem.SetProxyChildren(itemData.GetChildren());
+
+						return proxyItem;
 					}
 				}
 			}
 
-			return new ProxyItem(new ItemData(Database.GetItem(id)));
+			itemData = new ItemData(Database.GetItem(id));
+			proxyItem = new ProxyItem(itemData);
+			proxyItem.SetProxyChildren(itemData.GetChildren());
+			return proxyItem;
 		}
 
 		/// <summary>
