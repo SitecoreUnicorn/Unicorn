@@ -548,13 +548,11 @@ namespace Unicorn.Data.DataProvider
 			// with it.
 			new Timer(state =>
 			{
-				var item = GetItemFromId(new ID(restoreItemCompletedEvent.ItemId), true);
+				var item = GetSourceItemDataFromId(new ID(restoreItemCompletedEvent.ItemId), true);
 
 				Assert.IsNotNull(item, "Item that was restored was null.");
 
-				var iitem = new ItemData(item);
-
-				SerializeItemIfIncluded(iitem, "Restored");
+				SerializeItemIfIncluded(item, "Restored");
 			}, null, 2000, Timeout.Infinite);
 		}
 
@@ -609,7 +607,7 @@ namespace Unicorn.Data.DataProvider
 
 		protected virtual IItemData GetSourceFromId(ID id, bool useCache = false, bool allowTpSyncFallback = true)
 		{
-			var item = GetItemFromId(id, useCache);
+			var item = GetSourceItemDataFromId(id, useCache);
 
 			if (item == null)
 			{
@@ -623,14 +621,35 @@ namespace Unicorn.Data.DataProvider
 				return null;
 			}
 
-			return new ItemData(item);
+			return item;
 		}
 
 		/// <summary>
 		/// When items are acquired from the data provider they can be stale in cache, which fouls up serializing them.
-		/// Renames and template changes are particularly vulnerable to this.
+		/// Renames and template changes are particularly vulnerable to this. This method fully proxies the item including all versions with the cache settings.
 		/// </summary>
-		protected virtual Item GetItemFromId(ID id, bool useCache)
+		protected virtual IItemData GetSourceItemDataFromId(ID id, bool useCache)
+		{
+			if (!useCache)
+			{
+				using (new TransparentSyncDisabler())
+				{
+					using (new DatabaseCacheDisabler())
+					{
+						// we wrap the ItemData in a ProxyItem to force all its versions to be immediately evaluated in the same database cache context as the original was loaded in
+						return new ProxyItem(new ItemData(Database.GetItem(id)));
+					}
+				}
+			}
+
+			return new ProxyItem(new ItemData(Database.GetItem(id)));
+		}
+
+		/// <summary>
+		/// Gets a source item with or without DB caching. Beware that some other operations, like 
+		/// getting versions, may execute DB operations without the same caching settings.
+		/// </summary>
+		protected virtual Item GetSourceItemFromId(ID id, bool useCache)
 		{
 			if (!useCache)
 			{
@@ -679,7 +698,9 @@ namespace Unicorn.Data.DataProvider
 			if (!_blobIdLookup.TryGetValue(blobId, out blobEntry)) return null;
 
 			var targetItem = _targetDataStore.GetByPathAndId(blobEntry.Item1, blobEntry.Item2, Database.Name);
+
 			if (targetItem == null) return null;
+
 			var targetFieldValue = targetItem.SharedFields.Concat(targetItem.Versions.SelectMany(version => version.Fields))
 					.FirstOrDefault(targetField => targetField.BlobId.HasValue && targetField.BlobId.Value == blobId);
 
@@ -706,7 +727,7 @@ namespace Unicorn.Data.DataProvider
 
 			if (_syncConfiguration.UpdateLinkDatabase || _syncConfiguration.UpdateSearchIndex)
 			{
-				var item = GetItemFromId(new ID(metadata.Id), true);
+				var item = GetSourceItemFromId(new ID(metadata.Id), true);
 
 				if (item == null) return;
 
