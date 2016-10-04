@@ -199,7 +199,7 @@ namespace Unicorn.Data.DataProvider
 			// rebase the path to the new destination path (this handles children too)
 			var rebasedSourceItem = new PathRebasingProxyItem(sourceItem, destinationItem.Path, destinationItem.Id);
 
-			if (!_predicate.Includes(rebasedSourceItem).IsIncluded) 
+			if (!_predicate.Includes(rebasedSourceItem).IsIncluded)
 			{
 				// if the destination we are moving to is NOT included for serialization, we delete the existing item from serialization
 				var existingItem = _targetDataStore.GetByPathAndId(sourceItem.Path, sourceItem.Id, sourceItem.DatabaseName);
@@ -632,17 +632,14 @@ namespace Unicorn.Data.DataProvider
 		{
 			if (!useCache)
 			{
-				using (new TransparentSyncDisabler())
+				using (new DataProviderDatabaseCacheDisabler())
 				{
-					using (new DatabaseCacheDisabler())
-					{
-						// we wrap the ItemData in a ProxyItem to force all its versions to be immediately evaluated in the same database cache context as the original was loaded in
-						return new ProxyItem(new ItemData(Database.GetItem(id)));
-					}
+					// we wrap the ItemData in a ProxyItem to force all its versions to be immediately evaluated in the same database cache context as the original was loaded in
+					return new ItemData(Database.GetItem(id), () => new DataProviderDatabaseCacheDisabler());
 				}
 			}
 
-			return new ProxyItem(new ItemData(Database.GetItem(id)));
+			return new ItemData(Database.GetItem(id));
 		}
 
 		/// <summary>
@@ -653,12 +650,9 @@ namespace Unicorn.Data.DataProvider
 		{
 			if (!useCache)
 			{
-				using (new TransparentSyncDisabler())
+				using (new DataProviderDatabaseCacheDisabler())
 				{
-					using (new DatabaseCacheDisabler())
-					{
-						return Database.GetItem(id);
-					}
+					return Database.GetItem(id);
 				}
 			}
 
@@ -721,8 +715,8 @@ namespace Unicorn.Data.DataProvider
 			CacheManager.ClearAllCaches();
 
 			if (metadata == null) return;
-			
-			if(metadata.TemplateId == TemplateIDs.Template.Guid || metadata.TemplateId == TemplateIDs.TemplateField.Guid || metadata.Path.EndsWith("__Standard Values", StringComparison.OrdinalIgnoreCase))
+
+			if (metadata.TemplateId == TemplateIDs.Template.Guid || metadata.TemplateId == TemplateIDs.TemplateField.Guid || metadata.Path.EndsWith("__Standard Values", StringComparison.OrdinalIgnoreCase))
 				Database.Engines.TemplateEngine.Reset();
 
 			if (_syncConfiguration.UpdateLinkDatabase || _syncConfiguration.UpdateSearchIndex)
@@ -791,6 +785,24 @@ namespace Unicorn.Data.DataProvider
 				// ReSharper disable once SuspiciousTypeConversion.Global
 				var targetAsDisposable = _targetDataStore as IDisposable;
 				targetAsDisposable?.Dispose();
+			}
+		}
+
+		protected class DataProviderDatabaseCacheDisabler : IDisposable
+		{
+			private readonly DatabaseCacheDisabler _databaseCacheDisabler = new DatabaseCacheDisabler();
+			private readonly TransparentSyncDisabler _transparentSyncDisabler = new TransparentSyncDisabler();
+
+			public void Dispose()
+			{
+				try
+				{
+					_databaseCacheDisabler.Dispose();
+				}
+				finally
+				{
+					_transparentSyncDisabler.Dispose();
+				}
 			}
 		}
 	}
