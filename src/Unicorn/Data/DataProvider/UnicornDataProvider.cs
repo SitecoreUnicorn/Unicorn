@@ -8,6 +8,7 @@ using System.Threading;
 using Rainbow.Filtering;
 using Rainbow.Model;
 using Sitecore;
+using Sitecore.Caching;
 using Sitecore.Collections;
 using Sitecore.ContentSearch;
 using Sitecore.ContentSearch.Maintenance;
@@ -696,10 +697,7 @@ namespace Unicorn.Data.DataProvider
 			// that make it difficult to cleanly remove a single item ID from all cases in the cache
 			// either way, this should be a relatively rare occurrence (from runtime changes on disk)
 			// and we're preserving prefetch, etc. Seems pretty zippy overall.
-			Database.Caches.DataCache.Clear();
-			Database.Caches.ItemCache.Clear();
-			Database.Caches.ItemPathsCache.Clear();
-			Database.Caches.PathCache.Clear();
+			CacheManager.ClearAllCaches();
 
 			if (metadata == null) return;
 			
