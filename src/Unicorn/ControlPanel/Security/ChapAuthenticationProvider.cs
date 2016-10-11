@@ -15,18 +15,23 @@ namespace Unicorn.ControlPanel.Security
 	{
 		private static IChapServer _server;
 		private static ISignatureService _signatureService;
+		private static IChapServerLogger _chapServerLogger;
 
 		public string SharedSecret { get; set; }
 		public string ChallengeDatabase { get; set; } = "web";
 
-		protected virtual IChapServer Server
+		public bool WriteAuthFailuresToLog { get; set; } = false;
+
+		protected virtual IChapServer Server => _server ?? (_server = new ChapServer(SignatureService, ChallengeStore));
+
+		protected virtual IChapServerLogger ServerLogger
 		{
 			get
 			{
-				if (_server == null)
-					_server = new ChapServer(SignatureService, ChallengeStore);
-				
-				return _server;
+				if(_chapServerLogger == null && WriteAuthFailuresToLog)
+					return _chapServerLogger = new ChapServerSitecoreLogger("Unicorn-Auth");
+
+				return _chapServerLogger;
 			}
 		}
 
@@ -46,7 +51,9 @@ namespace Unicorn.ControlPanel.Security
 			}
 		}
 
-		protected virtual IChallengeStore ChallengeStore => new SitecoreDatabaseChallengeStore(ChallengeDatabase);
+		protected virtual IChallengeStore ChallengeStore => WriteAuthFailuresToLog ? 
+			new SitecoreDatabaseChallengeStore(ChallengeDatabase, new ChallengeStoreSitecoreLogger("Unicorn-Auth")) : 
+			new SitecoreDatabaseChallengeStore(ChallengeDatabase);
 
 		public string GetChallengeToken()
 		{
@@ -71,7 +78,7 @@ namespace Unicorn.ControlPanel.Security
 			{
 				ValidateSharedSecret();
 
-				if (Server.ValidateRequest(request))
+				if (Server.ValidateRequest(request, ServerLogger))
 				{
 					return new SecurityState(true, true);
 				}
@@ -96,7 +103,7 @@ namespace Unicorn.ControlPanel.Security
 			var challenge = client.DownloadString(remoteUri.GetLeftPart(UriPartial.Path) + "?verb=Challenge");
 
 			// then we sign the request using our shared secret combined with the challenge and the URL, providing a unique verifiable hash for the request
-			client.Headers.Add("X-MC-MAC", _signatureService.CreateSignature(challenge, remoteUnicornUrl, Enumerable.Empty<SignatureFactor>()));
+			client.Headers.Add("X-MC-MAC", _signatureService.CreateSignature(challenge, remoteUnicornUrl, Enumerable.Empty<SignatureFactor>()).SignatureHash);
 			
 			// the Unicorn server needs to know the challenge we are using. It makes sure that it issued the challenge before validating it.
 			client.Headers.Add("X-MC-Nonce", challenge);

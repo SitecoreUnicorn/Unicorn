@@ -13,3 +13,6 @@ Sync-Unicorn -ControlPanelUrl 'https://localhost/unicorn.aspx' -SharedSecret 'yo
 Sync-Unicorn -ControlPanelUrl 'https://localhost/unicorn.aspx' -SharedSecret 'your-sharedsecret-here' -Configurations @('Test1', 'Test2')
 
 # Note: you may pass -Verb 'Reserialize' for remote reserialize. Usually not needed though.
+
+# Note: the default configuration will write out signature debug data to the console which includes the shared secret
+# If you wish to disable this, pass -NoDebug to Sync-Unicorn.
