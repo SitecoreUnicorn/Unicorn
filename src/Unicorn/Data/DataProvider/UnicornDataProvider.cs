@@ -279,6 +279,20 @@ namespace Unicorn.Data.DataProvider
 
 			if (sourceItem == null) return; // not an included item
 
+			// if the source item came from the database (which we're somewhat hackily determining by type name)
+			// then because (a) DB cache is disabled and (b) the Sitecore data provider went first,
+			// the source item ALREADY contains the version we added. So all we have to do is update the serialized version.
+			if (sourceItem is ItemData)
+			{
+				SerializeItemIfIncluded(sourceItem, "Version Added");
+				return;
+			}
+
+			// on the other hand if the source item did not come from the database - e.g. transparent sync,
+			// and the item did not exist in the database, the sourceItem will be a YAML file on disk.
+			// in this case nobody has 'gone first' with adding the version, so we have to manually add it like
+			// Sitecore would to a database item.
+
 			// we make a clone of the item so that we can insert a new version on it
 			var versionAddProxy = new ProxyItem(sourceItem);
 
@@ -634,12 +648,17 @@ namespace Unicorn.Data.DataProvider
 			{
 				using (new DataProviderDatabaseCacheDisabler())
 				{
-					// we wrap the ItemData in a ProxyItem to force all its versions to be immediately evaluated in the same database cache context as the original was loaded in
-					return new ItemData(Database.GetItem(id), () => new DataProviderDatabaseCacheDisabler());
+					var item = Database.GetItem(id);
+					if (item == null) return null;
+
+					return new ItemData(item, () => new DataProviderDatabaseCacheDisabler());
 				}
 			}
 
-			return new ItemData(Database.GetItem(id));
+			var dbItem = Database.GetItem(id);
+			if (dbItem == null) return null;
+
+			return new ItemData(dbItem);
 		}
 
 		/// <summary>
