@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Linq;
 using Rainbow.Model;
@@ -10,7 +10,7 @@ namespace Unicorn.Pipelines.UnicornSyncComplete
 	/// </summary>
 	public class DefaultSyncCompleteDataCollector: ISyncCompleteDataCollector
 	{
-		private readonly Queue<ChangeEntry> _entries = new Queue<ChangeEntry>();
+		private readonly ConcurrentQueue<ChangeEntry> _entries = new ConcurrentQueue<ChangeEntry>();
  
 		public void PushChangedItem(IItemData serializedItemData, ChangeType type)
 		{
@@ -31,7 +31,13 @@ namespace Unicorn.Pipelines.UnicornSyncComplete
 
 		public void Reset()
 		{
-			_entries.Clear();
+			ChangeEntry entry;
+
+			while (_entries.TryDequeue(out entry))
+			{
+				// this approximates Clear() for a ConcurrentQueue
+			}
+
 			ProcessedItemCount = 0;
 		}
 	}
