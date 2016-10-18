@@ -48,6 +48,7 @@ Function Sync-Unicorn {
 	Write-Host "Sync-Unicorn: Executing $Verb..."
 
 	# USING THE SIGNATURE, EXECUTE UNICORN
+	[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 	$result = Invoke-WebRequest -Uri $url -Headers @{ "X-MC-MAC" = $signature.SignatureHash; "X-MC-Nonce" = $challenge } -TimeoutSec 10800 -UseBasicParsing
 
 	$result.Content
@@ -61,6 +62,7 @@ Function Get-Challenge {
 
 	$url = "$($ControlPanelUrl)?verb=Challenge"
 
+	[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 	$result = Invoke-WebRequest -Uri $url -TimeoutSec 360 -UseBasicParsing
 
 	$result.Content
