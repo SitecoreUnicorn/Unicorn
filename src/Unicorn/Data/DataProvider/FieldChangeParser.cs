@@ -48,8 +48,17 @@ namespace Unicorn.Data.DataProvider
 				}
 				else
 				{
-					newChangeValue.BlobId = Guid.Parse(change.Value);
-					newChangeValue.Value = GetBlobValue(newChangeValue.BlobId.Value, databaseName);
+					Guid blobId;
+					if (Guid.TryParse(change.Value, out blobId))
+					{
+						newChangeValue.BlobId = blobId;
+						newChangeValue.Value = GetBlobValue(blobId, databaseName);
+					}
+					else
+					{
+						newChangeValue.BlobId = null;
+						newChangeValue.Value = null;
+					}
 				}
 
 				fields[change.FieldID.Guid] = newChangeValue;
