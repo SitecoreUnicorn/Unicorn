@@ -46,7 +46,7 @@ namespace Unicorn.Evaluators
 			{
 				var encodedTarget = HttpUtility.HtmlEncode(targetValue);
 				var encodedSource = sourceValue == null ? string.Empty: HttpUtility.HtmlEncode(sourceValue);
-				_logger.Debug("> Field {0} - Serialized {1}, Source {2}".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId), encodedTarget, encodedSource));
+				_logger.Debug("> Field {0} - Serialized '{1}', Source '{2}'".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId), encodedTarget, encodedSource));
 			}
 			else
 			{
@@ -66,7 +66,7 @@ namespace Unicorn.Evaluators
 			{
 				var encodedTarget = HttpUtility.HtmlEncode(targetValue);
 				var encodedSource = sourceValue == null ? string.Empty : HttpUtility.HtmlEncode(sourceValue);
-				_logger.Debug("> Field {0} - {1} - Serialized {2}, Source {3}".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId), language.Name, encodedTarget, encodedSource));
+				_logger.Debug("> Field {0} - {1} - Serialized '{2}', Source '{3}'".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId), language.Name, encodedTarget, encodedSource));
 			}
 			else
 			{
@@ -87,7 +87,7 @@ namespace Unicorn.Evaluators
 			{
 				var encodedTarget = HttpUtility.HtmlEncode(targetValue);
 				var encodedSource = sourceValue == null ? string.Empty : HttpUtility.HtmlEncode(sourceValue);
-				_logger.Debug("> Field {0} - {1}#{2}: Serialized {3}, Source {4}".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId), version.Language, version.VersionNumber, encodedTarget, encodedSource));
+				_logger.Debug("> Field {0} - {1}#{2}: Serialized '{3}', Source '{4}'".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId), version.Language, version.VersionNumber, encodedTarget, encodedSource));
 			}
 			else
 			{
@@ -100,7 +100,7 @@ namespace Unicorn.Evaluators
 			Assert.ArgumentNotNull(sourceItem, "sourceItem");
 			Assert.ArgumentNotNull(targetItem, "targetItem");
 
-			_logger.Debug("> Template: Serialized \"{0}\", Source \"{1}\"".FormatWith(TryResolveItemName(targetItem.DatabaseName, targetItem.TemplateId), TryResolveItemName(sourceItem.DatabaseName, sourceItem.TemplateId)));
+			_logger.Debug("> Template: Serialized '{0}', Source '{1}'".FormatWith(TryResolveItemName(targetItem.DatabaseName, targetItem.TemplateId), TryResolveItemName(sourceItem.DatabaseName, sourceItem.TemplateId)));
 		}
 
 		public virtual void Renamed(IItemData sourceItem, IItemData targetItem)
@@ -108,7 +108,7 @@ namespace Unicorn.Evaluators
 			Assert.ArgumentNotNull(sourceItem, "sourceItem");
 			Assert.ArgumentNotNull(targetItem, "targetItem");
 
-			_logger.Debug("> Name: Serialized \"{0}\", Source \"{1}\"".FormatWith(targetItem.Name, sourceItem.Name));
+			_logger.Debug("> Name: Serialized '{0}', Source '{1}'".FormatWith(targetItem.Name, sourceItem.Name));
 		}
 
 

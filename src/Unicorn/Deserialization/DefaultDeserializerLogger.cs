@@ -34,7 +34,7 @@ namespace Unicorn.Deserialization
 
 		public virtual void RenamedItem(Item targetItem, string oldName)
 		{
-			_logger.Debug($"* [R] from {oldName} to {targetItem.Name}");
+			_logger.Debug($"* [R] from '{oldName}' to '{targetItem.Name}'");
 		}
 
 		public virtual void ChangedBranchTemplate(Item targetItem, string oldBranchId)
