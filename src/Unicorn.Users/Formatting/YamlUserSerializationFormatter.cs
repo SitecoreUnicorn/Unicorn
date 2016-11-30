@@ -85,7 +85,7 @@ namespace Unicorn.Users.Formatting
 			using (var writer = new YamlWriter(outputStream, 4096, true))
 			{
 				writer.WriteMap("Username", userData.UserName);
-				writer.WriteMap("Email", userData.Email);
+				writer.WriteMap("Email", userData.Email ?? string.Empty);
 				writer.WriteMap("Comment", userData.Comment ?? string.Empty);
 				writer.WriteMap("Created", userData.CreationDate.ToString("O"));
 				writer.WriteMap("IsApproved", userData.IsApproved.ToString());
