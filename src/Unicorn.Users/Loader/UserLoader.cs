@@ -120,8 +120,8 @@ namespace Unicorn.Users.Loader
 				return Membership.GeneratePassword(32, 0);
 			}
 
-			if (password.Length < 8)
-				throw new InvalidOperationException("I will not set the default user password to anything less than 8 characters. Change your userSyncConfiguration's defaultPassword setting to something more secure.");
+			if (password.Length < _syncConfiguration.MinPasswordLength)
+				throw new InvalidOperationException($"I will not set the default user password to anything less than {_syncConfiguration.MinPasswordLength} characters. Change your userSyncConfiguration\'s defaultPassword setting to something more secure.");
 
 			return password;
 		}
