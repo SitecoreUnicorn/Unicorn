@@ -61,7 +61,7 @@ namespace Unicorn.ControlPanel
 
 				if (pipelineArgs.Response == null)
 				{
-					pipelineArgs.Response = new PlainTextResponse("Not Found", HttpStatusCode.NotFound);
+					pipelineArgs.Response = new PlainTextResponse("Verb not found. Please check your unicornControlPanelRequest pipeline and compare it against the standard Unicorn.UI.config.", HttpStatusCode.NotFound);
 				}
 
 				if (securityState.IsAllowed)
