@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Configuration;
 using System.Linq;
 using System.Xml;
 using Rainbow.Storage;
@@ -156,7 +157,12 @@ namespace Unicorn.Configuration
 				Func<IDataStore> factory = () => (IDataStore)registry.Activate(type.Type, attributes);
 				Func<object> wrapperFactory = () => new ConfigurationDataStore(new Lazy<IDataStore>(factory));
 
-				registry.Register(resultType, wrapperFactory, type.SingleInstance);
+				if (!type.SingleInstance)
+				{
+					Log.Warn($"[Unicorn] The sourceDataStore on configuration {registry.Name} is set to transient lifecycle (singleInstance=false or missing). This will be ignored and the dependency will use singleton lifecycle to prevent unusual behaviors and performance issues.", this);
+				}
+
+				registry.Register(resultType, wrapperFactory, true);
 				return;
 			}
 
@@ -165,7 +171,12 @@ namespace Unicorn.Configuration
 				Func<IDataStore> factory = () => (IDataStore)registry.Activate(type.Type, attributes);
 				Func<object> wrapperFactory = () => new ConfigurationDataStore(new Lazy<IDataStore>(factory));
 
-				registry.Register(resultType, wrapperFactory, type.SingleInstance);
+				if (!type.SingleInstance)
+				{
+					Log.Warn($"[Unicorn] The targetDataStore on configuration {registry.Name} is set to transient lifecycle (singleInstance=false or missing). This will be ignored and the dependency will use singleton lifecycle to prevent unusual behaviors and performance issues.", this);
+				}
+
+				registry.Register(resultType, wrapperFactory, true);
 				return;
 			}
 
