@@ -8,6 +8,7 @@ using Unicorn.Configuration;
 using Unicorn.ControlPanel.Headings;
 using Unicorn.ControlPanel.Responses;
 using Unicorn.Data;
+using Unicorn.Data.Dilithium;
 using Unicorn.Logging;
 using Unicorn.Pipelines.UnicornReserializeComplete;
 using Unicorn.Predicates;
@@ -36,8 +37,12 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 
 			try
 			{
+				progress.ReportStatus("Dilithium is batching items. Hold on to your hat, it's about to get fast in here...", MessageType.Debug);
 
+				ReactorContext.Reactor = new DilithiumReactor(configurations);
 
+				var init = ReactorContext.Reactor.Initialize(false);
+				if(!init) progress.ReportStatus("No configurations slated to sync enabled Dilithium. Sitecore APIs will be used.", MessageType.Debug);
 
 				foreach (var configuration in configurations)
 				{
@@ -92,6 +97,7 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 			}
 			finally
 			{
+				ReactorContext.Dispose();
 			}
 		}
 

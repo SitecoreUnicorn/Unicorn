@@ -11,6 +11,7 @@ using Unicorn.Pipelines.UnicornSyncEnd;
 using Unicorn.Predicates;
 using Sitecore.Diagnostics;
 using Unicorn.Data.DataProvider;
+using Unicorn.Data.Dilithium;
 using Unicorn.Pipelines.UnicornSyncStart;
 
 // ReSharper disable RedundantArgumentNameForLiteralExpression
@@ -81,6 +82,7 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 					catch (Exception ex)
 					{
 						logger.Error(ex);
+						ReactorContext.Dispose();
 						success = false;
 						break;
 					}
@@ -88,6 +90,8 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 
 				taskNumber++;
 			}
+
+			ReactorContext.Dispose();
 
 			try
 			{

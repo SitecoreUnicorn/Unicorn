@@ -21,6 +21,8 @@ namespace Unicorn.Data
 			_innerDataStore = innerDataStore;
 		}
 
+		public IDataStore InnerDataStore => _innerDataStore.Value;
+
 		public void Save(IItemData item)
 		{
 			_innerDataStore.Value.Save(item);

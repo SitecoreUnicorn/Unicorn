@@ -118,6 +118,15 @@
     <Compile Include="Data\DataProvider\FieldChangeParser.cs" />
     <Compile Include="Data\DataProvider\ItemChangeApplyingItemData.cs" />
     <Compile Include="Data\DataProvider\IUnicornDataProviderConfiguration.cs" />
+    <Compile Include="Data\Dilithium\Data\DataCore.cs" />
+    <Compile Include="Data\Dilithium\Data\DilithiumFieldValue.cs" />
+    <Compile Include="Data\Dilithium\Data\DilithiumItemData.cs" />
+    <Compile Include="Data\Dilithium\Data\DilithiumItemLanguage.cs" />
+    <Compile Include="Data\Dilithium\Data\DilithiumItemVersion.cs" />
+    <Compile Include="Data\Dilithium\DilithiumReactor.cs" />
+    <Compile Include="Data\Dilithium\DilithiumSitecoreDataStore.cs" />
+    <Compile Include="Data\Dilithium\Pipelines\InitializeDilithium.cs" />
+    <Compile Include="Data\Dilithium\ReactorContext.cs" />
     <Compile Include="DeserializationSoftFailureAggregateException.cs" />
     <Compile Include="Deserialization\UnicornDeserializer.cs" />
     <Compile Include="Evaluators\INewItemOnlyEvaluatorLogger.cs" />
@@ -235,6 +244,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="Standard Config Files\Unicorn.Dilithium.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Standard Config Files\Unicorn.zSharedSecret.config.example">
       <SubType>Designer</SubType>
     </None>
@@ -286,6 +298,7 @@
   <ItemGroup>
     <EmbeddedResource Include="ControlPanel\Headings\Allthethings.svg.html" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

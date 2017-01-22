@@ -9,6 +9,7 @@ using Sitecore.StringExtensions;
 using Unicorn.Configuration;
 using Unicorn.Data;
 using Unicorn.Data.DataProvider;
+using Unicorn.Data.Dilithium;
 using Unicorn.Loader;
 using Unicorn.Logging;
 using Unicorn.Pipelines.UnicornSyncBegin;
@@ -63,6 +64,7 @@ namespace Unicorn
 					DumpTreeInternal(item, predicate, serializationStore, sourceStore, logger, dpConfig);
 				}
 			}
+
 			return true;
 		}
 
@@ -101,6 +103,8 @@ namespace Unicorn
 		{
 			var logger = configuration.Resolve<ILogger>();
 
+			// check if Dilithium was already running. If it was, we won't dispose it when we're done.
+			bool dilithiumWasStarted = ReactorContext.Reactor != null;
 
 			if (runSyncStartPipeline)
 			{
@@ -113,33 +117,47 @@ namespace Unicorn
 
 			if (beginArgs.Aborted)
 			{
+				if (!dilithiumWasStarted) ReactorContext.Dispose();
+
 				logger.Error("Unicorn Sync Begin pipeline was aborted. Not executing sync for this configuration.");
 				return false;
 			}
 
 			if (beginArgs.SyncIsHandled)
 			{
+				if (!dilithiumWasStarted) ReactorContext.Dispose();
+
 				logger.Info("Unicorn Sync Begin pipeline signalled that it handled the sync for this configuration.");
 				return true;
 			}
 
 			var syncStartTimestamp = DateTime.Now;
 
-			using (new TransparentSyncDisabler())
+			try
 			{
-				var retryer = configuration.Resolve<IDeserializeFailureRetryer>();
-				var consistencyChecker = configuration.Resolve<IConsistencyChecker>();
-				var loader = configuration.Resolve<SerializationLoader>();
+				using (new TransparentSyncDisabler())
+				{
+					var retryer = configuration.Resolve<IDeserializeFailureRetryer>();
+					var consistencyChecker = configuration.Resolve<IConsistencyChecker>();
+					var loader = configuration.Resolve<SerializationLoader>();
 
-				if (roots.Length > 0)
-				{
-					loader.LoadAll(roots, retryer, consistencyChecker, rootLoadedCallback);
-				}
-				else
-				{
-					logger.Warn($"{configuration.Name} had no root paths included to sync. If you're only syncing roles, this is expected. Otherwise it indicates that your predicate has no included items and you need to add some.");
+					if (roots.Length > 0)
+					{
+						loader.LoadAll(roots, retryer, consistencyChecker, rootLoadedCallback);
+					}
+					else
+					{
+						logger.Warn($"{configuration.Name} had no root paths included to sync. If you're only syncing roles, this is expected. Otherwise it indicates that your predicate has no included items and you need to add some.");
+					}
 				}
 			}
+			catch
+			{
+				ReactorContext.Dispose();
+				throw;
+			}
+
+			if (!dilithiumWasStarted) ReactorContext.Dispose();
 
 			CorePipeline.Run("unicornSyncComplete", new UnicornSyncCompletePipelineArgs(configuration, syncStartTimestamp));
 
