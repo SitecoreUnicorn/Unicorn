@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Web;
 using Kamsar.WebConsole;
 using Sitecore.Pipelines;
@@ -9,6 +10,7 @@ using Unicorn.Logging;
 using Unicorn.Pipelines.UnicornSyncEnd;
 using Unicorn.Predicates;
 using Sitecore.Diagnostics;
+using Unicorn.Data.DataProvider;
 
 namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 {
@@ -33,6 +35,7 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 			var configurations = ResolveConfigurations();
 			int taskNumber = 1;
 
+			bool success = true;
 			foreach (var configuration in configurations)
 			{
 				var logger = configuration.Resolve<ILogger>();
@@ -67,6 +70,7 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 					catch (Exception ex)
 					{
 						logger.Error(ex);
+						success = false;
 						break;
 					}
 				}
@@ -76,7 +80,7 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 
 			try
 			{
-				CorePipeline.Run("unicornSyncEnd", new UnicornSyncEndPipelineArgs(progress, configurations));
+				CorePipeline.Run("unicornSyncEnd", new UnicornSyncEndPipelineArgs(progress, success, configurations));
 			}
 			catch (Exception exception)
 			{

@@ -6,6 +6,10 @@ using Unicorn.Configuration;
 
 namespace Unicorn.Pipelines.UnicornSyncComplete
 {
+	/// <summary>
+	/// Pipeline runs when a single configuration finishes syncing (e.g. if syncing 4 configs this runs 4 times)
+	/// Not run if config errors.
+	/// </summary>
 	public class UnicornSyncCompletePipelineArgs : PipelineArgs
 	{
 		public UnicornSyncCompletePipelineArgs(IConfiguration configuration, DateTime syncStartedTimestamp)
