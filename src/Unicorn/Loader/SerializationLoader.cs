@@ -12,6 +12,7 @@ using Unicorn.Data;
 using Unicorn.Data.DataProvider;
 using Unicorn.Evaluators;
 using Unicorn.Predicates;
+// ReSharper disable TooWideLocalVariableScope
 
 namespace Unicorn.Loader
 {
@@ -26,7 +27,7 @@ namespace Unicorn.Loader
 		protected readonly IEvaluator Evaluator;
 		protected readonly ISourceDataStore SourceDataStore;
 		protected readonly ISerializationLoaderLogger Logger;
-		protected  readonly ISyncConfiguration SyncConfiguration;
+		protected readonly ISyncConfiguration SyncConfiguration;
 		protected readonly IUnicornDataProviderConfiguration DataProviderConfiguration;
 		protected readonly PredicateRootPathResolver PredicateRootPathResolver;
 
@@ -69,7 +70,7 @@ namespace Unicorn.Loader
 
 			if (DataProviderConfiguration.EnableTransparentSync)
 			{
-				CacheManager.ClearAllCaches(); 
+				CacheManager.ClearAllCaches();
 				// BOOM! This clears all caches before we begin; 
 				// because for a TpSync configuration we could have TpSync items in the data cache which 'taint' the item comparisons and result in missed updates
 			}
@@ -149,79 +150,44 @@ namespace Unicorn.Loader
 			}
 
 			// we throw items into this queue, and let a thread pool pick up anything available to process in parallel. only the children of queued items are processed, not the item itself
-			ConcurrentQueue<IItemData> processQueue = new ConcurrentQueue<IItemData>();
-
-			// exceptions thrown on background threads are left in here
-			ConcurrentQueue<Exception> errors = new ConcurrentQueue<Exception>();
-
-			// we keep track of how many threads are actively processing something so we know when to end the threads
-			// (e.g. a thread could have nothing in the queue right now, but that's because a different thread is about
-			// to add 8 things to the queue - so it shouldn't quit till all is done)
-			int activeThreads = 0;
+			var processQueue = new Queue<IItemData>();
 
 			// put the root in the queue
 			processQueue.Enqueue(root);
 
-			if(SyncConfiguration.MaxConcurrency < 1) throw new InvalidOperationException("Max concurrency is set to zero. Please set it to one or more threads.");
-
-			Thread[] pool = Enumerable.Range(0, SyncConfiguration.MaxConcurrency).Select(i => new Thread(() =>
+			using (new UnicornOperationContext()) // disablers only work on the current thread. So we need to disable on all worker threads
 			{
-				Process:
-				Interlocked.Increment(ref activeThreads);
-
-				using (new UnicornOperationContext()) // disablers only work on the current thread. So we need to disable on all worker threads
+				IItemData parentItem;
+				while (processQueue.Count > 0)
 				{
-					IItemData parentItem;
-					while (processQueue.TryDequeue(out parentItem) && errors.Count == 0)
+					parentItem = processQueue.Dequeue();
+					try
 					{
-						try
+						// load the current level
+						LoadOneLevel(parentItem, retryer, consistencyChecker);
+
+						// check if we have child paths to process down
+						var children = TargetDataStore.GetChildren(parentItem).ToArray();
+
+						if (children.Length > 0)
 						{
-
-							// load the current level
-							LoadOneLevel(parentItem, retryer, consistencyChecker);
-
-							// check if we have child paths to process down
-							var children = TargetDataStore.GetChildren(parentItem).ToArray();
-
-							if (children.Length > 0)
+							// load each child path
+							foreach (var child in children)
 							{
-								// load each child path
-								foreach (var child in children)
-								{
-									processQueue.Enqueue(child);
-								}
-							} // children.length > 0
-						}
-						catch (ConsistencyException cex)
-						{
-							errors.Enqueue(cex);
-							break;
-						}
-						catch (Exception ex)
-						{
-							retryer.AddTreeRetry(root, ex);
-						}
-					} // end while
-				}
-
-				// if we get here, the queue was empty. let's make ourselves inactive.
-				Interlocked.Decrement(ref activeThreads);
-
-				// if some other thread in our pool was doing stuff, sleep for a sec to see if we can pick up their work
-				if (activeThreads > 0)
-				{
-					Thread.Sleep(10);
-					goto Process; // OH MY GOD :)
-				}
-			})).ToArray();
-
-			// start the thread pool
-			foreach (var thread in pool) thread.Start();
-
-			// ...and then wait for all the threads to finish
-			foreach (var thread in pool) thread.Join();
-
-			if (errors.Count > 0) throw new AggregateException(errors);
+								processQueue.Enqueue(child);
+							}
+						} // children.length > 0
+					}
+					catch (ConsistencyException)
+					{
+						throw;
+					}
+					catch (Exception ex)
+					{
+						retryer.AddTreeRetry(root, ex);
+					}
+				} // end while
+			}
 		}
 
 		/// <summary>

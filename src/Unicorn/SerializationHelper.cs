@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using Rainbow.Model;
 using Sitecore.Caching;
 using Sitecore.Configuration;
@@ -16,6 +15,7 @@ using Unicorn.Pipelines.UnicornSyncBegin;
 using Unicorn.Pipelines.UnicornSyncComplete;
 using Unicorn.Pipelines.UnicornSyncStart;
 using Unicorn.Predicates;
+// ReSharper disable TooWideLocalVariableScope
 
 namespace Unicorn
 {
@@ -73,7 +73,7 @@ namespace Unicorn
 			{
 				if (configurations == null) configurations = GetConfigurationsForItem(item);
 
-				foreach(var configuration in configurations)
+				foreach (var configuration in configurations)
 				{
 					if (configuration == null) return false;
 
@@ -104,7 +104,7 @@ namespace Unicorn
 
 			if (runSyncStartPipeline)
 			{
-				var startArgs = new UnicornSyncStartPipelineArgs(new []{ configuration }, logger);
+				var startArgs = new UnicornSyncStartPipelineArgs(new[] { configuration }, logger);
 				CorePipeline.Run("unicornSyncStart", startArgs);
 			}
 
@@ -150,22 +150,14 @@ namespace Unicorn
 		{
 			if (dpConfig.EnableTransparentSync)
 			{
-				CacheManager.ClearAllCaches(); 
+				CacheManager.ClearAllCaches();
 				// BOOM! This clears all caches before we begin; 
 				// because for a TpSync configuration we could have TpSync items in the data cache which 'taint' the reserialize
 				// from being purely database
 			}
 
 			// we throw items into this queue, and let a thread pool pick up anything available to process in parallel. only the children of queued items are processed, not the item itself
-			ConcurrentQueue<IItemData> processQueue = new ConcurrentQueue<IItemData>();
-
-			// exceptions thrown on background threads are left in here
-			ConcurrentQueue<Exception> errors = new ConcurrentQueue<Exception>();
-
-			// we keep track of how many threads are actively processing something so we know when to end the threads
-			// (e.g. a thread could have nothing in the queue right now, but that's because a different thread is about
-			// to add 8 things to the queue - so it shouldn't quit till all is done)
-			int activeThreads = 0;
+			var processQueue = new Queue<IItemData>();
 
 			using (new UnicornOperationContext())
 			{
@@ -175,71 +167,42 @@ namespace Unicorn
 
 			processQueue.Enqueue(root);
 
-			Thread[] pool = Enumerable.Range(0, ThreadCount).Select(i => new Thread(() =>
+			IItemData parentItem;
+
+			while (processQueue.Count > 0)
 			{
-				Process:
-				Interlocked.Increment(ref activeThreads);
-				IItemData parentItem;
+				parentItem = processQueue.Dequeue();
 
-				while (processQueue.TryDequeue(out parentItem) && errors.Count == 0)
+				using (new UnicornOperationContext()) // disablers only work on the current thread. So we need to disable on all worker threads
 				{
-					using (new UnicornOperationContext()) // disablers only work on the current thread. So we need to disable on all worker threads
-					{
-						var children = sourceDataStore.GetChildren(parentItem);
+					var children = sourceDataStore.GetChildren(parentItem);
 
-						foreach (var item in children)
+					foreach (var item in children)
+					{
+						// we dump each item in the queue item
+						// we do a whole array of children at a time because this makes the serialization of all children of a given item single threaded
+						// this gives us a deterministic result of naming when name collisions occur, which means trees will not contain random differences
+						// when reserialized (oh joy, that)
+						var dump = DumpItemInternal(item, predicate, serializationStore);
+						if (dump.IsIncluded)
 						{
-							try
-							{
-								// we dump each item in the queue item
-								// we do a whole array of children at a time because this makes the serialization of all children of a given item single threaded
-								// this gives us a deterministic result of naming when name collisions occur, which means trees will not contain random differences
-								// when reserialized (oh joy, that)
-								var dump = DumpItemInternal(item, predicate, serializationStore);
-								if (dump.IsIncluded)
-								{
-									// if the item is included, then we add its children as a queued work item
-									processQueue.Enqueue(item);
-								}
-								else
-								{
-									logger.Warn("[S] {0} because {1}".FormatWith(item.GetDisplayIdentifier(), dump.Justification));
-								}
-							}
-							catch (Exception ex)
-							{
-								errors.Enqueue(ex);
-								break;
-							}
+							// if the item is included, then we add its children as a queued work item
+							processQueue.Enqueue(item);
+						}
+						else
+						{
+							logger.Warn("[S] {0} because {1}".FormatWith(item.GetDisplayIdentifier(), dump.Justification));
 						}
 					}
 				}
-
-				// if we get here, the queue was empty. let's make ourselves inactive.
-				Interlocked.Decrement(ref activeThreads);
-
-				// if some other thread in our pool was doing stuff, sleep for a sec to see if we can pick up their work
-				if (activeThreads > 0)
-				{
-					Thread.Sleep(10);
-					goto Process; // OH MY GOD :)
-				}
-			})).ToArray();
-
-			// start the thread pool
-			foreach (var thread in pool) thread.Start();
-
-			// ...and then wait for all the threads to finish
-			foreach (var thread in pool) thread.Join();
+			}
 
 			if (dpConfig.EnableTransparentSync)
 			{
-				CacheManager.ClearAllCaches(); 
+				CacheManager.ClearAllCaches();
 				// BOOM! And we clear everything again at the end, because now
 				// for a TpSync configuration we might have DATABASE items in cache where we want TpSync.
 			}
-
-			if (errors.Count > 0) throw new AggregateException(errors);
 		}
 
 		protected virtual PredicateResult DumpItemInternal(IItemData item, IPredicate predicate, ITargetDataStore targetDataStore)

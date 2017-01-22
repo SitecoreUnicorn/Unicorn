@@ -14,10 +14,5 @@ namespace Unicorn.Loader
 		/// If true changed items are updated in link database
 		/// </summary>
 		bool UpdateSearchIndex { get; }
-
-		/// <summary>
-		/// How many threads to sync with. Use 1 if: syncing templates or Sitecore older than Sitecore 8 Update 3. Use 16 or so otherwise.
-		/// </summary>
-		int MaxConcurrency { get; }
 	}
 }
