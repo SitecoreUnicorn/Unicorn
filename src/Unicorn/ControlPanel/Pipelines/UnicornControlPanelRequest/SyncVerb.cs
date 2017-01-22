@@ -107,6 +107,14 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 
 			if (targetConfigurations.Length == 0) throw new ArgumentException("Configuration(s) requested were not defined.");
 
+			var skipTransparent = HttpContext.Current.Request.QueryString["skipTransparentConfigs"];
+			if (skipTransparent == "1")
+			{
+				targetConfigurations = targetConfigurations.Where(configuration => !configuration.Resolve<IUnicornDataProviderConfiguration>().EnableTransparentSync).ToArray();
+
+				if(targetConfigurations.Length == 0) Log.Warn("[Unicorn] All configurations were transparent sync and skipTransparentConfigs was active. Syncing nothing.", this);
+			}
+
 			return targetConfigurations;
 		}
 	}

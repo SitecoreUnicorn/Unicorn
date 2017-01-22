@@ -35,6 +35,7 @@ namespace Unicorn.ControlPanel.Controls
 					$('a[data-overlay-trigger=""]').on('click', function() {
 						overlay.trigger('show');
 					});
+					
 					$('a[data-modal]:not([data-modal=""])').on('click', function(e) {
 						$('#' + $(this).data('modal')).trigger('show');
 
@@ -83,9 +84,10 @@ namespace Unicorn.ControlPanel.Controls
 			var allSelected = checked.length == $fakeboxes.length;
 			var configSpec = checked.join('^');
 			var verbosity = $('#verbosity').val();
+			var skipTransparent = $('#skipTransparent').prop('checked') ? 1 : 0;
 
-			$('.batch-sync').attr('href', '?verb=Sync&configuration=' + configSpec + '&log=' + verbosity);
-			$('.batch-reserialize').attr('href', '?verb=Reserialize&configuration=' + configSpec + '&log=' + verbosity);
+			$('.batch-sync').attr('href', '?verb=Sync&configuration=' + configSpec + '&log=' + verbosity + '&skipTransparentConfigs=' + skipTransparent);
+			$('.batch-reserialize').attr('href', '?verb=Reserialize&configuration=' + configSpec + '&log=' + verbosity + '&skipTransparentConfigs=' + skipTransparent);
 			$('.batch-configurations').html('<li>' + (allSelected ? 'All Configurations' :checked.join('</li><li>')) + '</li>');
 			if(allSelected) $('.fakebox-all').addClass('checked');
 
@@ -100,28 +102,40 @@ namespace Unicorn.ControlPanel.Controls
 			}
 		}
 
-		/* Verbosity */
 		$(function() {
+			/* Verbosity */
 			var verbosityCookie = Cookies.get('UnicornLogVerbosity');
 			if(verbosityCookie) {
 				$('#verbosity').val(verbosityCookie);
 			}
 
-			UpdateVerbosity();
-
 			$('#verbosity').on('change', function() {
 				UpdateBatch();
-				UpdateVerbosity();
+				UpdateOptions();
 			});
+
+			/* Transparent Skipping */
+			var transparentCookie = Cookies.get('UnicornSkipTransparent');
+			$('#skipTransparent').prop('checked', transparentCookie == '1' ? true : false);
+
+			$('#skipTransparent').on('change', function() {
+				UpdateBatch();
+				UpdateOptions();
+			});
+
+			UpdateOptions();
+
 		});
 
-		function UpdateVerbosity() {
+		function UpdateOptions() {
 			var verbosity = $('#verbosity').val();
+			var skipTransparent = $('#skipTransparent').prop('checked');
 
 			$('[data-basehref]').each(function() {
-				$(this).attr('href', $(this).data('basehref') + '&log=' + verbosity);
+				$(this).attr('href', $(this).data('basehref') + '&log=' + verbosity + '&skipTransparentConfigs=' + skipTransparent);
 			});
 
+			Cookies.set('UnicornSkipTransparent', skipTransparent ? 1 : 0, { expires: 730 });
 			Cookies.set('UnicornLogVerbosity', verbosity, { expires: 730 });
 		}
 	</script>");

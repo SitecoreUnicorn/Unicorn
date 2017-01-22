@@ -54,6 +54,11 @@ namespace Unicorn.ControlPanel.Controls
 						display: block;
 					}
 
+					input[type=checkbox] {
+						float: left;
+						margin-top: 6px;
+					}
+
 					label {
 						font-weight: bold;
 					}

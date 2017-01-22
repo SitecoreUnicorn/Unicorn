@@ -15,6 +15,8 @@ Function Sync-Unicorn {
 
 		[string]$Verb = 'Sync',
 
+		[switch]$SkipTransparentConfigs,
+
 		[switch]$NoDebug
 	)
 
@@ -25,7 +27,12 @@ Function Sync-Unicorn {
 		$parsedConfigurations = ($Configurations) -join "^"
 	}
 
-	$url = "{0}?verb={1}&configuration={2}" -f $ControlPanelUrl, $Verb, $parsedConfigurations
+	$skipValue = 0
+	if($SkipTransparentConfigs) {
+		$skipValue = 1
+	}
+
+	$url = "{0}?verb={1}&configuration={2}&skipTransparentConfigs={3}" -f $ControlPanelUrl, $Verb, $parsedConfigurations, $skipValue 
 
 	Write-Host "Sync-Unicorn: Preparing authorization for $url"
 

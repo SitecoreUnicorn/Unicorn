@@ -31,6 +31,18 @@ namespace Unicorn.ControlPanel.Controls
 								</select> 
 								<br>
 								<p class=""help"">Use lower verbosity when expecting many changes to avoid slowing down the browser.<br>Log files always get full verbosity.</p>
+								
+								<p>
+								<input type=""checkbox"" id=""skipTransparent"" value=""1"">
+								<label for=""skipTransparent"">When syncing multiple configurations, skip configurations using Transparent Sync</label>
+								<br>
+								</p>
+
+								<p class=""help"">Skipping transparent sync configurations can make your development synchronizations faster.</p>
+
+								<p class=""help""><strong>Note:</strong> Changes are saved immediately.</p>
+
+								<p><a class=""button"" onclick=""$('.overlay').trigger('hide'); return false;"">Close</a></p>
 							</div>");
 			}
 		}
