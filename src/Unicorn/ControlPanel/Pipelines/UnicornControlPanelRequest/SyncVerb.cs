@@ -11,6 +11,10 @@ using Unicorn.Pipelines.UnicornSyncEnd;
 using Unicorn.Predicates;
 using Sitecore.Diagnostics;
 using Unicorn.Data.DataProvider;
+using Unicorn.Pipelines.UnicornSyncStart;
+
+// ReSharper disable RedundantArgumentNameForLiteralExpression
+// ReSharper disable RedundantArgumentName
 
 namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 {
@@ -36,6 +40,10 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 			int taskNumber = 1;
 
 			bool success = true;
+
+			var startArgs = new UnicornSyncStartPipelineArgs(configurations, additionalLogger);
+			CorePipeline.Run("unicornSyncStart", startArgs);
+
 			foreach (var configuration in configurations)
 			{
 				var logger = configuration.Resolve<ILogger>();
@@ -54,12 +62,15 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 							var roots = pathResolver.GetRootSerializedItems();
 
 							var index = 0;
-
-							helper.SyncTree(configuration, item =>
+							helper.SyncTree(
+							configuration: configuration, 
+							rootLoadedCallback: item =>
 							{
 								WebConsoleUtility.SetTaskProgress(progress, taskNumber, configurations.Length, (int)((index / (double)roots.Length) * 100));
 								index++;
-							}, roots);
+							}, 
+							runSyncStartPipeline: false, 
+							roots: roots);
 						}
 					}
 					catch (DeserializationSoftFailureAggregateException ex)

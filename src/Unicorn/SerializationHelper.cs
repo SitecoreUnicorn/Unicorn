@@ -9,10 +9,12 @@ using Sitecore.Pipelines;
 using Sitecore.StringExtensions;
 using Unicorn.Configuration;
 using Unicorn.Data;
+using Unicorn.Data.DataProvider;
 using Unicorn.Loader;
 using Unicorn.Logging;
 using Unicorn.Pipelines.UnicornSyncBegin;
 using Unicorn.Pipelines.UnicornSyncComplete;
+using Unicorn.Pipelines.UnicornSyncStart;
 using Unicorn.Predicates;
 
 namespace Unicorn
@@ -95,9 +97,16 @@ namespace Unicorn
 		}
 
 		/// <remarks>All roots must live within the same configuration! Make sure that the roots are from the target data store.</remarks>
-		public virtual bool SyncTree(IConfiguration configuration, Action<IItemData> rootLoadedCallback = null, params IItemData[] roots)
+		public virtual bool SyncTree(IConfiguration configuration, Action<IItemData> rootLoadedCallback = null, bool runSyncStartPipeline = true, params IItemData[] roots)
 		{
 			var logger = configuration.Resolve<ILogger>();
+
+
+			if (runSyncStartPipeline)
+			{
+				var startArgs = new UnicornSyncStartPipelineArgs(new []{ configuration }, logger);
+				CorePipeline.Run("unicornSyncStart", startArgs);
+			}
 
 			var beginArgs = new UnicornSyncBeginPipelineArgs(configuration);
 			CorePipeline.Run("unicornSyncBegin", beginArgs);

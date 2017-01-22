@@ -11,7 +11,7 @@ namespace Unicorn.Pipelines.UnicornSyncBegin
 		{
 			var collector = args.Configuration.Resolve<ISyncCompleteDataCollector>();
 
-			if (collector != null) collector.Reset();
+			collector?.Reset();
 		}
 	}
 }

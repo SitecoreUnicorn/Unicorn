@@ -134,6 +134,8 @@
     <Compile Include="Pipelines\UnicornReserializeComplete\UnicornReserializeCompletePipelineArgs.cs" />
     <Compile Include="Pipelines\UnicornSyncComplete\DictionaryCacheClearer.cs" />
     <Compile Include="Pipelines\UnicornSyncComplete\SyncedItemPostProcessor.cs" />
+    <Compile Include="Pipelines\UnicornSyncStart\IUnicornSyncStartProcessor.cs" />
+    <Compile Include="Pipelines\UnicornSyncStart\UnicornSyncStartPipelineArgs.cs" />
     <Compile Include="Predicates\Exclusions\ChildrenOfPathBasedPresetTreeExclusion.cs" />
     <Compile Include="Predicates\Exclusions\PathBasedPresetTreeExclusion.cs" />
     <Compile Include="Predicates\Exclusions\PathTool.cs" />
