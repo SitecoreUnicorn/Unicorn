@@ -27,9 +27,10 @@ namespace Unicorn.Loader
 		protected readonly ISourceDataStore SourceDataStore;
 		protected readonly ISerializationLoaderLogger Logger;
 		protected  readonly ISyncConfiguration SyncConfiguration;
+		protected readonly IUnicornDataProviderConfiguration DataProviderConfiguration;
 		protected readonly PredicateRootPathResolver PredicateRootPathResolver;
 
-		public SerializationLoader(ISourceDataStore sourceDataStore, ITargetDataStore targetDataStore, IPredicate predicate, IEvaluator evaluator, ISerializationLoaderLogger logger, ISyncConfiguration syncConfiguration, PredicateRootPathResolver predicateRootPathResolver)
+		public SerializationLoader(ISourceDataStore sourceDataStore, ITargetDataStore targetDataStore, IPredicate predicate, IEvaluator evaluator, ISerializationLoaderLogger logger, ISyncConfiguration syncConfiguration, IUnicornDataProviderConfiguration dataProviderConfiguration, PredicateRootPathResolver predicateRootPathResolver)
 		{
 			Assert.ArgumentNotNull(targetDataStore, nameof(targetDataStore));
 			Assert.ArgumentNotNull(sourceDataStore, nameof(sourceDataStore));
@@ -38,9 +39,11 @@ namespace Unicorn.Loader
 			Assert.ArgumentNotNull(logger, nameof(logger));
 			Assert.ArgumentNotNull(predicateRootPathResolver, nameof(predicateRootPathResolver));
 			Assert.ArgumentNotNull(syncConfiguration, nameof(syncConfiguration));
+			Assert.ArgumentNotNull(dataProviderConfiguration, nameof(dataProviderConfiguration));
 
 			Logger = logger;
 			SyncConfiguration = syncConfiguration;
+			DataProviderConfiguration = dataProviderConfiguration;
 			PredicateRootPathResolver = predicateRootPathResolver;
 			Evaluator = evaluator;
 			Predicate = predicate;
@@ -64,8 +67,12 @@ namespace Unicorn.Loader
 			Assert.ArgumentNotNull(rootItemsData, "rootItems");
 			Assert.IsTrue(rootItemsData.Length > 0, "No root items were passed!");
 
-			CacheManager.ClearAllCaches(); // BOOM! This clears all caches before we begin; 
-										   // because for a TpSync configuration we could have TpSync items in the data cache which 'taint' the item comparisons and result in missed updates
+			if (DataProviderConfiguration.EnableTransparentSync)
+			{
+				CacheManager.ClearAllCaches(); 
+				// BOOM! This clears all caches before we begin; 
+				// because for a TpSync configuration we could have TpSync items in the data cache which 'taint' the item comparisons and result in missed updates
+			}
 
 			bool disableNewSerialization = UnicornDataProvider.DisableSerialization;
 			try
