@@ -163,10 +163,13 @@ namespace Unicorn.Data.Dilithium
 
 					var rootItem = Factory.GetDatabase(root.DatabaseName).GetItem(root.Path);
 
-					// TODO ??? should this be an error or just don't add the root thus causing it to not exist in the store (e.g. serialized needs to write to it on sync)
-					if (rootItem == null) throw new InvalidOperationException($"Cannot resolve root path {root.Path} in {root.DatabaseName} Sitecore database. Check your predicates.");
-
-					databases[root.DatabaseName].Add(new RootData(root.Path, rootItem.ID.Guid));
+					// if the root item is null, its path does not exist in the DB.
+					// so we'll just not add it, and items will return null
+					// which is correct, since we want those items to get created from serialized
+					if (rootItem != null)
+					{
+						databases[root.DatabaseName].Add(new RootData(root.Path, rootItem.ID.Guid));
+					}
 				}
 
 				// generate a data core for each database, which contains all the predicated items' item data
