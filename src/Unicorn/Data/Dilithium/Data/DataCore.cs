@@ -53,11 +53,7 @@ namespace Unicorn.Data.Dilithium.Data
 		{
 			IngestItemData(reader);
 
-			var readDataTask = Task.Run(() =>
-			{
-				IngestFieldData(reader, false);
-				IngestEmptyVersionData(reader);
-			});
+			var readDataTask = Task.Run(() => IngestFieldData(reader, false));
 
 			IndexChildren();
 			IndexPaths(rootData);
@@ -160,29 +156,6 @@ namespace Unicorn.Data.Dilithium.Data
 			// the third result in the reader is the root item fields.
 			// this has an identical schema to the descendant fields and thus this method can be used to parse it as well.
 			if (!secondPass) IngestFieldData(reader, true);
-		}
-
-		private void IngestEmptyVersionData(SqlDataReader reader)
-		{
-			// the reader will be on result set 2 when it arrives (root field data)
-			// so we need to advance it to set 3 (empty version data)
-			reader.NextResult();
-
-			Guid itemId;
-			int version;
-			string language;
-			DilithiumItemData targetItem;
-
-			while (reader.Read())
-			{
-				itemId = reader.GetGuid(0);
-				version = reader.GetInt32(1);
-				language = reader.GetString(2);
-
-				targetItem = GetById(itemId);
-
-				targetItem.RawVersions.Add(new DilithiumItemVersion { VersionNumber = version, Language = new CultureInfo(language)});
-			}
 		}
 
 		private void IndexPaths(IList<DilithiumReactor.RootData> rootData)

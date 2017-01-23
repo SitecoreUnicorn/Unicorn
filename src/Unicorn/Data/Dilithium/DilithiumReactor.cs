@@ -211,6 +211,8 @@ namespace Unicorn.Data.Dilithium
 			// add parameters for ignored fields
 			var ignoredFieldsInStatement = BuildSqlInStatement(ignoredFields, command, "i");
 
+			var ignoredFieldsValueSkipStatement = $@"CASE WHEN FieldID {ignoredFieldsInStatement} THEN '' ELSE Value END AS Value";
+
 			// add parameters for root item IDs
 			var rootItemIdsInStatement = BuildSqlInStatement(rootItemIds, command, "r");
 
@@ -232,52 +234,36 @@ namespace Unicorn.Data.Dilithium
 			// of the root items. Does not get the root items' fields data (it seemed faster to do that in a separate
 			// query based on query analysis as opposed to an IN...OR...IN in this one)
 			sql.Append($@"
-				SELECT ItemId, '' AS Language, FieldId, Value, -1 as Version
+				SELECT ItemId, '' AS Language, FieldId, {ignoredFieldsValueSkipStatement}, -1 as Version
 				FROM SharedFields s
 				INNER JOIN Descendants d on s.ItemId = d.Descendant
 				WHERE d.Ancestor {rootItemIdsInStatement}
-				AND s.FieldId NOT {ignoredFieldsInStatement}
 				UNION ALL
-				SELECT ItemId, Language, FieldId, Value, -1 as Version
+				SELECT ItemId, Language, FieldId, {ignoredFieldsValueSkipStatement}, -1 as Version
 				FROM UnversionedFields u
 				INNER JOIN Descendants d on u.ItemId = d.Descendant
 				WHERE d.Ancestor {rootItemIdsInStatement}
-				AND u.FieldId NOT {ignoredFieldsInStatement}
 				UNION ALL
-				SELECT v.ItemId, v.Language, v.FieldId, v.Value, v.Version
+				SELECT ItemId, Language, FieldId, {ignoredFieldsValueSkipStatement}, Version
 				FROM VersionedFields v
 				INNER JOIN Descendants d on v.ItemId = d.Descendant
 				WHERE d.Ancestor {rootItemIdsInStatement}
-				AND v.FieldId NOT {ignoredFieldsInStatement}
 ");
 
 			// FIELDS DATA QUERY - ROOTS - gets all fields for all languages and versions of the root items
 			sql.Append($@"
-				SELECT ItemId, '' AS Language, FieldId, Value, -1 as Version
+				SELECT ItemId, '' AS Language, FieldId, {ignoredFieldsValueSkipStatement}, -1 as Version
 				FROM SharedFields s
 				WHERE s.ItemId {rootItemIdsInStatement}
-				AND s.FieldId NOT {ignoredFieldsInStatement}
 				UNION ALL
-				SELECT ItemId, Language, FieldId, Value, -1 as Version
+				SELECT ItemId, Language, FieldId, {ignoredFieldsValueSkipStatement}, -1 as Version
 				FROM UnversionedFields u
 				WHERE u.ItemId {rootItemIdsInStatement}
-				AND u.FieldId NOT {ignoredFieldsInStatement}
 				UNION ALL
-				SELECT v.ItemId, v.Language, v.FieldId, v.Value, v.Version
+				SELECT ItemId, Language, FieldId, {ignoredFieldsValueSkipStatement}, Version
 				FROM VersionedFields v
 				WHERE v.ItemId {rootItemIdsInStatement}
-				AND v.FieldId NOT {ignoredFieldsInStatement}
 ");
-
-			// EMPTY VERSIONS QUERY - Finds all versions of an item who have ONLY ignored fields in them
-			// this is MUCH faster than including them in the fields data query (can save 200k rows for revision and modified on stock core for example, and 500ms)
-			sql.Append($@"
-				SELECT DISTINCT v.ItemID, v.Version, v.Language
-				FROM VersionedFields v 
-				INNER JOIN Descendants d on v.ItemId = d.Descendant
-				WHERE d.Ancestor {rootItemIdsInStatement}
-				AND FieldID {ignoredFieldsInStatement}
-				AND ItemId NOT IN (SELECT v2.ItemID FROM VersionedFields v2 WHERE FieldID NOT {ignoredFieldsInStatement} AND v2.Language = v.Language AND v2.Version = v.Version)");
 
 			command.CommandText = sql.ToString();
 
