@@ -51,7 +51,6 @@ namespace Unicorn.UI.Pipelines.GetContentEditorWarnings
 						warning.Title = warningObject.Title;
 						warning.Text = warningObject.Message;
 					}
-					break;
 				}
 			}
 		}
