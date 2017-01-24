@@ -192,7 +192,7 @@ namespace Unicorn.Predicates
 				return new ChildrenOfPathBasedPresetTreeExclusion(GetExpectedAttribute(excludeNode, "childrenOfPath"), exclusions, root);
 			}
 
-			throw new InvalidOperationException($"Unable to parse invalid exclusion value: {excludeNode.InnerXml}");
+			throw new InvalidOperationException($"Unable to parse invalid exclusion value: {excludeNode.OuterXml}");
 		}
 
 		private static string GetExpectedAttribute(XmlNode node, string attributeName)
