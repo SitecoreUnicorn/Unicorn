@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Rainbow;
 using Rainbow.Diff;
 using Rainbow.Filtering;
@@ -9,11 +10,11 @@ using Sitecore.Configuration;
 using Sitecore.Data;
 using Sitecore.Data.Items;
 using Sitecore.Diagnostics;
-using Sitecore.StringExtensions;
 using Unicorn.Configuration;
 using Unicorn.Data;
 using Unicorn.Data.DataProvider;
 using Unicorn.Logging;
+using Unicorn.Predicates;
 using Unicorn.UI.Pipelines.GetContentEditorWarnings;
 
 namespace Unicorn.Evaluators
@@ -28,6 +29,7 @@ namespace Unicorn.Evaluators
 		private readonly IItemComparer _itemComparer;
 		private readonly IFieldFilter _fieldFilter;
 		private readonly ISourceDataStore _sourceDataStore;
+		private readonly ITargetDataStore _targetDataStore;
 		private readonly IConfiguration _parentConfiguration;
 		protected static readonly Guid RootId = new Guid("{11111111-1111-1111-1111-111111111111}");
 
@@ -44,6 +46,7 @@ namespace Unicorn.Evaluators
 			_itemComparer = itemComparer;
 			_fieldFilter = fieldFilter;
 			_sourceDataStore = sourceDataStore;
+			_targetDataStore = targetDataStore;
 			_parentConfiguration = parentConfiguration;
 		}
 
@@ -81,16 +84,27 @@ namespace Unicorn.Evaluators
 			return null;
 		}
 
-		public override Warning EvaluateEditorWarning(Item item)
+		public override Warning EvaluateEditorWarning(Item item, PredicateResult predicateResult)
 		{
 			bool transparentSync = item.Statistics.UpdatedBy == UnicornDataProvider.TransparentSyncUpdatedByValue;
 			string title = transparentSync ? "This item is included by Unicorn Transparent Sync" : "This item is controlled by Unicorn";
 
-			string message = "You should not change this item because your changes will be overwritten by the next code deployment. Ask a developer for help if you need to change this item.";
+			var message = new StringBuilder();
 
-			if (Settings.GetBoolSetting("Unicorn.DevMode", true))
+			if (IsDevMode)
 			{
-				message = "Changes to this item will be written to disk as part of the '{0}' configuration so they can be shared with others.".FormatWith(_parentConfiguration.Name);
+				message.Append("Changes to this item will be written to disk so they can be shared with others.");
+			}
+			else
+			{
+				message.Append("<b style=\"color: red; font-size: 24px;\">You should not change this item because your changes will be overwritten by the next code deployment.</b><br>Ask a developer for help if you need to change this item.");
+			}
+
+			message.Append($"<br><br><b>Configuration</b>: {_parentConfiguration.Name}");
+
+			if (predicateResult.PredicateComponentId != null)
+			{
+				message.Append($"<br><b>Predicate Component</b>: {predicateResult.PredicateComponentId}");
 			}
 
 			if (transparentSync)
@@ -100,14 +114,27 @@ namespace Unicorn.Evaluators
 					using (new DatabaseCacheDisabler())
 					{
 						var dbItem = Database.GetItem(item.Uri);
-						if (dbItem != null) message += " Item exists in the Sitecore database as well as Transparent Sync.";
+						if (dbItem != null)
+						{
+							message.Append("<br><b>Transparent Sync</b>: Database + Serialized");
+						}
 						else
-							message += " Item does not exist in the Sitecore database.";
+						{
+							message.Append("<br><b>Transparent Sync</b>: Serialized Only");
+						}
 					}
 				}
 			}
 
-			return new Warning(title, message);
+			var existingTargetItem = _targetDataStore.GetByPathAndId(item.Paths.Path, item.ID.Guid, item.Database.Name);
+
+			// check if serialized item ID looks like a filesystem path e.g. c:\
+			if (IsDevMode && existingTargetItem?.SerializedItemId != null && existingTargetItem.SerializedItemId.Substring(1, 2) == ":\\")
+			{
+				message.Append($"<br><b>Physical path</b>: <span style=\"font-family: consolas, monospace\">{existingTargetItem.SerializedItemId}</span>");
+			}
+
+			return new Warning(title, message.ToString());
 		}
 
 		public override bool ShouldPerformConflictCheck(Item item)
@@ -169,8 +196,8 @@ namespace Unicorn.Evaluators
 				{
 					foreach (var field in versionChange.ChangedFields)
 					{
-						var sourceFieldValue = field.SourceField == null ? null : field.SourceField.Value;
-						var targetFieldValue = field.TargetField == null ? null : field.TargetField.Value;
+						var sourceFieldValue = field.SourceField?.Value;
+						var targetFieldValue = field.TargetField?.Value;
 						var fieldId = (field.SourceField ?? field.TargetField).FieldId;
 
 						deferredUpdateLog.AddEntry(log => log.VersionedFieldIsChanged(targetItem, versionChange.SourceVersion ?? versionChange.TargetVersion, fieldId, targetFieldValue, sourceFieldValue));
@@ -209,15 +236,9 @@ namespace Unicorn.Evaluators
 			_sourceDataStore.Remove(itemData);
 		}
 
-		public override string FriendlyName
-		{
-			get { return "Serialized as Master Evaluator"; }
-		}
+		public override string FriendlyName => "Serialized as Master Evaluator";
 
-		public override string Description
-		{
-			get { return "Treats the items that are serialized as the master copy, and any changes whether newer or older are synced into the source data. This allows for all merging to occur in source control, and is the default way Unicorn behaves."; }
-		}
+		public override string Description => "Treats the items that are serialized as the master copy, and any changes whether newer or older are synced into the source data. This allows for all merging to occur in source control, and is the default way Unicorn behaves.";
 
 		public override KeyValuePair<string, string>[] GetConfigurationDetails()
 		{

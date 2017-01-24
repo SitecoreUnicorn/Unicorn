@@ -5,6 +5,7 @@ using Sitecore.Pipelines.GetContentEditorWarnings;
 using Unicorn.Configuration;
 using Unicorn.Evaluators;
 using Unicorn.Predicates;
+// ReSharper disable TooWideLocalVariableScope
 
 namespace Unicorn.UI.Pipelines.GetContentEditorWarnings
 {
@@ -32,18 +33,25 @@ namespace Unicorn.UI.Pipelines.GetContentEditorWarnings
 
 			var existingSitecoreItem = new ItemData(item);
 
-			var configuration = _configurations.FirstOrDefault(config => config.Resolve<IPredicate>().Includes(existingSitecoreItem).IsIncluded);
-			if (configuration != null)
+			PredicateResult matchingPredicate = null;
+
+			foreach (var configuration in _configurations)
 			{
-				var evaluator = configuration.Resolve<IEvaluator>();
+				matchingPredicate = configuration.Resolve<IPredicate>().Includes(existingSitecoreItem);
 
-				var warningObject = evaluator.EvaluateEditorWarning(item);
-
-				if (warningObject != null)
+				if (matchingPredicate.IsIncluded)
 				{
-					GetContentEditorWarningsArgs.ContentEditorWarning warning = args.Add();
-					warning.Title = warningObject.Title;
-					warning.Text = warningObject.Message;
+					var evaluator = configuration.Resolve<IEvaluator>();
+
+					var warningObject = evaluator.EvaluateEditorWarning(item, matchingPredicate);
+
+					if (warningObject != null)
+					{
+						GetContentEditorWarningsArgs.ContentEditorWarning warning = args.Add();
+						warning.Title = warningObject.Title;
+						warning.Text = warningObject.Message;
+					}
+					break;
 				}
 			}
 		}
