@@ -20,7 +20,9 @@ namespace Unicorn.ControlPanel.Controls
 		{
 			writer.Write("<h4>Initial Setup</h4>");
 
-			if (ControlPanelUtility.AllRootPathsExist(_configuration))
+			var invalidRootPaths = ControlPanelUtility.GetInvalidRootPaths(_configuration);
+
+			if (invalidRootPaths.Length == 0)
 			{
 				writer.Write("<p>Would you like to perform an initial serialization of all configured items using the options outlined above now? This is required to start using this configuration.</p>");
 
@@ -28,7 +30,13 @@ namespace Unicorn.ControlPanel.Controls
 			}
 			else
 			{
-				writer.Write("<p class=\"warning\">Cannot perform initial serialization because the predicate configuration is including item paths which do not exist in the database.</p>");
+				writer.Write("<div class=\"warning\"><p>Cannot perform initial serialization because the predicate configuration is including item paths which do not exist in the database. The following path(s) are invalid:</p>");
+				writer.Write("<ul>");
+				foreach (var root in invalidRootPaths)
+				{
+					writer.Write($"<li>{root}</li>");
+				}
+				writer.Write("</ul></div>");
 			}
 		}
 	}

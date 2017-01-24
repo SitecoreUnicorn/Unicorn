@@ -38,16 +38,19 @@ namespace Unicorn.ControlPanel
 		}
 
 		/// <summary>
-		/// Verifies that all root paths defined in the predicate exist in Sitecore
+		/// Gets any paths in a configuration's predicate that do not exist in Sitecore
 		/// In other words, if you were to reserialize this configuration would there be something
 		/// to serialize at all root locations?
 		/// </summary>
-		public static bool AllRootPathsExist(IConfiguration configuration)
+		public static string[] GetInvalidRootPaths(IConfiguration configuration)
 		{
 			var predicate = configuration.Resolve<PredicateRootPathResolver>();
 			var sourceDataStore = configuration.Resolve<ISourceDataStore>();
 
-			return predicate.GetRootPaths().All(include => RootPathExists(sourceDataStore, include));
+			return predicate.GetRootPaths()
+				.Where(include => !RootPathExists(sourceDataStore, include))
+				.Select(treeRoot => treeRoot.DatabaseName + ":" + treeRoot.Path)
+				.ToArray(); 
 		}
 
 		/// <summary>
