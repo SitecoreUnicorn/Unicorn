@@ -40,7 +40,11 @@ namespace Unicorn.Predicates
 			{
 				result = Includes(entry, itemData);
 
-				if (result.IsIncluded) return result; // it's definitely included if anything includes it
+				if (result.IsIncluded)
+				{
+					result.PresetTreeRoot = entry;
+					return result; // it's definitely included if anything includes it
+				}
 				if (!string.IsNullOrEmpty(result.Justification)) priorityResult = result; // a justification means this is probably a more 'important' fail than others
 			}
 

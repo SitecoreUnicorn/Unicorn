@@ -1,5 +1,6 @@
 using System.Linq;
 using Rainbow.Storage.Sc;
+using Sitecore.Configuration;
 using Sitecore.Data.Items;
 using Sitecore.Pipelines.GetContentEditorWarnings;
 using Unicorn.Configuration;
@@ -32,10 +33,24 @@ namespace Unicorn.UI.Pipelines.GetContentEditorWarnings
 
 			var existingSitecoreItem = new ItemData(item);
 
-			var configuration = _configurations.FirstOrDefault(config => config.Resolve<IPredicate>().Includes(existingSitecoreItem).IsIncluded);
-			if (configuration != null)
+			IConfiguration foundConfiguration = null;
+			PredicateResult foundPredicateResult = null;
+
+			foreach (var configuration in _configurations)
 			{
-				var evaluator = configuration.Resolve<IEvaluator>();
+				var predicate = configuration.Resolve<IPredicate>();
+				var predicateResult = predicate.Includes(existingSitecoreItem);
+				if (predicateResult.IsIncluded)
+				{
+					foundConfiguration = configuration;
+					foundPredicateResult = predicateResult;
+					break;
+				}
+			}
+
+			if (foundConfiguration != null)
+			{
+				var evaluator = foundConfiguration.Resolve<IEvaluator>();
 
 				var warningObject = evaluator.EvaluateEditorWarning(item);
 
@@ -43,7 +58,10 @@ namespace Unicorn.UI.Pipelines.GetContentEditorWarnings
 				{
 					GetContentEditorWarningsArgs.ContentEditorWarning warning = args.Add();
 					warning.Title = warningObject.Title;
-					warning.Text = warningObject.Message;
+					if (Settings.GetBoolSetting("Unicorn.DevMode", true))
+						warning.Text = string.Format($"{warningObject.Message} Predicate name: '{foundPredicateResult.PresetTreeRoot?.Name}'.");
+					else
+						warning.Text = warningObject.Message;
 				}
 			}
 		}

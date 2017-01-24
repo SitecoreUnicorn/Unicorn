@@ -15,5 +15,6 @@
 
 		public bool IsIncluded { get; private set; }
 		public string Justification { get; private set; }
+		public PresetTreeRoot PresetTreeRoot { get; set; }
 	}
 }
