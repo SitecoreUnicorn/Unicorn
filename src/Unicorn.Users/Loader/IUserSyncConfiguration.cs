@@ -16,5 +16,11 @@ namespace Unicorn.Users.Loader
 		/// If the value is set to "random," the password will be set to a long randomly generated value, otherwise the literal value is used.
 		/// </summary>
 		string DefaultPassword { get; }
+		
+		/// <summary>
+		/// If defaultPassword is not random, this settings defines the minimum accepted password length when deserializing a user.
+		/// Default is 8 and must be larger than 0.
+		/// </summary>
+		int MinPasswordLength { get; }
 	}
 }
