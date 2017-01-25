@@ -4,7 +4,7 @@ namespace Unicorn.Loader
 {
 	public class DefaultSyncConfiguration : ISyncConfiguration
 	{
-		public DefaultSyncConfiguration(bool updateLinkDatabase, bool updateSearchIndex, int maxConcurrency)
+		public DefaultSyncConfiguration(bool updateLinkDatabase, bool updateSearchIndex)
 		{
 			UpdateLinkDatabase = updateLinkDatabase;
 			UpdateSearchIndex = updateSearchIndex;
