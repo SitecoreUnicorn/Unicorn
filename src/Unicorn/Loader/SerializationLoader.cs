@@ -149,7 +149,6 @@ namespace Unicorn.Loader
 				return;
 			}
 
-			// we throw items into this queue, and let a thread pool pick up anything available to process in parallel. only the children of queued items are processed, not the item itself
 			var processQueue = new Queue<IItemData>();
 
 			// put the root in the queue

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Web;
 using Kamsar.WebConsole;
 using Sitecore.Pipelines;
@@ -10,6 +11,7 @@ using Unicorn.ControlPanel.Responses;
 using Unicorn.Data;
 using Unicorn.Data.Dilithium;
 using Unicorn.Logging;
+using Unicorn.Pipelines.UnicornOperationStart;
 using Unicorn.Pipelines.UnicornReserializeComplete;
 using Unicorn.Predicates;
 
@@ -37,12 +39,8 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 
 			try
 			{
-				progress.ReportStatus("Dilithium is batching items. Hold on to your hat, it's about to get fast in here...", MessageType.Debug);
-
-				ReactorContext.Reactor = new DilithiumReactor(configurations);
-
-				var init = ReactorContext.Reactor.Initialize(false);
-				if(!init) progress.ReportStatus("No configurations slated to sync enabled Dilithium. Sitecore APIs will be used.", MessageType.Debug);
+				var startArgs = new UnicornOperationStartPipelineArgs(configurations, additionalLogger);
+				CorePipeline.Run("unicornReserializeStart", startArgs);
 
 				foreach (var configuration in configurations)
 				{
@@ -73,7 +71,7 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 								int index = 1;
 								foreach (var root in roots)
 								{
-									helper.DumpTree(root, new[] {configuration});
+									helper.DumpTree(root, false, new[] {configuration});
 									WebConsoleUtility.SetTaskProgress(progress, taskNumber, configurations.Length, (int) ((index/(double) roots.Length)*100));
 									index++;
 								}

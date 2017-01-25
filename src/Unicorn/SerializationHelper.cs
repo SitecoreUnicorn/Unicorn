@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Rainbow.Model;
 using Sitecore.Caching;
-using Sitecore.Configuration;
 using Sitecore.Pipelines;
 using Sitecore.StringExtensions;
 using Unicorn.Configuration;
@@ -12,9 +11,9 @@ using Unicorn.Data.DataProvider;
 using Unicorn.Data.Dilithium;
 using Unicorn.Loader;
 using Unicorn.Logging;
+using Unicorn.Pipelines.UnicornOperationStart;
 using Unicorn.Pipelines.UnicornSyncBegin;
 using Unicorn.Pipelines.UnicornSyncComplete;
-using Unicorn.Pipelines.UnicornSyncStart;
 using Unicorn.Predicates;
 // ReSharper disable TooWideLocalVariableScope
 
@@ -25,43 +24,57 @@ namespace Unicorn
 	/// </summary>
 	public class SerializationHelper
 	{
-		public int ThreadCount { get; set; } = Settings.GetIntSetting("Unicorn.MaximumWriteConcurrency", 16);
-
 		public virtual IConfiguration[] GetConfigurationsForItem(IItemData item)
 		{
 			return UnicornConfigurationManager.Configurations.Where(configuration => configuration.Resolve<IPredicate>().Includes(item).IsIncluded).ToArray();
 		}
 
 		/// <returns>True if the tree was dumped, false if the root item was not included</returns>
-		public virtual bool DumpTree(IItemData item, IConfiguration[] configurations = null)
+		public virtual bool DumpTree(IItemData item, bool runReserializeStartPipeline, IConfiguration[] configurations = null)
 		{
 			using (new TransparentSyncDisabler())
 			{
 				if (configurations == null) configurations = GetConfigurationsForItem(item);
 
-				foreach (var configuration in configurations)
+				// check if Dilithium was already running. If it was, we won't dispose it when we're done.
+				bool dilithiumWasStarted = ReactorContext.Reactor != null;
+
+				if (runReserializeStartPipeline)
 				{
-					if (configuration == null) return false;
+					var startArgs = new UnicornOperationStartPipelineArgs(configurations, configurations.First().Resolve<ILogger>());
+					CorePipeline.Run("unicornReserializeStart", startArgs);
+				}
 
-					var logger = configuration.Resolve<ILogger>();
-
-					var predicate = configuration.Resolve<IPredicate>();
-					var serializationStore = configuration.Resolve<ITargetDataStore>();
-					var sourceStore = configuration.Resolve<ISourceDataStore>();
-					var dpConfig = configuration.Resolve<IUnicornDataProviderConfiguration>();
-
-					var rootReference = serializationStore.GetByPathAndId(item.Path, item.Id, item.DatabaseName);
-					if (rootReference != null)
+				try
+				{
+					foreach (var configuration in configurations)
 					{
-						logger.Warn("[D] existing serialized items under {0}".FormatWith(rootReference.GetDisplayIdentifier()));
-						serializationStore.Remove(rootReference);
+						if (configuration == null) return false;
+
+						var logger = configuration.Resolve<ILogger>();
+
+						var predicate = configuration.Resolve<IPredicate>();
+						var serializationStore = configuration.Resolve<ITargetDataStore>();
+						var sourceStore = configuration.Resolve<ISourceDataStore>();
+						var dpConfig = configuration.Resolve<IUnicornDataProviderConfiguration>();
+
+						var rootReference = serializationStore.GetByPathAndId(item.Path, item.Id, item.DatabaseName);
+						if (rootReference != null)
+						{
+							logger.Warn("[D] existing serialized items under {0}".FormatWith(rootReference.GetDisplayIdentifier()));
+							serializationStore.Remove(rootReference);
+						}
+
+						logger.Info("[U] Serializing included items under root {0}".FormatWith(item.GetDisplayIdentifier()));
+
+						if (!predicate.Includes(item).IsIncluded) return false;
+
+						DumpTreeInternal(item, predicate, serializationStore, sourceStore, logger, dpConfig);
 					}
-
-					logger.Info("[U] Serializing included items under root {0}".FormatWith(item.GetDisplayIdentifier()));
-
-					if (!predicate.Includes(item).IsIncluded) return false;
-
-					DumpTreeInternal(item, predicate, serializationStore, sourceStore, logger, dpConfig);
+				}
+				finally
+				{
+					if(!dilithiumWasStarted) ReactorContext.Dispose();
 				}
 			}
 
@@ -81,15 +94,24 @@ namespace Unicorn
 
 					var predicate = configuration.Resolve<IPredicate>();
 					var serializationStore = configuration.Resolve<ITargetDataStore>();
+					var dpConfig = configuration.Resolve<IUnicornDataProviderConfiguration>();
 
-					CacheManager.ClearAllCaches(); // BOOM! This clears all caches before we begin; 
-												   // because for a TpSync configuration we could have TpSync items in the data cache which 'taint' the reserialize
-												   // from being purely database
+					if (dpConfig.EnableTransparentSync)
+					{
+						CacheManager.ClearAllCaches(); 
+						// BOOM! This clears all caches before we begin; 
+						// because for a TpSync configuration we could have TpSync items in the data cache which 'taint' the reserialize
+						// from being purely database
+					}
 
 					var result = DumpItemInternal(item, predicate, serializationStore).IsIncluded;
 
-					CacheManager.ClearAllCaches(); // BOOM! And we clear everything again at the end, because now
-												   // for a TpSync configuration we might have DATABASE items in cache where we want TpSync.
+					if (dpConfig.EnableTransparentSync)
+					{
+						CacheManager.ClearAllCaches(); 
+						// BOOM! And we clear everything again at the end, because now
+						// for a TpSync configuration we might have DATABASE items in cache where we want TpSync.
+					}
 
 					if (!result) return false;
 				}
@@ -108,7 +130,7 @@ namespace Unicorn
 
 			if (runSyncStartPipeline)
 			{
-				var startArgs = new UnicornSyncStartPipelineArgs(new[] { configuration }, logger);
+				var startArgs = new UnicornOperationStartPipelineArgs(new[] { configuration }, logger);
 				CorePipeline.Run("unicornSyncStart", startArgs);
 			}
 

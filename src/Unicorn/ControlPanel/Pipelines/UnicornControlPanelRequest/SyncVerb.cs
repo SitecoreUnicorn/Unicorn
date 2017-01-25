@@ -12,7 +12,7 @@ using Unicorn.Predicates;
 using Sitecore.Diagnostics;
 using Unicorn.Data.DataProvider;
 using Unicorn.Data.Dilithium;
-using Unicorn.Pipelines.UnicornSyncStart;
+using Unicorn.Pipelines.UnicornOperationStart;
 
 // ReSharper disable RedundantArgumentNameForLiteralExpression
 // ReSharper disable RedundantArgumentName
@@ -42,7 +42,7 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 
 			bool success = true;
 
-			var startArgs = new UnicornSyncStartPipelineArgs(configurations, additionalLogger);
+			var startArgs = new UnicornOperationStartPipelineArgs(configurations, additionalLogger);
 			CorePipeline.Run("unicornSyncStart", startArgs);
 
 			foreach (var configuration in configurations)
