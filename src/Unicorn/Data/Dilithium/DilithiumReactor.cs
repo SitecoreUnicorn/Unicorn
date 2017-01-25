@@ -47,7 +47,8 @@ namespace Unicorn.Data.Dilithium
 		{
 			var dilithiumItem = item as DilithiumItemData;
 
-			if(dilithiumItem == null) throw new InvalidOperationException($"Dilithium only knows how to get children of items returned from Dilithium. {item.GetType().FullName} is incompatible.");
+			// if the item is not from Dilithium it will have to use its original data store to get children
+			if (dilithiumItem == null) return item.GetChildren();
 
 			var cores = GetCores(item.DatabaseName);
 
