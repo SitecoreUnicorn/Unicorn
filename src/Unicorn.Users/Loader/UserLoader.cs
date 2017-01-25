@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Web.Profile;
 using System.Web.Security;
 using Sitecore.Caching;
-using Sitecore.Configuration;
 using Sitecore.Diagnostics;
 using Sitecore.Security.Accounts;
 using Sitecore.Security.Serialization.ObjectModel;
@@ -67,10 +65,8 @@ namespace Unicorn.Users.Loader
 		protected virtual void DeserializeUser(SyncUserFile serializedUser)
 		{
 			var changes = new List<UserUpdate>();
-
 			var syncUser = serializedUser.User;
-
-			List<string> missingRolesForUser = syncUser.Roles.FindAll(roleName => !Roles.RoleExists(roleName));
+			var missingRolesForUser = syncUser.Roles.FindAll(roleName => !Roles.RoleExists(roleName));
 
 			if (missingRolesForUser.Count > 0)
 			{
@@ -137,22 +133,25 @@ namespace Unicorn.Users.Loader
 				return Membership.GeneratePassword(32, 0);
 			}
 
-			if (password.Length < 8) throw new InvalidOperationException("I will not set the default user password to anything less than 8 characters. Change your userSyncConfiguration's defaultPassword setting to something more secure.");
+			if (password.Length < _syncConfiguration.MinPasswordLength)
+			{
+				throw new InvalidOperationException($"I will not set the default user password to anything less than {_syncConfiguration.MinPasswordLength} characters. Change your userSyncConfiguration's defaultPassword setting to something more secure.");
+			}
 
 			return password;
 		}
 
 		protected virtual void PasteProfileValues(MembershipUser updatedUser, SyncUser serializedUser, List<UserUpdate> changes)
 		{
-			foreach (string name in SiteContextFactory.GetSiteNames())
+			foreach (var name in SiteContextFactory.GetSiteNames())
 			{
-				SiteContext siteContext = SiteContextFactory.GetSiteContext(name);
+				var siteContext = SiteContextFactory.GetSiteContext(name);
 				siteContext?.Caches.RegistryCache.RemoveKeysContaining(updatedUser.UserName);
 			}
 
-			User user = User.FromName(serializedUser.UserName, true);
+			var user = User.FromName(serializedUser.UserName, true);
 
-			bool propertiesAreUpdated = false;
+			var propertiesAreUpdated = false;
 
 			// load custom properties
 			var knownCustomProperties = new HashSet<string>();

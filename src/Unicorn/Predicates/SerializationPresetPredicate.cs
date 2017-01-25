@@ -40,7 +40,13 @@ namespace Unicorn.Predicates
 			{
 				result = Includes(entry, itemData);
 
-				if (result.IsIncluded) return result; // it's definitely included if anything includes it
+				if (result.IsIncluded)
+				{
+					result.PredicateComponentId = entry.Name;
+
+					return result; // it's definitely included if anything includes it
+				}
+
 				if (!string.IsNullOrEmpty(result.Justification)) priorityResult = result; // a justification means this is probably a more 'important' fail than others
 			}
 
@@ -192,7 +198,7 @@ namespace Unicorn.Predicates
 				return new ChildrenOfPathBasedPresetTreeExclusion(GetExpectedAttribute(excludeNode, "childrenOfPath"), exclusions, root);
 			}
 
-			throw new InvalidOperationException($"Unable to parse invalid exclusion value: {excludeNode.InnerXml}");
+			throw new InvalidOperationException($"Unable to parse invalid exclusion value: {excludeNode.OuterXml}");
 		}
 
 		private static string GetExpectedAttribute(XmlNode node, string attributeName)

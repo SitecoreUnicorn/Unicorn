@@ -1,14 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Sitecore.Collections;
+using Sitecore.Configuration;
 using Sitecore.Data;
 using Sitecore.Data.DataProviders;
 using Sitecore.Data.Items;
 using Sitecore.Data.SqlServer;
 using Sitecore.Data.Templates;
+using Sitecore.Diagnostics;
 using Sitecore.Globalization;
 using Unicorn.Configuration;
 
@@ -27,10 +30,8 @@ namespace Unicorn.Data.DataProvider
 	public class UnicornSqlServerDataProvider : SqlServerDataProvider
 	{
 		private readonly List<UnicornDataProvider> _unicornDataProviders = new List<UnicornDataProvider>();
-		protected ReadOnlyCollection<UnicornDataProvider> UnicornDataProviders
-		{
-			get { return _unicornDataProviders.AsReadOnly(); }
-		}
+
+		protected ReadOnlyCollection<UnicornDataProvider> UnicornDataProviders => _unicornDataProviders.AsReadOnly();
 
 		public UnicornSqlServerDataProvider(string connectionString)
 			: this(connectionString, UnicornConfigurationManager.Configurations.Select(x => x.Resolve<UnicornDataProvider>()).ToArray())
@@ -300,6 +301,19 @@ namespace Unicorn.Data.DataProvider
 			}
 
 			return base.GetBlobStream(blobId, context);
+		}
+
+		protected bool DisableFastQueryLogging = Settings.GetBoolSetting("Unicorn.DisableFastQueryWarning", false);
+		protected override IDList QueryFast(string query, CallContext context)
+		{
+			if (!DisableFastQueryLogging && UnicornDataProviders.Any(provider => !provider.DisableTransparentSync))
+			{
+				Log.Warn("[Unicorn] A Fast Query was performed and Unicorn had one or more configurations enabled that used Transparent Sync. Fast Query is not supported with Transparent Sync. Either stop using Fast Query (it's generally regarded as a bad idea in almost every circumstance), or disable Transparent Sync for all configurations.", this);
+				Log.Warn("[Unicorn] The Fast Query was: " + query, this);
+				Log.Warn("[Unicorn] The call stack that made the Fast Query was: " + new StackTrace(), this);
+			}
+
+			return base.QueryFast(query, context);
 		}
 	}
 }

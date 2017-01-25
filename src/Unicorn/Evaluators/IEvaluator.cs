@@ -1,5 +1,6 @@
 ﻿using Rainbow.Model;
 using Sitecore.Data.Items;
+using Unicorn.Predicates;
 using Unicorn.UI.Pipelines.GetContentEditorWarnings;
 
 namespace Unicorn.Evaluators
@@ -38,8 +39,9 @@ namespace Unicorn.Evaluators
 		/// You can safely assume that any item passed in is included in the context configuration.
 		/// </summary>
 		/// <param name="item">The item being loaded in the content editor.</param>
+		/// <param name="predicateResult">The predicate result that included the item.</param>
 		/// <returns>Return a warning to show a message, or null to show no warning.</returns>
-		Warning EvaluateEditorWarning(Item item);
+		Warning EvaluateEditorWarning(Item item, PredicateResult predicateResult);
 
 		/// <summary>
 		/// Allows the evaluator to decide if items being saved should be checked against the serialized state to find sync issues
