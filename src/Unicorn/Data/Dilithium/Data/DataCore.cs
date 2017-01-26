@@ -303,11 +303,11 @@ namespace Unicorn.Data.Dilithium.Data
 			{
 				if (string.IsNullOrEmpty(language))
 				{
-					Log.Error($"[Dilithium] Data corruption in {targetItem.DatabaseName}:{targetItem.Id}! Field {currentField.FieldId} (versioned) had a value in the unversioned fields table. The field value will be ignored.", this);
+					Log.Error($"[Dilithium] Data corruption in {targetItem.DatabaseName}:{targetItem.Id}! Field {currentField.FieldId} (versioned) had a value in the shared fields table. The field value will be ignored.", this);
 				}
 				else
 				{
-					Log.Error($"[Dilithium] Data corruption in {targetItem.DatabaseName}:{targetItem.Id}! Field {currentField.FieldId} (versioned) had a value in the shared fields table. The field value will be ignored.", this);
+					Log.Error($"[Dilithium] Data corruption in {targetItem.DatabaseName}:{targetItem.Id}! Field {currentField.FieldId} (versioned) had a value in the unversioned fields table. The field value will be ignored.", this);
 				}
 				return;
 			}
