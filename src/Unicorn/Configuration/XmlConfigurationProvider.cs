@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Configuration;
 using System.Linq;
 using System.Xml;
+using Rainbow.SourceControl;
 using Rainbow.Storage;
 using Sitecore.Configuration;
 using Sitecore.Diagnostics;
@@ -95,6 +96,7 @@ namespace Unicorn.Configuration
 				{"evaluator", RegisterExpectedConfigType<IEvaluator>},
 				{"predicate", RegisterExpectedConfigType<IPredicate>},
 				{"targetDataStore", RegisterExpectedConfigType<ITargetDataStore>},
+				{"sourceControlSync", RegisterExpectedConfigType<ISourceControlSync>},
 				{"logger", RegisterExpectedConfigType<ILogger>},
 				{"loaderLogger", RegisterExpectedConfigType<ISerializationLoaderLogger>},
 				{"loaderConsistencyChecker", RegisterExpectedConfigType<IConsistencyChecker>},
