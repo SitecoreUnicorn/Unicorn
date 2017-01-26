@@ -2,14 +2,14 @@
 using System.Globalization;
 using Rainbow.Model;
 
-namespace Unicorn.Data.Dilithium.Data
+namespace Unicorn.Data.Dilithium.Sql
 {
-	public class DilithiumItemLanguage : IItemLanguage
+	public class SqlItemLanguage : IItemLanguage
 	{
 		public IEnumerable<IItemFieldValue> Fields => RawFields;
 
 		public CultureInfo Language { get; set; }
 
-		public IList<DilithiumFieldValue> RawFields { get; } = new List<DilithiumFieldValue>(); 
+		public IList<SqlItemFieldValue> RawFields { get; } = new List<SqlItemFieldValue>(); 
 	}
 }

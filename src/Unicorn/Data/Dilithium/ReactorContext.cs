@@ -1,18 +1,28 @@
 ﻿using Sitecore.Diagnostics;
+using Unicorn.Data.Dilithium.Rainbow;
+using Unicorn.Data.Dilithium.Sql;
 
 namespace Unicorn.Data.Dilithium
 {
 	public static class ReactorContext
 	{
-		public static DilithiumReactor Reactor { get; set; }
+		public static SqlPrecacheStore SqlPrecache { get; set; }
+		public static RainbowPrecacheStore RainbowPrecache { get; set; }
 
 		public static void Dispose()
 		{
-			if (Reactor != null)
+			if (SqlPrecache != null)
 			{
-				Log.Info("[Unicorn] Dilithium context has been released.", typeof(ReactorContext));
+				Log.Info("[Unicorn] Dilithium SQL context has been released.", typeof(ReactorContext));
 
-				Reactor = null;
+				SqlPrecache = null;
+			}
+
+			if (RainbowPrecache != null)
+			{
+				Log.Info("[Unicorn] Dilithium Rainbow context has been released.", typeof(ReactorContext));
+
+				RainbowPrecache = null;
 			}
 		}
 	}

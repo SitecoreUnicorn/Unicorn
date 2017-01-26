@@ -19,14 +19,14 @@ namespace Unicorn.Data.Dilithium
 
 		public override IItemData GetById(Guid id, string database)
 		{
-			if (ReactorContext.Reactor != null) return ReactorContext.Reactor.GetById(id, database);
+			if (ReactorContext.SqlPrecache != null) return ReactorContext.SqlPrecache.GetById(id, database);
 
 			return base.GetById(id, database);
 		}
 
 		public override IEnumerable<IItemData> GetByPath(string path, string database)
 		{
-			if (ReactorContext.Reactor != null) return ReactorContext.Reactor.GetByPath(path, database);
+			if (ReactorContext.SqlPrecache != null) return ReactorContext.SqlPrecache.GetByPath(path, database);
 
 			return base.GetByPath(path, database);
 		}
@@ -38,7 +38,7 @@ namespace Unicorn.Data.Dilithium
 
 		public override IEnumerable<IItemData> GetChildren(IItemData parentItem)
 		{
-			if (ReactorContext.Reactor != null) return ReactorContext.Reactor.GetChildren(parentItem);
+			if (ReactorContext.SqlPrecache != null) return ReactorContext.SqlPrecache.GetChildren(parentItem);
 
 			return base.GetChildren(parentItem);
 		}

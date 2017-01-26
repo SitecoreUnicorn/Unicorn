@@ -11,69 +11,53 @@ using Rainbow.Storage;
 using Sitecore.Configuration;
 using Sitecore.Diagnostics;
 using Unicorn.Configuration;
-using Unicorn.Data.Dilithium.Data;
 using Unicorn.Predicates;
+
 // ReSharper disable TooWideLocalVariableScope
 
-namespace Unicorn.Data.Dilithium
+namespace Unicorn.Data.Dilithium.Sql
 {
-	public class DilithiumReactor
+	public class SqlPrecacheStore
 	{
 		protected object SyncLock = new object();
 		protected bool Initialized = false;
 
 		private readonly IConfiguration[] _configurations;
-		private List<DataCore> _dataCores; 
+		private Dictionary<string, SqlDataCache> _databaseCores; 
 
-		public DilithiumReactor(IConfiguration[] configurations)
+		public SqlPrecacheStore(IConfiguration[] configurations)
 		{
 			_configurations = configurations;
 		}
 
 		public IEnumerable<IItemData> GetByPath(string path, string database)
 		{
-			var cores = GetCores(database);
+			var core = GetCore(database);
 
-			var results = new List<IItemData>();
-			foreach (var core in cores)
-			{
-				results.AddRange(core.GetByPath(path));
-			}
+			if (core == null) return Enumerable.Empty<IItemData>();
 
-			return results;
+			return core.GetByPath(path);
 		}
 
 		public IEnumerable<IItemData> GetChildren(IItemData item)
 		{
-			var dilithiumItem = item as DilithiumItemData;
+			var dilithiumItem = item as SqlItemData;
 
 			// if the item is not from Dilithium it will have to use its original data store to get children
 			if (dilithiumItem == null) return item.GetChildren();
 
-			var cores = GetCores(item.DatabaseName);
+			var core = GetCore(item.DatabaseName);
 
-			var results = new List<IItemData>();
-			foreach (var core in cores)
-			{
-				results.AddRange(core.GetChildren(dilithiumItem));
-			}
+			if (core == null) return Enumerable.Empty<IItemData>();
 
-			return results;
+			return core.GetChildren(dilithiumItem);
 		}
 
 		public IItemData GetById(Guid id, string database)
 		{
-			var cores = GetCores(database);
-			DilithiumItemData result;
+			var core = GetCore(database);
 
-			foreach (var core in cores)
-			{
-				result = core.GetById(id);
-
-				if (result != null) return result;
-			}
-
-			return null;
+			return core?.GetById(id);
 		}
 
 		/// <summary>
@@ -81,13 +65,13 @@ namespace Unicorn.Data.Dilithium
 		/// </summary>
 		/// <param name="force">Force reinitialization (reread from SQL)</param>
 		/// <returns>True if initialized successfully (or if already inited), false if no configurations were using Dilithium</returns>
-		public bool Initialize(bool force)
+		public InitResult Initialize(bool force)
 		{
-			if (Initialized && !force) return true;
+			if (Initialized && !force) return new InitResult(false);
 
 			lock (SyncLock)
 			{
-				if (Initialized && !force) return true;
+				if (Initialized && !force) return new InitResult(false);
 
 				var timer = new Stopwatch();
 				timer.Start();
@@ -133,8 +117,10 @@ namespace Unicorn.Data.Dilithium
 				if (allPredicateRoots.Count == 0)
 				{
 					Initialized = true;
-					_dataCores = new List<DataCore>();
-					return false;
+
+					_databaseCores = new Dictionary<string, SqlDataCache>();
+
+					return new InitResult(false);
 				}
 
 				// calculate root path uniqueness (e.g. if /sitecore/templates and /sitecore/templates/foo are both here
@@ -174,10 +160,11 @@ namespace Unicorn.Data.Dilithium
 				}
 
 				// generate a data core for each database, which contains all the predicated items' item data
-				var dataCores = new List<DataCore>(databases.Count);
+				var dataCores = new Dictionary<string, SqlDataCache>(databases.Count, StringComparer.Ordinal);
+				bool coreLoadError = false;
 				foreach (var database in databases)
 				{
-					var dataCore = new DataCore(database.Key);
+					var dataCore = new SqlDataCache(database.Key);
 					using (var sqlConnection = new SqlConnection(ConfigurationManager.ConnectionStrings[database.Key].ConnectionString))
 					{
 						sqlConnection.Open();
@@ -187,27 +174,27 @@ namespace Unicorn.Data.Dilithium
 
 							using (var reader = sqlCommand.ExecuteReader())
 							{
-								dataCore.Ingest(reader, database.Value);
+								if (!dataCore.Ingest(reader, database.Value)) coreLoadError = true;
 							}
 						}
 					}
 
-					dataCores.Add(dataCore);
+					dataCores.Add(database.Key, dataCore);
 				}
 
 				timer.Stop();
-				Log.Info($"[Unicorn] Initialized Dilithium reactor with {dataCores.Count} cores. {dataCores.Select(core => core.Count).Sum()} total items in reactor cores. Initialized in {timer.ElapsedMilliseconds} ms", this);
 
 				Initialized = true;
-				_dataCores = dataCores;
-				return true;
+				_databaseCores = dataCores;
+
+				return new InitResult(true, coreLoadError, dataCores.Values.Select(core => core.Count).Sum(), (int)timer.ElapsedMilliseconds);
 			}
 		}
 
 		private SqlCommand ConstructSqlBatch(Guid[] rootItemIds, Guid[] ignoredFields)
 		{
 			Assert.ArgumentNotNull(rootItemIds, nameof(rootItemIds));
-			if (rootItemIds.Length == 0) throw new InvalidOperationException("Cannot make a query for empty root set.");
+			if (rootItemIds.Length == 0) throw new InvalidOperationException("Cannot make a query for empty root set. This likely means a predicate did not have any roots.");
 			if (ignoredFields == null) ignoredFields = new Guid[0];
 
 			var command = new SqlCommand();
@@ -300,20 +287,13 @@ namespace Unicorn.Data.Dilithium
 			return inStatement;
 		}
 
-		private IList<DataCore> GetCores(string database)
+		private SqlDataCache GetCore(string database)
 		{
-			if (_dataCores == null) Initialize(false);
-			if(_dataCores == null) return new List<DataCore>();
+			SqlDataCache cache;
 
-			var result = new List<DataCore>();
-			foreach (var dataCore in _dataCores)
-			{
-				if (!dataCore.Database.Name.Equals(database, StringComparison.OrdinalIgnoreCase)) continue;
-				
-				result.Add(dataCore);
-			}
+			if (_databaseCores.TryGetValue(database, out cache)) return cache;
 
-			return result;
+			return null;
 		}
 
 		public class RootData

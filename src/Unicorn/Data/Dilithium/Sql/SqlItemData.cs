@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Rainbow.Model;
 
-namespace Unicorn.Data.Dilithium.Data
+namespace Unicorn.Data.Dilithium.Sql
 {
-	[DebuggerDisplay("{Name} ({DatabaseName}::{Id}) [DILITHIUM]")]
-	public class DilithiumItemData : IItemData
+	[DebuggerDisplay("{Name} ({DatabaseName}::{Id}) [DILITHIUM SQL]")]
+	public class SqlItemData : IItemData
 	{
-		private readonly DataCore _sourceDataCore;
+		private readonly SqlDataCache _sourceDataCore;
 
-		public DilithiumItemData(DataCore sourceDataCore)
+		public SqlItemData(SqlDataCache sourceDataCore)
 		{
 			_sourceDataCore = sourceDataCore;
 		}
@@ -45,8 +45,8 @@ namespace Unicorn.Data.Dilithium.Data
 		// Dilithium extensions
 		public IList<Guid> Children { get; } = new List<Guid>();
 		// the predicate tree root item ID this item was sourced for
-		public IList<DilithiumFieldValue> RawSharedFields { get; } = new List<DilithiumFieldValue>();
-		public IList<DilithiumItemLanguage> RawUnversionedFields { get; } = new List<DilithiumItemLanguage>(); 
-		public IList<DilithiumItemVersion> RawVersions { get; } = new List<DilithiumItemVersion>(); 
+		public IList<SqlItemFieldValue> RawSharedFields { get; } = new List<SqlItemFieldValue>();
+		public IList<SqlItemLanguage> RawUnversionedFields { get; } = new List<SqlItemLanguage>(); 
+		public IList<SqlItemVersion> RawVersions { get; } = new List<SqlItemVersion>(); 
 	}
 }

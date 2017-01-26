@@ -4,16 +4,16 @@ using Rainbow.Model;
 using Sitecore.Data;
 using Sitecore.Data.Managers;
 
-namespace Unicorn.Data.Dilithium.Data
+namespace Unicorn.Data.Dilithium.Sql
 {
 	[DebuggerDisplay("{NameHint} ({FieldType})")]
-	public class DilithiumFieldValue : IItemFieldValue
+	public class SqlItemFieldValue : IItemFieldValue
 	{
 		private readonly Guid _itemId;
 		private readonly string _databaseName;
 		private string _value;
 
-		public DilithiumFieldValue(Guid itemId, string databaseName)
+		public SqlItemFieldValue(Guid itemId, string databaseName)
 		{
 			_itemId = itemId;
 			_databaseName = databaseName;

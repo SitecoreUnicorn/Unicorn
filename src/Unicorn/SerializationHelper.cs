@@ -37,7 +37,7 @@ namespace Unicorn
 				if (configurations == null) configurations = GetConfigurationsForItem(item);
 
 				// check if Dilithium was already running. If it was, we won't dispose it when we're done.
-				bool dilithiumWasStarted = ReactorContext.Reactor != null;
+				bool dilithiumWasStarted = ReactorContext.SqlPrecache != null;
 
 				if (runReserializeStartPipeline)
 				{
@@ -126,7 +126,7 @@ namespace Unicorn
 			var logger = configuration.Resolve<ILogger>();
 
 			// check if Dilithium was already running. If it was, we won't dispose it when we're done.
-			bool dilithiumWasStarted = ReactorContext.Reactor != null;
+			bool dilithiumWasStarted = ReactorContext.SqlPrecache != null;
 
 			if (runSyncStartPipeline)
 			{

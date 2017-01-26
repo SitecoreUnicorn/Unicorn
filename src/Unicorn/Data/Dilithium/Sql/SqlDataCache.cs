@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Globalization;
 using System.Threading.Tasks;
-using Sitecore.Collections;
 using Sitecore.Data;
 using Sitecore.Data.Managers;
 using Sitecore.Data.Templates;
@@ -11,15 +10,18 @@ using Sitecore.Diagnostics;
 
 // ReSharper disable TooWideLocalVariableScope
 
-namespace Unicorn.Data.Dilithium.Data
+namespace Unicorn.Data.Dilithium.Sql
 {
-	public class DataCore
+	/// <summary>
+	/// Stores and indexes cached items from a MSSQL database. Each SqlDataCore can store items from one Sitecore database.
+	/// </summary>
+	public class SqlDataCache
 	{
-		private Dictionary<Guid, DilithiumItemData> _itemsById; // start with large capacity. Dictionary likes primes for its size.
+		private Dictionary<Guid, SqlItemData> _itemsById; // start with large capacity. Dictionary likes primes for its size.
 		private Dictionary<string, IList<Guid>> _itemsByPath;
 		private readonly Dictionary<Guid, TemplateField> _templateMetadataLookup = new Dictionary<Guid, TemplateField>(1000);
 
-		public DataCore(string databaseName)
+		public SqlDataCache(string databaseName)
 		{
 			Database = Database.GetDatabase(databaseName);
 			Assert.ArgumentNotNull(Database, nameof(databaseName));
@@ -28,29 +30,29 @@ namespace Unicorn.Data.Dilithium.Data
 		public Database Database { get; }
 		public int Count => _itemsById.Count;
 
-		public IEnumerable<DilithiumItemData> GetChildren(DilithiumItemData item)
+		public IEnumerable<SqlItemData> GetChildren(SqlItemData item)
 		{
 			return GuidsToItems(item.Children);
 		}
 
-		public IEnumerable<DilithiumItemData> GetByPath(string path)
+		public IEnumerable<SqlItemData> GetByPath(string path)
 		{
 			IList<Guid> itemsAtPath;
 
-			if(!_itemsByPath.TryGetValue(path, out itemsAtPath)) return new DilithiumItemData[0];
+			if(!_itemsByPath.TryGetValue(path, out itemsAtPath)) return new SqlItemData[0];
 
 			return GuidsToItems(itemsAtPath);
 		}
 
-		public DilithiumItemData GetById(Guid id)
+		public SqlItemData GetById(Guid id)
 		{
-			DilithiumItemData item;
+			SqlItemData item;
 			if (_itemsById.TryGetValue(id, out item)) return item;
 
 			return null;
 		} 
 
-		public void Ingest(SqlDataReader reader, IList<DilithiumReactor.RootData> rootData)
+		public bool Ingest(SqlDataReader reader, IList<SqlPrecacheStore.RootData> rootData)
 		{
 			IngestItemData(reader);
 
@@ -60,19 +62,21 @@ namespace Unicorn.Data.Dilithium.Data
 			IndexPaths(rootData);
 
 			Task.WaitAll(readDataTask);
+
+			return !readDataTask.Result;
 		}
 
 		private void IngestItemData(SqlDataReader reader)
 		{
 			// 8087 = prime. Lots of items will load in so we start with a large capacity to minimize expansions.
 			// Dictionary expands using primes, hence our choice.
-			var results = new Dictionary<Guid, DilithiumItemData>(8087);
+			var results = new Dictionary<Guid, SqlItemData>(8087);
 
-			DilithiumItemData currentItem;
+			SqlItemData currentItem;
 			while (reader.Read())
 			{
 				// NOTE: refer to SQL in Reactor (first query) to get column ordinals
-				currentItem = new DilithiumItemData(this);
+				currentItem = new SqlItemData(this);
 				currentItem.Id = reader.GetGuid(0);
 				currentItem.Name = reader.GetString(1);
 				currentItem.TemplateId = reader.GetGuid(2);
@@ -86,7 +90,7 @@ namespace Unicorn.Data.Dilithium.Data
 			_itemsById = results;
 		}
 
-		private void IngestFieldData(SqlDataReader reader, bool secondPass)
+		private bool IngestFieldData(SqlDataReader reader, bool secondPass, bool errors = false)
 		{
 			// the reader will be on result set 0 when it arrives (item data)
 			// so we need to advance it to set 1 (descendants field data)
@@ -96,14 +100,14 @@ namespace Unicorn.Data.Dilithium.Data
 			Guid itemId;
 			string language;
 			int version;
-			DilithiumFieldValue currentField;
-			DilithiumItemData targetItem;
+			SqlItemFieldValue currentField;
+			SqlItemData targetItem;
 
 			while (reader.Read())
 			{
 				itemId = reader.GetGuid(0);
 
-				currentField = new DilithiumFieldValue(itemId, Database.Name);
+				currentField = new SqlItemFieldValue(itemId, Database.Name);
 
 				language = reader.GetString(1);
 				currentField.FieldId = reader.GetGuid(2);
@@ -140,32 +144,34 @@ namespace Unicorn.Data.Dilithium.Data
 				if (fieldMetadata.IsShared)
 				{
 					// shared field = no version, no language
-					SetSharedField(targetItem, currentField, version, language);
+					if (!SetSharedField(targetItem, currentField, version, language)) errors = true;
 				}
 				else if (fieldMetadata.IsUnversioned)
 				{
 					// unversioned field = no version, with language (version -1 is used as a nonversioned flag)
-					SetUnversionedField(targetItem, currentField, version, language);
+					if (!SetUnversionedField(targetItem, currentField, version, language)) errors = true;
 				}
 				else
 				{
 					// versioned field
-					SetVersionedField(targetItem, language, version, currentField);
+					if (!SetVersionedField(targetItem, language, version, currentField)) errors = true;
 				}
 			}
 
 			// the third result in the reader is the root item fields.
 			// this has an identical schema to the descendant fields and thus this method can be used to parse it as well.
-			if (!secondPass) IngestFieldData(reader, true);
+			if (!secondPass) return IngestFieldData(reader, true, errors);
+
+			return errors;
 		}
 
-		private void IndexPaths(IList<DilithiumReactor.RootData> rootData)
+		private void IndexPaths(IList<SqlPrecacheStore.RootData> rootData)
 		{
-			DilithiumItemData currentItem;
+			SqlItemData currentItem;
 			IList<Guid> pathItemList;
-			IEnumerable<DilithiumItemData> childList;
+			IEnumerable<SqlItemData> childList;
 
-			var processQueue = new Queue<DilithiumItemData>(_itemsById.Count);
+			var processQueue = new Queue<SqlItemData>(_itemsById.Count);
 
 			// seed the queue with the known roots, setting their paths
 			// all other items will be pathed up based on these
@@ -205,8 +211,8 @@ namespace Unicorn.Data.Dilithium.Data
 
 		private void IndexChildren()
 		{
-			DilithiumItemData currentItem;
-			DilithiumItemData parentItem;
+			SqlItemData currentItem;
+			SqlItemData parentItem;
 			var itemsById = _itemsById;
 
 			// puts the IDs of all children into each item's Children list
@@ -235,9 +241,9 @@ namespace Unicorn.Data.Dilithium.Data
 			return null;
 		}
 
-		private IList<DilithiumItemData> GuidsToItems(IList<Guid> guids)
+		private IList<SqlItemData> GuidsToItems(IList<Guid> guids)
 		{
-			var items = new List<DilithiumItemData>(guids.Count);
+			var items = new List<SqlItemData>(guids.Count);
 
 			foreach (var childId in guids)
 			{
@@ -247,37 +253,39 @@ namespace Unicorn.Data.Dilithium.Data
 			return items;
 		}
 
-		private void SetSharedField(DilithiumItemData targetItem, DilithiumFieldValue currentField, int version, string language)
+		private bool SetSharedField(SqlItemData targetItem, SqlItemFieldValue currentField, int version, string language)
 		{
 			// check for corruption in SQL server tables (field values in wrong table) - shared field should have neither language nor version one or greater (SQL sends version -1 for shared)
 			if (version >= 1)
 			{
-				Log.Error($"[Dilithium] Data corruption in {targetItem.DatabaseName}:{targetItem.Id}! Field {currentField.FieldId} (shared) had a value in the versioned fields table. The field value will be ignored.", this);
-				return;
+				Log.Error($"[Dilithium] Data corruption in {targetItem.DatabaseName}://{{{targetItem.Id}}}! Field {{{currentField.FieldId}}} (shared) had a value in the versioned fields table. The field value will be ignored.", this);
+				return false;
 			}
 
 			if (!string.IsNullOrEmpty(language))
 			{
-				Log.Error($"[Dilithium] Data corruption in {targetItem.DatabaseName}:{targetItem.Id}! Field {currentField.FieldId} (shared) had a value in the unversioned fields table. The field value will be ignored.", this);
-				return;
+				Log.Error($"[Dilithium] Data corruption in {targetItem.DatabaseName}://{{{targetItem.Id}}}! Field {currentField.FieldId} (shared) had a value in the unversioned fields table. The field value will be ignored.", this);
+				return false;
 			}
 
 			targetItem.RawSharedFields.Add(currentField);
+
+			return true;
 		}
 
-		private void SetUnversionedField(DilithiumItemData targetItem, DilithiumFieldValue currentField, int version, string language)
+		private bool SetUnversionedField(SqlItemData targetItem, SqlItemFieldValue currentField, int version, string language)
 		{
 			// check for corruption in SQL server tables (field values in wrong table) - an unversioned field should have a version less than 1 (SQL sends -1 back for unversioned) and a language
 			if (version >= 1)
 			{
-				Log.Error($"[Dilithium] Data corruption in {targetItem.DatabaseName}:{targetItem.Id}! Field {currentField.FieldId} (unversioned) had a value in the versioned fields table. The field value will be ignored.", this);
-				return;
+				Log.Error($"[Dilithium] Data corruption in {targetItem.DatabaseName}://{{{targetItem.Id}}}! Field {currentField.FieldId} (unversioned) had a value in the versioned fields table. The field value will be ignored.", this);
+				return false;
 			}
 
 			if (string.IsNullOrEmpty(language))
 			{
-				Log.Error($"[Dilithium] Data corruption in {targetItem.DatabaseName}:{targetItem.Id}! Field {currentField.FieldId} (unversioned) had a value in the shared fields table. The field value will be ignored.", this);
-				return;
+				Log.Error($"[Dilithium] Data corruption in {targetItem.DatabaseName}://{{{targetItem.Id}}}! Field {currentField.FieldId} (unversioned) had a value in the shared fields table. The field value will be ignored.", this);
+				return false;
 			}
 
 			foreach (var languageFields in targetItem.RawUnversionedFields)
@@ -285,31 +293,33 @@ namespace Unicorn.Data.Dilithium.Data
 				if (languageFields.Language.Name.Equals(language, StringComparison.Ordinal))
 				{
 					languageFields.RawFields.Add(currentField);
-					return;
+					return true;
 				}
 			}
 
-			var newLanguage = new DilithiumItemLanguage();
+			var newLanguage = new SqlItemLanguage();
 			newLanguage.Language = new CultureInfo(language);
 			newLanguage.RawFields.Add(currentField);
 
 			targetItem.RawUnversionedFields.Add(newLanguage);
+
+			return true;
 		}
 
-		private void SetVersionedField(DilithiumItemData targetItem, string language, int version, DilithiumFieldValue currentField)
+		private bool SetVersionedField(SqlItemData targetItem, string language, int version, SqlItemFieldValue currentField)
 		{
 			// check for corruption in SQL server tables (field values in wrong table) - a versioned field should have both a language and a version that's one or greater
 			if (version < 1)
 			{
 				if (string.IsNullOrEmpty(language))
 				{
-					Log.Error($"[Dilithium] Data corruption in {targetItem.DatabaseName}:{targetItem.Id}! Field {currentField.FieldId} (versioned) had a value in the shared fields table. The field value will be ignored.", this);
+					Log.Error($"[Dilithium] Data corruption in {targetItem.DatabaseName}://{{{targetItem.Id}}}! Field {currentField.FieldId} (versioned) had a value in the shared fields table. The field value will be ignored.", this);
 				}
 				else
 				{
-					Log.Error($"[Dilithium] Data corruption in {targetItem.DatabaseName}:{targetItem.Id}! Field {currentField.FieldId} (versioned) had a value in the unversioned fields table. The field value will be ignored.", this);
+					Log.Error($"[Dilithium] Data corruption in {targetItem.DatabaseName}://{{{targetItem.Id}}}! Field {currentField.FieldId} (versioned) had a value in the unversioned fields table. The field value will be ignored.", this);
 				}
-				return;
+				return false;
 			}
 
 			foreach (var versionFields in targetItem.RawVersions)
@@ -317,16 +327,18 @@ namespace Unicorn.Data.Dilithium.Data
 				if (versionFields.Language.Name.Equals(language, StringComparison.Ordinal) && versionFields.VersionNumber == version)
 				{
 					versionFields.RawFields.Add(currentField);
-					return;
+					return true;
 				}
 			}
 
-			var newVersion = new DilithiumItemVersion();
+			var newVersion = new SqlItemVersion();
 			newVersion.Language = new CultureInfo(language);
 			newVersion.VersionNumber = version;
 			newVersion.RawFields.Add(currentField);
 
 			targetItem.RawVersions.Add(newVersion);
+
+			return true;
 		}
 	}
 }
