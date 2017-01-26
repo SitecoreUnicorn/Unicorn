@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Globalization;
 using System.Threading.Tasks;
+using Sitecore.Collections;
 using Sitecore.Data;
 using Sitecore.Data.Managers;
 using Sitecore.Data.Templates;
@@ -139,12 +140,12 @@ namespace Unicorn.Data.Dilithium.Data
 				if (fieldMetadata.IsShared)
 				{
 					// shared field = no version, no language
-					targetItem.RawSharedFields.Add(currentField);
+					SetSharedField(targetItem, currentField, version, language);
 				}
 				else if (fieldMetadata.IsUnversioned)
 				{
 					// unversioned field = no version, with language (version -1 is used as a nonversioned flag)
-					SetUnversionedField(targetItem, language, currentField);
+					SetUnversionedField(targetItem, currentField, version, language);
 				}
 				else
 				{
@@ -244,10 +245,41 @@ namespace Unicorn.Data.Dilithium.Data
 			}
 
 			return items;
-		} 
+		}
 
-		private void SetUnversionedField(DilithiumItemData targetItem, string language, DilithiumFieldValue currentField)
+		private void SetSharedField(DilithiumItemData targetItem, DilithiumFieldValue currentField, int version, string language)
 		{
+			// check for corruption in SQL server tables (field values in wrong table) - shared field should have neither language nor version one or greater (SQL sends version -1 for shared)
+			if (version >= 1)
+			{
+				Log.Error($"[Dilithium] Data corruption in {targetItem.DatabaseName}:{targetItem.Id}! Field {currentField.FieldId} (shared) had a value in the versioned fields table. The field value will be ignored.", this);
+				return;
+			}
+
+			if (!string.IsNullOrEmpty(language))
+			{
+				Log.Error($"[Dilithium] Data corruption in {targetItem.DatabaseName}:{targetItem.Id}! Field {currentField.FieldId} (shared) had a value in the unversioned fields table. The field value will be ignored.", this);
+				return;
+			}
+
+			targetItem.RawSharedFields.Add(currentField);
+		}
+
+		private void SetUnversionedField(DilithiumItemData targetItem, DilithiumFieldValue currentField, int version, string language)
+		{
+			// check for corruption in SQL server tables (field values in wrong table) - an unversioned field should have a version less than 1 (SQL sends -1 back for unversioned) and a language
+			if (version >= 1)
+			{
+				Log.Error($"[Dilithium] Data corruption in {targetItem.DatabaseName}:{targetItem.Id}! Field {currentField.FieldId} (unversioned) had a value in the versioned fields table. The field value will be ignored.", this);
+				return;
+			}
+
+			if (string.IsNullOrEmpty(language))
+			{
+				Log.Error($"[Dilithium] Data corruption in {targetItem.DatabaseName}:{targetItem.Id}! Field {currentField.FieldId} (unversioned) had a value in the shared fields table. The field value will be ignored.", this);
+				return;
+			}
+
 			foreach (var languageFields in targetItem.RawUnversionedFields)
 			{
 				if (languageFields.Language.Name.Equals(language, StringComparison.Ordinal))
@@ -266,6 +298,20 @@ namespace Unicorn.Data.Dilithium.Data
 
 		private void SetVersionedField(DilithiumItemData targetItem, string language, int version, DilithiumFieldValue currentField)
 		{
+			// check for corruption in SQL server tables (field values in wrong table) - a versioned field should have both a language and a version that's one or greater
+			if (version < 1)
+			{
+				if (string.IsNullOrEmpty(language))
+				{
+					Log.Error($"[Dilithium] Data corruption in {targetItem.DatabaseName}:{targetItem.Id}! Field {currentField.FieldId} (versioned) had a value in the unversioned fields table. The field value will be ignored.", this);
+				}
+				else
+				{
+					Log.Error($"[Dilithium] Data corruption in {targetItem.DatabaseName}:{targetItem.Id}! Field {currentField.FieldId} (versioned) had a value in the shared fields table. The field value will be ignored.", this);
+				}
+				return;
+			}
+
 			foreach (var versionFields in targetItem.RawVersions)
 			{
 				if (versionFields.Language.Name.Equals(language, StringComparison.Ordinal) && versionFields.VersionNumber == version)
