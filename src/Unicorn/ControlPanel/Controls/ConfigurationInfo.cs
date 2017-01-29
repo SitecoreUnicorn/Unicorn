@@ -5,7 +5,9 @@ using System.Web.UI;
 using Sitecore.StringExtensions;
 using Unicorn.Configuration;
 using Unicorn.Configuration.Dependencies;
+using Unicorn.Data;
 using Unicorn.Data.DataProvider;
+using Unicorn.Data.Dilithium;
 
 namespace Unicorn.ControlPanel.Controls
 {
@@ -45,15 +47,29 @@ namespace Unicorn.ControlPanel.Controls
 					<span class=""badge""><a href=""#"" data-modal=""{0}"" class=""info"">Show Config</a></span>", modalId);
 			}
 
+			// Transparent Sync badge
 			var dpConfig = _configuration.Resolve<IUnicornDataProviderConfiguration>();
 			if (dpConfig != null && dpConfig.EnableTransparentSync)
 				writer.Write(@"
-					<span class=""badge"">Transparent Sync</span>");
+					<span class=""badge"" title=""Transparent Sync"">TS</span>");
 
+			// Dependent configs badge
 			if (dependents.Any())
 			{
-				writer.Write(@"
-					<span class=""badge"">Dependent ({0})</span>", dependents.Length);
+				writer.Write($@"
+					<span class=""badge"" title=""{dependents.Length} other configuration(s) depend on items in this configuration."">Dep: {dependents.Length}</span>");
+			}
+
+			// Dilithium badge
+			var diSql = ((ConfigurationDataStore) _configuration.Resolve<ISourceDataStore>()).InnerDataStore as DilithiumSitecoreDataStore;
+			var diSfs = ((ConfigurationDataStore)_configuration.Resolve<ITargetDataStore>()).InnerDataStore as DilithiumSerializationFileSystemDataStore;
+			if (diSql != null || diSfs != null)
+			{
+				writer.Write($@"
+					<span class=""badge"" 
+						title=""Uses Dilithium high speed cached data stores.{(diSql != null ? " Direct SQL active." : string.Empty)}{(diSql != null ? " Serialized snapshots active." : string.Empty)}"">
+						Dilithium: {(diSql != null ? " SC" : string.Empty)}{(diSql != null ? " Serialized" : string.Empty)}
+					</span>");
 			}
 
 			if (!configurationHasValidRootPathParents && !configurationHasAnySerializedItems)

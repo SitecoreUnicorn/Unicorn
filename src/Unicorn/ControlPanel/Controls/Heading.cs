@@ -1,5 +1,6 @@
 ﻿using System.Web.UI;
 using Unicorn.ControlPanel.Headings;
+using Unicorn.Data.Dilithium;
 
 namespace Unicorn.ControlPanel.Controls
 {
@@ -19,6 +20,14 @@ namespace Unicorn.ControlPanel.Controls
 			if (_isAuthenticated)
 			{
 				writer.Write($"<p class=\"version\">Version {UnicornVersion.Current} | <a href=\"#\" data-modal=\"options\">Options</a></p>");
+
+				if (ReactorContext.RainbowPrecache != null || ReactorContext.SqlPrecache != null)
+				{
+					writer.Write(@"<p class=""warning"">Dilithium cache context is active. <br><br>
+								Do not sync any Dilithium configurations until the cache has released from the other sync or reserialize operation. 
+								If this remains visible and no operations are in progress this may indicate a bug in Unicorn; 
+								report what you did right before this in an issue on GitHub and then restart your app pool to clear.</p>");
+				}
 
 				writer.Write(@"<div class=""overlay"" id=""options"">
 								<article class=""modal"">
