@@ -44,9 +44,16 @@ namespace Unicorn.Data.Dilithium.Rainbow
 			return null;
 		}
 
-		public void AddItem(RainbowItemData item)
+		public bool AddItem(RainbowItemData item)
 		{
-			_itemsById.Add(item.Id, item);
+			// if multiple configurations contain the same item they may attempt to add the same item ID twice
+			if (!_itemsById.ContainsKey(item.Id))
+			{
+				_itemsById.Add(item.Id, item);
+				return true;
+			}
+
+			return false;
 		}
 
 		public void Ingest()

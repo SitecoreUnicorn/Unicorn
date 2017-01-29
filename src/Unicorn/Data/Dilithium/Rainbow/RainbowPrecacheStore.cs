@@ -93,8 +93,14 @@ namespace Unicorn.Data.Dilithium.Rainbow
 							caches.Add(item.DatabaseName, currentCache = new RainbowDataCache(item.DatabaseName));
 						}
 
-						itemsLoaded++;
-						currentCache.AddItem(new RainbowItemData(item, currentCache));
+						if (currentCache.AddItem(new RainbowItemData(item, currentCache)))
+						{
+							// If different configs have the same item, the item will be 'added' twice in different
+							// snapshots if those configs sync together.
+							// If we did not only count 'new' items the counts shown for items loaded might not match
+							// between DiSql and DiSfs, which might cause undue panic from a user even though it's totally fine internally
+							itemsLoaded++;
+						}
 					}
 				}
 
