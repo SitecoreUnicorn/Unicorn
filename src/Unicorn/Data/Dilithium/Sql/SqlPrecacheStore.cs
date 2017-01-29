@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data.SqlClient;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using Rainbow.Filtering;
@@ -134,10 +135,14 @@ namespace Unicorn.Data.Dilithium.Sql
 				// we must remove /sitecore/templates/foo because Dilithium is strictly descendants and follows no exclusions)
 				for (var index = allPredicateRoots.Count - 1; index >= 0; index--)
 				{
-					var compareAgainst = allPredicateRoots[index].Path + "/";
+					var compareAgainstItem = allPredicateRoots[index];
+					var compareAgainstPath = compareAgainstItem.Path + "/";
 					for (var longerIndex = allPredicateRoots.Count - 1; longerIndex >= 0; longerIndex--)
 					{
-						if (allPredicateRoots[longerIndex].Path.StartsWith(compareAgainst, StringComparison.OrdinalIgnoreCase))
+						var longerIndexItem = allPredicateRoots[longerIndex];
+
+						if (longerIndexItem.DatabaseName.Equals(compareAgainstItem.DatabaseName) &&
+							longerIndexItem.Path.StartsWith(compareAgainstPath, StringComparison.OrdinalIgnoreCase))
 						{
 							allPredicateRoots.RemoveAt(longerIndex);
 
