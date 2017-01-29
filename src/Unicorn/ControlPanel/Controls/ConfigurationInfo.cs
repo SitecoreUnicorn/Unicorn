@@ -61,14 +61,14 @@ namespace Unicorn.ControlPanel.Controls
 			}
 
 			// Dilithium badge
-			var diSql = ((ConfigurationDataStore) _configuration.Resolve<ISourceDataStore>()).InnerDataStore as DilithiumSitecoreDataStore;
-			var diSfs = ((ConfigurationDataStore)_configuration.Resolve<ITargetDataStore>()).InnerDataStore as DilithiumSerializationFileSystemDataStore;
-			if (diSql != null || diSfs != null)
+			var diSql = _configuration.EnablesDilithiumSql();
+			var diSfs = _configuration.EnablesDilithiumSfs();
+			if (diSql || diSfs)
 			{
 				writer.Write($@"
 					<span class=""badge"" 
-						title=""Uses Dilithium high speed cached data stores.{(diSql != null ? " Direct SQL active." : string.Empty)}{(diSql != null ? " Serialized snapshots active." : string.Empty)}"">
-						Dilithium: {(diSql != null ? " SC" : string.Empty)}{(diSql != null ? " Serialized" : string.Empty)}
+						title=""Uses Dilithium high speed cached data stores.{(diSql ? " Direct SQL active." : string.Empty)}{(diSfs ? " Serialized snapshots active." : string.Empty)}"">
+						Dilithium: {(diSql ? " SC" : string.Empty)}{(diSfs ? " Serialized" : string.Empty)}
 					</span>");
 			}
 

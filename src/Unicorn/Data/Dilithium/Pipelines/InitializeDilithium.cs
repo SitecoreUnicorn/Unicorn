@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using Unicorn.Data.Dilithium.Rainbow;
 using Unicorn.Data.Dilithium.Sql;
@@ -11,7 +12,15 @@ namespace Unicorn.Data.Dilithium.Pipelines
 	{
 		public void Process(UnicornOperationStartPipelineArgs args)
 		{
-			args.Logger.Info($"Dilithium is precaching items in {args.Configurations.Length} configurations.");
+			var configCount = args.Configurations.Count(config => config.EnablesDilithium());
+
+			if (configCount == 0)
+			{
+				args.Logger.Info("No current configurations enabled Dilithium. Skipping precache.");
+				return;
+			}
+
+			args.Logger.Info($"Precaching items in {configCount} Dilithium-enabled configuration(s).");
 
 			var sw = new Stopwatch();
 			sw.Start();
@@ -34,7 +43,7 @@ namespace Unicorn.Data.Dilithium.Pipelines
 
 					if (!initData.LoadedItems)
 					{
-						args.Logger.Debug("No current configurations enabled DilithiumSitecoreDataStore. Sitecore APIs will be used.");
+						args.Logger.Debug("[SQL] No current configurations enabled Dilithium SQL. Precache disabled.");
 					}
 					else
 					{
@@ -43,7 +52,7 @@ namespace Unicorn.Data.Dilithium.Pipelines
 
 					if (initData.FoundConsistencyErrors)
 					{
-						args.Logger.Warn("Detected field storage corruption in the Sitecore database. See the Sitecore logs for details.");
+						args.Logger.Warn("[SQL] Detected field storage corruption in the Sitecore database. See the Sitecore logs for details.");
 					}
 
 					ReactorContext.SqlPrecache = sqlPrecache;
@@ -67,7 +76,7 @@ namespace Unicorn.Data.Dilithium.Pipelines
 
 					if (!initData.LoadedItems)
 					{
-						args.Logger.Debug("No current configurations enabled DilithiumSfsDataStore. Rainbow APIs will be used.");
+						args.Logger.Debug("[Serialized] No current configurations enabled Dilithium Serialized. Precache disabled.");
 					}
 					else
 					{

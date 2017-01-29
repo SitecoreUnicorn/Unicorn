@@ -118,6 +118,7 @@
     <Compile Include="Data\DataProvider\FieldChangeParser.cs" />
     <Compile Include="Data\DataProvider\ItemChangeApplyingItemData.cs" />
     <Compile Include="Data\DataProvider\IUnicornDataProviderConfiguration.cs" />
+    <Compile Include="Data\Dilithium\DilithiumExtensions.cs" />
     <Compile Include="Data\Dilithium\DilithiumSerializationFileSystemDataStore.cs" />
     <Compile Include="Data\Dilithium\Rainbow\RainbowItemData.cs" />
     <Compile Include="Data\Dilithium\Rainbow\RainbowDataCache.cs" />

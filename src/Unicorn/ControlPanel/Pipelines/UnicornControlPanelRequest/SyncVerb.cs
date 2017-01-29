@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Text;
 using System.Web;
 using Kamsar.WebConsole;
 using Sitecore.Pipelines;
@@ -56,7 +57,24 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 					{
 						try
 						{
-							logger.Info(configuration.Name + " is being synced.");
+							var startStatement = new StringBuilder();
+							startStatement.Append(configuration.Name);
+							startStatement.Append(" is being synced");
+
+							if (configuration.EnablesDilithium())
+							{
+								startStatement.Append(" with Dilithium");
+								if (configuration.EnablesDilithiumSql()) startStatement.Append(" SQL");
+								if (configuration.EnablesDilithiumSql() && configuration.EnablesDilithiumSfs()) startStatement.Append(" +");
+								if (configuration.EnablesDilithiumSfs()) startStatement.Append(" Serialized");
+								startStatement.Append(" enabled.");
+							}
+							else
+							{
+								startStatement.Append(".");
+							}
+
+							logger.Info(startStatement.ToString());
 
 							using (new TransparentSyncDisabler())
 							{
