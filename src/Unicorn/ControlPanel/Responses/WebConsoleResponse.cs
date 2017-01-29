@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.Timers;
 using System.Web;
@@ -73,11 +74,14 @@ namespace Unicorn.ControlPanel.Responses
 			progress.ReportTransientStatus("Executing.");
 
 			var heartbeat = new Timer(3000);
-			var startTime = DateTime.Now;
+
+			var timer = new Stopwatch();
+			timer.Start();
+
 			heartbeat.AutoReset = true;
 			heartbeat.Elapsed += (sender, args) =>
 			{
-				var elapsed = Math.Round((args.SignalTime - startTime).TotalSeconds);
+				var elapsed = Math.Round(timer.ElapsedMilliseconds/1000d);
 
 				try
 				{
@@ -104,10 +108,12 @@ namespace Unicorn.ControlPanel.Responses
 				heartbeat.Stop();
 			}
 
+			timer.Stop();
+
 			progress.Report(100);
-			progress.ReportTransientStatus("Completed.");
+			progress.ReportTransientStatus("Operation completed.");
 			progress.ReportStatus(_isAutomatedTool ? "\r\n" : "<br>");
-			progress.ReportStatus(_isAutomatedTool ? "Completed." : "Completed. Want to <a href=\"?verb=\">return to the control panel?</a>");
+			progress.ReportStatus(_isAutomatedTool ? $"Completed in {timer.ElapsedMilliseconds}ms." : $"Operation completed in {timer.ElapsedMilliseconds}ms. Want to <a href=\"?verb=\">return to the control panel?</a>");
 		}
 
 		private class CustomStyledHtml5WebConsole : Html5WebConsole

@@ -150,8 +150,8 @@
     <Compile Include="Pipelines\UnicornReserializeComplete\UnicornReserializeCompletePipelineArgs.cs" />
     <Compile Include="Pipelines\UnicornSyncComplete\DictionaryCacheClearer.cs" />
     <Compile Include="Pipelines\UnicornSyncComplete\SyncedItemPostProcessor.cs" />
-    <Compile Include="Pipelines\UnicornOperationStart\IUnicornSyncStartProcessor.cs" />
-    <Compile Include="Pipelines\UnicornOperationStart\UnicornSyncStartPipelineArgs.cs" />
+    <Compile Include="Pipelines\UnicornOperationStart\IUnicornOperationStartProcessor.cs" />
+    <Compile Include="Pipelines\UnicornOperationStart\UnicornOperationStartPipelineArgs.cs" />
     <Compile Include="Predicates\Exclusions\ChildrenOfPathBasedPresetTreeExclusion.cs" />
     <Compile Include="Predicates\Exclusions\PathBasedPresetTreeExclusion.cs" />
     <Compile Include="Predicates\Exclusions\PathTool.cs" />
