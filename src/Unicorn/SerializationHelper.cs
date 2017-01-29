@@ -208,7 +208,7 @@ namespace Unicorn
 			}
 			finally
 			{
-				if (dilithiumWasStarted) ReactorContext.Dispose();
+				if (!dilithiumWasStarted) ReactorContext.Dispose();
 			}
 
 			CorePipeline.Run("unicornSyncComplete", new UnicornSyncCompletePipelineArgs(configuration, syncStartTimestamp));
