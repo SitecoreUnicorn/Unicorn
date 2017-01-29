@@ -21,7 +21,7 @@ namespace Unicorn.ControlPanel.Controls
 			{
 				writer.Write($"<p class=\"version\">Version {UnicornVersion.Current} | <a href=\"#\" data-modal=\"options\">Options</a></p>");
 
-				if (ReactorContext.RainbowPrecache != null || ReactorContext.SqlPrecache != null)
+				if (ReactorContext.IsActive)
 				{
 					writer.Write(@"<p class=""warning"">Dilithium cache context is active. <br><br>
 								Do not sync any Dilithium configurations until the cache has released from the other sync or reserialize operation. 

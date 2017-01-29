@@ -22,12 +22,12 @@ namespace Unicorn.Data.Dilithium.Rainbow
 
 		public int Count => _itemsById.Count;
 
-		public IEnumerable<RainbowItemData> GetChildren(RainbowItemData item)
+		public IList<RainbowItemData> GetChildren(RainbowItemData item)
 		{
 			return GuidsToItems(item.Children);
 		}
 
-		public IEnumerable<RainbowItemData> GetByPath(string path)
+		public IList<RainbowItemData> GetByPath(string path)
 		{
 			IList<RainbowItemData> itemsAtPath;
 

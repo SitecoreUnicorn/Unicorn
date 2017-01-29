@@ -9,6 +9,8 @@ namespace Unicorn.Data.Dilithium
 		public static SqlPrecacheStore SqlPrecache { get; set; }
 		public static RainbowPrecacheStore RainbowPrecache { get; set; }
 
+		public static bool IsActive => SqlPrecache != null || RainbowPrecache != null;
+
 		public static void Dispose()
 		{
 			if (SqlPrecache != null)

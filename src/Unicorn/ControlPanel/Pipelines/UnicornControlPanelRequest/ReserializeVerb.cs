@@ -39,7 +39,7 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 
 			try
 			{
-				var startArgs = new UnicornOperationStartPipelineArgs(configurations, additionalLogger);
+				var startArgs = new UnicornOperationStartPipelineArgs(OperationType.FullReserialize, configurations, additionalLogger, null);
 				CorePipeline.Run("unicornReserializeStart", startArgs);
 
 				foreach (var configuration in configurations)
@@ -71,7 +71,7 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 								int index = 1;
 								foreach (var root in roots)
 								{
-									helper.DumpTree(root, false, new[] {configuration});
+									helper.ReserializeTree(root, false, new[] {configuration});
 									WebConsoleUtility.SetTaskProgress(progress, taskNumber, configurations.Length, (int) ((index/(double) roots.Length)*100));
 									index++;
 								}

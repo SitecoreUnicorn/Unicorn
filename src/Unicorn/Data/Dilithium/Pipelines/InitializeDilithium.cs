@@ -16,13 +16,21 @@ namespace Unicorn.Data.Dilithium.Pipelines
 			var sw = new Stopwatch();
 			sw.Start();
 
+			if (ReactorContext.IsActive)
+			{
+				args.Logger.Warn("Dilithium cache context was active, which probably means another Unicorn operation is currently running.");
+				args.Logger.Warn("In order to prevent corruption of both operations, we are disabling Dilithium for both operations instead to ensure consistency.");
+				ReactorContext.Dispose();
+				return;
+			}
+
 			var sourceItems = Task.Run(() =>
 			{
 				using (new UnicornOperationContext())
 				{
 					var sqlPrecache = new SqlPrecacheStore(args.Configurations);
 
-					var initData = sqlPrecache.Initialize(false);
+					var initData = args.PartialOperationRoot != null ? sqlPrecache.Initialize(false, args.PartialOperationRoot) : sqlPrecache.Initialize(false);
 
 					if (!initData.LoadedItems)
 					{
@@ -47,6 +55,10 @@ namespace Unicorn.Data.Dilithium.Pipelines
 
 			var targetItems = Task.Run(() =>
 			{
+				// there's little point to snapshotting when we're doing a partial sync/partial reserialize
+				// as the tree is probably quite a small chunk of the whole. So we skip out here.
+				if (args.PartialOperationRoot != null) return 0;
+
 				using (new UnicornOperationContext())
 				{
 					var rainbowPrecache = new RainbowPrecacheStore(args.Configurations);

@@ -30,12 +30,12 @@ namespace Unicorn.Data.Dilithium.Sql
 		public Database Database { get; }
 		public int Count => _itemsById.Count;
 
-		public IEnumerable<SqlItemData> GetChildren(SqlItemData item)
+		public IList<SqlItemData> GetChildren(SqlItemData item)
 		{
 			return GuidsToItems(item.Children);
 		}
 
-		public IEnumerable<SqlItemData> GetByPath(string path)
+		public IList<SqlItemData> GetByPath(string path)
 		{
 			IList<Guid> itemsAtPath;
 

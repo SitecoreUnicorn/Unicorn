@@ -27,7 +27,7 @@ namespace Unicorn.UI.Commands
 
 			var itemData = new ItemData(item);
 
-			var result = _helper.DumpItem(itemData);
+			var result = _helper.ReserializeItem(itemData);
 
 			if (!result)
 			{

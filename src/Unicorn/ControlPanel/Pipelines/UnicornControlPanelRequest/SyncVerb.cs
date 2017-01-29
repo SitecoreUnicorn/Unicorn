@@ -27,7 +27,7 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 
 		protected SyncVerb(string verb) : base(verb)
 		{
-			
+
 		}
 
 		protected override IResponse CreateResponse(UnicornControlPanelRequestPipelineArgs args)
@@ -42,56 +42,60 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 
 			bool success = true;
 
-			var startArgs = new UnicornOperationStartPipelineArgs(configurations, additionalLogger);
-			CorePipeline.Run("unicornSyncStart", startArgs);
-
-			foreach (var configuration in configurations)
+			try
 			{
-				var logger = configuration.Resolve<ILogger>();
-				var helper = configuration.Resolve<SerializationHelper>();
+				var startArgs = new UnicornOperationStartPipelineArgs(OperationType.FullSync, configurations, additionalLogger, null);
+				CorePipeline.Run("unicornSyncStart", startArgs);
 
-				using (new LoggingContext(additionalLogger, configuration))
+				foreach (var configuration in configurations)
 				{
-					try
+					var logger = configuration.Resolve<ILogger>();
+					var helper = configuration.Resolve<SerializationHelper>();
+
+					using (new LoggingContext(additionalLogger, configuration))
 					{
-						logger.Info(configuration.Name + " is being synced.");
-
-						using (new TransparentSyncDisabler())
+						try
 						{
-							var pathResolver = configuration.Resolve<PredicateRootPathResolver>();
+							logger.Info(configuration.Name + " is being synced.");
 
-							var roots = pathResolver.GetRootSerializedItems();
-
-							var index = 0;
-							helper.SyncTree(
-							configuration: configuration, 
-							rootLoadedCallback: item =>
+							using (new TransparentSyncDisabler())
 							{
-								WebConsoleUtility.SetTaskProgress(progress, taskNumber, configurations.Length, (int)((index / (double)roots.Length) * 100));
-								index++;
-							}, 
-							runSyncStartPipeline: false, 
-							roots: roots);
+								var predicate = configuration.Resolve<IPredicate>();
+
+								var roots = predicate.GetRootPaths();
+
+								var index = 0;
+								helper.SyncTree(
+									configuration: configuration,
+									rootLoadedCallback: item =>
+									{
+										WebConsoleUtility.SetTaskProgress(progress, taskNumber, configurations.Length, (int) ((index / (double) roots.Length) * 100));
+										index++;
+									},
+									runSyncStartPipeline: false
+								);
+							}
+						}
+						catch (DeserializationSoftFailureAggregateException ex)
+						{
+							logger.Error(ex);
+							// allow execution to continue, because the exception was non-fatal
+						}
+						catch (Exception ex)
+						{
+							logger.Error(ex);
+							success = false;
+							break;
 						}
 					}
-					catch (DeserializationSoftFailureAggregateException ex)
-					{
-						logger.Error(ex);
-						// allow execution to continue, because the exception was non-fatal
-					}
-					catch (Exception ex)
-					{
-						logger.Error(ex);
-						ReactorContext.Dispose();
-						success = false;
-						break;
-					}
+
+					taskNumber++;
 				}
-
-				taskNumber++;
 			}
-
-			ReactorContext.Dispose();
+			finally
+			{
+				ReactorContext.Dispose();
+			}
 
 			try
 			{
@@ -116,7 +120,7 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 			{
 				targetConfigurations = targetConfigurations.Where(configuration => !configuration.Resolve<IUnicornDataProviderConfiguration>().EnableTransparentSync).ToArray();
 
-				if(targetConfigurations.Length == 0) Log.Warn("[Unicorn] All configurations were transparent sync and skipTransparentConfigs was active. Syncing nothing.", this);
+				if (targetConfigurations.Length == 0) Log.Warn("[Unicorn] All configurations were transparent sync and skipTransparentConfigs was active. Syncing nothing.", this);
 			}
 
 			return targetConfigurations;

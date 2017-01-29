@@ -56,7 +56,7 @@ namespace Unicorn.UI.Commands
 			{
 				logger.Info("Command Sync: Processing partial Unicorn configuration " + configuration.Name + " under " + itemData.Path);
 
-				helper.SyncTree(configuration, roots: new[] { itemData });
+				helper.SyncTree(configuration, partialSyncRoot: itemData);
 
 				logger.Info("Command Sync: Completed syncing partial Unicorn configuration " + configuration.Name + " under " + itemData.Path);
 			}

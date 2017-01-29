@@ -64,8 +64,9 @@ namespace Unicorn.Data.Dilithium.Sql
 		/// Sets up Dilithium's cache for all configurations passed in, if they use the DilithiumDataStore.
 		/// </summary>
 		/// <param name="force">Force reinitialization (reread from SQL)</param>
+		/// <param name="specificRoots">If passed, overrides the predicate roots in the configurations registered. Used for partial sync/partial reserialize.</param>
 		/// <returns>True if initialized successfully (or if already inited), false if no configurations were using Dilithium</returns>
-		public InitResult Initialize(bool force)
+		public InitResult Initialize(bool force, params IItemData[] specificRoots)
 		{
 			if (Initialized && !force) return new InitResult(false);
 
@@ -76,7 +77,9 @@ namespace Unicorn.Data.Dilithium.Sql
 				var timer = new Stopwatch();
 				timer.Start();
 
-				var allPredicateRoots = new List<TreeRoot>();
+				// if specific roots are passed we init the collection with them
+				var allPredicateRoots = new List<TreeRoot>(specificRoots.Select(root => new TreeRoot(string.Empty, root.Path, root.DatabaseName)));
+
 				HashSet<Guid> intersectedIgnoredFields = null;
 
 				IPredicate predicate;
@@ -89,9 +92,13 @@ namespace Unicorn.Data.Dilithium.Sql
 					sourceDataStore = configuration.Resolve<ISourceDataStore>() as ConfigurationDataStore;
 					if (!(sourceDataStore?.InnerDataStore is DilithiumSitecoreDataStore)) continue;
 
-					// add configuration's predicate roots to the pile of dilithium store roots
-					predicate = configuration.Resolve<IPredicate>();
-					allPredicateRoots.AddRange(predicate.GetRootPaths());
+					// unless specific roots are passed we add all predicate roots
+					if (specificRoots.Length == 0)
+					{
+						// add configuration's predicate roots to the pile of dilithium store roots
+						predicate = configuration.Resolve<IPredicate>();
+						allPredicateRoots.AddRange(predicate.GetRootPaths());
+					}
 
 					// acquire list of ignored fields for configuration
 					fieldFilter = configuration.Resolve<IEnumerableFieldFilter>();

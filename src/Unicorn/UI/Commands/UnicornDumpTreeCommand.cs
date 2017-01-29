@@ -27,7 +27,7 @@ namespace Unicorn.UI.Commands
 
 			var itemData = new ItemData(item);
 
-			var result = _helper.DumpTree(itemData, true);
+			var result = _helper.ReserializeTree(itemData, true);
 
 			if (!result)
 			{
