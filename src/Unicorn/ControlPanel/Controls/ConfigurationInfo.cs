@@ -68,7 +68,7 @@ namespace Unicorn.ControlPanel.Controls
 				writer.Write($@"
 					<span class=""badge"" 
 						title=""Uses Dilithium high speed cached data stores.{(diSql ? " Direct SQL active." : string.Empty)}{(diSfs ? " Serialized snapshots active." : string.Empty)}"">
-						Dilithium: {(diSql ? " SC" : string.Empty)}{(diSfs ? " Serialized" : string.Empty)}
+						Dilithium: {(diSql ? " SQL" : string.Empty)}{(diSfs ? " Serialized" : string.Empty)}
 					</span>");
 			}
 
