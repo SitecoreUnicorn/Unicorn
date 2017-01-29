@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Rainbow.Formatting;
 using Rainbow.Model;
 using Rainbow.Storage;
+using Unicorn.Data.Dilithium.Rainbow;
 
 namespace Unicorn.Data.Dilithium
 {
@@ -36,7 +37,8 @@ namespace Unicorn.Data.Dilithium
 
 		public override IEnumerable<IItemData> GetChildren(IItemData parentItem)
 		{
-			if (ReactorContext.RainbowPrecache != null) return ReactorContext.RainbowPrecache.GetChildren(parentItem);
+			// the check for RainbowItemData prevents infinite recursion when a YAML item goes to get its children from this data store :D
+			if (ReactorContext.RainbowPrecache != null && parentItem is RainbowItemData) return ReactorContext.RainbowPrecache.GetChildren(parentItem);
 
 			return base.GetChildren(parentItem);
 		}
