@@ -110,15 +110,15 @@ namespace Unicorn.Data.Dilithium.Rainbow
 					cache.Value.Ingest();
 				}
 
+				Initialized = true;
+				_itemCores = caches;
+
 				if (caches.Count == 0)
 				{
 					return new InitResult(false);
 				}
 
 				timer.Stop();
-
-				Initialized = true;
-				_itemCores = caches;
 
 				return new InitResult(true, false, itemsLoaded, (int)timer.ElapsedMilliseconds);
 			}
