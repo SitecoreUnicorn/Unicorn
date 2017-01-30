@@ -10,6 +10,7 @@ using Sitecore.Data.Events;
 using Sitecore.Diagnostics;
 using Unicorn.Data;
 using Unicorn.Data.DataProvider;
+using Unicorn.Data.Dilithium;
 using Unicorn.Evaluators;
 using Unicorn.Predicates;
 // ReSharper disable TooWideLocalVariableScope
@@ -145,7 +146,12 @@ namespace Unicorn.Loader
 			var included = Predicate.Includes(root);
 			if (!included.IsIncluded)
 			{
-				Logger.SkippedItemPresentInSerializationProvider(root, Predicate.FriendlyName, TargetDataStore.GetType().Name, included.Justification ?? string.Empty);
+				if (!ReactorContext.IsActive)
+				{
+					// we skip this when Dilithium is active because it's entirely probable that another config, containing ignored children, may also be in the cache - so we cannot guarantee this log message being accurate.
+					Logger.SkippedItemPresentInSerializationProvider(root, Predicate.FriendlyName, TargetDataStore.GetType().Name, included.Justification ?? string.Empty);
+				}
+
 				return;
 			}
 
@@ -299,7 +305,11 @@ namespace Unicorn.Loader
 
 			if (!included.IsIncluded)
 			{
-				Logger.SkippedItemPresentInSerializationProvider(serializedItemData, Predicate.FriendlyName, TargetDataStore.FriendlyName, included.Justification ?? string.Empty);
+				if (!ReactorContext.IsActive)
+				{
+					// we skip this when Dilithium is active because it's entirely probable that another config, containing ignored children, may also be in the cache - so we cannot guarantee this log message being accurate.
+					Logger.SkippedItemPresentInSerializationProvider(serializedItemData, Predicate.FriendlyName, TargetDataStore.FriendlyName, included.Justification ?? string.Empty);
+				}
 				return new ItemLoadResult(ItemLoadStatus.Skipped);
 			}
 
