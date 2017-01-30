@@ -64,7 +64,7 @@ namespace Unicorn.Data.Dilithium.Rainbow
 
 		private void IndexPaths()
 		{
-			var pathIndex = new Dictionary<string, IList<RainbowItemData>>(StringComparer.Ordinal);
+			var pathIndex = new Dictionary<string, IList<RainbowItemData>>(StringComparer.OrdinalIgnoreCase);
 			var itemsById = _itemsById;
 			RainbowItemData currentItem;
 			IList<RainbowItemData> pathItemList;

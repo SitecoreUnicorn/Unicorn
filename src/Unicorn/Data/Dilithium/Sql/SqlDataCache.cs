@@ -183,7 +183,7 @@ namespace Unicorn.Data.Dilithium.Sql
 				processQueue.Enqueue(currentItem);
 			}
 
-			var pathIndex = new Dictionary<string, IList<Guid>>(StringComparer.Ordinal);
+			var pathIndex = new Dictionary<string, IList<Guid>>(StringComparer.OrdinalIgnoreCase);
 
 			while (processQueue.Count > 0)
 			{
