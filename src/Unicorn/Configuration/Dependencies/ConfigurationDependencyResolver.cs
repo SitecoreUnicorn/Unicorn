@@ -14,6 +14,7 @@ namespace Unicorn.Configuration.Dependencies
 		private IConfiguration[] _dependents;
 		private IConfiguration[] _allConfigurations;
 		private readonly IConfiguration _configuration;
+		protected readonly object SyncLock = new object();
 
 		public ConfigurationDependencyResolver(IConfiguration configuration)
 		{
@@ -44,14 +45,20 @@ namespace Unicorn.Configuration.Dependencies
 		/// </summary>
 		private IConfigurationDependency[] ResolveDependencies()
 		{
-			if (DependencyCache.ContainsKey(_configuration))
-				return DependencyCache[_configuration];
+			IConfigurationDependency[] result;
 
-			var dependencies = GetDependencies(_configuration);
+			if (DependencyCache.TryGetValue(_configuration, out result)) return result;
 
-			DependencyCache.Add(_configuration, dependencies);
+			lock (SyncLock)
+			{
+				if (DependencyCache.TryGetValue(_configuration, out result)) return result;
 
-			return dependencies;
+				var dependencies = GetDependencies(_configuration);
+
+				DependencyCache.Add(_configuration, dependencies);
+
+				return dependencies;
+			}
 		}
 
 		/// <summary>
