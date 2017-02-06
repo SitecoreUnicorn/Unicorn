@@ -36,6 +36,9 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Cognifide.PowerShell">
+      <HintPath>..\..\lib\Cognifide.PowerShell.dll</HintPath>
+    </Reference>
     <Reference Include="Kamsar.WebConsole, Version=1.2.2.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\packages\Kamsar.WebConsole.1.2.2.0\lib\net40\Kamsar.WebConsole.dll</HintPath>
@@ -65,6 +68,7 @@
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Management.Automation, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" />
     <Reference Include="System.Web" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
@@ -73,6 +77,7 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="ConfigurationExtensions.cs" />
     <Compile Include="Configuration\Dependencies\ImplicitConfigurationDependency.cs" />
     <Compile Include="Configuration\Dependencies\InterconfigurationDependencyResolver.cs" />
     <Compile Include="Configuration\Dependencies\ConfigurationDependencyResolver.cs" />
@@ -152,6 +157,8 @@
     <Compile Include="Pipelines\UnicornSyncComplete\SyncedItemPostProcessor.cs" />
     <Compile Include="Pipelines\UnicornOperationStart\IUnicornOperationStartProcessor.cs" />
     <Compile Include="Pipelines\UnicornOperationStart\UnicornOperationStartPipelineArgs.cs" />
+    <Compile Include="PowerShell\PowershellProgressStatus.cs" />
+    <Compile Include="PowerShell\SyncUnicornConfigurationCommand.cs" />
     <Compile Include="Predicates\Exclusions\ChildrenOfPathBasedPresetTreeExclusion.cs" />
     <Compile Include="Predicates\Exclusions\PathBasedPresetTreeExclusion.cs" />
     <Compile Include="Predicates\Exclusions\PathTool.cs" />
@@ -254,6 +261,7 @@
     <None Include="Standard Config Files\Unicorn.Dilithium.config">
       <SubType>Designer</SubType>
     </None>
+    <None Include="Standard Config Files\Unicorn.PowerShell.config" />
     <None Include="Standard Config Files\Unicorn.zSharedSecret.config.example">
       <SubType>Designer</SubType>
     </None>

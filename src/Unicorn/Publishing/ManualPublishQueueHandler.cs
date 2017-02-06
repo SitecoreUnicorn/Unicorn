@@ -6,6 +6,7 @@ using Sitecore.Data;
 using Sitecore.Data.Items;
 using Sitecore.Publishing;
 using Sitecore.Publishing.Pipelines.Publish;
+using Unicorn.Logging;
 
 namespace Unicorn.Publishing
 {
@@ -24,19 +25,20 @@ namespace Unicorn.Publishing
 
 		public static bool HasItemsToPublish => ManuallyAddedCandidates.Count > 0;
 
-		public static bool PublishQueuedItems(Item triggerItem, Database[] targets, IProgressStatus progress = null)
+		public static bool PublishQueuedItems(Item triggerItem, Database[] targets, ILogger logger = null)
 		{
 			if (ManuallyAddedCandidates.Count == 0) return false;
 
 			foreach (var database in targets)
 			{
-				progress?.ReportStatus("> Publishing {0} synced item{2} in queue to {1}", MessageType.Debug, ManuallyAddedCandidates.Count, database.Name, ManuallyAddedCandidates.Count == 1 ? string.Empty : "s");
+				var suffix = ManuallyAddedCandidates.Count == 1 ? string.Empty : "s";
+				logger?.Debug($"> Publishing {ManuallyAddedCandidates.Count} synced item{suffix} in queue to {database.Name}");
 
 				var publishOptions = new PublishOptions(triggerItem.Database, database, PublishMode.SingleItem, triggerItem.Language, DateTime.UtcNow) { RootItem = triggerItem, CompareRevisions = false, RepublishAll = true };
 
 				var result = new Publisher(publishOptions, triggerItem.Database.Languages).PublishWithResult();
 
-				progress?.ReportStatus("> Published synced items to {0} (New: {1}, Updated: {2}, Deleted: {3} Skipped: {4})", MessageType.Debug, database.Name, result.Statistics.Created, result.Statistics.Updated, result.Statistics.Deleted, result.Statistics.Skipped);
+				logger?.Debug($"> Published synced items to {database.Name} (New: {result.Statistics.Created}, Updated: {result.Statistics.Updated}, Deleted: {result.Statistics.Deleted} Skipped: {result.Statistics.Skipped})");
 			}
 
 			// clear the queue after we publish

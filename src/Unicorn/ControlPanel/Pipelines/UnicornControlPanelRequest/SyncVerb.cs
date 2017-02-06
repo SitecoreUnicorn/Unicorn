@@ -22,13 +22,15 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 {
 	public class SyncVerb : UnicornControlPanelRequestPipelineProcessor
 	{
-		public SyncVerb() : this("Sync")
+		private readonly SerializationHelper _helper;
+
+		public SyncVerb() : this("Sync", new SerializationHelper())
 		{
 		}
 
-		protected SyncVerb(string verb) : base(verb)
+		protected SyncVerb(string verb, SerializationHelper helper) : base(verb)
 		{
-
+			_helper = helper;
 		}
 
 		protected override IResponse CreateResponse(UnicornControlPanelRequestPipelineArgs args)
@@ -39,91 +41,8 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 		protected virtual void Process(IProgressStatus progress, ILogger additionalLogger)
 		{
 			var configurations = ResolveConfigurations();
-			int taskNumber = 1;
 
-			bool success = true;
-
-			try
-			{
-				var startArgs = new UnicornOperationStartPipelineArgs(OperationType.FullSync, configurations, additionalLogger, null);
-				CorePipeline.Run("unicornSyncStart", startArgs);
-
-				foreach (var configuration in configurations)
-				{
-					var logger = configuration.Resolve<ILogger>();
-					var helper = configuration.Resolve<SerializationHelper>();
-
-					using (new LoggingContext(additionalLogger, configuration))
-					{
-						try
-						{
-							var startStatement = new StringBuilder();
-							startStatement.Append(configuration.Name);
-							startStatement.Append(" is being synced");
-
-							if (configuration.EnablesDilithium())
-							{
-								startStatement.Append(" with Dilithium");
-								if (configuration.EnablesDilithiumSql()) startStatement.Append(" SQL");
-								if (configuration.EnablesDilithiumSql() && configuration.EnablesDilithiumSfs()) startStatement.Append(" +");
-								if (configuration.EnablesDilithiumSfs()) startStatement.Append(" Serialized");
-								startStatement.Append(" enabled.");
-							}
-							else
-							{
-								startStatement.Append(".");
-							}
-
-							logger.Info(startStatement.ToString());
-
-							using (new TransparentSyncDisabler())
-							{
-								var predicate = configuration.Resolve<IPredicate>();
-
-								var roots = predicate.GetRootPaths();
-
-								var index = 0;
-								helper.SyncTree(
-									configuration: configuration,
-									rootLoadedCallback: item =>
-									{
-										WebConsoleUtility.SetTaskProgress(progress, taskNumber, configurations.Length, (int) ((index / (double) roots.Length) * 100));
-										index++;
-									},
-									runSyncStartPipeline: false
-								);
-							}
-						}
-						catch (DeserializationSoftFailureAggregateException ex)
-						{
-							logger.Error(ex);
-							// allow execution to continue, because the exception was non-fatal
-						}
-						catch (Exception ex)
-						{
-							logger.Error(ex);
-							success = false;
-							break;
-						}
-					}
-
-					taskNumber++;
-				}
-			}
-			finally
-			{
-				ReactorContext.Dispose();
-			}
-
-			try
-			{
-				CorePipeline.Run("unicornSyncEnd", new UnicornSyncEndPipelineArgs(progress, success, configurations));
-			}
-			catch (Exception exception)
-			{
-				Log.Error("Error occurred in unicornSyncEnd pipeline.", exception);
-				progress.ReportException(exception);
-			}
+			_helper.SyncConfigurations(configurations, progress, additionalLogger);
 		}
 
 		protected virtual IConfiguration[] ResolveConfigurations()
@@ -136,7 +55,7 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 			var skipTransparent = HttpContext.Current.Request.QueryString["skipTransparentConfigs"];
 			if (skipTransparent == "1")
 			{
-				targetConfigurations = targetConfigurations.Where(configuration => !configuration.Resolve<IUnicornDataProviderConfiguration>().EnableTransparentSync).ToArray();
+				targetConfigurations = targetConfigurations.SkipTransparentSync().ToArray();
 
 				if (targetConfigurations.Length == 0) Log.Warn("[Unicorn] All configurations were transparent sync and skipTransparentConfigs was active. Syncing nothing.", this);
 			}

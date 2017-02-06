@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using Kamsar.WebConsole;
 using Rainbow.Model;
 using Sitecore.Caching;
+using Sitecore.Diagnostics;
 using Sitecore.Pipelines;
 using Sitecore.StringExtensions;
 using Unicorn.Configuration;
+using Unicorn.ControlPanel;
 using Unicorn.Data;
 using Unicorn.Data.DataProvider;
 using Unicorn.Data.Dilithium;
@@ -14,6 +18,7 @@ using Unicorn.Logging;
 using Unicorn.Pipelines.UnicornOperationStart;
 using Unicorn.Pipelines.UnicornSyncBegin;
 using Unicorn.Pipelines.UnicornSyncComplete;
+using Unicorn.Pipelines.UnicornSyncEnd;
 using Unicorn.Predicates;
 // ReSharper disable TooWideLocalVariableScope
 
@@ -139,6 +144,97 @@ namespace Unicorn
 
 				return true;
 			}
+		}
+
+		public virtual bool SyncConfigurations(IConfiguration[] configurations, IProgressStatus progress, ILogger additionalLogger)
+		{
+			int taskNumber = 1;
+
+			bool success = true;
+
+			try
+			{
+				var startArgs = new UnicornOperationStartPipelineArgs(OperationType.FullSync, configurations, additionalLogger, null);
+				CorePipeline.Run("unicornSyncStart", startArgs);
+
+				foreach (var configuration in configurations)
+				{
+					var logger = configuration.Resolve<ILogger>();
+					var helper = configuration.Resolve<SerializationHelper>();
+
+					using (new LoggingContext(additionalLogger, configuration))
+					{
+						try
+						{
+							var startStatement = new StringBuilder();
+							startStatement.Append(configuration.Name);
+							startStatement.Append(" is being synced");
+
+							if (configuration.EnablesDilithium())
+							{
+								startStatement.Append(" with Dilithium");
+								if (configuration.EnablesDilithiumSql()) startStatement.Append(" SQL");
+								if (configuration.EnablesDilithiumSql() && configuration.EnablesDilithiumSfs()) startStatement.Append(" +");
+								if (configuration.EnablesDilithiumSfs()) startStatement.Append(" Serialized");
+								startStatement.Append(" enabled.");
+							}
+							else
+							{
+								startStatement.Append(".");
+							}
+
+							logger.Info(startStatement.ToString());
+
+							using (new TransparentSyncDisabler())
+							{
+								var predicate = configuration.Resolve<IPredicate>();
+
+								var roots = predicate.GetRootPaths();
+
+								var index = 0;
+								helper.SyncTree(
+									configuration: configuration,
+									rootLoadedCallback: item =>
+									{
+										WebConsoleUtility.SetTaskProgress(progress, taskNumber, configurations.Length, (int)((index / (double)roots.Length) * 100));
+										index++;
+									},
+									runSyncStartPipeline: false
+								);
+							}
+						}
+						catch (DeserializationSoftFailureAggregateException ex)
+						{
+							logger.Error(ex);
+							// allow execution to continue, because the exception was non-fatal
+						}
+						catch (Exception ex)
+						{
+							logger.Error(ex);
+							success = false;
+							break;
+						}
+					}
+
+					taskNumber++;
+				}
+			}
+			finally
+			{
+				ReactorContext.Dispose();
+			}
+
+			try
+			{
+				CorePipeline.Run("unicornSyncEnd", new UnicornSyncEndPipelineArgs(additionalLogger, success, configurations));
+			}
+			catch (Exception exception)
+			{
+				Log.Error("Error occurred in unicornSyncEnd pipeline.", exception);
+				additionalLogger.Error(exception);
+			}
+
+			return success;
 		}
 
 		/// <remarks>All roots must live within the same configuration! Make sure that the roots are from the target data store.</remarks>

@@ -66,7 +66,7 @@ namespace Unicorn.UI.Commands
 				throw;
 			}
 
-			CorePipeline.Run("unicornSyncEnd", new UnicornSyncEndPipelineArgs(new StringProgressStatus(), true, configuration));
+			CorePipeline.Run("unicornSyncEnd", new UnicornSyncEndPipelineArgs(new SitecoreLogger(), true, configuration));
 
 			return Database.GetItem(item.Uri);
 		}

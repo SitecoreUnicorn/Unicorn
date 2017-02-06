@@ -1,6 +1,7 @@
 ﻿using Kamsar.WebConsole;
 using Sitecore.Pipelines;
 using Unicorn.Configuration;
+using Unicorn.Logging;
 
 namespace Unicorn.Pipelines.UnicornSyncEnd
 {
@@ -10,14 +11,14 @@ namespace Unicorn.Pipelines.UnicornSyncEnd
 	/// </summary>
 	public class UnicornSyncEndPipelineArgs : PipelineArgs
 	{
-		public UnicornSyncEndPipelineArgs(IProgressStatus console, bool succeeded, params IConfiguration[] syncedConfigurations)
+		public UnicornSyncEndPipelineArgs(ILogger logger, bool succeeded, params IConfiguration[] syncedConfigurations)
 		{
-			Console = console;
+			Logger = logger;
 			SyncedConfigurations = syncedConfigurations;
 			Succeeded = succeeded;
 		}
 
-		public IProgressStatus Console { get; }
+		public ILogger Logger { get; }
 
 		public IConfiguration[] SyncedConfigurations { get; }
 
