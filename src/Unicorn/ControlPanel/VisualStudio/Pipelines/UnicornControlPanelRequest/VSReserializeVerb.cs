@@ -7,7 +7,7 @@ namespace Unicorn.ControlPanel.VisualStudio.Pipelines.UnicornControlPanelRequest
 	// ReSharper disable once InconsistentNaming
 	public class VSReserializeVerb : ReserializeVerb
 	{
-		public VSReserializeVerb() : base("VSReserialize")
+		public VSReserializeVerb() : base("VSReserialize", new SerializationHelper())
 		{
 		}
 

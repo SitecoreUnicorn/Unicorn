@@ -20,7 +20,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>..\..\..\legendary-pancake\website\bin\</OutputPath>
     <DefineConstants>TRACE;DEBUG;SITECORE_7</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -157,8 +157,13 @@
     <Compile Include="Pipelines\UnicornSyncComplete\SyncedItemPostProcessor.cs" />
     <Compile Include="Pipelines\UnicornOperationStart\IUnicornOperationStartProcessor.cs" />
     <Compile Include="Pipelines\UnicornOperationStart\UnicornOperationStartPipelineArgs.cs" />
+    <Compile Include="PowerShell\ImportYamlCommand.cs" />
+    <Compile Include="PowerShell\OutYamlCommand.cs" />
     <Compile Include="PowerShell\PowershellProgressStatus.cs" />
+    <Compile Include="PowerShell\GetUnicornConfiguration.cs" />
+    <Compile Include="PowerShell\ExportUnicornConfigurationCommand.cs" />
     <Compile Include="PowerShell\SyncUnicornConfigurationCommand.cs" />
+    <Compile Include="PowerShell\YamlCommandBase.cs" />
     <Compile Include="Predicates\Exclusions\ChildrenOfPathBasedPresetTreeExclusion.cs" />
     <Compile Include="Predicates\Exclusions\PathBasedPresetTreeExclusion.cs" />
     <Compile Include="Predicates\Exclusions\PathTool.cs" />
@@ -289,6 +294,10 @@
     <ProjectReference Include="..\..\..\Rainbow\src\Rainbow.Storage.Sc\Rainbow.Storage.Sc.csproj">
       <Project>{956afe8b-51cd-4d61-b8c1-bffdc749fd82}</Project>
       <Name>Rainbow.Storage.Sc</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Rainbow\src\Rainbow.Storage.Yaml\Rainbow.Storage.Yaml.csproj">
+      <Project>{371181c9-45dc-4885-8894-43ffc235d124}</Project>
+      <Name>Rainbow.Storage.Yaml</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\..\Rainbow\src\Rainbow\Rainbow.csproj">
       <Project>{8ff75c8b-2a9e-4d95-91ad-333071813199}</Project>

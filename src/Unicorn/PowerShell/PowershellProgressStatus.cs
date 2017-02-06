@@ -5,13 +5,16 @@ using Kamsar.WebConsole;
 
 namespace Unicorn.PowerShell
 {
+	/// <summary>
+	/// Implements IProgressStatus in a way that writes out to a SPE PowerShell host
+	/// Used for cmdlets to log things from Unicorn to the console.
+	/// </summary>
 	public class PowershellProgressStatus : IProgressStatus
 	{
 		private readonly PSHost _host;
 		private readonly string _progressActivity;
 		private const long SourceId = 31337;
 		private const int ActivityId = 1337;
-		private string _currentTransientStatus = string.Empty;
 
 		public PowershellProgressStatus(PSHost host, string progressActivity)
 		{
@@ -21,12 +24,8 @@ namespace Unicorn.PowerShell
 		public void Report(int percent)
 		{
 			Progress = percent;
-			if (string.IsNullOrWhiteSpace(_currentTransientStatus))
-			{
-				_currentTransientStatus = $"{Progress}% complete.";
-			}
 
-			_host.UI.WriteProgress(SourceId, new ProgressRecord(ActivityId, _progressActivity, _currentTransientStatus) { PercentComplete = percent });
+			_host.UI.WriteProgress(SourceId, new ProgressRecord(ActivityId, _progressActivity, $"{percent}% complete") { PercentComplete = percent });
 		}
 
 		public void ReportException(Exception exception)
@@ -49,7 +48,7 @@ namespace Unicorn.PowerShell
 					_host.UI.WriteLine(message);
 					break;
 				case MessageType.Debug:
-					_host.UI.WriteDebugLine(message);
+					_host.UI.WriteLine(message);
 					break;
 				case MessageType.Warning:
 					_host.UI.WriteWarningLine(message);
@@ -63,8 +62,7 @@ namespace Unicorn.PowerShell
 
 		public void ReportTransientStatus(string statusMessage, params object[] formatParameters)
 		{
-			_currentTransientStatus = string.Format(statusMessage, formatParameters);
-			Report(Progress);
+			// do nothing
 		}
 
 		public int Progress { get; private set; }
