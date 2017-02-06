@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Kamsar.WebConsole;
@@ -16,6 +17,7 @@ using Unicorn.Data.Dilithium;
 using Unicorn.Loader;
 using Unicorn.Logging;
 using Unicorn.Pipelines.UnicornOperationStart;
+using Unicorn.Pipelines.UnicornReserializeComplete;
 using Unicorn.Pipelines.UnicornSyncBegin;
 using Unicorn.Pipelines.UnicornSyncComplete;
 using Unicorn.Pipelines.UnicornSyncEnd;
@@ -34,7 +36,73 @@ namespace Unicorn
 			return UnicornConfigurationManager.Configurations.Where(configuration => configuration.Resolve<IPredicate>().Includes(item).IsIncluded).ToArray();
 		}
 
+		public virtual bool ReserializeConfigurations(IConfiguration[] configurations, IProgressStatus progress, ILogger additionalLogger)
+		{
+			int taskNumber = 1;
 
+			try
+			{
+				var startArgs = new UnicornOperationStartPipelineArgs(OperationType.FullReserialize, configurations, additionalLogger, null);
+				CorePipeline.Run("unicornReserializeStart", startArgs);
+
+				foreach (var configuration in configurations)
+				{
+					var logger = configuration.Resolve<ILogger>();
+
+					using (new LoggingContext(additionalLogger, configuration))
+					{
+						try
+						{
+							var timer = new Stopwatch();
+							timer.Start();
+
+							logger.Info(string.Empty);
+							logger.Info(configuration.Name + " is being reserialized.");
+
+							using (new TransparentSyncDisabler())
+							{
+								var targetDataStore = configuration.Resolve<ITargetDataStore>();
+								var helper = configuration.Resolve<SerializationHelper>();
+
+								// nuke any existing items in the store before we begin. This is a full reserialize so we want to
+								// get rid of any existing stuff even if it's not part of existing configs
+								logger.Warn("[D] Clearing existing items from {0} (if any)".FormatWith(targetDataStore.FriendlyName));
+								targetDataStore.Clear();
+
+								var roots = configuration.Resolve<PredicateRootPathResolver>().GetRootSourceItems();
+
+								int index = 1;
+								foreach (var root in roots)
+								{
+									helper.ReserializeTree(root, false, new[] { configuration });
+									WebConsoleUtility.SetTaskProgress(progress, taskNumber, configurations.Length, (int)((index / (double)roots.Length) * 100));
+									index++;
+								}
+							}
+
+							timer.Stop();
+
+							CorePipeline.Run("unicornReserializeComplete", new UnicornReserializeCompletePipelineArgs(configuration));
+
+							logger.Info("{0} reserialization complete in {1}ms.".FormatWith(configuration.Name, timer.ElapsedMilliseconds));
+						}
+						catch (Exception ex)
+						{
+							logger.Error(ex);
+							return false;
+						}
+
+						taskNumber++;
+					}
+				}
+			}
+			finally
+			{
+				ReactorContext.Dispose();
+			}
+
+			return true;
+		}
 
 		/// <summary>
 		/// Reserializes an item and all of its children.
@@ -62,7 +130,7 @@ namespace Unicorn
 
 					foreach (var configuration in configurations)
 					{
-						if (configuration == null) return false;
+						if (configuration == null) continue;
 
 						var logger = configuration.Resolve<ILogger>();
 
@@ -80,7 +148,7 @@ namespace Unicorn
 
 						logger.Info("[A] Serializing included items under root {0}".FormatWith(item.GetDisplayIdentifier()));
 
-						if (!predicate.Includes(item).IsIncluded) return false;
+						if (!predicate.Includes(item).IsIncluded) continue;
 
 						DumpTreeInternal(item, predicate, serializationStore, sourceStore, logger, dpConfig);
 					}
@@ -254,10 +322,10 @@ namespace Unicorn
 					var startArgs = new UnicornOperationStartPipelineArgs(OperationType.PartialSync, new[] { configuration }, logger, partialSyncRoot);
 					CorePipeline.Run("unicornSyncStart", startArgs);
 				}
-
+				
 				var beginArgs = new UnicornSyncBeginPipelineArgs(configuration);
 				CorePipeline.Run("unicornSyncBegin", beginArgs);
-
+				
 				if (beginArgs.Aborted)
 				{
 					if (!dilithiumWasStarted) ReactorContext.Dispose();
@@ -273,8 +341,6 @@ namespace Unicorn
 					logger.Info("Unicorn Sync Begin pipeline signalled that it handled the sync for this configuration.");
 					return true;
 				}
-
-
 
 				using (new TransparentSyncDisabler())
 				{
