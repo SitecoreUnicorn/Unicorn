@@ -117,6 +117,8 @@ namespace Unicorn
 			{
 				if (configurations == null) configurations = GetConfigurationsForItem(item);
 
+				if (configurations.Length == 0) return false;
+
 				// check if Dilithium was already running. If it was, we won't dispose it when we're done.
 				bool dilithiumWasStarted = ReactorContext.IsActive;
 
@@ -168,6 +170,9 @@ namespace Unicorn
 			using (new TransparentSyncDisabler())
 			{
 				if (configurations == null) configurations = GetConfigurationsForItem(item);
+
+				// return false; item not part of any configs
+				if (configurations.Length == 0) return false;
 
 				// check if Dilithium was already running. If it was, we won't dispose it when we're done.
 				bool dilithiumWasStarted = ReactorContext.IsActive;

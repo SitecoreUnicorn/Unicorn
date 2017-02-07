@@ -10,12 +10,12 @@ namespace Unicorn.PowerShell
 {
 	/// <summary>
 	/// # RAW YAML OUTPUT
-	/// Get-Item "/sitecore/content" | Out-Yaml # Convert an item to YAML format (always uses default excludes and field formatters)
-	/// Get-ChildItem "/sitecore/content" | Out-Yaml # Convert many items to YAML strings
-	/// Get-Item "/sitecore/content" | Out-Yaml -Raw # Disable all field formats and field filtering
+	/// Get-Item "/sitecore/content" | ConvertTo-RainbowYaml # Convert an item to YAML format (always uses default excludes and field formatters)
+	/// Get-ChildItem "/sitecore/content" | ConvertTo-RainbowYaml # Convert many items to YAML strings
+	/// Get-Item "/sitecore/content" | ConvertTo-RainbowYaml -Raw # Disable all field formats and field filtering
 	/// </summary>
-	[OutputType(typeof(string)), Cmdlet("Out", "Yaml")]
-	public class OutYamlCommand : YamlCommandBase
+	[OutputType(typeof(string)), Cmdlet("ConvertTo", "RainbowYaml")]
+	public class ConvertToRainbowYamlCommand : YamlCommandBase
 	{
 		protected override void ProcessRecord()
 		{
