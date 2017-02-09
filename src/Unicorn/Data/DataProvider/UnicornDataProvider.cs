@@ -160,7 +160,10 @@ namespace Unicorn.Data.DataProvider
 					// this allows us to filter out any excluded children by predicate when the data store moves children
 					var predicatedItem = new PredicateFilteredItemData(sourceItem, _predicate);
 
-					_targetDataStore.MoveOrRenameItem(predicatedItem, changes.Item.Paths.ParentPath + "/" + oldName);
+					// renames may come with additional field changes (but usually do not), so we have to apply field changes here
+					var changesAppliedItem = new ItemChangeApplyingItemData(predicatedItem, changes);
+
+					_targetDataStore.MoveOrRenameItem(changesAppliedItem, changes.Item.Paths.ParentPath + "/" + oldName);
 				}
 
 				_logger.RenamedItem(_targetDataStore.FriendlyName, sourceItem, oldName);
