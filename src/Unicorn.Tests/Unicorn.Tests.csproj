@@ -151,6 +151,8 @@
     <Compile Include="Configuration\Dependencies\DepTestHelper.cs" />
     <Compile Include="Configuration\Dependencies\InterconfigurationDependencyResolverTests.cs" />
     <Compile Include="Configuration\MicroConfigurationTests.cs" />
+    <Compile Include="TestingTools\Attributes\AutoSubAttribute.cs" />
+    <Compile Include="UI\Gutter\TransparentSyncGutterTests.cs" />
     <None Include="app.config" />
     <Compile Include="ControlPanel\Security\SitecoreDatabaseChallengeStoreTests.cs" />
     <Compile Include="Data\DataProvider\ItemChangeApplyingItemDataTests.cs" />

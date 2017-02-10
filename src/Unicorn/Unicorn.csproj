@@ -81,8 +81,12 @@
     <Compile Include="ControlPanel\Controls\BatchProcessingControls.cs" />
     <Compile Include="ControlPanel\Controls\ConfigurationInfo.cs" />
     <Compile Include="ControlPanel\Controls\GlobalWarnings.cs" />
+    <Compile Include="ControlPanel\Controls\Addons.cs" />
     <Compile Include="ControlPanel\Controls\QuickReference.cs" />
     <Compile Include="ControlPanel\Controls\NoConfigurations.cs" />
+    <Compile Include="ControlPanel\Pipelines\UnicornControlPanelRequest\GutterVerbBase.cs" />
+    <Compile Include="ControlPanel\Pipelines\UnicornControlPanelRequest\RemoveGutterVerb.cs" />
+    <Compile Include="ControlPanel\Pipelines\UnicornControlPanelRequest\InstallGutterVerb.cs" />
     <Compile Include="ControlPanel\Security\ChallengeStoreSitecoreLogger.cs" />
     <Compile Include="ControlPanel\Security\ChapServerSitecoreLogger.cs" />
     <Compile Include="ControlPanel\UnicornStringConsole.cs" />
@@ -222,6 +226,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Publishing\ManualPublishQueueHandler.cs" />
     <Compile Include="TransparentSyncDisabler.cs" />
+    <Compile Include="UI\Gutter\TransparentSyncGutter.cs" />
     <Compile Include="UI\Pipelines\GetContentEditorWarnings\SerializedWarning.cs" />
     <Compile Include="UI\Pipelines\GetContentEditorWarnings\Warning.cs" />
     <Compile Include="UI\Pipelines\SaveUi\SaveUiConfirmProcessor.cs" />

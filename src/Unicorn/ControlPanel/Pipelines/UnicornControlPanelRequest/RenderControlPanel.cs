@@ -72,6 +72,8 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 							</table>
 						</article>");
 
+				yield return new Addons();
+
 				yield return new QuickReference();
 			}
 			else
