@@ -20,7 +20,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\legendary-pancake\website\bin\</OutputPath>
+    <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>TRACE;DEBUG;SITECORE_7</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -125,6 +125,7 @@
     <Compile Include="Data\DataProvider\IUnicornDataProviderConfiguration.cs" />
     <Compile Include="Data\Dilithium\DilithiumExtensions.cs" />
     <Compile Include="Data\Dilithium\DilithiumSerializationFileSystemDataStore.cs" />
+    <Compile Include="Data\DataProvider\RenamedItemData.cs" />
     <Compile Include="Data\Dilithium\Rainbow\RainbowItemData.cs" />
     <Compile Include="Data\Dilithium\Rainbow\RainbowDataCache.cs" />
     <Compile Include="Data\Dilithium\Rainbow\RainbowPrecacheStore.cs" />

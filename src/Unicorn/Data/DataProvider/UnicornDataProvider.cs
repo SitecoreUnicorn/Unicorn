@@ -149,37 +149,48 @@ namespace Unicorn.Data.DataProvider
 
 			if (!_predicate.Includes(sourceItem).IsIncluded) return;
 
-			string oldName = changes.Renamed ? changes.Properties["name"].OriginalValue.ToString() : string.Empty;
-			if (changes.Renamed && !oldName.Equals(sourceItem.Name, StringComparison.Ordinal))
-			// it's a rename, in which the name actually changed (template builder will cause 'renames' for the same name!!!)
+			// reject if only inconsequential fields (e.g. last updated, revision) were changed - again, template builder FTW with the junk saves
+			if (!HasConsequentialChanges(changes)) return;
+
+			string existingItemPath = sourceItem.Path;
+
+			// check if the save includes a rename as part of the operation, in which case we have to get the existing item, if any, from the OLD path pre-rename
+			// note that if an item is renamed to the same name this will simply fall through as not a rename
+			if (changes.Renamed)
 			{
-				using (new DatabaseCacheDisabler())
-				{
-					// disabling the DB caches while running this ensures that any children of the renamed item are retrieved with their proper post-rename paths and thus are not saved at their old location
-
-					// this allows us to filter out any excluded children by predicate when the data store moves children
-					var predicatedItem = new PredicateFilteredItemData(sourceItem, _predicate);
-
-					_targetDataStore.MoveOrRenameItem(predicatedItem, changes.Item.Paths.ParentPath + "/" + oldName);
-				}
-
-				_logger.RenamedItem(_targetDataStore.FriendlyName, sourceItem, oldName);
+				string oldName = changes.Properties["name"].OriginalValue.ToString();
+				existingItemPath = changes.Item.Paths.ParentPath + "/" + oldName;
 			}
-			else if (HasConsequentialChanges(changes))
-			// it's a simple update - but we reject it if only inconsequential fields (last updated, revision) were changed - again, template builder FTW
+
+			// we find the existing serialized item, with which we want to merge the item changes, if it exists. If not then the changes are the source of all truth.
+			var existingSerializedItem = _targetDataStore.GetByPathAndId(existingItemPath, sourceItem.Id, sourceItem.DatabaseName);
+
+			// generate an IItemData from the item changes we received, and apply those changes to the existing serialized item if any
+			var changesAppliedItem = existingSerializedItem != null ? new ItemChangeApplyingItemData(existingSerializedItem, changes) : new ItemChangeApplyingItemData(changes);
+
+			// put any media blob IDs on this item into the media blob cache (used for TpSync media - does not cache the blob just the filename it lives in)
+			AddBlobsToCache(changesAppliedItem);
+
+			// check for renamed item (existing path != source path -> rename)
+			if(!existingItemPath.Equals(sourceItem.Path, StringComparison.Ordinal))
 			{
-				var existingSerializedItem = _targetDataStore.GetByPathAndId(sourceItem.Path, sourceItem.Id, sourceItem.DatabaseName);
+				// this allows us to filter out any excluded children when the data store moves children to the renamed path
+				var predicatedItem = new PredicateFilteredItemData(changesAppliedItem, _predicate);
 
-				// generated an IItemData from the item changes we received, and apply those changes to the existing serialized item if any
-				if (existingSerializedItem != null) sourceItem = new ItemChangeApplyingItemData(existingSerializedItem, changes);
-				else sourceItem = new ItemChangeApplyingItemData(changes);
+				// change the item's name before sending it to the data store (note: the data store will normalize any child paths for us) 
+				var alteredPathItem = new RenamedItemData(predicatedItem, sourceItem.Name);
 
-				_targetDataStore.Save(sourceItem);
+				_targetDataStore.MoveOrRenameItem(alteredPathItem, existingItemPath);
 
-				AddBlobsToCache(sourceItem);
+				_logger.RenamedItem(_targetDataStore.FriendlyName, alteredPathItem, existingItemPath.Substring(existingItemPath.LastIndexOf('/') + 1));
 
-				_logger.SavedItem(_targetDataStore.FriendlyName, sourceItem, "Saved");
+				return;
 			}
+
+			// if we get here, it's just a save, not a rename
+			_targetDataStore.Save(sourceItem);
+
+			_logger.SavedItem(_targetDataStore.FriendlyName, sourceItem, "Saved");
 		}
 
 		public virtual void MoveItem(ItemDefinition itemDefinition, ItemDefinition destination, CallContext context)

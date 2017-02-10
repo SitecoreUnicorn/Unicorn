@@ -28,6 +28,18 @@ namespace Unicorn.Data.DataProvider
 			_changes = changes;
 		}
 
+		public override Guid BranchId
+		{
+			get
+			{
+				const string branchProperty = "branchid";
+				if (_changes.IsPropertyModified(branchProperty))
+					return Guid.Parse(_changes.GetPropertyValue(branchProperty).ToString());
+
+				return base.BranchId;
+			}
+		}
+
 		public override IEnumerable<IItemFieldValue> SharedFields
 		{
 			get
