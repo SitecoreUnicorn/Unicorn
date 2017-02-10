@@ -118,6 +118,7 @@
     <Compile Include="Data\DataProvider\FieldChangeParser.cs" />
     <Compile Include="Data\DataProvider\ItemChangeApplyingItemData.cs" />
     <Compile Include="Data\DataProvider\IUnicornDataProviderConfiguration.cs" />
+    <Compile Include="Data\DataProvider\RenamedItemData.cs" />
     <Compile Include="DeserializationSoftFailureAggregateException.cs" />
     <Compile Include="Deserialization\UnicornDeserializer.cs" />
     <Compile Include="Evaluators\INewItemOnlyEvaluatorLogger.cs" />
