@@ -22,6 +22,9 @@ namespace Unicorn.PowerShell
 	/// $pkg = New-Package
 	/// Get-UnicornConfiguration "Foundation.*" | New-UnicornItemSource -Project $pkg
 	/// Export-Package -Project $pkg -Path "C:\foo.zip"
+	/// 
+	/// NOTE: This cmdlet generates the package based off the database state, not serialized state.
+	/// Make sure you sync your database with serialized before generating packages with this.
 	/// </summary>
 	[Cmdlet(VerbsCommon.New, "UnicornItemSource")]
 	[OutputType(typeof(ExplicitItemSource))]
