@@ -21,10 +21,11 @@ namespace Unicorn.PowerShell
 	public class SyncUnicornConfigurationCommand : BaseCommand
 	{
 		private readonly SerializationHelper _helper;
+		private List<IConfiguration> _configurations = new List<IConfiguration>();
 
 		public SyncUnicornConfigurationCommand() : this(new SerializationHelper())
 		{
-			
+
 		}
 
 		public SyncUnicornConfigurationCommand(SerializationHelper helper)
@@ -34,19 +35,24 @@ namespace Unicorn.PowerShell
 
 		protected override void ProcessRecord()
 		{
-			var configurations = PipelineConfigurations ?? UnicornConfigurationManager.Configurations;
-
-			if (PipelineConfigurations == null)
+			if (PipelineConfiguration != null)
 			{
-				if(Configurations == null || Configurations.Length == 0) throw new InvalidOperationException("-Configurations not specified, and no pipeline input.");
-
-				var includedConfigs = new HashSet<string>(Configurations, StringComparer.OrdinalIgnoreCase);
-
-				configurations = configurations
-					.Where(config => includedConfigs.Contains(config.Name))
-					.ToArray();
+				_configurations.Add(PipelineConfiguration);
+				return;
 			}
-			
+
+			if (Configuration == null) throw new InvalidOperationException("-Configurations not specified, and no pipeline input.");
+
+			var config = UnicornConfigurationManager.Configurations
+				.FirstOrDefault(cfg => cfg.Name.Equals(Configuration, StringComparison.OrdinalIgnoreCase));
+
+			if (config != null) _configurations.Add(config);
+		}
+
+		protected override void EndProcessing()
+		{
+			var configurations = _configurations.ToArray();
+
 			if (SkipTransparent.IsPresent) configurations = configurations.SkipTransparentSync().ToArray();
 
 			var console = new PowershellProgressStatus(Host, "Sync Unicorn");
@@ -57,10 +63,10 @@ namespace Unicorn.PowerShell
 		}
 
 		[Parameter(ValueFromPipeline = true)]
-		public IConfiguration[] PipelineConfigurations { get; set; }
+		public IConfiguration PipelineConfiguration { get; set; }
 
 		[Parameter(Position = 0)]
-		public string[] Configurations { get; set; }
+		public string Configuration { get; set; }
 
 		[Parameter]
 		public SwitchParameter SkipTransparent { get; set; }

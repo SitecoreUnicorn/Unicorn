@@ -40,9 +40,7 @@ namespace Unicorn.PowerShell
 		{
 			var touchedConfigs = new List<IConfiguration>();
 
-			foreach (var item in Items)
-			{
-				IItemData itemData = new ItemData(item);
+				IItemData itemData = new ItemData(Item);
 				var configuration = _helper.GetConfigurationsForItem(itemData).FirstOrDefault(); // if multiple configs contain item, load from first one
 
 				if (configuration == null) throw new InvalidOperationException($"{itemData.GetDisplayIdentifier()} was not part of any Unicorn configurations.");
@@ -58,38 +56,38 @@ namespace Unicorn.PowerShell
 
 				if (itemData == null)
 				{
-					throw new InvalidOperationException($"Could not do partial sync of {item.Database.Name}:{item.Paths.FullPath} because it was not serialized. You may need to perform initial serialization.");
+					throw new InvalidOperationException($"Could not do partial sync of {Item.Database.Name}:{Item.Paths.FullPath} because it was not serialized. You may need to perform initial serialization.");
 				}
 
-				try
-				{
-					logger.Info($"Processing partial Unicorn configuration {itemData.GetDisplayIdentifier()} (Config: {configuration.Name})");
+			try
+			{
+				logger.Info(
+					$"Processing partial Unicorn configuration {itemData.GetDisplayIdentifier()} (Config: {configuration.Name})");
 
-					using (new LoggingContext(logger, configuration))
+				using (new LoggingContext(logger, configuration))
+				{
+					if (Recurse.IsPresent)
 					{
-						if (Recurse.IsPresent)
-						{
-							helper.SyncTree(configuration, partialSyncRoot: itemData);
-						}
-						else
-						{
-							var sourceStore = configuration.Resolve<ISourceDataStore>();
-							sourceStore.Save(itemData);
-						}
+						helper.SyncTree(configuration, partialSyncRoot: itemData);
+					}
+					else
+					{
+						var sourceStore = configuration.Resolve<ISourceDataStore>();
+						sourceStore.Save(itemData);
 					}
 				}
-				catch (Exception ex)
-				{
-					logger.Error(ex);
-					throw;
-				}
+			}
+			catch (Exception ex)
+			{
+				logger.Error(ex);
+				throw;
 			}
 
 			CorePipeline.Run("unicornSyncEnd", new UnicornSyncEndPipelineArgs(new SitecoreLogger(), true, touchedConfigs.ToArray()));
 		}
 
 		[Parameter(ValueFromPipeline = true, Mandatory = true)]
-		public Item[] Items { get; set; }
+		public Item Item { get; set; }
 
 		[Parameter]
 		public SwitchParameter Recurse { get; set; }

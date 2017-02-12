@@ -32,9 +32,9 @@ namespace Unicorn.PowerShell
 
 		protected override void ProcessRecord()
 		{
-			var configurations = PipelineConfigurations ?? UnicornConfigurationManager.Configurations;
+			var configurations = PipelineConfiguration != null ? new [] { PipelineConfiguration } : UnicornConfigurationManager.Configurations;
 
-			if (!All.IsPresent && PipelineConfigurations == null)
+			if (!All.IsPresent && PipelineConfiguration == null)
 			{
 				if(Configurations == null || Configurations.Length == 0) throw new InvalidOperationException("-All was not specified, but neither was -Configurations.");
 
@@ -53,7 +53,7 @@ namespace Unicorn.PowerShell
 		}
 
 		[Parameter(ValueFromPipeline = true)]
-		public IConfiguration[] PipelineConfigurations { get; set; }
+		public IConfiguration PipelineConfiguration { get; set; }
 
 		[Parameter(Position = 0)]
 		public string[] Configurations { get; set; }

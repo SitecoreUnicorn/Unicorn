@@ -12,28 +12,22 @@ namespace Unicorn.PowerShell
 	/// $yamlStringArray | Import-RainbowYaml # Read multiple IItemData at once
 	/// </summary>
 	[Cmdlet("ConvertFrom", "RainbowYaml")]
+	[OutputType(typeof(IItemData))]
 	public class ConvertFromRainbowYamlCommand : YamlCommandBase
 	{
 		protected override void ProcessRecord()
 		{
 			var yaml = CreateFormatter(CreateFieldFilter());
 
-			var results = new List<IItemData>(Yaml.Length);
-
-			foreach (var yamlItem in Yaml)
+			using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(Yaml)))
 			{
-				using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(yamlItem)))
-				{
-					var item = yaml.ReadSerializedItem(stream, "(from PowerShell)");
+				var item = yaml.ReadSerializedItem(stream, "(from PowerShell)");
 
-					results.Add(item);
-				}
+				WriteObject(item);
 			}
-
-			WriteObject(results);
 		}
 
 		[Parameter(ValueFromPipeline = true, Mandatory = true)]
-		public string[] Yaml { get; set; }
+		public string Yaml { get; set; }
 	}
 }

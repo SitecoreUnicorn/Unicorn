@@ -23,7 +23,7 @@ namespace Unicorn.PowerShell
 
 		public ExportUnicornItemCommand() : this(new SerializationHelper())
 		{
-			
+
 		}
 
 		public ExportUnicornItemCommand(SerializationHelper helper)
@@ -33,23 +33,20 @@ namespace Unicorn.PowerShell
 
 		protected override void ProcessRecord()
 		{
-			foreach (var item in Items)
-			{
-				IItemData itemData = new ItemData(item);
+			IItemData itemData = new ItemData(Item);
 
-				if (Recurse.IsPresent)
-				{
-					if (!_helper.ReserializeTree(itemData)) throw new InvalidOperationException($"{itemData.GetDisplayIdentifier()} was not part of any Unicorn configuration.");
-				}
-				else
-				{
-					if (!_helper.ReserializeItem(itemData)) throw new InvalidOperationException($"{itemData.GetDisplayIdentifier()} was not part of any Unicorn configuration.");
-				}
+			if (Recurse.IsPresent)
+			{
+				if (!_helper.ReserializeTree(itemData)) throw new InvalidOperationException($"{itemData.GetDisplayIdentifier()} was not part of any Unicorn configuration.");
+			}
+			else
+			{
+				if (!_helper.ReserializeItem(itemData)) throw new InvalidOperationException($"{itemData.GetDisplayIdentifier()} was not part of any Unicorn configuration.");
 			}
 		}
 
 		[Parameter(ValueFromPipeline = true, Mandatory = true)]
-		public Item[] Items { get; set; }
+		public Item Item { get; set; }
 
 		[Parameter]
 		public SwitchParameter Recurse { get; set; }

@@ -22,7 +22,7 @@ namespace Unicorn.PowerShell
 	{
 		protected override void ProcessRecord()
 		{
-			if (Yaml == null && Items == null) throw new InvalidOperationException("Neither YAML strings or IItemDatas were passed in, cannot process.");
+			if (Yaml == null && Item == null) throw new InvalidOperationException("Neither YAML strings or IItemDatas were passed in, cannot process.");
 
 			var console = new PowershellProgressStatus(Host, "Deserialize Item");
 			var consoleLogger = new WebConsoleLogger(console, MessageType.Debug);
@@ -33,32 +33,26 @@ namespace Unicorn.PowerShell
 
 			if (Yaml != null)
 			{
-				foreach (var yamlItem in Yaml)
+				using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(Yaml)))
 				{
-					using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(yamlItem)))
-					{
-						var item = yaml.ReadSerializedItem(stream, "(from PowerShell)");
+					var item = yaml.ReadSerializedItem(stream, "(from PowerShell)");
 
-						consoleLogger.Info(item.Path);
-						deserializer.Deserialize(item);
-					}
-				}
-			}
-
-			if (Items != null)
-			{
-				foreach (var item in Items)
-				{
 					consoleLogger.Info(item.Path);
 					deserializer.Deserialize(item);
 				}
 			}
+
+			if (Item != null)
+			{
+				consoleLogger.Info(Item.Path);
+				deserializer.Deserialize(Item);
+			}
 		}
 
 		[Parameter(ValueFromPipeline = true)]
-		public string[] Yaml { get; set; }
+		public string Yaml { get; set; }
 
 		[Parameter(ValueFromPipeline = true)]
-		public IItemData[] Items { get; set; }
+		public IItemData Item { get; set; }
 	}
 }

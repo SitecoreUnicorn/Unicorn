@@ -19,32 +19,29 @@ namespace Unicorn.PowerShell
 	{
 		protected override void ProcessRecord()
 		{
-			var items = ItemData ?? Item?.Select(item => new ItemData(item)).ToArray();
+			var item = ItemData ?? new ItemData(Item);
 
-			if(items == null) throw new InvalidOperationException("-Item and -ItemData were both not set. Pass one, or send an item in from the pipeline.");
+			if (item == null) throw new InvalidOperationException("-Item and -ItemData were both not set. Pass one, or send an item in from the pipeline.");
 
 			var yaml = CreateFormatter(CreateFieldFilter());
 
-			foreach (var item in items)
+			using (var stream = new MemoryStream())
 			{
-				using (var stream = new MemoryStream())
+				yaml.WriteSerializedItem(item, stream);
+
+				stream.Seek(0, SeekOrigin.Begin);
+
+				using (var reader = new StreamReader(stream))
 				{
-					yaml.WriteSerializedItem(item, stream);
-
-					stream.Seek(0, SeekOrigin.Begin);
-
-					using (var reader = new StreamReader(stream))
-					{
-						WriteObject(reader.ReadToEnd());
-					}
+					WriteObject(reader.ReadToEnd());
 				}
 			}
 		}
 
 		[Parameter(ValueFromPipeline = true)]
-		public IItemData[] ItemData { get; set; }
+		public IItemData ItemData { get; set; }
 
 		[Parameter(ValueFromPipeline = true, Position = 0)]
-		public Item[] Item { get; set; }
+		public Item Item { get; set; }
 	}
 }

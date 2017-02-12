@@ -10,7 +10,7 @@ namespace Unicorn.PowerShell
 	/// Get-UnicornConfiguration "Foundation.*" # Get by filter
 	/// Get-UnicornConfiguration # Get all
 	/// </summary>
-	[OutputType(typeof(IConfiguration[])), Cmdlet("Get", "UnicornConfiguration")]
+	[OutputType(typeof(IConfiguration)), Cmdlet("Get", "UnicornConfiguration")]
 	public class GetUnicornConfigurationCommand : BaseCommand
 	{
 		protected override void ProcessRecord()
@@ -22,7 +22,10 @@ namespace Unicorn.PowerShell
 				configs = WildcardFilter(Filter, configs, configuration => configuration.Name).ToArray();
 			}
 
-			WriteObject(configs);
+			foreach (var config in configs)
+			{
+				WriteObject(config);
+			}
 		}
 
 		[Parameter(Position = 0)]
