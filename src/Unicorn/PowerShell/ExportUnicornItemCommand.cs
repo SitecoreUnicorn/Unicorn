@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Management.Automation;
 using Cognifide.PowerShell.Commandlets;
-using Kamsar.WebConsole;
 using Rainbow.Model;
 using Sitecore.Data.Items;
 using Unicorn.Data;
-using Unicorn.Logging;
 using ItemData = Rainbow.Storage.Sc.ItemData;
 
 namespace Unicorn.PowerShell
