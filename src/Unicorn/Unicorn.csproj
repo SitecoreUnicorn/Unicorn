@@ -161,6 +161,7 @@
     <Compile Include="PowerShell\ConvertFromRainbowYamlCommand.cs" />
     <Compile Include="PowerShell\ImportRainbowYamlCommand.cs" />
     <Compile Include="PowerShell\ConvertToRainbowYamlCommand.cs" />
+    <Compile Include="PowerShell\NewUnicornItemSourceCommand.cs" />
     <Compile Include="PowerShell\PowershellProgressStatus.cs" />
     <Compile Include="PowerShell\GetUnicornConfiguration.cs" />
     <Compile Include="PowerShell\ExportUnicornConfigurationCommand.cs" />
