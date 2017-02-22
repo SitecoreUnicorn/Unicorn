@@ -40,7 +40,7 @@
       <HintPath>..\..\lib\Cognifide.PowerShell.dll</HintPath>
     </Reference>
     <Reference Include="Kamsar.WebConsole, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Kamsar.WebConsole.2.0.0-beta01\lib\net40\Kamsar.WebConsole.dll</HintPath>
+      <HintPath>..\..\packages\Kamsar.WebConsole.2.0.0-beta02\lib\net40\Kamsar.WebConsole.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="MicroCHAP, Version=1.2.2.2, Culture=neutral, processorArchitecture=MSIL">
@@ -91,7 +91,6 @@
     <Compile Include="ControlPanel\Controls\NoConfigurations.cs" />
     <Compile Include="ControlPanel\Security\ChallengeStoreSitecoreLogger.cs" />
     <Compile Include="ControlPanel\Security\ChapServerSitecoreLogger.cs" />
-    <Compile Include="ControlPanel\UnicornStringConsole.cs" />
     <Compile Include="ControlPanel\Security\SitecoreDatabaseChallengeStore.cs" />
     <Compile Include="ControlPanel\VisualStudio\Pipelines\UnicornControlPanelRequest\ConfigurationHealthVerb.cs" />
     <Compile Include="ControlPanel\VisualStudio\StreamWriterExtensions.cs" />

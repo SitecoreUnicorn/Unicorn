@@ -39,13 +39,12 @@ namespace Unicorn.ControlPanel.Responses
 		{
 			if (_isAutomatedTool)
 			{
-				var console = new UnicornStringConsole();
-				ProcessInternal(console);
+				var console = new TextWebConsole(response);
 
-				response.ContentType = "text/plain";
-				response.Write(_title + "\n\n");
-				response.Write(console.Output);
+				console.WriteLine(_title + "\n\n");
 
+				console.Render(ProcessInternal);
+				
 				if (console.HasErrors)
 				{
 					response.StatusCode = 500;
