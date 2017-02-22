@@ -31,6 +31,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Configy, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Configy.1.0.0-pre02\lib\net45\Configy.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Sitecore.Kernel, Version=10.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Sitecore.Kernel.NoReferences.8.2.160729\lib\NET452\Sitecore.Kernel.dll</HintPath>
       <Private>False</Private>
@@ -87,10 +91,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Configy\src\Configy\Configy.csproj">
-      <Project>{bb66d7f7-6e33-4ac6-b978-e1f4e757f4a5}</Project>
-      <Name>Configy</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\..\Rainbow\src\Rainbow.Storage.Yaml\Rainbow.Storage.Yaml.csproj">
       <Project>{371181c9-45dc-4885-8894-43ffc235d124}</Project>
       <Name>Rainbow.Storage.Yaml</Name>
