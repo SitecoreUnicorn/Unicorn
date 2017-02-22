@@ -33,7 +33,8 @@ namespace Unicorn.ControlPanel.Controls
 			writer.Write(@"
 <ul>
 	<li><a href=""https://github.com/kamsar/Unicorn/blob/master/Build/Unicorn.nuget/readme.txt"">Unicorn Getting Started/Installation</a></li>
-	<li><a href=""https://github.com/kamsar/Unicorn/blob/master/README.md"">Unicorn Documentation</a></li>
+	<li><a href=""https://github.com/kamsar/Unicorn/blob/master/README.md"">Unicorn Quick Start</a></li>
+	<li><a href=""https://unicorn.kamsar.net/"">Unicorn Book</a></li>
 	<li><a href=""https://github.com/kamsar/Unicorn/tree/master/src/Unicorn/Standard%20Config%20Files"">Default Configuration Files</a></li>
 	<li><a href=""http://kamsar.net/index.php/category/Unicorn/"">Unicorn Blog Posts</a></li>
 	<li><a href=""https://visualstudiogallery.msdn.microsoft.com/64439022-f470-422a-b663-fbb89aaf6e86"">Unicorn Control Panel for Visual Studio</a></li>

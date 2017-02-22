@@ -65,10 +65,12 @@ namespace Unicorn.ControlPanel.Controls
 			var diSfs = _configuration.EnablesDilithiumSfs();
 			if (diSql || diSfs)
 			{
+				var diState = diSql && diSfs ? "Full" : (diSql ? "SQL" : "Serialized");
+
 				writer.Write($@"
 					<span class=""badge"" 
 						title=""Uses Dilithium high speed cached data stores.{(diSql ? " Direct SQL active." : string.Empty)}{(diSfs ? " Serialized snapshots active." : string.Empty)}"">
-						Dilithium: {(diSql ? " SQL" : string.Empty)}{(diSfs ? " Serialized" : string.Empty)}
+						Dilithium: {diState}
 					</span>");
 			}
 

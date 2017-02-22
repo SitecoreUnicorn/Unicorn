@@ -81,7 +81,7 @@ namespace Unicorn.ControlPanel.Responses
 			heartbeat.AutoReset = true;
 			heartbeat.Elapsed += (sender, args) =>
 			{
-				var elapsed = Math.Round(timer.ElapsedMilliseconds/1000d);
+				var elapsed = Math.Round(timer.ElapsedMilliseconds / 1000d);
 
 				try
 				{

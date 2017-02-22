@@ -39,9 +39,9 @@
     <Reference Include="Cognifide.PowerShell">
       <HintPath>..\..\lib\Cognifide.PowerShell.dll</HintPath>
     </Reference>
-    <Reference Include="Kamsar.WebConsole, Version=1.2.2.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\packages\Kamsar.WebConsole.1.2.2.0\lib\net40\Kamsar.WebConsole.dll</HintPath>
+    <Reference Include="Kamsar.WebConsole, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Kamsar.WebConsole.2.0.0-beta01\lib\net40\Kamsar.WebConsole.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="MicroCHAP, Version=1.2.2.2, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\packages\MicroCHAP.1.2.2.2\lib\net45\MicroCHAP.dll</HintPath>
@@ -194,8 +194,8 @@
     <Compile Include="ControlPanel\UnicornControlPanelPipelineProcessor.cs" />
     <Compile Include="ControlPanel\ControlPanelUtility.cs" />
     <Compile Include="ControlPanel\Controls\Heading.cs" />
-    <Compile Include="ControlPanel\Controls\Html5Footer.cs" />
-    <Compile Include="ControlPanel\Controls\Html5HeadAndStyles.cs" />
+    <Compile Include="ControlPanel\Controls\HtmlFooter.cs" />
+    <Compile Include="ControlPanel\Controls\HtmlHeadAndStyles.cs" />
     <Compile Include="ControlPanel\Controls\IControlPanelControl.cs" />
     <Compile Include="ControlPanel\Controls\InitialSetup.cs" />
     <Compile Include="ControlPanel\Controls\Literal.cs" />

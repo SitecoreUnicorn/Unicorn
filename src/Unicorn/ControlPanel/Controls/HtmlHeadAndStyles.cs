@@ -2,7 +2,7 @@
 
 namespace Unicorn.ControlPanel.Controls
 {
-	internal class Html5HeadAndStyles : IControlPanelControl
+	internal class HtmlHeadAndStyles : IControlPanelControl
 	{
 		public void Render(HtmlTextWriter writer)
 		{
