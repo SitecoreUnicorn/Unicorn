@@ -150,16 +150,14 @@
     <Compile Include="Configuration\Dependencies\ConfigurationDependencyResolverTests.Explicit.cs" />
     <Compile Include="Configuration\Dependencies\DepTestHelper.cs" />
     <Compile Include="Configuration\Dependencies\InterconfigurationDependencyResolverTests.cs" />
-    <Compile Include="Configuration\MicroConfigurationTests.cs" />
     <None Include="app.config" />
     <Compile Include="ControlPanel\Security\SitecoreDatabaseChallengeStoreTests.cs" />
     <Compile Include="Data\DataProvider\ItemChangeApplyingItemDataTests.cs" />
     <Compile Include="Data\DataProvider\UnicornDataProviderTests.AddVersion.cs" />
     <Compile Include="Data\DataProvider\UnicornDataProviderTests.SaveItem.cs" />
     <Compile Include="Evaluator\SerializedAsMasterEvaluatorTests.cs" />
-    <Compile Include="Configuration\TestXmlConfigurationProvider.cs" />
-    <Compile Include="Configuration\XmlConfigurationProviderTests.cs" />
-    <Compile Include="Configuration\XmlConfigurationTypeActivatorTests.cs" />
+    <Compile Include="Configuration\TestConfigyConfigurationProvider.cs" />
+    <Compile Include="Configuration\ConfigyConfigurationProviderTests.cs" />
     <Compile Include="Content.cs" />
     <Compile Include="ControlPanel\Headings\HeadingServiceTests.cs" />
     <Compile Include="Data\DataProvider\DataProviderConfigurationTests.cs" />
@@ -187,6 +185,10 @@
     <EmbeddedResource Include="Configuration\TestXmlConfiguration.xml" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\Configy\src\Configy\Configy.csproj">
+      <Project>{bb66d7f7-6e33-4ac6-b978-e1f4e757f4a5}</Project>
+      <Name>Configy</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\Rainbow\src\Rainbow.Storage.Sc\Rainbow.Storage.Sc.csproj">
       <Project>{956afe8b-51cd-4d61-b8c1-bffdc749fd82}</Project>
       <Name>Rainbow.Storage.Sc</Name>

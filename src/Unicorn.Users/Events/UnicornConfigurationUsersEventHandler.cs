@@ -21,7 +21,6 @@ namespace Unicorn.Users.Events
 			_dataStore = configuration.Resolve<IUserDataStore>();
 		}
 
-
 		public virtual void UserAlteredOrCreated(string userName)
 		{
 			var user = User.FromName(userName, false);

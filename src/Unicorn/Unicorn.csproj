@@ -83,6 +83,7 @@
     <Compile Include="Configuration\Dependencies\ConfigurationDependencyResolver.cs" />
     <Compile Include="Configuration\Dependencies\ExplicitConfigurationDependency.cs" />
     <Compile Include="Configuration\Dependencies\IConfigurationDependency.cs" />
+    <Compile Include="Configuration\PipelineBasedVariablesReplacer.cs" />
     <Compile Include="ControlPanel\Controls\BatchProcessingControls.cs" />
     <Compile Include="ControlPanel\Controls\ConfigurationInfo.cs" />
     <Compile Include="ControlPanel\Controls\GlobalWarnings.cs" />
@@ -152,6 +153,9 @@
     <Compile Include="Logging\LogTransaction.cs" />
     <Compile Include="OperationType.cs" />
     <Compile Include="Pipelines\SaveUi\TransparentSyncAwareCheckRevision.cs" />
+    <Compile Include="Pipelines\UnicornExpandConfigurationVariables\HelixConventionVariablesReplacer.cs" />
+    <Compile Include="Pipelines\UnicornExpandConfigurationVariables\IUnicornExpandConfigurationVariablesProcessor.cs" />
+    <Compile Include="Pipelines\UnicornExpandConfigurationVariables\UnicornExpandConfigurationVariablesPipelineArgs.cs" />
     <Compile Include="Pipelines\UnicornReserializeComplete\IUnicornReserializeCompleteProcessor.cs" />
     <Compile Include="Pipelines\UnicornReserializeComplete\UnicornReserializeCompletePipelineArgs.cs" />
     <Compile Include="Pipelines\UnicornSyncComplete\DictionaryCacheClearer.cs" />
@@ -182,7 +186,6 @@
     <Compile Include="UI\Commands\UnicornDumpItemCommand.cs" />
     <Compile Include="Configuration\ConfigurationUtility.cs" />
     <Compile Include="Configuration\MicroConfiguration.cs" />
-    <Compile Include="Configuration\MicroResolutionException.cs" />
     <Compile Include="ControlPanel\Controls\AccessDenied.cs" />
     <Compile Include="ControlPanel\CheckIfFilterDisablerIsActive.cs" />
     <Compile Include="ControlPanel\Controls\ConfigurationDetails.cs" />
@@ -199,7 +202,7 @@
     <Compile Include="ControlPanel\Responses\WebConsoleResponse.cs" />
     <Compile Include="Data\ConfigurationDataStore.cs" />
     <Compile Include="Data\ISerializableItemExtensions.cs" />
-    <Compile Include="Configuration\XmlConfigurationProvider.cs" />
+    <Compile Include="Configuration\ConfigyConfigurationProvider.cs" />
     <Compile Include="Configuration\IConfigurationProvider.cs" />
     <Compile Include="Data\ISourceDataStore.cs" />
     <Compile Include="Data\ITargetDataStore.cs" />
@@ -296,6 +299,10 @@
     <None Include="Unicorn.nuspec" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\Configy\src\Configy\Configy.csproj">
+      <Project>{bb66d7f7-6e33-4ac6-b978-e1f4e757f4a5}</Project>
+      <Name>Configy</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\Rainbow\src\Rainbow.Storage.Sc\Rainbow.Storage.Sc.csproj">
       <Project>{956afe8b-51cd-4d61-b8c1-bffdc749fd82}</Project>
       <Name>Rainbow.Storage.Sc</Name>

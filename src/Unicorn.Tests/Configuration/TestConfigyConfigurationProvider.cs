@@ -5,7 +5,7 @@ using Unicorn.Configuration;
 
 namespace Unicorn.Tests.Configuration
 {
-	internal class TestXmlConfigurationProvider : XmlConfigurationProvider
+	internal class TestConfigyConfigurationProvider : ConfigyConfigurationProvider
 	{
 		protected override XmlNode GetConfigurationNode()
 		{

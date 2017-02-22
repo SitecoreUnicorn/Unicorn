@@ -87,6 +87,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\Configy\src\Configy\Configy.csproj">
+      <Project>{bb66d7f7-6e33-4ac6-b978-e1f4e757f4a5}</Project>
+      <Name>Configy</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\Rainbow\src\Rainbow.Storage.Yaml\Rainbow.Storage.Yaml.csproj">
       <Project>{371181c9-45dc-4885-8894-43ffc235d124}</Project>
       <Name>Rainbow.Storage.Yaml</Name>
