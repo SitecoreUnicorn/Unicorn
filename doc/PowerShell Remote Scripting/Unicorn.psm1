@@ -17,7 +17,7 @@ Function Sync-Unicorn {
 
 		[switch]$SkipTransparentConfigs,
 
-		[switch]$NoDebug
+		[switch]$DebugSecurity
 	)
 
 	# PARSE THE URL TO REQUEST
@@ -46,7 +46,7 @@ Function Sync-Unicorn {
 
 	$signature = $signatureService.CreateSignature($challenge, $url, $null)
 
-	if(-not $NoDebug) {
+	if($DebugSecurity) {
 		Write-Host "Sync-Unicorn: MAC '$($signature.SignatureSource)'"
 		Write-Host "Sync-Unicorn: HMAC '$($signature.SignatureHash)'"
 		Write-Host "Sync-Unicorn: If you get authorization failures compare the values above to the Sitecore logs."

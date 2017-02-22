@@ -17,5 +17,4 @@ Sync-Unicorn -ControlPanelUrl 'https://localhost/unicorn.aspx' -SharedSecret 'yo
 
 # Note: you may pass -Verb 'Reserialize' for remote reserialize. Usually not needed though.
 
-# Note: the default configuration will write out signature debug data to the console which includes the shared secret
-# If you wish to disable this, pass -NoDebug to Sync-Unicorn.
+# Note: If you are having authorization issues, add -DebugSecurity to your cmdlet invocation; this will display the raw signatures being used to compare to the server.
