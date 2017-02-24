@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Sitecore.Diagnostics;
 using Unicorn.Predicates;
 
 namespace Unicorn.Configuration.Dependencies
@@ -18,6 +19,8 @@ namespace Unicorn.Configuration.Dependencies
 
 		public ConfigurationDependencyResolver(IConfiguration configuration)
 		{
+			Assert.ArgumentNotNull(configuration, nameof(configuration));
+
 			_configuration = configuration;
 		}
 
@@ -45,12 +48,10 @@ namespace Unicorn.Configuration.Dependencies
 		/// </summary>
 		private IConfigurationDependency[] ResolveDependencies()
 		{
-			IConfigurationDependency[] result;
-
-			if (DependencyCache.TryGetValue(_configuration, out result)) return result;
-
 			lock (SyncLock)
 			{
+				IConfigurationDependency[] result;
+
 				if (DependencyCache.TryGetValue(_configuration, out result)) return result;
 
 				var dependencies = GetDependencies(_configuration);
