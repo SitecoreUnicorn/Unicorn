@@ -44,12 +44,12 @@
 			<configurations>
 				<!-- Setup the convention using the HelixConventionVariablesReplacer (inheriting config must be named Layer.Module) -->
 				<configuration name="Helix" abstract="true">
-					<targetDataStore physicalRootPath="$(sourceFolder)\$(layer)\$(module)\serialization\$(configurationName)" />
+					<targetDataStore physicalRootPath="$(sourceFolder)\$(layer)\$(module)\serialization\$(moduleConfigName)" />
 				</configuration>
 				
-				<configuration name="Foundation.MyModule" extends="Helix">
+				<configuration name="Foundation.MyModule.Content" extends="Helix">
 					<!-- 
-						This configuration will now be placed at $(sourceFolder)\Foundation\MyModule\serialization\Foundation.MyModule (variables expand at the inheriting config)
+						This configuration will now be placed at $(sourceFolder)\Foundation\MyModule\serialization\Content (variables expand at the inheriting config)
 						
 						The same trick works great on predicate paths (e.g. '/sitecore/templates/$(layer)/$(module)')
 					-->

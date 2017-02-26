@@ -7,6 +7,8 @@ namespace Unicorn.Pipelines.UnicornExpandConfigurationVariables
 	/// <summary>
 	/// Enables the use of $(layer) and $(module) in configurations, as long as you name the configurations to Helix conventions (e.g. Layer.Module)
 	/// This can allow you to use a single base configuration that defines your storage and predicate conventions so you don't have to restate them all day.
+	/// 
+	/// Multiple configurations per module is also supported via $(moduleConfigName) (e.g. Feature.Foo.Content = Content)
 	/// </summary>
 	public class HelixConventionVariablesReplacer : ContainerDefinitionVariablesReplacer, IUnicornExpandConfigurationVariablesProcessor
 	{
@@ -30,11 +32,18 @@ namespace Unicorn.Pipelines.UnicornExpandConfigurationVariables
 
 			if (pieces.Length < 2) return new Dictionary<string, string>();
 
-			return new Dictionary<string, string>
+			var vars = new Dictionary<string, string>
 			{
 				{"layer", pieces[0]},
 				{"module", pieces[1]}
 			};
+
+			if (pieces.Length >= 3)
+			{
+				vars.Add("moduleConfigName", pieces[2]);
+			}
+
+			return vars;
 		}
 	}
 }
