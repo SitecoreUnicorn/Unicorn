@@ -274,7 +274,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="Standard Config Files\Unicorn.Dilithium.config">
+    <None Include="Standard Config Files\Unicorn.Dilithium.config.example">
       <SubType>Designer</SubType>
     </None>
     <None Include="Standard Config Files\Unicorn.PowerShell.config" />
