@@ -42,6 +42,11 @@ namespace Unicorn.Pipelines.UnicornExpandConfigurationVariables
 			{
 				vars.Add("moduleConfigName", pieces[2]);
 			}
+			else
+			{
+				// fallback if no third level name is used but variable is defined
+				vars.Add("moduleConfigName", "Dev");
+			}
 
 			return vars;
 		}
