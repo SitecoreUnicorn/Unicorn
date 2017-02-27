@@ -45,8 +45,12 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 
 			if (targetConfigurations.Length == 0) throw new ArgumentException("Configuration(s) requested were not defined.");
 
+			// skipTransparent does not apply when syncing a single config explicitly
+			if (targetConfigurations.Length == 1) return targetConfigurations;
+
+			// optionally skip transparent sync configs when syncing
 			var skipTransparent = HttpContext.Current.Request.QueryString["skipTransparentConfigs"];
-			if (skipTransparent == "1")
+			if (skipTransparent == "1" || skipTransparent.Equals(bool.TrueString, StringComparison.OrdinalIgnoreCase))
 			{
 				targetConfigurations = targetConfigurations.SkipTransparentSync().ToArray();
 
