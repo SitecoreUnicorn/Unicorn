@@ -43,12 +43,20 @@ namespace Unicorn.ControlPanel.Responses
 
 				console.WriteLine(_title + "\n\n");
 
-				console.Render(ProcessInternal);
-				
+				try
+				{
+					console.Render(ProcessInternal);
+				}
+				catch(Exception ex)
+				{
+					// writing the exception will also trigger HasErrors
+					console.WriteException(ex);
+				}
+
 				if (console.HasErrors)
 				{
-					response.StatusCode = 500;
-					response.TrySkipIisCustomErrors = true;
+					// we cannot return HTTP 500 because headers will have already been sent by now
+					response.Write("****ERROR OCCURRED****");
 				}
 
 				response.End();
