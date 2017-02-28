@@ -34,12 +34,16 @@ Function Sync-Unicorn {
 
 	$url = "{0}?verb={1}&configuration={2}&skipTransparentConfigs={3}" -f $ControlPanelUrl, $Verb, $parsedConfigurations, $skipValue 
 
-	Write-Host "Sync-Unicorn: Preparing authorization for $url"
+	if($DebugSecurity) {
+		Write-Host "Sync-Unicorn: Preparing authorization for $url"
+	}
 
 	# GET AN AUTH CHALLENGE
 	$challenge = Get-Challenge -ControlPanelUrl $ControlPanelUrl
 
-	Write-Host "Sync-Unicorn: Received challenge from remote server: $challenge"
+	if($DebugSecurity) {
+		Write-Host "Sync-Unicorn: Received challenge from remote server: $challenge"
+	}
 
 	# CREATE A SIGNATURE WITH THE SHARED SECRET AND CHALLENGE
 	$signatureService = New-Object MicroCHAP.SignatureService -ArgumentList $SharedSecret
@@ -56,9 +60,14 @@ Function Sync-Unicorn {
 
 	# USING THE SIGNATURE, EXECUTE UNICORN
 	[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-	$result = Invoke-WebRequest -Uri $url -Headers @{ "X-MC-MAC" = $signature.SignatureHash; "X-MC-Nonce" = $challenge } -TimeoutSec 10800 -UseBasicParsing
+	$result = Invoke-StreamingWebRequest -Uri $url -Mac $signature.SignatureHash -Nonce $challenge
 
-	$result.Content
+	if($result.TrimEnd().EndsWith('****ERROR OCCURRED****')) {
+		throw "Unicorn $Verb to $url returned an error. See the preceding log for details."
+	}
+
+	# Uncomment this if you want the console results to be returned by the function
+	# $result
 }
 
 Function Get-Challenge {
@@ -73,6 +82,43 @@ Function Get-Challenge {
 	$result = Invoke-WebRequest -Uri $url -TimeoutSec 360 -UseBasicParsing
 
 	$result.Content
+}
+
+Function Invoke-StreamingWebRequest($Uri, $MAC, $Nonce) {
+	$responseText = new-object -TypeName "System.Text.StringBuilder"
+
+	$request = [System.Net.WebRequest]::Create($Uri)
+	$request.Headers["X-MC-MAC"] = $MAC
+	$request.Headers["X-MC-Nonce"] = $Nonce
+	$request.Timeout = 10800000
+
+	$response = $request.GetResponse()
+	$responseStream = $response.GetResponseStream()
+	$responseStreamReader = new-object System.IO.StreamReader $responseStream
+	
+	while(-not $responseStreamReader.EndOfStream) {
+		$line = $responseStreamReader.ReadLine()
+
+		if($line.StartsWith('Error:')) {
+			Write-Host $line.Substring(7) -ForegroundColor Red
+		}
+		elseif($line.StartsWith('Warning:')) {
+			Write-Host $line.Substring(9) -ForegroundColor Yellow
+		}
+		elseif($line.StartsWith('Debug:')) {
+			Write-Host $line.Substring(7) -ForegroundColor Gray
+		}
+		elseif($line.StartsWith('Info:')) {
+			Write-Host $line.Substring(6) -ForegroundColor White
+		}
+		else {
+			Write-Host $line -ForegroundColor White
+		}
+
+		[void]$responseText.AppendLine($line)
+	}
+
+	return $responseText.ToString()
 }
 
 Export-ModuleMember -Function Sync-Unicorn
