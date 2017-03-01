@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Rainbow.Model;
 using System.Globalization;
+using Rainbow.Storage.Sc;
 using Sitecore.Data.Items;
 
 namespace Unicorn.Data.DataProvider
@@ -23,7 +24,7 @@ namespace Unicorn.Data.DataProvider
 			_changes = changes;
 		}
 
-		public ItemChangeApplyingItemData(ItemChanges changes) : base(new ProxyItem(changes.Item.Name, changes.Item.ID.Guid, changes.Item.ParentID.Guid, changes.Item.TemplateID.Guid, changes.Item.Paths.Path, changes.Item.Database.Name))
+		public ItemChangeApplyingItemData(ItemChanges changes) : base(new ProxyItem(changes.Item.Name, changes.Item.ID.Guid, changes.Item.ParentID.Guid, changes.Item.TemplateID.Guid, changes.Item.Paths.Path, changes.Item.Database.Name, () => changes.Item.Children.Select(child => new ItemData(child))))
 		{
 			_changes = changes;
 		}
