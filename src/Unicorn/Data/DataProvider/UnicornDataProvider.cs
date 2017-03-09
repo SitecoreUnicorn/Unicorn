@@ -188,9 +188,9 @@ namespace Unicorn.Data.DataProvider
 			}
 
 			// if we get here, it's just a save, not a rename
-			_targetDataStore.Save(sourceItem);
+			_targetDataStore.Save(changesAppliedItem);
 
-			_logger.SavedItem(_targetDataStore.FriendlyName, sourceItem, "Saved");
+			_logger.SavedItem(_targetDataStore.FriendlyName, changesAppliedItem, "Saved");
 		}
 
 		public virtual void MoveItem(ItemDefinition itemDefinition, ItemDefinition destination, CallContext context)
