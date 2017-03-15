@@ -12,9 +12,10 @@ namespace Unicorn.ControlPanel.Security
 		{
 			_logPrefix = logPrefix;
 		}
+
 		public void RejectedDueToMissingHttpHeaders()
 		{
-			Log.Warn($"[{_logPrefix}] CHAP authentication attempt rejected due to missing HTTP headers.", this);
+			//Log.Warn($"[{_logPrefix}] CHAP authentication attempt rejected due to missing HTTP headers.", this);
 		}
 
 		public void RejectedDueToInvalidChallenge(string challengeProvided, string url)
