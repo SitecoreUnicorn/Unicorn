@@ -1,6 +1,4 @@
-﻿using Unicorn.Pipelines.UnicornReserializeComplete;
-
-namespace Unicorn.Pipelines.UnicornExpandConfigurationVariables
+﻿namespace Unicorn.Pipelines.UnicornExpandConfigurationVariables
 {
 	public interface IUnicornExpandConfigurationVariablesProcessor
 	{

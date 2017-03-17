@@ -156,6 +156,7 @@
     <Compile Include="Logging\LogTransaction.cs" />
     <Compile Include="OperationType.cs" />
     <Compile Include="Pipelines\SaveUi\TransparentSyncAwareCheckRevision.cs" />
+    <Compile Include="Pipelines\UnicornExpandConfigurationVariables\ConfigurationNameVariablesReplacer.cs" />
     <Compile Include="Pipelines\UnicornExpandConfigurationVariables\HelixConventionVariablesReplacer.cs" />
     <Compile Include="Pipelines\UnicornExpandConfigurationVariables\IUnicornExpandConfigurationVariablesProcessor.cs" />
     <Compile Include="Pipelines\UnicornExpandConfigurationVariables\UnicornExpandConfigurationVariablesPipelineArgs.cs" />
