@@ -54,8 +54,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Kamsar.WebConsole, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Kamsar.WebConsole.2.0.0-pre03\lib\net40\Kamsar.WebConsole.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\..\packages\Kamsar.WebConsole.2.0.0-pre04\lib\net40\Kamsar.WebConsole.dll</HintPath>
     </Reference>
     <Reference Include="Lucene.Net, Version=3.0.3.0, Culture=neutral, PublicKeyToken=85089178b9ac3181, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Lucene.Net.3.0.3\lib\NET40\Lucene.Net.dll</HintPath>
