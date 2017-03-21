@@ -5,7 +5,6 @@ using Rainbow.Model;
 using Sitecore.Configuration;
 using Sitecore.Data.Items;
 using Sitecore.Diagnostics;
-using Sitecore.StringExtensions;
 using Unicorn.Configuration;
 using Unicorn.Data;
 using Unicorn.Predicates;

@@ -6,7 +6,6 @@ using Rainbow;
 using Rainbow.Diff;
 using Rainbow.Filtering;
 using Rainbow.Model;
-using Sitecore.Configuration;
 using Sitecore.Data;
 using Sitecore.Data.Items;
 using Sitecore.Diagnostics;
@@ -109,20 +108,15 @@ namespace Unicorn.Evaluators
 
 			if (transparentSync)
 			{
-				using (new TransparentSyncDisabler())
+				// it's static. deal with it. :cat:
+				var isInDatabase = TransparentSyncStatusChecker.IsInDatabase(item);
+				if (isInDatabase)
 				{
-					using (new DatabaseCacheDisabler())
-					{
-						var dbItem = Database.GetItem(item.Uri);
-						if (dbItem != null)
-						{
-							message.Append("<br><b>Transparent Sync</b>: Database + Serialized");
-						}
-						else
-						{
-							message.Append("<br><b>Transparent Sync</b>: Serialized Only");
-						}
-					}
+					message.Append("<br><b>Transparent Sync</b>: Database + Serialized");
+				}
+				else
+				{
+					message.Append("<br><b>Transparent Sync</b>: Serialized Only");
 				}
 			}
 
@@ -169,9 +163,9 @@ namespace Unicorn.Evaluators
 			foreach (var sharedChange in comparison.ChangedSharedFields)
 			{
 				deferredUpdateLog.AddEntry(log => log.SharedFieldIsChanged(
-					targetItem, 
-					(sharedChange.TargetField ?? sharedChange.SourceField).FieldId, 
-					sharedChange.TargetField?.Value, 
+					targetItem,
+					(sharedChange.TargetField ?? sharedChange.SourceField).FieldId,
+					sharedChange.TargetField?.Value,
 					sharedChange.SourceField?.Value));
 			}
 
@@ -180,10 +174,10 @@ namespace Unicorn.Evaluators
 				foreach (var uvField in unversionedChange.ChangedFields)
 				{
 					deferredUpdateLog.AddEntry(log => log.UnversionedFieldIsChanged(
-						targetItem, 
-						unversionedChange.Language.Language, 
-						(uvField.TargetField ?? uvField.SourceField).FieldId, 
-						uvField.TargetField?.Value, 
+						targetItem,
+						unversionedChange.Language.Language,
+						(uvField.TargetField ?? uvField.SourceField).FieldId,
+						uvField.TargetField?.Value,
 						uvField.SourceField?.Value));
 				}
 			}

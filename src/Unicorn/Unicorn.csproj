@@ -143,6 +143,7 @@
     <Compile Include="Data\Dilithium\InitResult.cs" />
     <Compile Include="Data\Dilithium\Pipelines\InitializeDilithium.cs" />
     <Compile Include="Data\Dilithium\ReactorContext.cs" />
+    <Compile Include="Data\TransparentSyncStatusChecker.cs" />
     <Compile Include="DeserializationSoftFailureAggregateException.cs" />
     <Compile Include="Deserialization\UnicornDeserializer.cs" />
     <Compile Include="Evaluators\INewItemOnlyEvaluatorLogger.cs" />
