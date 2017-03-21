@@ -49,7 +49,7 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 			if (targetConfigurations.Length == 1) return targetConfigurations;
 
 			// optionally skip transparent sync configs when syncing
-			var skipTransparent = HttpContext.Current.Request.QueryString["skipTransparentConfigs"];
+			var skipTransparent = HttpContext.Current.Request.QueryString["skipTransparentConfigs"] ?? "0";
 			if (skipTransparent == "1" || skipTransparent.Equals(bool.TrueString, StringComparison.OrdinalIgnoreCase))
 			{
 				targetConfigurations = targetConfigurations.SkipTransparentSync().ToArray();
