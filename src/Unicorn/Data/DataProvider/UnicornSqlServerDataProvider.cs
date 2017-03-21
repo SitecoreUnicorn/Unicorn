@@ -153,16 +153,22 @@ namespace Unicorn.Data.DataProvider
 		public override IDList GetChildIDs(ItemDefinition itemDefinition, CallContext context)
 		{
 			var results = new HashSet<ID>();
+			bool unicornChildrenAreAuthoritative = false;
+
 			foreach (var provider in UnicornDataProviders)
 			{
-				var providerResult = provider.GetChildIds(itemDefinition, context);
-				foreach (var result in providerResult)
+				IEnumerable<ID> childrenResult;
+				var providerResult = provider.GetChildIds(itemDefinition, context, out childrenResult);
+
+				foreach (var result in childrenResult)
 				{
 					if (!results.Contains(result)) results.Add(result);
 				}
+
+				if (providerResult) unicornChildrenAreAuthoritative = true;
 			}
 
-			if (results.Count == 0)
+			if (results.Count == 0 && !unicornChildrenAreAuthoritative)
 			{
 				// get database children
 				var baseIds = base.GetChildIDs(itemDefinition, context);
@@ -175,6 +181,7 @@ namespace Unicorn.Data.DataProvider
 					var providerResult = provider.GetAdditionalChildIds(itemDefinition, context);
 					foreach (var result in providerResult)
 					{
+						// if the db children returned null, we need to make a new list (because we DO have children)
 						if(baseIds == null) baseIds = new IDList();
 
 						if (!baseIds.Contains(result)) baseIds.Add(result);

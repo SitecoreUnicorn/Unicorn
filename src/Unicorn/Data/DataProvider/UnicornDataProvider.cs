@@ -397,16 +397,30 @@ namespace Unicorn.Data.DataProvider
 		 *	As if they were database items.
 		 * 
 		*/
-		public virtual IEnumerable<ID> GetChildIds(ItemDefinition itemDefinition, CallContext context)
+
+		/// <summary>
+		/// Gets child IDs for the current Unicorn configuration
+		/// </summary>
+		/// <param name="itemDefinition">The parent item</param>
+		/// <param name="context">The context</param>
+		/// <param name="results">The resultant children items, if any. Is never null, but may be empty.</param>
+		/// <returns>True if the child list is authoritative (don't get any further children from the DB), false if it's not.</returns>
+		public virtual bool GetChildIds(ItemDefinition itemDefinition, CallContext context, out IEnumerable<ID> results)
 		{
-			if (DisableSerialization || DisableTransparentSync) return Enumerable.Empty<ID>();
+			results = Enumerable.Empty<ID>();
+
+			// transparent sync is off, or serialization is off: we're not authoritative
+			if (DisableSerialization || DisableTransparentSync) return false;
 
 			// expectation: do not return null, return empty enumerable for not included etc
 			var parentItem = GetTargetFromId(itemDefinition.ID);
 
-			if (parentItem == null) return Enumerable.Empty<ID>();
+			// if the parent item is not found, we are non-authoritative (this is a tree that does not include the item)
+			if (parentItem == null) return false;
 
-			return _targetDataStore.GetChildren(parentItem).Select(item => new ID(item.Id));
+			results = _targetDataStore.GetChildren(parentItem).Select(item => new ID(item.Id));
+
+			return true;
 		}
 
 		/// <summary>
@@ -533,7 +547,11 @@ namespace Unicorn.Data.DataProvider
 			// return null if not present
 			if (DisableSerialization || DisableTransparentSync) return null;
 
-			return GetChildIds(itemDefinition, context).Any();
+			IEnumerable<ID> childResults;
+
+			GetChildIds(itemDefinition, context, out childResults);
+
+			return childResults.Any();
 		}
 
 		public virtual IEnumerable<ID> GetTemplateItemIds(CallContext context)
