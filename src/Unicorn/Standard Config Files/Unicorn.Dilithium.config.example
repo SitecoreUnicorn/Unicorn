@@ -15,28 +15,18 @@
 		Because SQL caching does not download blob data, it is less RAM intensive than serialized item caching for media.
 	
 	* Dilithium requires a MS SQL database.
-	
-	* Dilithium depends on the Descendants table in the Sitecore database. If the FastQueryDescendantsDisabled setting is enabled,
-			Dilithium will fail to work. If you need to enable this setting, disable Dilithium.
-			Notably, some of the publish speed patch examples that ship with Sitecore enable this setting.
 
 	* Dilithium does not guarantee identical child ordering to Sitecore. This means that when reserializing a configuration
 			that previously did not use Dilithium after activating Dilithium you may find items that are in loopback folders change,
 			as different children may be selected to place in loopback. This is normal and no actual data has changed; the items
 			are also sync-compatible both with and without Dilithium so you can turn it off without fear if you wish.
+			
+	* If you see uneven timings when running several synchronizations in succession, that's probably the time taken to reload the template field cache, as opposed to spiky SQL times :)
 
 	http://github.com/kamsar/Unicorn
 -->
 <configuration xmlns:patch="http://www.sitecore.net/xmlconfig/">
 	<sitecore>
-		<!-- 
-			Dilithium depends on the Descendants table in the Sitecore database. If the FastQueryDescendantsDisabled setting is enabled,
-			Dilithium will fail to work as this table will not be populated. If you need to enable this setting, disable Dilithium.
-		-->
-		<setting name="FastQueryDescendantsDisabled">
-			<patch:attribute name="value">false</patch:attribute>
-		</setting>
-		
 		<unicorn>
 			<defaults>
 				<!-- 

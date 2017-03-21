@@ -209,83 +209,90 @@ namespace Unicorn.Data.Dilithium.Sql
 			if (ignoredFields == null) ignoredFields = new Guid[0];
 
 			var command = new SqlCommand();
+			var debugCommand = new StringBuilder();
 
 			// add parameters for ignored fields
-			var ignoredFieldsInStatement = BuildSqlInStatement(ignoredFields, command, "i");
+			var ignoredFieldsInStatement = BuildSqlInStatement(ignoredFields, command, "i", debugCommand);
 
 			var ignoredFieldsValueSkipStatement = $@"CASE WHEN FieldID {ignoredFieldsInStatement} THEN '' ELSE Value END AS Value";
 
 			// add parameters for root item IDs
-			var rootItemIdsInStatement = BuildSqlInStatement(rootItemIds, command, "r");
+			var rootItemIdsInStatement = BuildSqlInStatement(rootItemIds, command, "r", debugCommand);
 
 			var sql = new StringBuilder(8000);
 
 			// ITEM DATA QUERY - gets top level metadata about included items (no fields)
 			sql.Append($@"
-				SELECT i.ID, i.Name, i.TemplateID, i.MasterID, i.ParentID
-				FROM Items i
-				WHERE i.ID {rootItemIdsInStatement}
-				UNION ALL
-				SELECT i.ID, i.Name, i.TemplateID, i.MasterID, i.ParentID
-				FROM Items i
-				INNER JOIN Descendants d on i.ID = d.Descendant
-				WHERE d.Ancestor {rootItemIdsInStatement}
+				IF OBJECT_ID('tempdb..#TempItemData') IS NOT NULL DROP Table #TempItemData
+
+				CREATE TABLE #TempItemData(
+					 ID uniqueidentifier,
+					 Name nvarchar(256),
+					 TemplateID uniqueidentifier,
+					 MasterID uniqueidentifier,
+					 ParentID uniqueidentifier
+				 );
+
+				WITH Roots AS (
+					SELECT Id
+					FROM Items
+					WHERE ID {rootItemIdsInStatement}
+				), tree AS (
+					SELECT x.ID, x.Name, x.TemplateID, x.MasterID, x.ParentID
+					FROM Items x
+					INNER JOIN Roots ON x.ID = Roots.ID
+					UNION ALL
+					SELECT y.ID, y.Name, y.TemplateID, y.MasterID, y.ParentID
+					FROM Items y
+					INNER JOIN tree t ON y.ParentID = t.ID
+				)
+				INSERT INTO #TempItemData
+				SELECT *
+				FROM tree
+
+				SELECT ID, Name, TemplateID, MasterID, ParentID
+				FROM #TempItemData
 ");
 
-			// FIELDS DATA QUERY - DESCENDANTS - gets all fields for all languages and versions of *descendants*
-			// of the root items. Does not get the root items' fields data (it seemed faster to do that in a separate
-			// query based on query analysis as opposed to an IN...OR...IN in this one)
+			// FIELDS DATA QUERY - gets all fields for all languages and versions of the root items and all descendants
 			sql.Append($@"
 				SELECT ItemId, '' AS Language, FieldId, {ignoredFieldsValueSkipStatement}, -1 as Version
 				FROM SharedFields s
-				INNER JOIN Descendants d on s.ItemId = d.Descendant
-				WHERE d.Ancestor {rootItemIdsInStatement}
+				INNER JOIN #TempItemData t ON s.ItemId = t.ID
 				UNION ALL
 				SELECT ItemId, Language, FieldId, {ignoredFieldsValueSkipStatement}, -1 as Version
 				FROM UnversionedFields u
-				INNER JOIN Descendants d on u.ItemId = d.Descendant
-				WHERE d.Ancestor {rootItemIdsInStatement}
+				INNER JOIN #TempItemData t ON u.ItemId = t.ID
 				UNION ALL
 				SELECT ItemId, Language, FieldId, {ignoredFieldsValueSkipStatement}, Version
 				FROM VersionedFields v
-				INNER JOIN Descendants d on v.ItemId = d.Descendant
-				WHERE d.Ancestor {rootItemIdsInStatement}
-");
-
-			// FIELDS DATA QUERY - ROOTS - gets all fields for all languages and versions of the root items
-			sql.Append($@"
-				SELECT ItemId, '' AS Language, FieldId, {ignoredFieldsValueSkipStatement}, -1 as Version
-				FROM SharedFields s
-				WHERE s.ItemId {rootItemIdsInStatement}
-				UNION ALL
-				SELECT ItemId, Language, FieldId, {ignoredFieldsValueSkipStatement}, -1 as Version
-				FROM UnversionedFields u
-				WHERE u.ItemId {rootItemIdsInStatement}
-				UNION ALL
-				SELECT ItemId, Language, FieldId, {ignoredFieldsValueSkipStatement}, Version
-				FROM VersionedFields v
-				WHERE v.ItemId {rootItemIdsInStatement}
+				INNER JOIN #TempItemData t ON v.ItemId = t.ID
 ");
 
 			command.CommandText = sql.ToString();
 
+			debugCommand.Append(sql);
+
+			// drop a debugger on this to see a runnable SQL statement for SSMS
+			var debugSqlStatement = debugCommand.ToString();
+
 			return command;
 		}
 
-		private StringBuilder BuildSqlInStatement(Guid[] parameters, SqlCommand command, string parameterPrefix)
+		private StringBuilder BuildSqlInStatement(Guid[] parameters, SqlCommand command, string parameterPrefix, StringBuilder debugStatementBuilder)
 		{
 			object currentParameter;
 			string parameterName;
 
 			var parameterNames = new List<string>(parameters.Length);
-
-
+			
 			for (int index = 0; index < parameters.Length; index++)
 			{
 				currentParameter = parameters[index];
 				parameterName = parameterPrefix + index;
 
 				command.Parameters.AddWithValue(parameterName, currentParameter);
+				debugStatementBuilder.AppendLine($"DECLARE @{parameterName} UNIQUEIDENTIFIER = '{currentParameter}'");
 				parameterNames.Add(parameterName);
 			}
 

@@ -56,7 +56,7 @@ namespace Unicorn.Data.Dilithium.Sql
 		{
 			IngestItemData(reader);
 
-			var readDataTask = Task.Run(() => IngestFieldData(reader, false));
+			var readDataTask = Task.Run(() => IngestFieldData(reader));
 
 			IndexChildren();
 			IndexPaths(rootData);
@@ -90,8 +90,10 @@ namespace Unicorn.Data.Dilithium.Sql
 			_itemsById = results;
 		}
 
-		private bool IngestFieldData(SqlDataReader reader, bool secondPass, bool errors = false)
+		private bool IngestFieldData(SqlDataReader reader)
 		{
+			bool errors = false;
+
 			// the reader will be on result set 0 when it arrives (item data)
 			// so we need to advance it to set 1 (descendants field data)
 			reader.NextResult();
@@ -157,10 +159,6 @@ namespace Unicorn.Data.Dilithium.Sql
 					if (!SetVersionedField(targetItem, language, version, currentField)) errors = true;
 				}
 			}
-
-			// the third result in the reader is the root item fields.
-			// this has an identical schema to the descendant fields and thus this method can be used to parse it as well.
-			if (!secondPass) return IngestFieldData(reader, true, errors);
 
 			return errors;
 		}

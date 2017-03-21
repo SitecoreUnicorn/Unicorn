@@ -135,7 +135,7 @@ namespace Unicorn.Loader
 
 				foreach (var failure in _treeFailures)
 				{
-					exceptions.Add(new DeserializationException(string.Format("Tree failed to load: {0} (the error may be on a child of this item, see the details below)", failure.Item.GetDisplayIdentifier()), failure.Item, failure.Reason));
+					exceptions.Add(new DeserializationException($"Tree failed to load: {failure.Item.GetDisplayIdentifier()} (the error may be on a child of this item, see the details below)", failure.Item, failure.Reason));
 				}
 
 				throw new DeserializationAggregateException("Some directories could not be loaded.") { InnerExceptions = exceptions.ToArray() };
@@ -158,13 +158,10 @@ namespace Unicorn.Loader
 				Reason = reason;
 			}
 
-			public IItemData Item { get; private set; }
-			public Exception Reason { get; private set; }
+			public IItemData Item { get; }
+			public Exception Reason { get; }
 
-			public virtual bool IsHardFailure
-			{
-				get { return !(Reason is TemplateMissingFieldException); }
-			}
+			public virtual bool IsHardFailure => !(Reason is TemplateMissingFieldException);
 		}
 	}
 }
