@@ -155,12 +155,9 @@ namespace Unicorn.Evaluators
 		{
 			var db = Factory.GetDatabase(database);
 
-			if (db != null)
-			{
-				var fieldItem = db.GetItem(new ID(fieldId));
+			var fieldItem = db?.GetItem(new ID(fieldId));
 
-				if (fieldItem != null) return fieldItem.Name;
-			}
+			if (fieldItem != null) return fieldItem.Name;
 
 			return fieldId.ToString();
 		}
