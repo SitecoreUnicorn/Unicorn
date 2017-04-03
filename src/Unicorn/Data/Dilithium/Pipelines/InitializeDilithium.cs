@@ -4,13 +4,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using Unicorn.Data.Dilithium.Rainbow;
 using Unicorn.Data.Dilithium.Sql;
-using Unicorn.Pipelines.UnicornOperationStart;
+using Unicorn.Pipelines.UnicornSyncStart;
 
 namespace Unicorn.Data.Dilithium.Pipelines
 {
-	public class InitializeDilithium : IUnicornOperationStartProcessor
+	public class InitializeDilithium : IUnicornSyncStartProcessor
 	{
-		public void Process(UnicornOperationStartPipelineArgs args)
+		public void Process(UnicornSyncStartPipelineArgs args)
 		{
 			var configCount = args.Configurations.Count(config => config.EnablesDilithium());
 
