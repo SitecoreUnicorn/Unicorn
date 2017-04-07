@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Web.Hosting;
 using Sitecore.Diagnostics;
@@ -87,7 +88,11 @@ namespace Unicorn.Roles.Data
 		{
 			if (rootPath.StartsWith("~") || rootPath.StartsWith("/"))
 			{
-				rootPath = HostingEnvironment.MapPath("~/") + rootPath.Substring(1).Replace("/", Path.DirectorySeparatorChar.ToString());
+				// Support unit testing scenario where hosting environment is not initialized.
+				var hostingRoot = HostingEnvironment.IsHosted
+					? HostingEnvironment.MapPath("~/")
+					: AppDomain.CurrentDomain.BaseDirectory;
+			    return Path.Combine(hostingRoot, rootPath.Substring(1).Replace("/", Path.DirectorySeparatorChar.ToString()));
 			}
 
 			if (!Directory.Exists(rootPath)) Directory.CreateDirectory(rootPath);
