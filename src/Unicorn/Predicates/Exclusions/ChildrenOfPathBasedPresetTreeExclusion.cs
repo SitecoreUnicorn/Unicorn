@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using Rainbow.Model;
 
 namespace Unicorn.Predicates.Exclusions
 {
@@ -29,9 +30,9 @@ namespace Unicorn.Predicates.Exclusions
 			_exceptions = exceptions.Select(exception => $"{PathTool.EnsureTrailingSlash(_excludeChildrenOfPath)}{exception}/").ToArray();
 		}
 
-		public PredicateResult Evaluate(string itemPath)
+		public PredicateResult Evaluate(IItemData itemData)
 		{
-			itemPath = PathTool.EnsureTrailingSlash(itemPath);
+			var itemPath = PathTool.EnsureTrailingSlash(itemData.Path);
 
 			// you may preserve certain children from exclusion
 			foreach (var exception in _exceptions)

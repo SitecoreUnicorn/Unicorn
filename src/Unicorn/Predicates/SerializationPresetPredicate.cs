@@ -81,7 +81,7 @@ namespace Unicorn.Predicates
 		{
 			foreach (var exclude in entry.Exclusions)
 			{
-				var result = exclude.Evaluate(itemData.Path);
+				var result = exclude.Evaluate(itemData);
 
 				if (!result.IsIncluded) return result;
 			}
@@ -180,6 +180,11 @@ namespace Unicorn.Predicates
 			if (excludeNode.HasAttribute("path"))
 			{
 				return new PathBasedPresetTreeExclusion(GetExpectedAttribute(excludeNode, "path"), root);
+			}
+
+			if (excludeNode.HasAttribute("templateId"))
+			{
+				return new TemplateBasedPresetExclusion(GetExpectedAttribute(excludeNode, "templateId"), root);
 			}
 
 			var exclusions = excludeNode.ChildNodes

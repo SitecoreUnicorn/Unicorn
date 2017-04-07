@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Xml;
 using FluentAssertions;
@@ -37,6 +38,11 @@ namespace Unicorn.Tests.Predicates
 		[InlineData("/implicit-nochildren/ignoredchild", false)]
 		[InlineData("/implicit-nochildren/ignored/stillignored", false)]
 		[InlineData("/implicit-nochildrenwithextrachars", false)]
+		// TEMPLATE-ID test config
+		[InlineData("/sitecore/allowed", true)]
+		[InlineData("/sitecore/allowed/child", true)]
+		[InlineData("/sitecore/excluded", false)]
+		[InlineData("/sitecore/excluded/nochildrenwithexcludedparent", false)]
 		// SOME-CHILDREN test config
 		[InlineData("/somechildren", true)]
 		[InlineData("/somechildren/ignoredchild", false)]
@@ -113,11 +119,15 @@ namespace Unicorn.Tests.Predicates
 
 			var roots = predicate.GetRootPaths();
 
-			roots.Length.Should().Be(11);
-			roots[0].DatabaseName.Should().Be("master");
-			roots[0].Path.Should().Be("/sitecore/layout/Simulators");
-			roots[7].DatabaseName.Should().Be("core");
-			roots[7].Path.Should().Be("/sitecore/coredb");
+			roots.Length.Should().Be(13);
+
+			var basicRoot = roots.FirstOrDefault(root => root.Name.Equals("Basic"));
+			basicRoot?.DatabaseName.Should().Be("master");
+			basicRoot?.Path.Should().Be("/sitecore/layout/Simulators");
+
+			var dbTestRoot = roots.FirstOrDefault(root => root.Name.Equals("DB test"));
+			dbTestRoot?.DatabaseName.Should().Be("core");
+			dbTestRoot?.Path.Should().Be("/sitecore/coredb");
 		}
 
 		private SerializationPresetPredicate CreateTestPredicate(XmlNode configNode)
@@ -142,9 +152,9 @@ namespace Unicorn.Tests.Predicates
 			return doc.DocumentElement;
 		}
 
-		private IItemData CreateTestItem(string path, string database = "master")
+		private IItemData CreateTestItem(string path, string database = "master", string templateId = "{11111111-1111-1111-1111-111111111111}")
 		{
-			return new ProxyItem { Path = path, DatabaseName = database };
+			return new ProxyItem { Path = path, DatabaseName = database, TemplateId = new Guid(templateId) };
 		}
 	}
 }

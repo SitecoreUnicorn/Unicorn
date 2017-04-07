@@ -1,8 +1,10 @@
-﻿namespace Unicorn.Predicates
+﻿using Rainbow.Model;
+
+namespace Unicorn.Predicates
 {
 	public interface IPresetTreeExclusion
 	{
-		PredicateResult Evaluate(string itemPath);
+		PredicateResult Evaluate(IItemData itemData);
 		string Description { get; }
 	}
 }

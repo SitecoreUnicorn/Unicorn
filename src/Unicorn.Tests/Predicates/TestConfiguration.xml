@@ -25,6 +25,18 @@
 		<exclude path="/implicit-nochildren/" /> <!-- implicit exclusion of a child path. NOTE: does not work for paths under the root (e.g. /implicit-nochildren/foo/) -->
 	</include>
 
+  <!-- 
+		TEMPLATE-ID: Exclude all children with a given templateId		
+		NOTE: children of items with the excluded template ID will also be excluded
+	-->
+  <include name="Template ID" database="master" path="/sitecore/allowed">
+    <exclude templateId="{3B4F2B85-778D-44F3-9B2D-BEFF1F3575E6}" />
+  </include>
+
+  <include name="Template ID - exclude" database="master" path="/sitecore/excluded">
+    <exclude templateId="{11111111-1111-1111-1111-111111111111}" /> <!--all test items are created with the following templateId-->
+  </include>  
+  
 	<!-- 
 		SOME-CHILDREN: Include parent, exclude all children EXCEPT for specific ones
 	-->

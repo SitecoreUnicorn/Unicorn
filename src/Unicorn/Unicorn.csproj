@@ -178,6 +178,7 @@
     <Compile Include="PowerShell\SyncUnicornItemCommand.cs" />
     <Compile Include="PowerShell\SyncUnicornConfigurationCommand.cs" />
     <Compile Include="PowerShell\YamlCommandBase.cs" />
+    <Compile Include="Predicates\Exclusions\TemplateBasedPresetExclusion.cs" />
     <Compile Include="Predicates\Exclusions\ChildrenOfPathBasedPresetTreeExclusion.cs" />
     <Compile Include="Predicates\Exclusions\PathBasedPresetTreeExclusion.cs" />
     <Compile Include="Predicates\Exclusions\PathTool.cs" />
