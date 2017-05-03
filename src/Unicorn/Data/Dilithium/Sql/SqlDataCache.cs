@@ -61,7 +61,7 @@ namespace Unicorn.Data.Dilithium.Sql
 			IndexChildren();
 			IndexPaths(rootData);
 
-			Task.WaitAll(readDataTask);
+			readDataTask.Wait();
 
 			return !readDataTask.Result;
 		}
@@ -175,10 +175,14 @@ namespace Unicorn.Data.Dilithium.Sql
 			// all other items will be pathed up based on these
 			foreach (var root in rootData)
 			{
-				currentItem = _itemsById[root.Id];
-				currentItem.Path = root.Path;
-
-				processQueue.Enqueue(currentItem);
+				// we still have to make sure the root is defined in the data
+				// e.g. a root that had transparent sync on could 'resolve' to an item + ID
+				// yet not actually be in the DB/part of the data in results
+				if (_itemsById.TryGetValue(root.Id, out currentItem))
+				{
+					currentItem.Path = root.Path;
+					processQueue.Enqueue(currentItem);
+				}
 			}
 
 			var pathIndex = new Dictionary<string, IList<Guid>>(StringComparer.OrdinalIgnoreCase);
