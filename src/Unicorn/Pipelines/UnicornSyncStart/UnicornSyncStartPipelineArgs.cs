@@ -3,14 +3,11 @@ using Sitecore.Pipelines;
 using Unicorn.Configuration;
 using Unicorn.Logging;
 
-namespace Unicorn.Pipelines.UnicornOperationStart
+namespace Unicorn.Pipelines.UnicornSyncStart
 {
-	/// <summary>
-	/// Pipeline runs when a batch sync begins (e.g. if syncing 4 configs this runs 1 time)
-	/// </summary>
-	public class UnicornOperationStartPipelineArgs : PipelineArgs
+    public class UnicornSyncStartPipelineArgs : PipelineArgs
 	{
-		public UnicornOperationStartPipelineArgs(OperationType type, IConfiguration[] configurations, ILogger logger, IItemData partialOperationRoot)
+        public UnicornSyncStartPipelineArgs(OperationType type, IConfiguration[] configurations, ILogger logger, IItemData partialOperationRoot)
 		{
 			Type = type;
 			Configurations = configurations;
@@ -22,5 +19,6 @@ namespace Unicorn.Pipelines.UnicornOperationStart
 		public IConfiguration[] Configurations { get; }
 		public ILogger Logger { get; }
 		public IItemData PartialOperationRoot { get; }
-	}
+		public bool SyncIsHandled { get; set; }
+    }
 }

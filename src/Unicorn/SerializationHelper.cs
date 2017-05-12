@@ -16,11 +16,12 @@ using Unicorn.Data.DataProvider;
 using Unicorn.Data.Dilithium;
 using Unicorn.Loader;
 using Unicorn.Logging;
-using Unicorn.Pipelines.UnicornOperationStart;
 using Unicorn.Pipelines.UnicornReserializeComplete;
+using Unicorn.Pipelines.UnicornReserializeStart;
 using Unicorn.Pipelines.UnicornSyncBegin;
 using Unicorn.Pipelines.UnicornSyncComplete;
 using Unicorn.Pipelines.UnicornSyncEnd;
+using Unicorn.Pipelines.UnicornSyncStart;
 using Unicorn.Predicates;
 // ReSharper disable TooWideLocalVariableScope
 
@@ -42,7 +43,7 @@ namespace Unicorn
 
 			try
 			{
-				var startArgs = new UnicornOperationStartPipelineArgs(OperationType.FullReserialize, configurations, additionalLogger, null);
+				var startArgs = new UnicornReserializeStartPipelineArgs(OperationType.FullReserialize, configurations, additionalLogger, null);
 				CorePipeline.Run("unicornReserializeStart", startArgs);
 
 				foreach (var configuration in configurations)
@@ -126,7 +127,7 @@ namespace Unicorn
 				{
 					if (runReserializeStartPipeline)
 					{
-						var startArgs = new UnicornOperationStartPipelineArgs(OperationType.PartialReserializeTree, configurations, configurations.First().Resolve<ILogger>(), item);
+						var startArgs = new UnicornReserializeStartPipelineArgs(OperationType.PartialReserializeTree, configurations, configurations.First().Resolve<ILogger>(), item);
 						CorePipeline.Run("unicornReserializeStart", startArgs);
 					}
 
@@ -179,7 +180,7 @@ namespace Unicorn
 
 				try
 				{
-					var startArgs = new UnicornOperationStartPipelineArgs(OperationType.PartialReserializeItem, configurations, configurations.First().Resolve<ILogger>(), item);
+					var startArgs = new UnicornReserializeStartPipelineArgs(OperationType.PartialReserializeItem, configurations, configurations.First().Resolve<ILogger>(), item);
 					CorePipeline.Run("unicornReserializeStart", startArgs);
 
 					foreach (var configuration in configurations)
@@ -227,8 +228,14 @@ namespace Unicorn
 
 			try
 			{
-				var startArgs = new UnicornOperationStartPipelineArgs(OperationType.FullSync, configurations, additionalLogger, null);
+				var startArgs = new UnicornSyncStartPipelineArgs(OperationType.FullSync, configurations, additionalLogger, null);
 				CorePipeline.Run("unicornSyncStart", startArgs);
+
+				if (startArgs.SyncIsHandled)
+				{
+					additionalLogger.Info("Unicorn Sync Start pipeline signalled that it handled the sync for all configurations.");
+					return true;
+				}
 
 				foreach (var configuration in configurations)
 				{
@@ -324,10 +331,16 @@ namespace Unicorn
 			{
 				if (runSyncStartPipeline)
 				{
-					var startArgs = new UnicornOperationStartPipelineArgs(OperationType.PartialSync, new[] { configuration }, logger, partialSyncRoot);
+					var startArgs = new UnicornSyncStartPipelineArgs(OperationType.PartialSync, new[] { configuration }, logger, partialSyncRoot);
 					CorePipeline.Run("unicornSyncStart", startArgs);
+
+					if (startArgs.SyncIsHandled)
+					{
+						logger.Info("Unicorn Sync Start pipeline signalled that it handled the sync for all configurations.");
+						return true;
+					}
 				}
-				
+
 				var beginArgs = new UnicornSyncBeginPipelineArgs(configuration);
 				CorePipeline.Run("unicornSyncBegin", beginArgs);
 				

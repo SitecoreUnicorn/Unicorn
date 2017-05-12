@@ -160,12 +160,14 @@
     <Compile Include="Pipelines\UnicornExpandConfigurationVariables\HelixConventionVariablesReplacer.cs" />
     <Compile Include="Pipelines\UnicornExpandConfigurationVariables\IUnicornExpandConfigurationVariablesProcessor.cs" />
     <Compile Include="Pipelines\UnicornExpandConfigurationVariables\UnicornExpandConfigurationVariablesPipelineArgs.cs" />
+    <Compile Include="Pipelines\UnicornSyncStart\IUnicornSyncStartProcessor.cs" />
+    <Compile Include="Pipelines\UnicornSyncStart\UnicornSyncStartPipelineArgs.cs" />
     <Compile Include="Pipelines\UnicornReserializeComplete\IUnicornReserializeCompleteProcessor.cs" />
     <Compile Include="Pipelines\UnicornReserializeComplete\UnicornReserializeCompletePipelineArgs.cs" />
     <Compile Include="Pipelines\UnicornSyncComplete\DictionaryCacheClearer.cs" />
     <Compile Include="Pipelines\UnicornSyncComplete\SyncedItemPostProcessor.cs" />
-    <Compile Include="Pipelines\UnicornOperationStart\IUnicornOperationStartProcessor.cs" />
-    <Compile Include="Pipelines\UnicornOperationStart\UnicornOperationStartPipelineArgs.cs" />
+    <Compile Include="Pipelines\UnicornReserializeStart\IUnicornReserializeStartProcessor.cs" />
+    <Compile Include="Pipelines\UnicornReserializeStart\UnicornReserializeStartPipelineArgs.cs" />
     <Compile Include="PowerShell\ConvertFromRainbowYamlCommand.cs" />
     <Compile Include="PowerShell\ImportRainbowYamlCommand.cs" />
     <Compile Include="PowerShell\ConvertToRainbowYamlCommand.cs" />
