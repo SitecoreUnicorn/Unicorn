@@ -61,9 +61,9 @@ When using [Transparent Sync](http://kamsar.net/index.php/2015/10/Unicorn-Introd
 ### Use the Automated Tool API
 Unicorn has an automated tool API whereby you can invoke actions in the Unicorn control panel from a script, such as invoking a sync after a code deployment.
 
-**NOTE: Automated Tool API is completely overhauled in Unicorn 3.1, and these instructions are for 3.1 only**
+**NOTE: Automated Tool API is completely overhauled in Unicorn 3.1 and later, and these instructions are for 3.1+ only**
 
-Tools are authenticated using a shared secret between the tool and the Sitecore server running Unicorn, which is relayed via [CHAP](https://en.wikipedia.org/wiki/Challenge-Handshake_Authentication_Protocol)+[HMAC](https://en.wikipedia.org/wiki/Hash-based_message_authentication_code)-SHA512. The practical upshot of this is that the shared secret never travels over the wire, the authentication key is unique every time, and replay attacks are not possible. You should still use the tool API over a TLS connection if possible.
+Tools are authenticated using a shared secret between the tool and the Sitecore server running Unicorn, which is relayed via [CHAP](https://en.wikipedia.org/wiki/Challenge-Handshake_Authentication_Protocol)+[HMAC](https://en.wikipedia.org/wiki/Hash-based_message_authentication_code)-SHA512. The practical upshot of this is that the shared secret never travels over the wire, the authentication key is unique every time, and replay attacks are not possible. You should still use the tool API over a TLS (SSL) connection if possible.
 
 Calls to the control panel from an automated tool behave a little differently from interactive control panel sessions. Specifically:
 
@@ -76,7 +76,7 @@ Ok, ok. Shut up about crypto and tell me how to set it up.
 
 1. Generate a very long random shared secret key, preferably using a password generator. There are no limits on character count, character types, etc but it must be > 30 characters.
 2. Install the shared secret into the `Unicorn.UI.config` file - or a patch thereof, under the `authenticationProvider/SharedSecret` node. There are comments to help.
-3. To call the tool API from a script, a PowerShell module is provided. Acquire the module and its supporting files from the `doc\PowerShell Remote Scripting` folder of the Unicorn git repository.
+3. To call the tool API from a script, a PowerShell module is provided. Acquire the module and its supporting files from the `packages\Unicorn.version\tools\PSAPI` folder of where you installed the Unicorn NuGet package. (Alternatively, it's also in  `doc\PowerShell Remote Scripting` folder of the Unicorn git repository, however this is always the latest and not necessarily matching your installed Unicorn version)
 4. Review the `sample.ps1` file and adapt it to your needs, including putting the shared secret into it and setting the URL as needed. Don't worry the guts of `sample.ps1` are two simple lines of code :)
 
 NOTE: When deploying to a Content Editing or Content Delivery server, the Unicorn configuration should be trimmed down from development. Each config file in `App_Config/Include/Unicorn` has comments at the top designating what environment(s) it should live on. If you opt to use Transparent Sync as a deployment mechanism, make sure you do not disable the data provider config file.

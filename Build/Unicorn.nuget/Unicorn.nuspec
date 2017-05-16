@@ -22,5 +22,6 @@
 		<file src="..\..\src\Unicorn\Standard Config Files\*.disabled" target="content\App_Config\Include\Unicorn" />
 		<file src="..\..\src\Unicorn\Standard Config Files\*.example" target="content\App_Config\Include\Unicorn" />
 		<file src="readme.txt" target="" />
+		<file src="..\..\doc\PowerShell Remote Scripting\*.*" target="tools\PSAPI" />
 	</files>
 </package>
