@@ -176,10 +176,15 @@ namespace Unicorn.Data.Dilithium.Sql
 				foreach (var database in databases)
 				{
 					var dataCore = new SqlDataCache(database.Key);
+
+					var rootIds = database.Value.Select(v => v.Id).ToArray();
+
+					if (rootIds.Length == 0) continue;
+
 					using (var sqlConnection = new SqlConnection(ConfigurationManager.ConnectionStrings[database.Key].ConnectionString))
 					{
 						sqlConnection.Open();
-						using (var sqlCommand = ConstructSqlBatch(database.Value.Select(v => v.Id).ToArray(), intersectedIgnoredFields?.ToArray()))
+						using (var sqlCommand = ConstructSqlBatch(rootIds, intersectedIgnoredFields?.ToArray()))
 						{
 							sqlCommand.Connection = sqlConnection;
 
