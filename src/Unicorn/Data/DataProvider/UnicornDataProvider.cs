@@ -753,38 +753,50 @@ namespace Unicorn.Data.DataProvider
 
 		protected virtual void RemoveItemFromCaches(IItemMetadata metadata, string databaseName)
 		{
-			if (databaseName != Database.Name) return;
-
-			// this is a bit heavy handed, sure.
-			// but the caches get interdependent stuff - like caching child IDs
-			// that make it difficult to cleanly remove a single item ID from all cases in the cache
-			// either way, this should be a relatively rare occurrence (from runtime changes on disk)
-			// and we're preserving prefetch, etc. Seems pretty zippy overall.
-			CacheManager.ClearAllCaches();
-
-			if (metadata == null) return;
-
-			if (metadata.TemplateId == TemplateIDs.Template.Guid || metadata.TemplateId == TemplateIDs.TemplateField.Guid || metadata.Path.EndsWith("__Standard Values", StringComparison.OrdinalIgnoreCase))
-				Database.Engines.TemplateEngine.Reset();
-
-			if (_syncConfiguration.UpdateLinkDatabase || _syncConfiguration.UpdateSearchIndex)
+			try
 			{
-				var item = GetSourceItemFromId(new ID(metadata.Id), true);
+				if (databaseName != Database.Name) return;
 
-				if (item == null) return;
+				// this is a bit heavy handed, sure.
+				// but the caches get interdependent stuff - like caching child IDs
+				// that make it difficult to cleanly remove a single item ID from all cases in the cache
+				// either way, this should be a relatively rare occurrence (from runtime changes on disk)
+				// and we're preserving prefetch, etc. Seems pretty zippy overall.
+				CacheManager.ClearAllCaches();
 
-				if (_syncConfiguration.UpdateLinkDatabase)
+				if (metadata == null) return;
+
+				if (metadata.TemplateId == TemplateIDs.Template.Guid || 
+					metadata.TemplateId == TemplateIDs.TemplateField.Guid ||
+					(metadata.Path != null && metadata.Path.EndsWith("__Standard Values", StringComparison.OrdinalIgnoreCase)))
 				{
-					Globals.LinkDatabase.UpdateReferences(item);
+					Database.Engines.TemplateEngine.Reset();
 				}
 
-				if (_syncConfiguration.UpdateSearchIndex)
+				if (_syncConfiguration != null && (_syncConfiguration.UpdateLinkDatabase || _syncConfiguration.UpdateSearchIndex))
 				{
-					foreach (var index in ContentSearchManager.Indexes)
+					var item = GetSourceItemFromId(new ID(metadata.Id), true);
+
+					if (item == null) return;
+
+					if (_syncConfiguration.UpdateLinkDatabase)
 					{
-						IndexCustodian.UpdateItem(index, new SitecoreItemUniqueId(item.Uri));
+						Globals.LinkDatabase.UpdateReferences(item);
+					}
+
+					if (_syncConfiguration.UpdateSearchIndex)
+					{
+						foreach (var index in ContentSearchManager.Indexes)
+						{
+							IndexCustodian.UpdateItem(index, new SitecoreItemUniqueId(item.Uri));
+						}
 					}
 				}
+			}
+			catch (Exception ex)
+			{
+				// we catch this because this method runs on a background thread. If an unhandled exception occurs there, the app pool terminates and that's Naughty(tm).
+				Log.Error($"[Unicorn] Exception occurred while processing a background item cache removal on {metadata?.Path ?? "unknown item"}", ex, this);
 			}
 		}
 
