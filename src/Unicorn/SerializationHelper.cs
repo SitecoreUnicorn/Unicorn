@@ -32,7 +32,10 @@ namespace Unicorn
 	/// </summary>
 	public class SerializationHelper
 	{
-		public Dictionary<string, object> PipelineArgumentData { get; set; }
+		/// <summary>
+		/// Case-insensitive dictionary for which the key-value pairs will be injected into the pipeline arguments as 'CustomData'.
+		/// </summary>
+		public IDictionary<string, object> PipelineArgumentData { get; } = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
 
 		public virtual IConfiguration[] GetConfigurationsForItem(IItemData item)
 		{
@@ -475,8 +478,6 @@ namespace Unicorn
 		protected virtual T MergePipelineArgs<T>(T args)
 			where T : PipelineArgs
 		{
-			if (PipelineArgumentData == null || PipelineArgumentData.Count == 0) return args;
-
 			foreach (var pair in PipelineArgumentData)
 			{
 				object value;
