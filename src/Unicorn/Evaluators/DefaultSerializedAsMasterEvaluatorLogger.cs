@@ -17,19 +17,19 @@ namespace Unicorn.Evaluators
 	[ExcludeFromCodeCoverage]
 	public class DefaultSerializedAsMasterEvaluatorLogger : ISerializedAsMasterEvaluatorLogger
 	{
-		private readonly ILogger _logger;
+		protected readonly ILogger Logger;
 		private readonly ISyncCompleteDataCollector _pipelineDataCollector;
 		private const int MaxFieldLengthToDisplayValue = 60;
 
 		public DefaultSerializedAsMasterEvaluatorLogger(ILogger logger, ISyncCompleteDataCollector pipelineDataCollector)
 		{
-			_logger = logger;
+			Logger = logger;
 			_pipelineDataCollector = pipelineDataCollector;
 		}
 
 		public virtual void RecycledItem(IItemData deletedItem)
 		{
-			_logger.Warn("[D] {0} because it did not exist in the serialization provider. Can restore from recycle bin.".FormatWith(deletedItem.GetDisplayIdentifier()));
+			Logger.Warn("[D] {0} because it did not exist in the serialization provider. Can restore from recycle bin.".FormatWith(deletedItem.GetDisplayIdentifier()));
 			_pipelineDataCollector.PushChangedItem(deletedItem, ChangeType.Deleted);
 			_pipelineDataCollector.AddProcessedItem();
 		}
@@ -40,17 +40,17 @@ namespace Unicorn.Evaluators
 
 			if (targetValue == null)
 			{
-				_logger.Debug("> Field {0} - Reset to standard value".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId)));
+				Logger.Debug("> Field {0} - Reset to standard value".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId)));
 			}
 			else if (targetValue.Length < MaxFieldLengthToDisplayValue && (sourceValue == null || sourceValue.Length < MaxFieldLengthToDisplayValue))
 			{
 				var encodedTarget = HttpUtility.HtmlEncode(targetValue);
 				var encodedSource = sourceValue == null ? string.Empty: HttpUtility.HtmlEncode(sourceValue);
-				_logger.Debug("> Field {0} - Serialized '{1}', Source '{2}'".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId), encodedTarget, encodedSource));
+				Logger.Debug("> Field {0} - Serialized '{1}', Source '{2}'".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId), encodedTarget, encodedSource));
 			}
 			else
 			{
-				_logger.Debug("> Field {0} - Value mismatch (values too long to display)".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId)));
+				Logger.Debug("> Field {0} - Value mismatch (values too long to display)".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId)));
 			}
 		}
 
@@ -60,17 +60,17 @@ namespace Unicorn.Evaluators
 
 			if (targetValue == null)
 			{
-				_logger.Debug("> Field {0} - {1} - Reset to standard value".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId), language.Name));
+				Logger.Debug("> Field {0} - {1} - Reset to standard value".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId), language.Name));
 			}
 			else if (targetValue.Length < MaxFieldLengthToDisplayValue && (sourceValue == null || sourceValue.Length < MaxFieldLengthToDisplayValue))
 			{
 				var encodedTarget = HttpUtility.HtmlEncode(targetValue);
 				var encodedSource = sourceValue == null ? string.Empty : HttpUtility.HtmlEncode(sourceValue);
-				_logger.Debug("> Field {0} - {1} - Serialized '{2}', Source '{3}'".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId), language.Name, encodedTarget, encodedSource));
+				Logger.Debug("> Field {0} - {1} - Serialized '{2}', Source '{3}'".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId), language.Name, encodedTarget, encodedSource));
 			}
 			else
 			{
-				_logger.Debug("> Field {0} - {1} - Value mismatch (values too long to display)".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId), language.Name));
+				Logger.Debug("> Field {0} - {1} - Value mismatch (values too long to display)".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId), language.Name));
 			}
 		}
 
@@ -81,17 +81,17 @@ namespace Unicorn.Evaluators
 
 			if (targetValue == null)
 			{
-				_logger.Debug("> Field {0} - {1}#{2} - Reset to standard value".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId), version.Language, version.VersionNumber));
+				Logger.Debug("> Field {0} - {1}#{2} - Reset to standard value".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId), version.Language, version.VersionNumber));
 			}
 			else if (targetValue.Length < MaxFieldLengthToDisplayValue && (sourceValue == null || sourceValue.Length < MaxFieldLengthToDisplayValue))
 			{
 				var encodedTarget = HttpUtility.HtmlEncode(targetValue);
 				var encodedSource = sourceValue == null ? string.Empty : HttpUtility.HtmlEncode(sourceValue);
-				_logger.Debug("> Field {0} - {1}#{2}: Serialized '{3}', Source '{4}'".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId), version.Language, version.VersionNumber, encodedTarget, encodedSource));
+				Logger.Debug("> Field {0} - {1}#{2}: Serialized '{3}', Source '{4}'".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId), version.Language, version.VersionNumber, encodedTarget, encodedSource));
 			}
 			else
 			{
-				_logger.Debug("> Field {0} - {1}#{2}: Value mismatch (values too long to display)".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId), version.Language, version.VersionNumber));
+				Logger.Debug("> Field {0} - {1}#{2}: Value mismatch (values too long to display)".FormatWith(TryResolveItemName(targetItem.DatabaseName, fieldId), version.Language, version.VersionNumber));
 			}
 		}
 
@@ -100,7 +100,7 @@ namespace Unicorn.Evaluators
 			Assert.ArgumentNotNull(sourceItem, "sourceItem");
 			Assert.ArgumentNotNull(targetItem, "targetItem");
 
-			_logger.Debug("> Template: Serialized '{0}', Source '{1}'".FormatWith(TryResolveItemName(targetItem.DatabaseName, targetItem.TemplateId), TryResolveItemName(sourceItem.DatabaseName, sourceItem.TemplateId)));
+			Logger.Debug("> Template: Serialized '{0}', Source '{1}'".FormatWith(TryResolveItemName(targetItem.DatabaseName, targetItem.TemplateId), TryResolveItemName(sourceItem.DatabaseName, sourceItem.TemplateId)));
 		}
 
 		public virtual void Renamed(IItemData sourceItem, IItemData targetItem)
@@ -108,7 +108,7 @@ namespace Unicorn.Evaluators
 			Assert.ArgumentNotNull(sourceItem, "sourceItem");
 			Assert.ArgumentNotNull(targetItem, "targetItem");
 
-			_logger.Debug("> Name: Serialized '{0}', Source '{1}'".FormatWith(targetItem.Name, sourceItem.Name));
+			Logger.Debug("> Name: Serialized '{0}', Source '{1}'".FormatWith(targetItem.Name, sourceItem.Name));
 		}
 
 
@@ -116,14 +116,14 @@ namespace Unicorn.Evaluators
 		{
 			Assert.ArgumentNotNull(newSerializedVersion, "newSerializedVersion");
 
-			_logger.Debug("> New version {0}#{1} (serialized)".FormatWith(newSerializedVersion.Language, newSerializedVersion.VersionNumber));
+			Logger.Debug("> New version {0}#{1} (serialized)".FormatWith(newSerializedVersion.Language, newSerializedVersion.VersionNumber));
 		}
 
 		public virtual void OrphanSourceVersion(IItemData existingItemData, IItemData serializedItemData, IItemVersion[] orphanSourceVersions)
 		{
 			Assert.ArgumentNotNull(orphanSourceVersions, "orphanSourceVersions");
 
-			_logger.Debug("> Orphaned version{0} {1} (source)".FormatWith(orphanSourceVersions.Length > 1 ? "s" : string.Empty, string.Join(", ", orphanSourceVersions.Select(x => x.Language + "#" + x.VersionNumber))));
+			Logger.Debug("> Orphaned version{0} {1} (source)".FormatWith(orphanSourceVersions.Length > 1 ? "s" : string.Empty, string.Join(", ", orphanSourceVersions.Select(x => x.Language + "#" + x.VersionNumber))));
 		}
 
 		public void Evaluated(IItemData item)
@@ -137,7 +137,7 @@ namespace Unicorn.Evaluators
 		{
 			Assert.ArgumentNotNull(targetItem, "targetItem");
 
-			_logger.Info("[A] {0}".FormatWith(targetItem.GetDisplayIdentifier()));
+			Logger.Info("[A] {0}".FormatWith(targetItem.GetDisplayIdentifier()));
 			_pipelineDataCollector.PushChangedItem(targetItem, ChangeType.Created);
 			_pipelineDataCollector.AddProcessedItem();
 		}
@@ -146,7 +146,7 @@ namespace Unicorn.Evaluators
 		{
 			Assert.ArgumentNotNull(targetItem, "targetItem");
 
-			_logger.Info("[U] {0}".FormatWith(targetItem.GetDisplayIdentifier()));
+			Logger.Info("[U] {0}".FormatWith(targetItem.GetDisplayIdentifier()));
 			_pipelineDataCollector.PushChangedItem(targetItem, ChangeType.Modified);
 			_pipelineDataCollector.AddProcessedItem();
 		}
