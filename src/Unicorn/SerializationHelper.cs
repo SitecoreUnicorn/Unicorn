@@ -32,6 +32,11 @@ namespace Unicorn
 	/// </summary>
 	public class SerializationHelper
 	{
+		/// <summary>
+		/// Case-insensitive dictionary for which the key-value pairs will be injected into the pipeline arguments as 'CustomData'.
+		/// </summary>
+		public IDictionary<string, object> PipelineArgumentData { get; } = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+
 		public virtual IConfiguration[] GetConfigurationsForItem(IItemData item)
 		{
 			return UnicornConfigurationManager.Configurations.Where(configuration => configuration.Resolve<IPredicate>().Includes(item).IsIncluded).ToArray();
@@ -44,6 +49,7 @@ namespace Unicorn
 			try
 			{
 				var startArgs = new UnicornReserializeStartPipelineArgs(OperationType.FullReserialize, configurations, additionalLogger, null);
+				MergePipelineArgs(startArgs);
 				CorePipeline.Run("unicornReserializeStart", startArgs);
 
 				foreach (var configuration in configurations)
@@ -83,7 +89,7 @@ namespace Unicorn
 
 							timer.Stop();
 
-							CorePipeline.Run("unicornReserializeComplete", new UnicornReserializeCompletePipelineArgs(configuration));
+							CorePipeline.Run("unicornReserializeComplete", MergePipelineArgs(new UnicornReserializeCompletePipelineArgs(configuration)));
 
 							logger.Info("{0} reserialization complete in {1}ms.".FormatWith(configuration.Name, timer.ElapsedMilliseconds));
 						}
@@ -128,6 +134,7 @@ namespace Unicorn
 					if (runReserializeStartPipeline)
 					{
 						var startArgs = new UnicornReserializeStartPipelineArgs(OperationType.PartialReserializeTree, configurations, configurations.First().Resolve<ILogger>(), item);
+						MergePipelineArgs(startArgs);
 						CorePipeline.Run("unicornReserializeStart", startArgs);
 					}
 
@@ -181,6 +188,7 @@ namespace Unicorn
 				try
 				{
 					var startArgs = new UnicornReserializeStartPipelineArgs(OperationType.PartialReserializeItem, configurations, configurations.First().Resolve<ILogger>(), item);
+					MergePipelineArgs(startArgs);
 					CorePipeline.Run("unicornReserializeStart", startArgs);
 
 					foreach (var configuration in configurations)
@@ -229,6 +237,7 @@ namespace Unicorn
 			try
 			{
 				var startArgs = new UnicornSyncStartPipelineArgs(OperationType.FullSync, configurations, additionalLogger, null);
+				MergePipelineArgs(startArgs);
 				CorePipeline.Run("unicornSyncStart", startArgs);
 
 				if (startArgs.SyncIsHandled)
@@ -306,7 +315,7 @@ namespace Unicorn
 
 			try
 			{
-				CorePipeline.Run("unicornSyncEnd", new UnicornSyncEndPipelineArgs(additionalLogger, success, configurations));
+				CorePipeline.Run("unicornSyncEnd", MergePipelineArgs(new UnicornSyncEndPipelineArgs(additionalLogger, success, configurations)));
 			}
 			catch (Exception exception)
 			{
@@ -332,6 +341,7 @@ namespace Unicorn
 				if (runSyncStartPipeline)
 				{
 					var startArgs = new UnicornSyncStartPipelineArgs(OperationType.PartialSync, new[] { configuration }, logger, partialSyncRoot);
+					MergePipelineArgs(startArgs);
 					CorePipeline.Run("unicornSyncStart", startArgs);
 
 					if (startArgs.SyncIsHandled)
@@ -342,6 +352,7 @@ namespace Unicorn
 				}
 
 				var beginArgs = new UnicornSyncBeginPipelineArgs(configuration);
+				MergePipelineArgs(beginArgs);
 				CorePipeline.Run("unicornSyncBegin", beginArgs);
 				
 				if (beginArgs.Aborted)
@@ -391,7 +402,7 @@ namespace Unicorn
 				if (!dilithiumWasStarted) ReactorContext.Dispose();
 			}
 
-			CorePipeline.Run("unicornSyncComplete", new UnicornSyncCompletePipelineArgs(configuration, syncStartTimestamp));
+			CorePipeline.Run("unicornSyncComplete", MergePipelineArgs(new UnicornSyncCompletePipelineArgs(configuration, syncStartTimestamp)));
 
 			return true;
 		}
@@ -462,6 +473,19 @@ namespace Unicorn
 
 			targetDataStore.Save(item);
 			return predicateResult;
+		}
+
+		protected virtual T MergePipelineArgs<T>(T args)
+			where T : PipelineArgs
+		{
+			foreach (var pair in PipelineArgumentData)
+			{
+				object value;
+				if (!args.CustomData.TryGetValue(pair.Key, out value))
+					args.CustomData[pair.Key] = pair.Value;
+			}
+
+			return args;
 		}
 	}
 }
