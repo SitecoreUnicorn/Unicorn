@@ -115,6 +115,16 @@ namespace Unicorn.ControlPanel.Controls
 						max-width: 960px;
 					}
 
+                    .batch-configurations {
+                        max-height: 400px;
+                        overflow-y: auto;
+                        margin-bottom: 10px;
+                    }
+
+                    .batch-configurations li {
+                        word-wrap: break-word;
+                    }
+
 					.batch > section {
 						float: right;
 						background: white;

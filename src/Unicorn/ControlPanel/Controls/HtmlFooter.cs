@@ -138,6 +138,20 @@ namespace Unicorn.ControlPanel.Controls
 			Cookies.set('UnicornSkipTransparent', skipTransparent ? 1 : 0, { expires: 730 });
 			Cookies.set('UnicornLogVerbosity', verbosity, { expires: 730 });
 		}
+
+        var fakeboxAll = $('.fakebox-all');
+        var sticky = $('.batch');
+        stickyTop = fakeboxAll.offset().top - fakeboxAll.height();
+        $(window).scroll(function () {
+            var scroll = $(window).scrollTop();
+
+            if (scroll >= fakeboxAll.offset().top) {
+                sticky.css({ 'top': 10 });
+            }
+            else {
+                sticky.css({ 'top': stickyTop - scroll });
+            }
+        });
 	</script>");
 			writer.Write(" </body></html>");
 		}
