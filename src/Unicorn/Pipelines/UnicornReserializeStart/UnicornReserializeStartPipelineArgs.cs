@@ -5,7 +5,7 @@ using Unicorn.Logging;
 
 namespace Unicorn.Pipelines.UnicornReserializeStart
 {
-	public class UnicornReserializeStartPipelineArgs : PipelineArgs
+	public class UnicornReserializeStartPipelineArgs : PipelineArgs, IUnicornOperationStartPipelineArgs
 	{
 		public UnicornReserializeStartPipelineArgs(OperationType type, IConfiguration[] configurations, ILogger logger, IItemData partialOperationRoot)
 		{

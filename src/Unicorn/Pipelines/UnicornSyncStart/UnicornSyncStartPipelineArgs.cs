@@ -5,9 +5,9 @@ using Unicorn.Logging;
 
 namespace Unicorn.Pipelines.UnicornSyncStart
 {
-    public class UnicornSyncStartPipelineArgs : PipelineArgs
+	public class UnicornSyncStartPipelineArgs : PipelineArgs, IUnicornOperationStartPipelineArgs
 	{
-        public UnicornSyncStartPipelineArgs(OperationType type, IConfiguration[] configurations, ILogger logger, IItemData partialOperationRoot)
+		public UnicornSyncStartPipelineArgs(OperationType type, IConfiguration[] configurations, ILogger logger, IItemData partialOperationRoot)
 		{
 			Type = type;
 			Configurations = configurations;
@@ -20,5 +20,5 @@ namespace Unicorn.Pipelines.UnicornSyncStart
 		public ILogger Logger { get; }
 		public IItemData PartialOperationRoot { get; }
 		public bool SyncIsHandled { get; set; }
-    }
+	}
 }

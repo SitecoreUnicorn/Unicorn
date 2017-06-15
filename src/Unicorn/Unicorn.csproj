@@ -160,6 +160,7 @@
     <Compile Include="Pipelines\UnicornExpandConfigurationVariables\HelixConventionVariablesReplacer.cs" />
     <Compile Include="Pipelines\UnicornExpandConfigurationVariables\IUnicornExpandConfigurationVariablesProcessor.cs" />
     <Compile Include="Pipelines\UnicornExpandConfigurationVariables\UnicornExpandConfigurationVariablesPipelineArgs.cs" />
+    <Compile Include="Pipelines\IUnicornOperationStartPipelineArgs.cs" />
     <Compile Include="Pipelines\UnicornSyncStart\IUnicornSyncStartProcessor.cs" />
     <Compile Include="Pipelines\UnicornSyncStart\UnicornSyncStartPipelineArgs.cs" />
     <Compile Include="Pipelines\UnicornReserializeComplete\IUnicornReserializeCompleteProcessor.cs" />
