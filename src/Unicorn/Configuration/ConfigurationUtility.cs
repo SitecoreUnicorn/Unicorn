@@ -20,6 +20,7 @@ namespace Unicorn.Configuration
 				var hostingRoot = HostingEnvironment.IsHosted
 					? HostingEnvironment.MapPath("~/")
 					: AppDomain.CurrentDomain.BaseDirectory;
+
 				return Path.Combine(hostingRoot, configPath.Substring(2).Replace('/', '\\'));
 			}
 

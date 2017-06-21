@@ -124,7 +124,7 @@ namespace Unicorn.Tests.Predicates
 
 			var roots = predicate.GetRootPaths();
 
-			roots.Length.Should().Be(13);
+			roots.Length.Should().Be(14);
 
 			var basicRoot = roots.FirstOrDefault(root => root.Name.Equals("Basic"));
 			basicRoot?.DatabaseName.Should().Be("master");

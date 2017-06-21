@@ -2,11 +2,17 @@
 using System.Reflection;
 using System.Xml;
 using Unicorn.Configuration;
+using Unicorn.Pipelines.UnicornExpandConfigurationVariables;
 
 namespace Unicorn.Tests.Configuration
 {
 	internal class TestConfigyConfigurationProvider : ConfigyConfigurationProvider
 	{
+		public TestConfigyConfigurationProvider() : base(new HelixConventionVariablesReplacer())
+		{
+			
+		}
+
 		protected override XmlNode GetConfigurationNode()
 		{
 			var assembly = Assembly.GetExecutingAssembly();

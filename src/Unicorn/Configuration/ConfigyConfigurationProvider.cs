@@ -23,8 +23,13 @@ namespace Unicorn.Configuration
 	{
 		private IConfiguration[] _configurations;
 
-		public ConfigyConfigurationProvider() : base(new PipelineBasedVariablesReplacer())
+		public ConfigyConfigurationProvider() : this(new PipelineBasedVariablesReplacer())
 		{
+		}
+
+		protected ConfigyConfigurationProvider(IContainerDefinitionVariablesReplacer variablesReplacer) : base(variablesReplacer)
+		{
+			
 		}
 
 		public IConfiguration[] Configurations

@@ -1,4 +1,6 @@
-﻿using Unicorn.Configuration;
+﻿using System;
+using FluentAssertions;
+using Unicorn.Configuration;
 using Xunit;
 
 namespace Unicorn.Tests.Configuration
@@ -8,21 +10,21 @@ namespace Unicorn.Tests.Configuration
 		[Fact]
 		public void ResolveConfigurationPath_ResolvesExpectedPath_WhenPathIsAbsolute()
 		{
-			Assert.Equal("c:\\web", ConfigurationUtility.ResolveConfigurationPath("c:\\web"));
+			ConfigurationUtility.ResolveConfigurationPath("c:\\web").Should().Be("c:\\web");
 		}
 
 		[Fact]
 		public void ResolveConfigurationPath_ResolvesExpectedPath_WhenPathIsRootRelative()
 		{
 			// HostingEnvironment returns null out of web context so path = empty string
-			Assert.Equal("", ConfigurationUtility.ResolveConfigurationPath("~/"));
+			ConfigurationUtility.ResolveConfigurationPath("~/").Should().Be(AppDomain.CurrentDomain.BaseDirectory);
 		}
 
 		[Fact]
 		public void ResolveConfigurationPath_ResolvesExpectedPath_WhenPathIsRelative()
 		{
 			// HostingEnvironment returns null out of web context so root = empty string
-			Assert.Equal("..\\hello", ConfigurationUtility.ResolveConfigurationPath("~/../hello"));
+			ConfigurationUtility.ResolveConfigurationPath("~/../hello").Should().Be($"{AppDomain.CurrentDomain.BaseDirectory}\\..\\hello");
 		}
 	}
 }
