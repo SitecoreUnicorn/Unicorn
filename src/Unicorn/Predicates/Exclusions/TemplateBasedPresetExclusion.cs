@@ -11,7 +11,7 @@ namespace Unicorn.Predicates.Exclusions
 	{
 		private readonly string _excludedTemplate;
 
-		public TemplateBasedPresetExclusion(string templateId, PresetTreeRoot root)
+		public TemplateBasedPresetExclusion(string templateId)
 		{
 			_excludedTemplate = templateId;
 		}

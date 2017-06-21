@@ -38,11 +38,15 @@ namespace Unicorn.Tests.Predicates
 		[InlineData("/implicit-nochildren/ignoredchild", false)]
 		[InlineData("/implicit-nochildren/ignored/stillignored", false)]
 		[InlineData("/implicit-nochildrenwithextrachars", false)]
-		// TEMPLATE-ID test config
+		// TEMPLATE ID test config
 		[InlineData("/sitecore/allowed", true)]
 		[InlineData("/sitecore/allowed/child", true)]
 		[InlineData("/sitecore/excluded", false)]
 		[InlineData("/sitecore/excluded/nochildrenwithexcludedparent", false)]
+		// NAME PATTERN test config
+		[InlineData("/sitecore/namepattern/foo", true)]
+		[InlineData("/sitecore/namepattern/not __Standard values", true)]
+		[InlineData("/sitecore/namepattern/__Standard values", false)]
 		// SOME-CHILDREN test config
 		[InlineData("/somechildren", true)]
 		[InlineData("/somechildren/ignoredchild", false)]
@@ -154,7 +158,8 @@ namespace Unicorn.Tests.Predicates
 
 		private IItemData CreateTestItem(string path, string database = "master", string templateId = "{11111111-1111-1111-1111-111111111111}")
 		{
-			return new ProxyItem { Path = path, DatabaseName = database, TemplateId = new Guid(templateId) };
+			var name = path.Substring(path.LastIndexOf('/') + 1);
+			return new ProxyItem { Name = name, Path = path, DatabaseName = database, TemplateId = new Guid(templateId) };
 		}
 	}
 }

@@ -184,7 +184,12 @@ namespace Unicorn.Predicates
 
 			if (excludeNode.HasAttribute("templateId"))
 			{
-				return new TemplateBasedPresetExclusion(GetExpectedAttribute(excludeNode, "templateId"), root);
+				return new TemplateBasedPresetExclusion(GetExpectedAttribute(excludeNode, "templateId"));
+			}
+
+			if (excludeNode.HasAttribute("namePattern"))
+			{
+				return new NameBasedPresetExclusion(GetExpectedAttribute(excludeNode, "namePattern"));
 			}
 
 			var exclusions = excludeNode.ChildNodes
