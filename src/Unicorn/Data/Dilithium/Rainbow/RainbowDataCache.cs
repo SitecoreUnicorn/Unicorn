@@ -108,7 +108,13 @@ namespace Unicorn.Data.Dilithium.Rainbow
 
 			foreach (var childId in guids)
 			{
-				items.Add(_itemsById[childId]);
+				if (!_itemsById.TryGetValue(childId, out RainbowItemData item))
+				{
+					Log.Debug($"[Dilithium] Child ID {childId} was not present in the items by ID index. This can occur if the item was deleted previously during a sync, in which case it's expected.");
+					continue;
+				}
+
+				items.Add(item);
 			}
 
 			return items;
