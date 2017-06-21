@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Linq;
+using System.Text.RegularExpressions;
 using Rainbow.Model;
 
 namespace Unicorn.Predicates.Exclusions
@@ -22,9 +23,14 @@ namespace Unicorn.Predicates.Exclusions
 
 		public PredicateResult Evaluate(IItemData itemData)
 		{
-			if (Regex.IsMatch(itemData.Name, _namePattern, RegexOptions.Compiled | RegexOptions.IgnoreCase))
+			var nameCandidates = itemData.Path.Split('/').Reverse();
+
+			foreach (var nameCandidate in nameCandidates)
 			{
-				return new PredicateResult($"Item name exclusion rule: {_namePattern}");
+				if (Regex.IsMatch(nameCandidate, _namePattern, RegexOptions.Compiled | RegexOptions.IgnoreCase))
+				{
+					return new PredicateResult($"Item name exclusion rule: {_namePattern}");
+				}
 			}
 
 			return new PredicateResult(true);

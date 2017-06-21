@@ -47,6 +47,7 @@ namespace Unicorn.Tests.Predicates
 		[InlineData("/sitecore/namepattern/foo", true)]
 		[InlineData("/sitecore/namepattern/not __Standard values", true)]
 		[InlineData("/sitecore/namepattern/__Standard values", false)]
+		[InlineData("/sitecore/namepattern/__Standard values/child-thereof", false)]
 		// SOME-CHILDREN test config
 		[InlineData("/somechildren", true)]
 		[InlineData("/somechildren/ignoredchild", false)]
