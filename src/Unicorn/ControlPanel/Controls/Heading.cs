@@ -33,8 +33,8 @@ namespace Unicorn.ControlPanel.Controls
 								<article class=""modal"">
 								<label for=""verbosity"">Sync/reserialize console verbosity</label>
 								<select id=""verbosity"">
-									<option value=""Debug"">Items synced + detailed info</option>
-									<option value=""Info"" selected>Items synced</option>
+									<option value=""Debug"" selected>Items synced + detailed info</option>
+									<option value=""Info"">Items synced</option>
 									<option value=""Warning"">Warnings and errors only</option>
 									<option value=""Error"">Errors only</option>
 								</select> 
