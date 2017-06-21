@@ -60,6 +60,20 @@ namespace Unicorn.Data.Dilithium.Sql
 			return core?.GetById(id);
 		}
 
+		public void Update(IItemData item)
+		{
+			var core = GetCore(item.DatabaseName);
+
+			core?.Update(item);
+		}
+
+		public void Remove(IItemData item)
+		{
+			var core = GetCore(item.DatabaseName);
+
+			core?.Remove(item);
+		}
+
 		/// <summary>
 		/// Sets up Dilithium's cache for all configurations passed in, if they use the DilithiumDataStore.
 		/// </summary>

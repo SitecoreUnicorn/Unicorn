@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Globalization;
 using System.Threading.Tasks;
+using Rainbow.Model;
 using Sitecore.Data;
 using Sitecore.Data.Managers;
 using Sitecore.Data.Templates;
@@ -29,6 +30,29 @@ namespace Unicorn.Data.Dilithium.Sql
 
 		public Database Database { get; }
 		public int Count => _itemsById.Count;
+
+		public void Update(IItemData updatedItem)
+		{
+			if (_itemsById.ContainsKey(updatedItem.Id))
+			{
+				var existingItem = _itemsById[updatedItem.Id];
+				existingItem.ParentId = updatedItem.ParentId;
+				existingItem.Path = updatedItem.Path;
+				existingItem.Name = updatedItem.Name;
+			}
+		}
+
+		public void Remove(IItemData removedItem)
+		{
+			if (_itemsById.ContainsKey(removedItem.Id))
+			{
+				var existingItem = _itemsById[removedItem.Id];
+
+				_itemsById.Remove(existingItem.Id);
+
+				_itemsByPath.Remove(existingItem.Path);
+			}
+		}
 
 		public IList<SqlItemData> GetChildren(SqlItemData item)
 		{
