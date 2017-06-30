@@ -14,7 +14,7 @@ using ItemData = Rainbow.Storage.Sc.ItemData;
 
 namespace Unicorn.UI.Commands
 {
-	public class UnicornLoadTreeCommand : LoadItemCommand
+	public class UnicornLoadTreeCommand : LoadTreeCommand
 	{
 		private readonly SerializationHelper _helper;
 
