@@ -97,7 +97,6 @@ namespace Unicorn.Users.Loader
 				if (!existingUser.Email.Equals(updatedUser.Email)) changes.Add(new UserUpdate("Email", existingUser.Email, updatedUser.Email));
 				if (!existingUser.Comment.Equals(updatedUser.Comment)) changes.Add(new UserUpdate("Comment", existingUser.Comment, updatedUser.Comment));
 				if (!existingUser.IsApproved.Equals(updatedUser.IsApproved)) changes.Add(new UserUpdate("IsApproved", existingUser.IsApproved.ToString(), updatedUser.IsApproved.ToString()));
-				if (!existingUser.CreationDate.Equals(updatedUser.CreationDate.ToUniversalTime())) changes.Add(new UserUpdate("CreationDate", existingUser.CreationDate.ToString(CultureInfo.InvariantCulture), updatedUser.CreationDate.ToUniversalTime().ToString(CultureInfo.InvariantCulture) + " (UTC)"));
 			}
 
 			Membership.UpdateUser(updatedUser);
