@@ -14,7 +14,6 @@ Unicorn solves some of the same issues as [Hedgehog's TDS](https://www.hhogdev.c
 
 ## Initial Setup
 * Upgrading from Unicorn 3? Great: it's just a NuGet upgrade away. From [Unicorn 2.x](https://github.com/kamsar/Unicorn/wiki/Upgrading-to-Unicorn-3), you can follow the same directions for 2.x->3.x to go from 2 to 4.
-* 
 * You'll need Sitecore 7 or later (including 8.x).
 * Install Unicorn. This is as simple as adding the Unicorn NuGet package to your project.
 * When you install the NuGet package, a [README file](https://github.com/kamsar/Unicorn/blob/master/Build/Unicorn.nuget/readme.txt) will come up in Visual Studio with help to get you started.
