@@ -35,10 +35,21 @@ namespace Unicorn.Data.Dilithium.Sql
 		{
 			if (_itemsById.ContainsKey(updatedItem.Id))
 			{
+				// update essential item cached data in the ID cache
 				var existingItem = _itemsById[updatedItem.Id];
 				existingItem.ParentId = updatedItem.ParentId;
 				existingItem.Path = updatedItem.Path;
 				existingItem.Name = updatedItem.Name;
+
+				// update path data
+				if (_itemsByPath.ContainsKey(existingItem.Path))
+				{
+					_itemsByPath[existingItem.Path].Remove(existingItem.Id);
+				}
+
+				if(!_itemsByPath.ContainsKey(updatedItem.Path)) _itemsByPath.Add(updatedItem.Path, new List<Guid>());
+
+				_itemsByPath[updatedItem.Path].Add(updatedItem.Id);
 			}
 		}
 
