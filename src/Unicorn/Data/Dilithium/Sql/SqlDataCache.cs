@@ -284,6 +284,12 @@ namespace Unicorn.Data.Dilithium.Sql
 
 			foreach (var childId in guids)
 			{
+				if (!_itemsById.ContainsKey(childId))
+				{
+					Log.Warn($"[Dilithium] The child ID {childId} was not present in the cached data. If this item was removed during the sync this is normal. If it was not, there might be a problem or bug.", this);
+					continue;
+				}
+
 				items.Add(_itemsById[childId]);
 			}
 
