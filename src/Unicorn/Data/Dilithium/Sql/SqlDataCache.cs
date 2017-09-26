@@ -143,13 +143,13 @@ namespace Unicorn.Data.Dilithium.Sql
 			while (reader.Read())
 			{
 				itemId = reader.GetGuid(0);
-
-				currentField = new SqlItemFieldValue(itemId, Database.Name);
-
 				language = reader.GetString(1);
+				version = reader.GetInt32(4);
+
+				currentField = new SqlItemFieldValue(itemId, Database.Name, language, version);
+
 				currentField.FieldId = reader.GetGuid(2);
 				currentField.Value = reader.GetString(3);
-				version = reader.GetInt32(4);
 
 				// get current item to add fields to
 				if (!itemsById.TryGetValue(itemId, out targetItem)) throw new InvalidOperationException($"Item {itemId} was not read by the item loader but had field {currentField.FieldId} in the field loader!");
