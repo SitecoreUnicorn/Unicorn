@@ -70,6 +70,9 @@
 			<except name="allofthis" includeChildren="true"/>
 			<!-- includeChildren defaults to true-->
 			<except name="allbydefault" />
+			<!-- Handpicked path-->
+			<except name="level1" includeChildren="false"/>
+			<except name="level1/level2" includeChildren="false"/>
 		</exclude>
 	</include>
 

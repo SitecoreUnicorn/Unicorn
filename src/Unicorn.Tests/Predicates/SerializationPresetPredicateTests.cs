@@ -64,6 +64,10 @@ namespace Unicorn.Tests.Predicates
 		[InlineData("/somechildren-onlyparents/allbydefault", true)]
 		[InlineData("/somechildren-onlyparents/allbydefault/andthischild", true)]
 		[InlineData("/somechildren-onlyparents/noneofthis", false)]
+		[InlineData("/somechildren-onlyparents/level1", true)]
+		[InlineData("/somechildren-onlyparents/level1/level2", true)]
+		[InlineData("/somechildren-onlyparents/level1/ignorethis", false)]
+		[InlineData("/somechildren-onlyparents/level1/level2/level3", false)]
 		// CHILDREN-OF-CHILDREN test config
 		[InlineData("/CoC", true)]
 		[InlineData("/CoC/stuff", true)]
