@@ -11,10 +11,10 @@ namespace Unicorn.Predicates.Exclusions
 	/// </summary>
 	public class ChildrenOfPathBasedPresetTreeExclusion : IPresetTreeExclusion
 	{
-		private readonly string[] _exceptions;
+		private readonly Tuple<string, ExceptionRule>[] _exceptions;
 		private readonly string _excludeChildrenOfPath;
 
-		public ChildrenOfPathBasedPresetTreeExclusion(string excludeChildrenOfPath, string[] exceptions, PresetTreeRoot root)
+		public ChildrenOfPathBasedPresetTreeExclusion(string excludeChildrenOfPath, ExceptionRule[] exceptions, PresetTreeRoot root)
 		{
 			_excludeChildrenOfPath = excludeChildrenOfPath;
 
@@ -27,7 +27,12 @@ namespace Unicorn.Predicates.Exclusions
 			_excludeChildrenOfPath = PathTool.EnsureTrailingSlash(_excludeChildrenOfPath);
 
 			// convert all exceptions to full paths with a trailing slash (so we can match on path segments)
-			_exceptions = exceptions.Select(exception => $"{PathTool.EnsureTrailingSlash(_excludeChildrenOfPath)}{exception}/").ToArray();
+			//_exceptions = exceptions.Select(exception => $"{PathTool.EnsureTrailingSlash(_excludeChildrenOfPath)}{exception}/").ToArray();
+			_exceptions = exceptions.Select(delegate(ExceptionRule exception)
+			{
+				var fullPath = $"{PathTool.EnsureTrailingSlash(_excludeChildrenOfPath)}{exception.Name}/";
+				return Tuple.Create(fullPath, exception);
+			}).ToArray();
 		}
 
 		public PredicateResult Evaluate(IItemData itemData)
@@ -37,8 +42,25 @@ namespace Unicorn.Predicates.Exclusions
 			// you may preserve certain children from exclusion
 			foreach (var exception in _exceptions)
 			{
-				var unescapedException = exception.Replace(@"\*", "*");
-				if (itemPath.StartsWith(unescapedException, StringComparison.OrdinalIgnoreCase)) return new PredicateResult(true);
+				var fullPath = exception.Item1;
+				var exceptionRule = exception.Item2;
+
+				var unescapedExceptionPath = fullPath.Replace(@"\*", "*");
+
+				if (exceptionRule.IncludeChildren)
+				{
+					if (itemPath.StartsWith(unescapedExceptionPath, StringComparison.OrdinalIgnoreCase))
+					{
+						return new PredicateResult(true);
+					}
+				}
+				else
+				{
+					if (itemPath.Equals(unescapedExceptionPath, StringComparison.OrdinalIgnoreCase))
+					{
+						return new PredicateResult(true);
+					}
+				}
 			}
 
 			// if the path isn't under the exclusion, it's included

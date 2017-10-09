@@ -55,6 +55,15 @@ namespace Unicorn.Tests.Predicates
 		[InlineData("/somechildren/tests/testschild", true)]
 		[InlineData("/somechildren/testswithextrachars", false)]
 		[InlineData("/somechildren/fests", true)]
+		// SOME-CHILDREN ONLY PARENTS test config
+		[InlineData("/somechildren-onlyparents", true)]
+		[InlineData("/somechildren-onlyparents/onlythis", true)]
+		[InlineData("/somechildren-onlyparents/onlythis/notthisdescendant", false)]
+		[InlineData("/somechildren-onlyparents/allofthis", true)]
+		[InlineData("/somechildren-onlyparents/allofthis/andthischild", true)]
+		[InlineData("/somechildren-onlyparents/allbydefault", true)]
+		[InlineData("/somechildren-onlyparents/allbydefault/andthischild", true)]
+		[InlineData("/somechildren-onlyparents/noneofthis", false)]
 		// CHILDREN-OF-CHILDREN test config
 		[InlineData("/CoC", true)]
 		[InlineData("/CoC/stuff", true)]
@@ -124,7 +133,7 @@ namespace Unicorn.Tests.Predicates
 
 			var roots = predicate.GetRootPaths();
 
-			roots.Length.Should().Be(14);
+			roots.Length.Should().Be(15);
 
 			var basicRoot = roots.FirstOrDefault(root => root.Name.Equals("Basic"));
 			basicRoot?.DatabaseName.Should().Be("master");
