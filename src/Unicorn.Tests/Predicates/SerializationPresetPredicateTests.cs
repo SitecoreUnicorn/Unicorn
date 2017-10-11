@@ -68,6 +68,25 @@ namespace Unicorn.Tests.Predicates
 		[InlineData("/somechildren-onlyparents/level1/level2", true)]
 		[InlineData("/somechildren-onlyparents/level1/ignorethis", false)]
 		[InlineData("/somechildren-onlyparents/level1/level2/level3", false)]
+		// MULTIPLE-EXCLUDES EXCEPTIONS
+		[InlineData("/multiple-excludes-except/DK", true)]
+		[InlineData("/multiple-excludes-except/DK/SiteData", true)]
+		[InlineData("/multiple-excludes-except/DK/SiteData/SiteConfiguration", true)]
+		[InlineData("/multiple-excludes-except/DK/SiteData/Widgets", true)]
+		[InlineData("/multiple-excludes-except/DK/SiteData/Widgets/ignored-widget", false)]
+		[InlineData("/multiple-excludes-except/DK/SiteData/notthis", false)]
+		[InlineData("/multiple-excludes-except/DK/Checkout", true)]
+		[InlineData("/multiple-excludes-except/DK/Checkout/Basket", true)]
+		[InlineData("/multiple-excludes-except/DK/notthis", false)]
+		[InlineData("/multiple-excludes-except/SE", true)]
+		[InlineData("/multiple-excludes-except/SE/SiteData", true)]
+		[InlineData("/multiple-excludes-except/SE/SiteData/SiteConfiguration", true)]
+		[InlineData("/multiple-excludes-except/SE/SiteData/Widgets", true)]
+		[InlineData("/multiple-excludes-except/SE/SiteData/Widgets/ignored-widget", false)]
+		[InlineData("/multiple-excludes-except/SE/SiteData/notthis", false)]
+		[InlineData("/multiple-excludes-except/SE/Checkout", true)]
+		[InlineData("/multiple-excludes-except/SE/Checkout/Basket", true)]
+		[InlineData("/multiple-excludes-except/SE/notthis", false)]
 		// CHILDREN-OF-CHILDREN test config
 		[InlineData("/CoC", true)]
 		[InlineData("/CoC/stuff", true)]
@@ -137,7 +156,7 @@ namespace Unicorn.Tests.Predicates
 
 			var roots = predicate.GetRootPaths();
 
-			roots.Length.Should().Be(15);
+			roots.Length.Should().Be(16);
 
 			var basicRoot = roots.FirstOrDefault(root => root.Name.Equals("Basic"));
 			basicRoot?.DatabaseName.Should().Be("master");

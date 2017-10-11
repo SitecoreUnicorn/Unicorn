@@ -77,6 +77,24 @@
 	</include>
 
 	<!-- 
+		MULTIPLE-EXCLUDES EXCEPTIONS: Exceptions for items on multiple excludes
+	-->
+	<include name="Multiple excludes with exceptions" database="master" path="/multiple-excludes-except">
+		<exclude childrenOfPath="DK">
+			<except name="SiteData" includeChildren="false"/>
+			<except name="SiteData/SiteConfiguration" includeChildren="false"/>
+			<except name="SiteData/Widgets" includeChildren="false"/>
+			<except name="Checkout"/>
+		</exclude>
+		<exclude childrenOfPath="SE">
+			<except name="SiteData" includeChildren="false"/>
+			<except name="SiteData/SiteConfiguration" includeChildren="false"/>
+			<except name="SiteData/Widgets" includeChildren="false"/>
+			<except name="Checkout"/>
+		</exclude>
+	</include>
+
+	<!-- 
 		CHILDREN-OF-CHILDREN: Exclusion that includes its specified path but excludes all children of the exclude
 	-->
 	<include name="Children of children" database="master" path="/CoC">
