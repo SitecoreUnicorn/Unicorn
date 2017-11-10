@@ -192,11 +192,21 @@ namespace Unicorn.Predicates
 				return new NameBasedPresetExclusion(GetExpectedAttribute(excludeNode, "namePattern"));
 			}
 
-			var exclusions = excludeNode.ChildNodes
+			ExceptionRule[] exclusions = excludeNode.ChildNodes
 				.OfType<XmlElement>()
 				.Where(element => element.Name.Equals("except") && element.HasAttribute("name"))
-				.Select(element => GetExpectedAttribute(element, "name"))
+				.Select(element =>
+				{
+					var name = GetExpectedAttribute(element, "name");
+					var excludeChildren = bool.FalseString.Equals(element.Attributes["includeChildren"]?.Value, StringComparison.InvariantCultureIgnoreCase);
+					return new ExceptionRule
+					{
+						Name = name,
+						IncludeChildren = !excludeChildren
+					};
+				})
 				.ToArray();
+
 
 			if (excludeNode.HasAttribute("children"))
 			{
