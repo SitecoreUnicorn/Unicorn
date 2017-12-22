@@ -20,7 +20,15 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 		{
 			bool handled = HandlesVerb(args);
 
-			if (!handled) return;
+			if (!handled)
+			{
+				if (_verbHandled.Equals(args.Verb ?? string.Empty, StringComparison.OrdinalIgnoreCase) && !args.SecurityState.IsAllowed && args.SecurityState.IsAutomatedTool)
+				{
+					args.Response = new PlainTextResponse("Unable to authorize request, ensure that your shared secrets match.", System.Net.HttpStatusCode.Forbidden);
+					args.AbortPipeline();
+				}
+				return;
+			}
 
 			args.Response = CreateResponse(args);
 
