@@ -354,7 +354,7 @@ namespace Unicorn
 				var beginArgs = new UnicornSyncBeginPipelineArgs(configuration);
 				MergePipelineArgs(beginArgs);
 				CorePipeline.Run("unicornSyncBegin", beginArgs);
-				
+
 				if (beginArgs.Aborted)
 				{
 					if (!dilithiumWasStarted) ReactorContext.Dispose();
@@ -397,12 +397,17 @@ namespace Unicorn
 					}
 				}
 			}
+			catch (DeserializationSoftFailureAggregateException)
+			{
+				RunUnicornSyncComplete(configuration, syncStartTimestamp);
+				throw;
+			}
 			finally
 			{
 				if (!dilithiumWasStarted) ReactorContext.Dispose();
 			}
 
-			CorePipeline.Run("unicornSyncComplete", MergePipelineArgs(new UnicornSyncCompletePipelineArgs(configuration, syncStartTimestamp)));
+			RunUnicornSyncComplete(configuration, syncStartTimestamp);
 
 			return true;
 		}
@@ -486,6 +491,11 @@ namespace Unicorn
 			}
 
 			return args;
+		}
+
+		private void RunUnicornSyncComplete(IConfiguration configuration, DateTime syncStartTimestamp)
+		{
+			CorePipeline.Run("unicornSyncComplete", MergePipelineArgs(new UnicornSyncCompletePipelineArgs(configuration, syncStartTimestamp)));
 		}
 	}
 }
