@@ -32,9 +32,9 @@ namespace Unicorn.Tests.Predicates
 		// INCLUDE NAMEPATTERN test config (rocket|unicorn)
 		[InlineData("/includenamepattern/unicorn", true)]
 		[InlineData("/includenamepattern/ninja", false)]
-		[InlineData("/includenamepattern/ninja unicorn", true)]
+		[InlineData("/includenamepattern/ninja unicorn", false)]
 		[InlineData("/includenamepattern/rocket", true)]
-		[InlineData("/includenamepattern/rocket unicorn", true)]
+		[InlineData("/includenamepattern/rocket unicorn", false)]
 		// EXPLICIT NO-CHILDREN test config
 		[InlineData("/nochildren", true)]
 		[InlineData("/nochildren/ignoredchild", false)]

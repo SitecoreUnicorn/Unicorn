@@ -77,7 +77,7 @@ namespace Unicorn.Predicates
 			// check for include match
 			if (!string.IsNullOrEmpty(entry.NamePattern))
 			{
-				var regexPattern = new Regex(entry.NamePattern, RegexOptions.IgnoreCase);
+				var regexPattern = new Regex($"^{entry.NamePattern}$", RegexOptions.IgnoreCase);
 				if (!regexPattern.IsMatch(itemData.Name))
 					return new PredicateResult(false);
 			}
