@@ -92,7 +92,7 @@ namespace Unicorn.Roles.Data
 				var hostingRoot = HostingEnvironment.IsHosted
 					? HostingEnvironment.MapPath("~/")
 					: AppDomain.CurrentDomain.BaseDirectory;
-			    return Path.Combine(hostingRoot, rootPath.Substring(1).Replace("/", Path.DirectorySeparatorChar.ToString()));
+			    return Path.Combine(hostingRoot, rootPath.TrimStart('~', '\\', '/').Replace("/", Path.DirectorySeparatorChar.ToString()));
 			}
 
 			if (!Directory.Exists(rootPath)) Directory.CreateDirectory(rootPath);
