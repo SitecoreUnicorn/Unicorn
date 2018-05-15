@@ -6,8 +6,10 @@ using System.Text;
 using Kamsar.WebConsole;
 using Rainbow.Model;
 using Sitecore.Caching;
+using Sitecore.Data.Items;
 using Sitecore.Diagnostics;
 using Sitecore.Pipelines;
+using Sitecore.Pipelines.ItemProvider.GetItem;
 using Sitecore.StringExtensions;
 using Unicorn.Configuration;
 using Unicorn.ControlPanel;
@@ -67,6 +69,7 @@ namespace Unicorn
 							logger.Info(configuration.Name + " is being reserialized.");
 
 							using (new TransparentSyncDisabler())
+							using (new EnforceVersionPresenceDisabler()) // https://github.com/kamsar/Unicorn/issues/280
 							{
 								var targetDataStore = configuration.Resolve<ITargetDataStore>();
 								var helper = configuration.Resolve<SerializationHelper>();
@@ -81,8 +84,8 @@ namespace Unicorn
 								int index = 1;
 								foreach (var root in roots)
 								{
-									helper.ReserializeTree(root, false, new[] { configuration });
-									WebConsoleUtility.SetTaskProgress(progress, taskNumber, configurations.Length, (int)((index / (double)roots.Length) * 100));
+									helper.ReserializeTree(root, false, new[] {configuration});
+									WebConsoleUtility.SetTaskProgress(progress, taskNumber, configurations.Length, (int) ((index / (double) roots.Length) * 100));
 									index++;
 								}
 							}
@@ -131,36 +134,40 @@ namespace Unicorn
 
 				try
 				{
-					if (runReserializeStartPipeline)
+					using (new EnforceVersionPresenceDisabler()) // https://github.com/kamsar/Unicorn/issues/280
 					{
-						var startArgs = new UnicornReserializeStartPipelineArgs(OperationType.PartialReserializeTree, configurations, configurations.First().Resolve<ILogger>(), item);
-						MergePipelineArgs(startArgs);
-						CorePipeline.Run("unicornReserializeStart", startArgs);
-					}
 
-					foreach (var configuration in configurations)
-					{
-						if (configuration == null) continue;
-
-						var logger = configuration.Resolve<ILogger>();
-
-						var predicate = configuration.Resolve<IPredicate>();
-						var serializationStore = configuration.Resolve<ITargetDataStore>();
-						var sourceStore = configuration.Resolve<ISourceDataStore>();
-						var dpConfig = configuration.Resolve<IUnicornDataProviderConfiguration>();
-
-						var rootReference = serializationStore.GetByPathAndId(item.Path, item.Id, item.DatabaseName);
-						if (rootReference != null)
+						if (runReserializeStartPipeline)
 						{
-							logger.Warn("[D] existing serialized items under {0}".FormatWith(rootReference.GetDisplayIdentifier()));
-							serializationStore.Remove(rootReference);
+							var startArgs = new UnicornReserializeStartPipelineArgs(OperationType.PartialReserializeTree, configurations, configurations.First().Resolve<ILogger>(), item);
+							MergePipelineArgs(startArgs);
+							CorePipeline.Run("unicornReserializeStart", startArgs);
 						}
 
-						logger.Info("[A] Serializing included items under root {0}".FormatWith(item.GetDisplayIdentifier()));
+						foreach (var configuration in configurations)
+						{
+							if (configuration == null) continue;
 
-						if (!predicate.Includes(item).IsIncluded) continue;
+							var logger = configuration.Resolve<ILogger>();
 
-						DumpTreeInternal(item, predicate, serializationStore, sourceStore, logger, dpConfig);
+							var predicate = configuration.Resolve<IPredicate>();
+							var serializationStore = configuration.Resolve<ITargetDataStore>();
+							var sourceStore = configuration.Resolve<ISourceDataStore>();
+							var dpConfig = configuration.Resolve<IUnicornDataProviderConfiguration>();
+
+							var rootReference = serializationStore.GetByPathAndId(item.Path, item.Id, item.DatabaseName);
+							if (rootReference != null)
+							{
+								logger.Warn("[D] existing serialized items under {0}".FormatWith(rootReference.GetDisplayIdentifier()));
+								serializationStore.Remove(rootReference);
+							}
+
+							logger.Info("[A] Serializing included items under root {0}".FormatWith(item.GetDisplayIdentifier()));
+
+							if (!predicate.Includes(item).IsIncluded) continue;
+
+							DumpTreeInternal(item, predicate, serializationStore, sourceStore, logger, dpConfig);
+						}
 					}
 				}
 				finally
@@ -176,6 +183,7 @@ namespace Unicorn
 		public virtual bool ReserializeItem(IItemData item, IConfiguration[] configurations = null)
 		{
 			using (new TransparentSyncDisabler())
+			using (new EnforceVersionPresenceDisabler()) // https://github.com/kamsar/Unicorn/issues/280
 			{
 				if (configurations == null) configurations = GetConfigurationsForItem(item);
 
@@ -275,6 +283,7 @@ namespace Unicorn
 							logger.Info(startStatement.ToString());
 
 							using (new TransparentSyncDisabler())
+							using (new EnforceVersionPresenceDisabler()) // https://github.com/kamsar/Unicorn/issues/280
 							{
 								var predicate = configuration.Resolve<IPredicate>();
 
@@ -372,6 +381,7 @@ namespace Unicorn
 				}
 
 				using (new TransparentSyncDisabler())
+				using (new EnforceVersionPresenceDisabler()) // https://github.com/kamsar/Unicorn/issues/280
 				{
 					var retryer = configuration.Resolve<IDeserializeFailureRetryer>();
 					var consistencyChecker = configuration.Resolve<IConsistencyChecker>();
