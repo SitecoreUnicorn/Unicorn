@@ -29,12 +29,6 @@ namespace Unicorn.Tests.Predicates
 		[InlineData("/sitecore/layout/Simulators/iPhone", false)]
 		[InlineData("/sitecore/layout/Simulators/iPhone Apps", true)] // path starts with excluded iPhone path but is not equal
 		[InlineData("/sitecore/layout/Simulators/iPhone Apps/1.0", false)]
-		// INCLUDE NAMEPATTERN test config (rocket|unicorn)
-		[InlineData("/includenamepattern/unicorn", true)]
-		[InlineData("/includenamepattern/ninja", false)]
-		[InlineData("/includenamepattern/ninja unicorn", true)]
-		[InlineData("/includenamepattern/rocket", true)]
-		[InlineData("/includenamepattern/rocket unicorn", true)]
 		// EXPLICIT NO-CHILDREN test config
 		[InlineData("/nochildren", true)]
 		[InlineData("/nochildren/ignoredchild", false)]
@@ -162,7 +156,7 @@ namespace Unicorn.Tests.Predicates
 
 			var roots = predicate.GetRootPaths();
 
-			roots.Length.Should().Be(17);
+			roots.Length.Should().Be(16);
 
 			var basicRoot = roots.FirstOrDefault(root => root.Name.Equals("Basic"));
 			basicRoot?.DatabaseName.Should().Be("master");

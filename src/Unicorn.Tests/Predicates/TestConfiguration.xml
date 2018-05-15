@@ -11,11 +11,6 @@
 		<exclude path="iPhone Apps/1.0" />
 		<!-- exclude where name starts with a different include -->
 	</include>
-	
-	<!--
-		INCLUDE NAMEPATTERN: Include only items matching the pattern within the path
-	-->
-	<include name="Include NamePattern" database="master" path="/includenamepattern" namePattern="(rocket|unicorn)" />
 
 	<!-- 
 		EXPLICIT NO-CHILDREN: Include parent, but exclude children test

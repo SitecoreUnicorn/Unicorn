@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Xml;
 using Rainbow.Model;
 using Rainbow.Storage;
@@ -72,14 +71,6 @@ namespace Unicorn.Predicates
 			if (!itemData.Path.StartsWith(unescapedPath + "/", StringComparison.OrdinalIgnoreCase) && !itemData.Path.Equals(unescapedPath, StringComparison.OrdinalIgnoreCase))
 			{
 				return new PredicateResult(false);
-			}
-
-			// check for include match
-			if (!string.IsNullOrEmpty(entry.NamePattern))
-			{
-				var regexPattern = new Regex(entry.NamePattern, RegexOptions.IgnoreCase);
-				if (!regexPattern.IsMatch(itemData.Name))
-					return new PredicateResult(false);
 			}
 
 			// check excludes
@@ -172,13 +163,8 @@ namespace Unicorn.Predicates
 			// ReSharper disable once PossibleNullReferenceException
 			var name = configuration.Attributes["name"];
 			string nameValue = name == null ? path.Substring(path.LastIndexOf('/') + 1) : name.Value;
-			
-			var namePattern = configuration.Attributes["namePattern"];
-			string namePatternValue = namePattern == null ? string.Empty : namePattern.Value;
 
-			var root = string.IsNullOrEmpty(namePatternValue)
-				? new PresetTreeRoot(nameValue, path, database)
-				: new PresetTreeRoot(nameValue, path, database, namePatternValue);
+			var root = new PresetTreeRoot(nameValue, path, database);
 
 			root.Exclusions = configuration.ChildNodes
 				.OfType<XmlElement>()
