@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Net;
 using System.Web;
+using Sitecore.Configuration;
 using Sitecore.Pipelines;
 using Sitecore.Pipelines.HttpRequest;
 using Sitecore.SecurityModel;
+using Sitecore.Sites;
 using Unicorn.Configuration;
 using Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest;
 using Unicorn.ControlPanel.Responses;
@@ -18,10 +20,12 @@ namespace Unicorn.ControlPanel
 	public class UnicornControlPanelPipelineProcessor : HttpRequestProcessor
 	{
 		private readonly string _activationUrl;
+		private readonly string _activationSite;
 
-		public UnicornControlPanelPipelineProcessor(string activationUrl)
+		public UnicornControlPanelPipelineProcessor(string activationUrl, string activationSite)
 		{
 			_activationUrl = activationUrl;
+			_activationSite = activationSite;
 		}
 
 		public override void Process(HttpRequestArgs args)
@@ -30,8 +34,19 @@ namespace Unicorn.ControlPanel
 
 			if (args.Context.Request.RawUrl.StartsWith(_activationUrl, StringComparison.OrdinalIgnoreCase))
 			{
-				ProcessRequest(args.Context);
-				args.Context.Response.End();
+				if (string.IsNullOrWhiteSpace(_activationSite))
+				{
+					ProcessRequest(args.Context);
+					args.Context.Response.End();
+				}
+				else
+				{
+					using (new SiteContextSwitcher(Factory.GetSite(_activationSite)))
+					{
+						ProcessRequest(args.Context);
+						args.Context.Response.End();
+					}
+				}
 			}
 		}
 
