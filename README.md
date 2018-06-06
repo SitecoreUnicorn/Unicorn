@@ -60,7 +60,7 @@ There is also a series of blog posts detailing Unicorn 3 (and why the Rainbow se
 ## Best Practices
 
 * If using [Helix architecture](http://helix.sitecore.net/) plan to use one Unicorn configuration per module. You can use [Unicorn 4's configuration conventions](https://kamsar.net/index.php/2017/02/Unicorn-4-Part-III-Configuration-Enhancements/) to avoid repetition and promote a consistent item architecture across modules.
-* Make sure to enable and disable configuration files appropriately when developing, and deploying to CE/CM and CD environments. Each config file has a comment header that details when it should be enabled and disabled. Most important is to disable the data provider config when deployed.
+* If using Sitecore 9 or the [Sitecore Configuration Roles module](https://github.com/Sitecore/Sitecore-Configuration-Roles), the Unicorn configuration files are automatically enabled or disabled based on the server role that they are deployed to. If not, make sure to enable and disable configuration files appropriately when developing, and deploying to CE/CM and CD environments. Each config file has a comment header that details when it should be enabled and disabled. Most important is to disable the data provider config when deployed.
 * Always automate your deployments of Unicorn items (see _Automated Deployment_ below). This ensures a consistent item state during deployments.
 * Consider automating _local development_ Unicorn syncing using scripts (e.g. PowerShell or Gulp), which can enable you to have a one-click "post-pull" experience that both builds your projects and syncs any item changes in. [Sitecore Habitat](https://github.com/sitecore/habitat) does this using a combination of Gulp and the Unicorn PowerShell API.
 
