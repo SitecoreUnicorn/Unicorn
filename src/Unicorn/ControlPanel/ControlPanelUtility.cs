@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Rainbow.Storage;
 using Unicorn.Configuration;
 using Unicorn.Configuration.Dependencies;
@@ -68,25 +69,46 @@ namespace Unicorn.ControlPanel
 			var allConfigurations = UnicornConfigurationManager.Configurations;
 
 			// determine which configurations the query string resolves to
-			IEnumerable<IConfiguration> selectedConfigurations;
+			List<IConfiguration> selectedConfigurations = new List<IConfiguration>();
 
 			if (configNames.Count == 0)
 			{
 				// query string specified no configs. This means sync all.
 				// but we still have to set in dependency order.
-				selectedConfigurations = allConfigurations;
+				selectedConfigurations = allConfigurations.ToList();
 			}
 			else
 			{
-				selectedConfigurations = configNames
-					.Select(name => allConfigurations.FirstOrDefault(conf => conf.Name.Equals(name)))
-					.Where(conf => conf != null);
+				// I can't LINQ like Kam can LINQ >.< ;-)
+				// querystring specified configs, but each config name can be a wildcard pattern. We have to loop through
+				// them all, and find any and all configs that match
+				foreach (string configName in configNames)
+				{
+					var matchingConfigurations = allConfigurations.Where(c => WildcardMatch(c.Name, configName));
+					foreach (var matchingConfiguration in matchingConfigurations)
+					{
+						if (!selectedConfigurations.Contains(matchingConfiguration))
+							selectedConfigurations.Add(matchingConfiguration);
+					}
+				}
 			}
 
 			// order the selected configurations in dependency order
 			var resolver = new InterconfigurationDependencyResolver();
 
 			return resolver.OrderByDependencies(selectedConfigurations);
+		}
+
+		// Should probably move this and all tasks of configuration matching, into the UnicornConfigurationManager at some point
+		internal static bool WildcardMatch(string stringToMatch, string wildcard)
+		{
+			if (wildcard.Contains('?') || wildcard.Contains('*'))
+			{
+				string regexExpression = $"^{Regex.Escape(wildcard).Replace("\\?", ".").Replace("\\*", ".*")}$";
+				return Regex.IsMatch(stringToMatch, regexExpression);
+			}
+
+			return stringToMatch.Equals(wildcard);
 		}
 
 		private static bool RootPathParentExists(IDataStore dataStore, TreeRoot include)

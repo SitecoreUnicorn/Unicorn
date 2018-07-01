@@ -22,6 +22,9 @@ namespace Unicorn.ControlPanel
 		private readonly string _activationUrl;
 		private readonly string _activationSite;
 
+		// Added, for people who forget to update their configs when upgrading from < 4.0.4
+		public UnicornControlPanelPipelineProcessor(string activationUrl) : this(activationUrl, "shell") { }
+
 		public UnicornControlPanelPipelineProcessor(string activationUrl, string activationSite)
 		{
 			_activationUrl = activationUrl;

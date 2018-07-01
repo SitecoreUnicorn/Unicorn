@@ -153,6 +153,7 @@
     <Compile Include="Configuration\Dependencies\InterconfigurationDependencyResolverTests.cs" />
     <None Include="app.config" />
     <Compile Include="ControlPanel\Security\SitecoreDatabaseChallengeStoreTests.cs" />
+    <Compile Include="ControlPanel\Utility\WildcardPatternMatchingTest.cs" />
     <Compile Include="Data\DataProvider\ItemChangeApplyingItemDataTests.cs" />
     <Compile Include="Data\DataProvider\UnicornDataProviderTests.AddVersion.cs" />
     <Compile Include="Data\DataProvider\UnicornDataProviderTests.SaveItem.cs" />
@@ -202,6 +203,7 @@
   <ItemGroup>
     <Content Include="license.xml" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
