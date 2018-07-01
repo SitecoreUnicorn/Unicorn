@@ -40,8 +40,10 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 
 		protected virtual IConfiguration[] ResolveConfigurations()
 		{
+			// This logic is present in all verbs. Marked for refactoring
 			var config = HttpContext.Current.Request.QueryString["configuration"];
-			var targetConfigurations = ControlPanelUtility.ResolveConfigurationsFromQueryParameter(config);
+			var exclude = HttpContext.Current.Request.QueryString["exclude"];
+			var targetConfigurations = ControlPanelUtility.ResolveConfigurationsFromQueryParameter(config, exclude);
 
 			if (targetConfigurations.Length == 0) throw new ArgumentException("Configuration(s) requested were not defined.");
 

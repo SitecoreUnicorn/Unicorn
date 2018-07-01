@@ -58,10 +58,16 @@ namespace Unicorn.ControlPanel
 		/// Resolves a set of configurations matches from a caret-delimited query string value.
 		/// Dependency order is considered in the returned order of configurations.
 		/// </summary>
-		public static IConfiguration[] ResolveConfigurationsFromQueryParameter(string queryParameter)
+		public static IConfiguration[] ResolveConfigurationsFromQueryParameter(string queryParameter, string excludeParameter = null)
 		{
 			// parse query string value
 			var configNames = (queryParameter ?? string.Empty)
+				.Split('^')
+				.Where(key => !string.IsNullOrWhiteSpace(key))
+				.ToList();
+
+			// parse exclude value
+			var excludedConfigNames = (excludeParameter ?? string.Empty)
 				.Split('^')
 				.Where(key => !string.IsNullOrWhiteSpace(key))
 				.ToList();
@@ -91,6 +97,12 @@ namespace Unicorn.ControlPanel
 							selectedConfigurations.Add(matchingConfiguration);
 					}
 				}
+			}
+
+			// process config excludes
+			foreach (var exclude in excludedConfigNames)
+			{
+				selectedConfigurations.RemoveAll(c => WildcardMatch(c.Name, exclude));
 			}
 
 			// order the selected configurations in dependency order
