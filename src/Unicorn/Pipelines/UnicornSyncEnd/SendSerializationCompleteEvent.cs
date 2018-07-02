@@ -7,6 +7,8 @@ using Sitecore.Eventing;
 using Sitecore.Jobs;
 using Unicorn.Predicates;
 
+// ReSharper disable UnusedMember.Global
+
 namespace Unicorn.Pipelines.UnicornSyncEnd
 {
 	public class SendSerializationCompleteEvent : IUnicornSyncEndProcessor

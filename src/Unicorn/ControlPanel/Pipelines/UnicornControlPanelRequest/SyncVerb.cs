@@ -10,6 +10,7 @@ using Sitecore.Diagnostics;
 
 // ReSharper disable RedundantArgumentNameForLiteralExpression
 // ReSharper disable RedundantArgumentName
+// ReSharper disable UnusedMember.Global
 
 namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 {

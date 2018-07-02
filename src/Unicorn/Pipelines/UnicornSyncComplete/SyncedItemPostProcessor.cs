@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using Sitecore;
 using Sitecore.Caching;
@@ -18,9 +19,14 @@ namespace Unicorn.Pipelines.UnicornSyncComplete
 	/// </summary>
 	public class SyncedItemPostProcessor : IUnicornSyncCompleteProcessor
 	{
+		public string UnconditionalCacheClearing { get; set; }
+
 		public void Process(UnicornSyncCompletePipelineArgs args)
 		{
-			if (!NeedsPostProcessing(args)) return;
+			if (!"true".Equals(UnconditionalCacheClearing, StringComparison.OrdinalIgnoreCase))
+			{
+				if (!NeedsPostProcessing(args)) return;
+			}
 
 			var logger = args.Configuration.Resolve<ILogger>();
 

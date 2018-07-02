@@ -11,6 +11,8 @@ using Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest;
 using Unicorn.ControlPanel.Responses;
 using SecurityState = Unicorn.ControlPanel.Security.SecurityState;
 
+// ReSharper disable UnusedMember.Global
+
 namespace Unicorn.ControlPanel
 {
 	/// <summary>
