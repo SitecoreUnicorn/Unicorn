@@ -12,7 +12,7 @@ In the control panel, click the Reserialize button on your role configuration to
 
 Check your serialized roles into source control, and use the Sync in the control panel to move updates from others into your database.
 
-Have questions? Tweet @kamsar, or join Sitecore Community Slack and ask in #unicorn
+Have questions? Tweet @kamsar or @cassidydotdk, or join Sitecore Community Slack and ask in #unicorn
 
-Found a bug? Send me a pull request on GitHub if you're feeling awesome: https://github.com/kamsar/Unicorn
+Found a bug? Send me a pull request on GitHub if you're feeling awesome: https://github.com/SitecoreUnicorn/Unicorn
 (or an issue if you're feeling lazy)

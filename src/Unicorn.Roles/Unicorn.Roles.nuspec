@@ -4,10 +4,10 @@
     <id>Unicorn.Roles.Core</id>
     <version>$version$</version>
     <title>Unicorn.Roles.Core</title>
-    <authors>Kam Figy</authors>
+    <authors>Kam Figy, Mark Cassidy</authors>
     <owners>Kam Figy</owners>
     <licenseUrl>http://opensource.org/licenses/MIT</licenseUrl>
-    <projectUrl>https://github.com/kamsar/Unicorn</projectUrl>
+    <projectUrl>https://github.com/SitecoreUnicorn/Unicorn</projectUrl>
     <iconUrl>http://kamsar.net/nuget/unicorn/logo.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Adds security role syncing to Unicorn. Install the non-core package to get config files.</description>

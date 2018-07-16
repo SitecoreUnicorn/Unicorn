@@ -19,7 +19,7 @@ Passwords: By default newly created users from serialization are assigned random
 Property syncing: Certain user properties, such as last login time, are not serialized because they should be kept environment-specific.
 Preference syncing: All user profile settings are serialized. This may cause confusion as it could un-set content editor preferences when synced (such as visible ribbon tabs).
 
-Have questions? Tweet @kamsar, or join Sitecore Community Slack and ask in #unicorn
+Have questions? Tweet @kamsar or @cassidydotdk, or join Sitecore Community Slack and ask in #unicorn
 
-Found a bug? Send me a pull request on GitHub if you're feeling awesome: https://github.com/kamsar/Unicorn
+Found a bug? Send me a pull request on GitHub if you're feeling awesome: https://github.com/SitecoreUnicorn/Unicorn
 (or an issue if you're feeling lazy)
