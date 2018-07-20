@@ -299,7 +299,7 @@
       <SubType>Designer</SubType>
     </None>
     <None Include="Standard Config Files\Unicorn.CustomSerializationFolder.config.example" />
-    <None Include="Standard Config Files\Unicorn.Deployed.config.disabled" />
+    <None Include="Standard Config Files\Unicorn.zContentEditorWarnings.config.disabled" />
     <None Include="Standard Config Files\Unicorn.Remote.config.disabled" />
     <None Include="Standard Config Files\Unicorn.Configs.Dependency.config.example" />
     <None Include="Standard Config Files\Unicorn.UI.config">
