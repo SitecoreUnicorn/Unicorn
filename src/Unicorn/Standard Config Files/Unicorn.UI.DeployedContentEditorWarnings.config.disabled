@@ -5,6 +5,9 @@
 
 	This is appropriate to use in a CE environment where Unicorn items are deployed to, as it will warn careless editors to not change items controlled by Unicorn.
 	Do not enable this in a development environment.
+	
+	IMPORTANT: THIS CONFIG PATCH *MUST* RUN AFTER Unicorn.UI.config, or you may receive errors in the content editor:
+	"Multiple controls with the same ID 'FContentSOMEGUIDHERESOMEGUIDHERESOMEGUID' were found. FindControl requires that controls have unique IDs."
 
 	http://github.com/kamsar/Unicorn
 -->
