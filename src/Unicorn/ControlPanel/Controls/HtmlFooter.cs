@@ -140,6 +140,7 @@ namespace Unicorn.ControlPanel.Controls
 		}
 
         var fakeboxAll = $('.fakebox-all');
+		if (fakeboxAll.offset() != null) {
         var sticky = $('.batch');
         stickyTop = fakeboxAll.offset().top - fakeboxAll.height();
         $(window).scroll(function () {
@@ -151,7 +152,7 @@ namespace Unicorn.ControlPanel.Controls
             else {
                 sticky.css({ 'top': stickyTop - scroll });
             }
-        });
+        });};
 	</script>");
 			writer.Write(" </body></html>");
 		}
