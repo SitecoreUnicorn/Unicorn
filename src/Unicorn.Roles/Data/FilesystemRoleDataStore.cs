@@ -88,12 +88,17 @@ namespace Unicorn.Roles.Data
 		{
 			if (rootPath.StartsWith("~") || rootPath.StartsWith("/"))
 			{
-				// Support unit testing scenario where hosting environment is not initialized.
-				var hostingRoot = HostingEnvironment.IsHosted
-					? HostingEnvironment.MapPath("~/")
-					: AppDomain.CurrentDomain.BaseDirectory;
-			    return Path.Combine(hostingRoot, rootPath.TrimStart('~', '\\', '/').Replace("/", Path.DirectorySeparatorChar.ToString()));
+				var cleanRootPath = rootPath.TrimStart('~', Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+				cleanRootPath = cleanRootPath.Replace("/", Path.DirectorySeparatorChar.ToString());
+
+				var basePath = HostingEnvironment.IsHosted ? HostingEnvironment.MapPath("~/") : AppDomain.CurrentDomain.BaseDirectory;
+				rootPath = Path.Combine(basePath, cleanRootPath);
 			}
+
+			// convert root path to canonical form, so subsequent transformations can do string comparison
+			// http://stackoverflow.com/questions/970911/net-remove-dots-from-the-path
+			if (rootPath.Contains(".."))
+				rootPath = Path.GetFullPath(rootPath);
 
 			if (!Directory.Exists(rootPath)) Directory.CreateDirectory(rootPath);
 
