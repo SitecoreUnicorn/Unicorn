@@ -21,7 +21,7 @@ namespace Unicorn.ControlPanel.Controls
 			writer.WriteLine("    `.            :.,\'");
 			writer.WriteLine("      `-.________,-\'");
 			writer.WriteLine("-->");
-			writer.Write($"<p>You need to <a href=\"/sitecore/login?returnUrl={HttpUtility.UrlEncode(HttpContext.Current.Request.Url.PathAndQuery)}\">sign in to Sitecore as an administrator</a> to use the Unicorn control panel.</p>");
+			writer.Write("<p>You need to <a href=\"/sitecore/admin/login.aspx?ReturnUrl={0}\">sign in to Sitecore as an administrator</a> to use the Unicorn control panel.</p>", HttpUtility.UrlEncode(HttpContext.Current.Request.Url.PathAndQuery));
 
 			HttpContext.Current.Response.TrySkipIisCustomErrors = true;
 
