@@ -22,7 +22,7 @@ namespace Unicorn.Predicates
 		{
 			Assert.ArgumentNotNull(configNode, "configNode");
 
-			_includeEntries = ParsePreset(configNode);
+			_includeEntries = ParsePreset(configNode, configuration?.Name);
 
 			EnsureEntriesExist(configuration?.Name ?? "Unknown");
 			ValidateExclusionConfiguration(configuration?.Name ?? "Unknown", dataProviderConfiguration?.EnableTransparentSync ?? false);
@@ -119,7 +119,7 @@ namespace Unicorn.Predicates
 			return string.Format(" (except {0})", string.Join(", ", entry.Exclusions.Select(exclude => exclude.Description)));
 		}
 
-		private IList<PresetTreeRoot> ParsePreset(XmlNode configuration)
+		private IList<PresetTreeRoot> ParsePreset(XmlNode configuration, string configurationName)
 		{
 			var presets = configuration.ChildNodes
 				.Cast<XmlNode>()
@@ -136,7 +136,7 @@ namespace Unicorn.Predicates
 					continue;
 				}
 
-				throw new InvalidOperationException("Multiple predicate include nodes had the same name '{0}'. This is not allowed. Note that this can occur if you did not specify the name attribute and two include entries end in an item with the same name. Use the name attribute on the include tag to give a unique name.".FormatWith(preset.Name));
+				throw new InvalidOperationException($"Multiple predicate include nodes in configuration '{configurationName}' had the same name '{preset.Name}'. This is not allowed. Note that this can occur if you did not specify the name attribute and two include entries end in an item with the same name. Use the name attribute on the include tag to give a unique name.");
 			}
 
 			return presets;
