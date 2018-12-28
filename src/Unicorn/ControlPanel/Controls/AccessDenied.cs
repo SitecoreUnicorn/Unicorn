@@ -1,4 +1,4 @@
-﻿using System.Web;
+using System.Web;
 using System.Web.UI;
 
 namespace Unicorn.ControlPanel.Controls
@@ -21,7 +21,7 @@ namespace Unicorn.ControlPanel.Controls
 			writer.WriteLine("    `.            :.,\'");
 			writer.WriteLine("      `-.________,-\'");
 			writer.WriteLine("-->");
-			writer.Write($"<p>You need to <a href=\"/sitecore/login?returnUrl={HttpUtility.UrlEncode(HttpContext.Current.Request.Url.PathAndQuery)}\">sign in to Sitecore as an administrator</a> to use the Unicorn control panel.</p>");
+			writer.Write($"<p>You need to <a href=\"{GetLoginUrl()}\">sign in to Sitecore as an administrator</a> to use the Unicorn control panel.</p>");
 
 			HttpContext.Current.Response.TrySkipIisCustomErrors = true;
 
@@ -29,6 +29,12 @@ namespace Unicorn.ControlPanel.Controls
 			// Returning 418 I'm a Teapot, instead. Unicorn refuses to brew coffee to people not authenticated.
 			// Assuming it is doubtful Sitecore has, or will ever, do any special handling for this situation.
 			HttpContext.Current.Response.StatusCode = 418;
+		}
+
+		private static string GetLoginUrl()
+		{
+			var returnUrl = HttpUtility.UrlEncode(HttpContext.Current.Request.Url.PathAndQuery);
+			return $"{Sitecore.Context.Site.LoginPage}?returnUrl={returnUrl}";
 		}
 	}
 }
