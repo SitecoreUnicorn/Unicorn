@@ -285,6 +285,9 @@
       <SubType>Designer</SubType>
     </None>
     <None Include="Standard Config Files\Unicorn.PowerShell.config" />
+    <None Include="Standard Config Files\Unicorn.UI.IdentityServer.config.disabled">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Standard Config Files\Unicorn.zSharedSecret.config.example">
       <SubType>Designer</SubType>
     </None>
