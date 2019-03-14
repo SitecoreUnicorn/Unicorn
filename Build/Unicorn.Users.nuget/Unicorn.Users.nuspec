@@ -15,11 +15,19 @@
 	<dependencies>
 		<dependency id="Unicorn.Users.Core" version="$version$" />
 	</dependencies>
+		<!-- PackageReference support -->
+	<contentFiles>
+		<files include="any/**/*" buildAction="Content" copyToOutput="true" />
+	</contentFiles>
 	</metadata>
 	<files>
+		<!-- PackageReference support -->
+		<file src="..\..\src\Unicorn.Users\Standard Config Files\*" target="contentFiles\any\any\App_Config\Include\Unicorn" />
+		<!-- legacy content folder -->
 		<file src="..\..\src\Unicorn.Users\Standard Config Files\Unicorn.Users.config" target="content\App_Config\Include\Unicorn" />
 		<file src="..\..\src\Unicorn.Users\Standard Config Files\Unicorn.Users.DataProvider.config" target="content\App_Config\Include\Unicorn" />
 		<file src="..\..\src\Unicorn.Users\Standard Config Files\Unicorn.Configs.Default.Users.config.example" target="content\App_Config\Include\Unicorn" />
+		<!-- Other assets -->
 		<file src="readme.txt" target="" />
 	</files>
 </package>

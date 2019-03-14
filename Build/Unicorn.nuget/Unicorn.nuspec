@@ -16,11 +16,29 @@
 		<dependency id="Unicorn.Core" version="$version$" />
 		<dependency id="Rainbow" version="$rainbowversion$" />
 	</dependencies>
+	<!--
+		PackageReference support
+		Describes how assets will be restored when the pacakge is consumed
+		We want all assets to be used as content files
+		The include path is rooted to the contentFiles path
+	-->
+	<contentFiles>
+		<files include="any/**/*" buildAction="Content" copyToOutput="true" />
+	</contentFiles>
 	</metadata>
 	<files>
+		<!--
+			PackageReference support
+			contentFiles\{language}\{tfm}
+			lanuguage - cs, vb etc. We use any as the assets are not language specific
+			tfm - net462,netstandard2.0 etc - We use any as the assets are not runtime specific
+		-->
+		<file src="..\..\src\Unicorn\Standard Config Files\*" target="contentFiles\any\any\App_Config\Include\Unicorn" />
+		<!-- legacy content folder -->
 		<file src="..\..\src\Unicorn\Standard Config Files\*.config" target="content\App_Config\Include\Unicorn" />
 		<file src="..\..\src\Unicorn\Standard Config Files\*.disabled" target="content\App_Config\Include\Unicorn" />
 		<file src="..\..\src\Unicorn\Standard Config Files\*.example" target="content\App_Config\Include\Unicorn" />
+		<!-- Other assets -->
 		<file src="readme.txt" target="" />
 		<file src="..\..\doc\PowerShell Remote Scripting\*.*" target="tools\PSAPI" />
 	</files>

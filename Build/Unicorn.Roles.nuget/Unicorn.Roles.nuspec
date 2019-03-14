@@ -16,11 +16,19 @@
 		<dependency id="Unicorn" version="$version$" />
 		<dependency id="Unicorn.Roles.Core" version="$version$" />
 	</dependencies>
+		<!-- PackageReference support -->
+		<contentFiles>
+			<files include="any/**/*" buildAction="Content" copyToOutput="true" />
+		</contentFiles>
 	</metadata>
 	<files>
+		<!-- PackageReference support -->
+		<file src="..\..\src\Unicorn.Roles\Standard Config Files\*" target="contentFiles\any\any\App_Config\Include\Unicorn" />
+		<!-- legacy content folder -->
 		<file src="..\..\src\Unicorn.Roles\Standard Config Files\Unicorn.Roles.config" target="content\App_Config\Include\Unicorn" />
 		<file src="..\..\src\Unicorn.Roles\Standard Config Files\Unicorn.Roles.DataProvider.config" target="content\App_Config\Include\Unicorn" />
 		<file src="..\..\src\Unicorn.Roles\Standard Config Files\Unicorn.Configs.Default.Roles.config.example" target="content\App_Config\Include\Unicorn" />
+		<!-- Other assets -->
 		<file src="readme.txt" target="" />
 	</files>
 </package>
