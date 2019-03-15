@@ -7,7 +7,7 @@ namespace Unicorn.Deserialization
 {
 	public class UnicornDeserializer : DefaultDeserializer
 	{
-		public UnicornDeserializer(IDefaultDeserializerLogger logger, IFieldFilter fieldFilter) : base(logger, fieldFilter)
+		public UnicornDeserializer(bool ignoreBranchId, IDefaultDeserializerLogger logger, IFieldFilter fieldFilter) : base(ignoreBranchId, logger, fieldFilter)
 		{
 		}
 

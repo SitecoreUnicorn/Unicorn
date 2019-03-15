@@ -29,7 +29,10 @@ namespace Unicorn.PowerShell
 
 			var yaml = CreateFormatter(CreateFieldFilter());
 
-			var deserializer = new DefaultDeserializer(new DefaultDeserializerLogger(consoleLogger), CreateFieldFilter());
+			// Ignoring BranchId should probably be controllable from the outside. For now it will just be wired to false. 
+			// See issue 283 in Unicorn. https://github.com/SitecoreUnicorn/Unicorn/issues/283
+			// Unicorn default for this will be to ignore BranchId
+			var deserializer = new DefaultDeserializer(false, new DefaultDeserializerLogger(consoleLogger), CreateFieldFilter());
 
 			if (Yaml != null)
 			{
