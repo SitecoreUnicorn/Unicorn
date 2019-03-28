@@ -19,7 +19,7 @@ You can also automate doing a sync as part of a CI deployment process; see the r
 
 NEW AS OF 4.0.7
 
-IF YOU ARE USING SITECORE 9.1 AND IDENTITYMANAGER (I don't know why you would on your local development instance, but some people do apparently) make sure to enable the "Unicorn.UI.IdentityServer.config.disabled" (remove the .disabled extension) configuration file, otherwise Unicorn will be unable to correctly detect your login in its Control Panel.
+IF YOU ARE USING SITECORE 9.1 AND IDENTITY SERVER make sure to enable the "Unicorn.UI.IdentityServer.config.disabled" (remove the .disabled extension) configuration file, otherwise Unicorn will be unable to correctly detect your login in its Control Panel.
 
 Want deeper documentation? The README.md on GitHub is your friend: https://github.com/SitecoreUnicorn/Unicorn/blob/master/README.md, as well as the comments in all the config files.
 

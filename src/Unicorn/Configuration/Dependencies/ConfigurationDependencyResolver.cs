@@ -70,7 +70,8 @@ namespace Unicorn.Configuration.Dependencies
 			if (configuration.Dependencies == null)
 				return new IConfigurationDependency[0];
 
-			return GetExplicitDependencies(configuration).Concat(GetImplicitDependencies(configuration)).ToArray();
+			// Gets explicit (first) then implicit dependencies. The grouping is so that if an explicit dependency is declared, any implicit dependency for the same configuration gets supressed.
+			return GetExplicitDependencies(configuration).Concat(GetImplicitDependencies(configuration)).GroupBy(d => d.Configuration.Name).Select(g => g.First()).ToArray();
 		}
 
 		protected virtual IEnumerable<IConfigurationDependency> GetExplicitDependencies(IConfiguration configuration)

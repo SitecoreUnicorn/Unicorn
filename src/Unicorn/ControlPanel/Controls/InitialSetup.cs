@@ -34,7 +34,7 @@ namespace Unicorn.ControlPanel.Controls
 				writer.Write("<ul>");
 				foreach (var root in invalidRootPaths)
 				{
-					writer.Write($"<li>{root}</li>");
+					writer.Write($"<li>- {root}</li>");
 				}
 				writer.Write("</ul></div>");
 			}

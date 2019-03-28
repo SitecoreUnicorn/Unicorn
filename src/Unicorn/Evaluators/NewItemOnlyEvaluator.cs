@@ -83,7 +83,7 @@ namespace Unicorn.Evaluators
 			else
 			{
 				title = "This item was added by developers.";
-				message.Append("You may edit this item, but <b>it will return next time code is deployed</b>. Ask a developer to help if you need to delete this item.");
+				message.Append("You may delete this item, but <b>it will return next time code is deployed</b>. Ask a developer to help if you need to delete this item.");
 			}
 
 			message.Append($"<br><br><b>Configuration</b>: {_parentConfiguration.Name}");
