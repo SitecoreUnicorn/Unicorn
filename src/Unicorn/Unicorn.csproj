@@ -187,8 +187,6 @@
     <Compile Include="Predicates\Exclusions\PathBasedPresetTreeExclusion.cs" />
     <Compile Include="Predicates\Exclusions\PathTool.cs" />
     <Compile Include="Predicates\IPresetTreeExclusion.cs" />
-    <Compile Include="Sequoia\Branch.cs" />
-    <Compile Include="Sequoia\GeneralSherman.cs" />
     <Compile Include="SerializationEnabler.cs" />
     <Compile Include="TransparentSyncEnabler.cs" />
     <Compile Include="UI\Commands\UnicornDumpTreeCommand.cs" />
@@ -345,10 +343,7 @@
   <ItemGroup>
     <EmbeddedResource Include="ControlPanel\Headings\Allthethings.svg.html" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Sequoia\Storage\" />
-    <Folder Include="Sequoia\Strategy\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
