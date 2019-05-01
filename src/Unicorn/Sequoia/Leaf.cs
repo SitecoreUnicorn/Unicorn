@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 
 namespace Unicorn.Sequoia
 {
-	public class Branch
+	public class Leaf
 	{
-		public Branch()
+		public Leaf(Branch owner)
 		{
+
 		}
 	}
 }

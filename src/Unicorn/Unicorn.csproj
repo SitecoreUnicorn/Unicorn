@@ -189,6 +189,7 @@
     <Compile Include="Predicates\IPresetTreeExclusion.cs" />
     <Compile Include="Sequoia\Branch.cs" />
     <Compile Include="Sequoia\GeneralSherman.cs" />
+    <Compile Include="Sequoia\Leaf.cs" />
     <Compile Include="SerializationEnabler.cs" />
     <Compile Include="TransparentSyncEnabler.cs" />
     <Compile Include="UI\Commands\UnicornDumpTreeCommand.cs" />
@@ -283,6 +284,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <Content Include="Standard Config Files\Unicorn.GeneralSherman.config">
+      <SubType>Designer</SubType>
+    </Content>
     <None Include="Standard Config Files\Unicorn.Dilithium.config.example">
       <SubType>Designer</SubType>
     </None>
