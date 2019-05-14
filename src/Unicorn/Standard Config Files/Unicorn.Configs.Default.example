@@ -65,6 +65,33 @@
 						<include database="master" path="/sitecore/system/Workflows" />
 						<include database="master" path="/sitecore/system/Settings" />
 					</predicate>
+
+					<!--
+						PREDICATE FIELD FILTERS
+						
+						1) These filters ONLY APPLY to what gets deserialized into Sitecore. Field values on disk/serialized datastore remain complete - respecting only the Rainbow field filter settings
+						2) Once you define any inclusive field filter, it takes over. So if you set up a filter for just the Title field, no other fields will be put into Sitecore for items in the predicate.
+						2a) And if you think about it, this makes sense ;-)
+						3) However, if all you define are CONDITIONAL field filters (!field, ?field, +field) - ALL fields are considered as normal (exlusion from Rainbow still applies).
+						4) To confuse matters even more, this works directly opposite for "Standard Fields" e.g. fields that come from Standard Template. These are included always unless excluded by a field filter OR filtered out by Rainbow
+						
+						IN OTHER WORDS:
+						
+						Example 1: "!title, !text, +ApiUrl[{$apiUrlToken$}]" => All fields get deployed as normal, except "title" and "text". And "ApiUrl" gets a forced value.
+						Example 2: "title, text" => ONLY fields Title and Text get deployed. Every other field value in the serialization datastore will be ignored
+						Example 3: "title, !text" => ONLY field "Title" gets deployed
+						Example 4: "?title, ?text" => ALL fields gets deployed, but fields "Title" and "Text" will only get their value deployed if target field value is empty
+						Example 5: "?title, ?text, !apiUrl" => As Example 4, but field "apiUrl" is ignored
+						
+						"field" => Normal field operation, but will exclude all other fields once you start defining
+						"!field" => Ignore this field unconditionally
+						"-field" => same as !field
+						"?field" => Deploy this field if it has no value in target data store (Sitecore)
+						"+field[value]" => Force a new value into this field on target data store (Sitecore)
+					-->
+					<predicate fieldFilter="Title,Text,!Include In Sitemap,+Api Endpoint[{$apiEndPoint$},?Default Product">"
+						<include name="Sample Data" database="master" path="/sitecore/content/global/sample" />
+					</predicate>
 					
 					<!--
 						SYNC TYPE
