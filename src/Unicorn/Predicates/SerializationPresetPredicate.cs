@@ -11,6 +11,7 @@ using Sitecore.StringExtensions;
 using Unicorn.Configuration;
 using Unicorn.Data.DataProvider;
 using Unicorn.Predicates.Exclusions;
+using Unicorn.Predicates.FieldFilters;
 
 namespace Unicorn.Predicates
 {
@@ -121,10 +122,15 @@ namespace Unicorn.Predicates
 
 		private IList<PresetTreeRoot> ParsePreset(XmlNode configuration, string configurationName)
 		{
+			var fieldTransforms = GetOptionalAttribute(configuration, "fieldTransforms");
+			FieldTransformsCollection filters = null;
+			if(!string.IsNullOrEmpty(fieldTransforms))
+				filters = FieldTransforms.GetFieldTransforms(fieldTransforms);
+
 			var presets = configuration.ChildNodes
 				.Cast<XmlNode>()
 				.Where(node => node.Name == "include")
-				.Select(CreateIncludeEntry)
+				.Select(x => CreateIncludeEntry(x, filters))
 				.ToList();
 
 			var names = new HashSet<string>();
@@ -155,7 +161,7 @@ namespace Unicorn.Predicates
 			if (_includeEntries.Any(entry => entry.Exclusions.Any())) throw new InvalidOperationException($"The predicate for the Unicorn Transparent Sync configuration {configurationName} contains exclusions. Exclusions are incompatible with Transparent Sync and could cause corruption. Refactor your configuration to only include whole paths, or do not use Transparent Sync.");
 		}
 
-		protected virtual PresetTreeRoot CreateIncludeEntry(XmlNode configuration)
+		protected virtual PresetTreeRoot CreateIncludeEntry(XmlNode configuration, FieldTransformsCollection predicateFieldFilterCollection)
 		{
 			string database = GetExpectedAttribute(configuration, "database");
 			string path = GetExpectedAttribute(configuration, "path");
@@ -171,6 +177,20 @@ namespace Unicorn.Predicates
 				.Where(element => element.Name.Equals("exclude"))
 				.Select(excludeNode => CreateExcludeEntry(excludeNode, root))
 				.ToList();
+
+			string fieldFilter = GetOptionalAttribute(configuration, "fieldTransforms");
+			FieldTransformsCollection localFieldFilters = null;
+			if (!string.IsNullOrEmpty(fieldFilter)) localFieldFilters = FieldTransforms.GetFieldTransforms(fieldFilter);
+
+			if (localFieldFilters != null)
+			{
+				if (predicateFieldFilterCollection != null)
+					root.FieldTransforms = predicateFieldFilterCollection.MergeFilters(localFieldFilters);
+			}
+			else
+			{
+				root.FieldTransforms = predicateFieldFilterCollection;
+			}
 
 			return root;
 		}
@@ -219,6 +239,12 @@ namespace Unicorn.Predicates
 			}
 
 			throw new InvalidOperationException($"Unable to parse invalid exclusion value: {excludeNode.OuterXml}");
+		}
+
+		private static string GetOptionalAttribute(XmlNode node, string attributeName)
+		{
+			// ReSharper disable once PossibleNullReferenceException
+			return node.Attributes[attributeName]?.Value;
 		}
 
 		private static string GetExpectedAttribute(XmlNode node, string attributeName)

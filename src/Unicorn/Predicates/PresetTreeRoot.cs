@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Rainbow.Storage;
+using Unicorn.Predicates.FieldFilters;
 
 namespace Unicorn.Predicates
 {
@@ -13,5 +14,6 @@ namespace Unicorn.Predicates
 		}
 
 		public IList<IPresetTreeExclusion> Exclusions { get; set; }
+		public FieldTransformsCollection FieldTransforms { get; set; }
 	}
 }

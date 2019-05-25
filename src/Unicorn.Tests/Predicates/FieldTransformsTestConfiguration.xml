@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+
+<testConfiguration>
+	<predicate fieldTransforms="!title,!text">
+		<include name="FF 1" database="master" path="/sitecore/unittests/fieldtransforms" />
+	</predicate>
+
+	<predicate fieldTransforms="!title,!text">
+		<include name="FF 2" database="master" path="/sitecore/unittests/fieldtransforms" fieldTransforms=":text" />
+	</predicate>
+
+	<predicate fieldTransforms="!title,!text">
+		<include name="FF 3" database="master" path="/sitecore/unittests/fieldtransforms" fieldTransforms="-text body" />
+	</predicate>
+</testConfiguration>
