@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Rainbow.Model;
+using Rainbow.Storage;
 
 namespace Unicorn.Data.Dilithium.Sql
 {
@@ -13,6 +14,7 @@ namespace Unicorn.Data.Dilithium.Sql
 		public SqlItemData(SqlDataCache sourceDataCore)
 		{
 			_sourceDataCore = sourceDataCore;
+			FieldValueManipulator = new DefaultFieldValueManipulator();
 		}
 
 		public Guid Id { get; set; }
@@ -24,6 +26,8 @@ namespace Unicorn.Data.Dilithium.Sql
 		public string Path { get; set; }
 
 		public string SerializedItemId => "(from Sitecore Database [Dilithium])";
+
+		public IFieldValueManipulator FieldValueManipulator { get; set; }
 
 		public string DatabaseName { get; set; }
 

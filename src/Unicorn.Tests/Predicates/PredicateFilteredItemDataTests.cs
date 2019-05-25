@@ -1,5 +1,4 @@
-﻿using System;
-using NSubstitute;
+﻿using NSubstitute;
 using Rainbow.Model;
 using Unicorn.Predicates;
 using Xunit;

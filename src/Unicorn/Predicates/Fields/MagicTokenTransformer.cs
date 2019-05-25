@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Rainbow.Storage;
 using Sitecore.StringExtensions;
 
-namespace Unicorn.Predicates.FieldFilters
+namespace Unicorn.Predicates.Fields
 {
 	public enum FieldTransformDeployRule
 	{
@@ -18,7 +19,7 @@ namespace Unicorn.Predicates.FieldFilters
 		SitecoreSetting,		// $  Grab the Sitecore setting defined inside [] as the value
 	}
 
-	public class FieldTransforms
+	public class MagicTokenTransformer : IFieldValueTransformer
 	{
 		public const string LoremIpsumTitle = "Lorem ipsum dolor";
 		public const string LoremIpsumBody = "<p>Lorem ipsum dolor. Sit amet condimentum. Rutrum perspiciatis et. Sagittis ultrices curabitur ut pellentesque massa. Fringilla urna placerat est suspendisse vitae neque eget sed nam.</p><p>Tempor feugiat et sed eros dictum. Nullam quis vivamus diam nam velit. Interdum praesent lacus. Enim gravida iaculis augue dolor lobortis. In lorem eu aliquam.</p><p>Quam porttitor lobortis ac id pede maecenas placerat sem hendrerit viverra leo velit ut convallis. Pharetra odio donec vehicula maecenas a quam semper morbi. Lorem velit sapien imperdiet eget vel eget interdum ut. Malesuada non mattis. Sed pellentesque proin. Sed nulla quis. Laoreet etiam sapien. Etiam lectus nunc. Aliquam facilisi et turpis metus mauris. Est felis magna. Ornare dolor elementum. Orci dolor dolor iaculis odio orci tortor nunc praesent mauris nulla nonummy. Ante mi luctus.</p><p>Excepturi posuere morbi pulvinar sodales orci. Mollis libero posuere. Morbi in nibh tellus vestibulum risus ac ac dui. Orci amet vel. Quam suspendisse diam adipiscing.</p><p>Nec sed id. Vivamus habitasse molestie egestas ante elit. Et ultricies placerat. Felis lacus ut lectus pulvinar mauris. Deleniti pellentesque etiam a vitae donec sollicitudin est duis ac potenti nec in sed ultricies. Consectetur id dolor dolor tellus pede. A montes vestibulum. Purus ac est. Metus nonummy tortor tellus velit.</p><p>Justo aliquam eu. In aenean nulla lobortis arcu lacinia. Lorem ipsum facilisis aliquam tempus nunc. Ut morbi et. Morbi tincidunt eros a ut nam ligula.</p><p>Tortor ullamcorper est elementum in purus. Ultricies viverra aenean. Pellentesque justo non. Mauris vestibulum in etiam nibh vitae et dignissim tellus. Ante luctus non odio ultrices sit bibendum donec auctor quis tellus feugiat. Omnis tortor lectus. Pede nunc praesent. At omnis etiam. Et rhoncus turpis risus platea metus risus consequat.</p><p>Vestibulum class malesuada potenti semper quia. Dolor condimentum quam. Donec nunc quisque. Nam sem sem a magna quis bibendum ultricies nam. Libero aliquam nibh nulla.</p>";
@@ -27,65 +28,16 @@ namespace Unicorn.Predicates.FieldFilters
 		public string FieldName { get; set; }
 		public string ForcedValue { get; set; }
 
-		public bool ShouldDeployFieldValue(string existingValue, string serializedValue)
+		public static FieldTransformsCollection GetFieldTransforms(string fieldFilterDefinition, List<MagicTokenTransformer> filters = null)
 		{
-			switch (FieldTransformDeployRule)
-			{
-				case FieldTransformDeployRule.ForceValue:
-				case FieldTransformDeployRule.ScreamingSnake:
-				case FieldTransformDeployRule.Clear:
-				case FieldTransformDeployRule.LoremIpsumTitle:
-				case FieldTransformDeployRule.LoremIpsumBody:
-				case FieldTransformDeployRule.SitecoreSetting:
-					return true;
-				case FieldTransformDeployRule.Ignore:
-					return false;
-				case FieldTransformDeployRule.OnlyIfNullOrEmpty:
-					if (string.IsNullOrEmpty(existingValue))
-						return true;
-					return false;
-			}
-
-			// Unknown deploy rule...   
-			return true;
-		}
-
-		public string GetResult(string existingValue, string serializedValue)
-		{
-			switch (FieldTransformDeployRule)
-			{
-				case FieldTransformDeployRule.Ignore:
-					throw new InvalidOperationException("GetResult() should not be called without prior approval from ShouldDeployFieldValue()");
-				case FieldTransformDeployRule.OnlyIfNullOrEmpty:
-					if(!string.IsNullOrEmpty(existingValue)) throw new InvalidOperationException("GetResult() should not be called without prior approval from ShouldDeployFieldValue()");
-					return serializedValue;
-				case FieldTransformDeployRule.ScreamingSnake:
-					return serializedValue?.ToUpperInvariant().Replace(" ", "_");
-				case FieldTransformDeployRule.ForceValue:
-					return ForcedValue;
-				case FieldTransformDeployRule.Clear:
-					return null;
-				case FieldTransformDeployRule.LoremIpsumTitle:
-					return LoremIpsumTitle;
-				case FieldTransformDeployRule.LoremIpsumBody:
-					return LoremIpsumBody;
-				case FieldTransformDeployRule.SitecoreSetting:
-					return Sitecore.Configuration.Settings.GetSetting(ForcedValue);
-			}
-
-			return serializedValue;
-		}
-
-		public static FieldTransformsCollection GetFieldTransforms(string fieldFilterDefinition, List<FieldTransforms> filters = null)
-		{
-			List<FieldTransforms> f = filters ?? new List<FieldTransforms>();
+			List<MagicTokenTransformer> f = filters ?? new List<MagicTokenTransformer>();
 
 			fieldFilterDefinition = fieldFilterDefinition.Trim();
 
 			if (fieldFilterDefinition.Length < 1)
 				return new FieldTransformsCollection(f.ToArray());
 
-			FieldTransforms ff = new FieldTransforms();
+			MagicTokenTransformer ff = new MagicTokenTransformer();
 			int commaIndex;
 
 			switch (fieldFilterDefinition[0])
@@ -182,6 +134,55 @@ namespace Unicorn.Predicates.FieldFilters
 			}
 
 			return sb.ToString();
+		}
+
+		public bool ShouldDeployFieldValue(string existingValue, string proposedValue)
+		{
+			switch (FieldTransformDeployRule)
+			{
+				case FieldTransformDeployRule.ForceValue:
+				case FieldTransformDeployRule.ScreamingSnake:
+				case FieldTransformDeployRule.Clear:
+				case FieldTransformDeployRule.LoremIpsumTitle:
+				case FieldTransformDeployRule.LoremIpsumBody:
+				case FieldTransformDeployRule.SitecoreSetting:
+					return true;
+				case FieldTransformDeployRule.Ignore:
+					return false;
+				case FieldTransformDeployRule.OnlyIfNullOrEmpty:
+					if (string.IsNullOrEmpty(existingValue))
+						return true;
+					return false;
+			}
+
+			// Unknown deploy rule...   
+			return true;
+		}
+
+		public string GetFieldValue(string existingValue, string proposedValue)
+		{
+			switch (FieldTransformDeployRule)
+			{
+				case FieldTransformDeployRule.Ignore:
+					throw new InvalidOperationException("GetResult() should not be called without prior approval from ShouldDeployFieldValue()");
+				case FieldTransformDeployRule.OnlyIfNullOrEmpty:
+					if (!string.IsNullOrEmpty(existingValue)) throw new InvalidOperationException("GetResult() should not be called without prior approval from ShouldDeployFieldValue()");
+					return proposedValue;
+				case FieldTransformDeployRule.ScreamingSnake:
+					return proposedValue?.ToUpperInvariant().Replace(" ", "_");
+				case FieldTransformDeployRule.ForceValue:
+					return ForcedValue;
+				case FieldTransformDeployRule.Clear:
+					return null;
+				case FieldTransformDeployRule.LoremIpsumTitle:
+					return LoremIpsumTitle;
+				case FieldTransformDeployRule.LoremIpsumBody:
+					return LoremIpsumBody;
+				case FieldTransformDeployRule.SitecoreSetting:
+					return Sitecore.Configuration.Settings.GetSetting(ForcedValue);
+			}
+
+			return proposedValue;
 		}
 	}
 }

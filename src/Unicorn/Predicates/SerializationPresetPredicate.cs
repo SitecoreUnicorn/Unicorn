@@ -11,7 +11,7 @@ using Sitecore.StringExtensions;
 using Unicorn.Configuration;
 using Unicorn.Data.DataProvider;
 using Unicorn.Predicates.Exclusions;
-using Unicorn.Predicates.FieldFilters;
+using Unicorn.Predicates.Fields;
 
 namespace Unicorn.Predicates
 {
@@ -125,7 +125,7 @@ namespace Unicorn.Predicates
 			var fieldTransforms = GetOptionalAttribute(configuration, "fieldTransforms");
 			FieldTransformsCollection filters = null;
 			if(!string.IsNullOrEmpty(fieldTransforms))
-				filters = FieldTransforms.GetFieldTransforms(fieldTransforms);
+				filters = MagicTokenTransformer.GetFieldTransforms(fieldTransforms);
 
 			var presets = configuration.ChildNodes
 				.Cast<XmlNode>()
@@ -180,17 +180,21 @@ namespace Unicorn.Predicates
 
 			string fieldFilter = GetOptionalAttribute(configuration, "fieldTransforms");
 			FieldTransformsCollection localFieldFilters = null;
-			if (!string.IsNullOrEmpty(fieldFilter)) localFieldFilters = FieldTransforms.GetFieldTransforms(fieldFilter);
+			if (!string.IsNullOrEmpty(fieldFilter)) localFieldFilters = MagicTokenTransformer.GetFieldTransforms(fieldFilter);
+
+			FieldTransformsCollection finalFilters = null;
 
 			if (localFieldFilters != null)
 			{
 				if (predicateFieldFilterCollection != null)
-					root.FieldTransforms = predicateFieldFilterCollection.MergeFilters(localFieldFilters);
+					finalFilters = predicateFieldFilterCollection.MergeFilters(localFieldFilters);
 			}
 			else
 			{
-				root.FieldTransforms = predicateFieldFilterCollection;
+				finalFilters = predicateFieldFilterCollection;
 			}
+
+			if (finalFilters != null) root.FieldValueManipulator = finalFilters;
 
 			return root;
 		}

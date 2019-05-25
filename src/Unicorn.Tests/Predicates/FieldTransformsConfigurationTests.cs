@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Xml;
 using FluentAssertions;
 using Unicorn.Predicates;
-using Unicorn.Predicates.FieldFilters;
+using Unicorn.Predicates.Fields;
 using Xunit;
 
 namespace Unicorn.Tests.Predicates
@@ -20,32 +20,35 @@ namespace Unicorn.Tests.Predicates
 			{
 				var predicate = CreateTestPredicate(configPredicate);
 
+				var manipulator = ((PresetTreeRoot) predicate.GetRootPaths()[0]).FieldValueManipulator;
+				var transformers = ((PresetTreeRoot) predicate.GetRootPaths()[0]).FieldValueManipulator.GetFieldValueTransformers();
+
 				switch (predicate.GetRootPaths()[0].Name)
 				{
 					case "FF 1":
-						var fieldTitle = ((PresetTreeRoot) predicate.GetRootPaths()[0]).FieldTransforms.GetFilterByFieldName("Title");
+						var fieldTitle = manipulator.GetFieldValueTransformer("Title");
 						Assert.NotNull(fieldTitle);
-						var fieldText = ((PresetTreeRoot)predicate.GetRootPaths()[0]).FieldTransforms.GetFilterByFieldName("Text");
+						var fieldText = manipulator.GetFieldValueTransformer("Text");
 						Assert.NotNull(fieldText);
-						((PresetTreeRoot) predicate.GetRootPaths()[0]).FieldTransforms.Transforms.Length.Should().Be(2);
+						transformers.Length.Should().Be(2);
 						break;
 					case "FF 2":
-						fieldTitle = ((PresetTreeRoot)predicate.GetRootPaths()[0]).FieldTransforms.GetFilterByFieldName("Title");
+						fieldTitle = manipulator.GetFieldValueTransformer("Title");
 						Assert.NotNull(fieldTitle);
-						fieldText = ((PresetTreeRoot)predicate.GetRootPaths()[0]).FieldTransforms.GetFilterByFieldName("Text");
+						fieldText = manipulator.GetFieldValueTransformer("Text");
 						Assert.NotNull(fieldText);
-						Assert.Equal(FieldTransformDeployRule.LoremIpsumBody, fieldText.FieldTransformDeployRule);
-						((PresetTreeRoot)predicate.GetRootPaths()[0]).FieldTransforms.Transforms.Length.Should().Be(2);
+						Assert.Equal(FieldTransformDeployRule.LoremIpsumBody, ((MagicTokenTransformer)fieldText).FieldTransformDeployRule);
+						transformers.Length.Should().Be(2);
 						break;
 					case "FF 3":
-						fieldTitle = ((PresetTreeRoot)predicate.GetRootPaths()[0]).FieldTransforms.GetFilterByFieldName("Title");
+						fieldTitle = manipulator.GetFieldValueTransformer("Title");
 						Assert.NotNull(fieldTitle);
-						fieldText = ((PresetTreeRoot)predicate.GetRootPaths()[0]).FieldTransforms.GetFilterByFieldName("Text");
+						fieldText = manipulator.GetFieldValueTransformer("Text");
 						Assert.NotNull(fieldText);
-						var fieldTextBody = ((PresetTreeRoot)predicate.GetRootPaths()[0]).FieldTransforms.GetFilterByFieldName("Text Body");
+						var fieldTextBody = manipulator.GetFieldValueTransformer("Text Body");
 						Assert.NotNull(fieldTextBody);
-						Assert.Equal(FieldTransformDeployRule.Ignore, fieldTextBody.FieldTransformDeployRule);
-						((PresetTreeRoot)predicate.GetRootPaths()[0]).FieldTransforms.Transforms.Length.Should().Be(3);
+						Assert.Equal(FieldTransformDeployRule.Ignore, ((MagicTokenTransformer)fieldTextBody).FieldTransformDeployRule);
+						transformers.Length.Should().Be(3);
 						break;
 					default:
 						throw new Exception($"No test case defined for predicate name {predicate.GetRootPaths()[0].Name}");

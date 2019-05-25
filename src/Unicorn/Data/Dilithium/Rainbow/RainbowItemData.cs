@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Rainbow.Model;
+using Rainbow.Storage;
 
 namespace Unicorn.Data.Dilithium.Rainbow
 {
@@ -15,6 +16,7 @@ namespace Unicorn.Data.Dilithium.Rainbow
 		{
 			_baseItemData = baseItemData;
 			_sourceDataCore = sourceDataCore;
+			FieldValueManipulator = baseItemData.FieldValueManipulator;
 		}
 
 		public Guid Id => _baseItemData.Id;
@@ -26,6 +28,8 @@ namespace Unicorn.Data.Dilithium.Rainbow
 		public string Path => _baseItemData.Path;
 
 		public string SerializedItemId => _baseItemData.SerializedItemId;
+
+		public IFieldValueManipulator FieldValueManipulator { get; set; }
 
 		public string DatabaseName
 		{
