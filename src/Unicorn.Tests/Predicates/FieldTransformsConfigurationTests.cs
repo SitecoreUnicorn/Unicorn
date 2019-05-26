@@ -50,6 +50,12 @@ namespace Unicorn.Tests.Predicates
 						Assert.Equal(FieldTransformDeployRule.Ignore, ((MagicTokenTransformer)fieldTextBody).FieldTransformDeployRule);
 						transformers.Length.Should().Be(3);
 						break;
+					case "FF 4":
+						fieldTextBody = manipulator.GetFieldValueTransformer("Text Body");
+						Assert.NotNull(fieldTextBody);
+						Assert.Equal(FieldTransformDeployRule.Ignore, ((MagicTokenTransformer)fieldTextBody).FieldTransformDeployRule);
+						transformers.Length.Should().Be(1);
+						break;
 					default:
 						throw new Exception($"No test case defined for predicate name {predicate.GetRootPaths()[0].Name}");
 				}

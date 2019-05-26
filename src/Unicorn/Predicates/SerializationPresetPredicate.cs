@@ -188,6 +188,8 @@ namespace Unicorn.Predicates
 			{
 				if (predicateFieldFilterCollection != null)
 					finalFilters = predicateFieldFilterCollection.MergeFilters(localFieldFilters);
+				else
+					finalFilters = localFieldFilters;
 			}
 			else
 			{

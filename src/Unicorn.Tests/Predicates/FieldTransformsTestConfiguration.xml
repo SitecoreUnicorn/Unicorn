@@ -12,4 +12,8 @@
 	<predicate fieldTransforms="!title,!text">
 		<include name="FF 3" database="master" path="/sitecore/unittests/fieldtransforms" fieldTransforms="-text body" />
 	</predicate>
+
+	<predicate>
+		<include name="FF 4" database="master" path="/sitecore/unittests/fieldtransforms" fieldTransforms="-text body" />
+	</predicate>
 </testConfiguration>
