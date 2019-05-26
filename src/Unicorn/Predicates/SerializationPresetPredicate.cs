@@ -27,6 +27,7 @@ namespace Unicorn.Predicates
 
 			EnsureEntriesExist(configuration?.Name ?? "Unknown");
 			ValidateExclusionConfiguration(configuration?.Name ?? "Unknown", dataProviderConfiguration?.EnableTransparentSync ?? false);
+			ValidateFieldTransformsConfiguration(configuration?.Name ?? "Unknown", dataProviderConfiguration?.EnableTransparentSync ?? false);
 		}
 
 		public PredicateResult Includes(IItemData itemData)
@@ -153,6 +154,13 @@ namespace Unicorn.Predicates
 		{
 			// no entries = throw!
 			if (_includeEntries.Count == 0) throw new InvalidOperationException($"No include entries were present on the predicate for the {configurationName} Unicorn configuration. You must explicitly specify the items you want to include.");
+		}
+
+		protected virtual void ValidateFieldTransformsConfiguration(string configurationName, bool isTransparentSync)
+		{
+			if (!isTransparentSync) return;
+
+			if (_includeEntries.Any(entry => entry.FieldValueManipulator != null)) throw new InvalidOperationException($"The predicate for the Unicorn Transparent Sync configuration {configurationName} contains Field Transforms. Field Transforms are incompatible with Transparent Sync and could cause unexpected results. Please refactor your configuration to not use Field Transforms, or do not use Transparent Sync.");
 		}
 
 		protected virtual void ValidateExclusionConfiguration(string configurationName, bool isTransparentSync)

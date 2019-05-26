@@ -86,7 +86,7 @@ namespace Unicorn.Predicates.Fields
 			if (!ff.FieldName.IsNullOrEmpty())
 			{
 				if(f.Any(x => string.Equals(x.FieldName, ff.FieldName, StringComparison.OrdinalIgnoreCase)))
-					throw new DuplicateFieldsException($"Field '{ff.FieldName} included multiple times in the field filter. This is not allowed, make up your mind.");
+					throw new DuplicateFieldsException($"Field '{ff.FieldName}' included multiple times in the field filter. This is not allowed, make up your mind.");
 
 				f.Add(ff);
 			}
