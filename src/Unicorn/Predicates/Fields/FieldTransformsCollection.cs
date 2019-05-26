@@ -43,5 +43,10 @@ namespace Unicorn.Predicates.Fields
 		{
 			return Transforms.Cast<IFieldValueTransformer>().ToArray();
 		}
+
+		public string[] GetFieldNamesInManipulator()
+		{
+			return Array.ConvertAll(GetFieldValueTransformers(), a => a.FieldName);
+		}
 	}
 }
