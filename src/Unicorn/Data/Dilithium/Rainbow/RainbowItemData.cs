@@ -16,7 +16,6 @@ namespace Unicorn.Data.Dilithium.Rainbow
 		{
 			_baseItemData = baseItemData;
 			_sourceDataCore = sourceDataCore;
-			FieldValueManipulator = baseItemData.FieldValueManipulator;
 		}
 
 		public Guid Id => _baseItemData.Id;
