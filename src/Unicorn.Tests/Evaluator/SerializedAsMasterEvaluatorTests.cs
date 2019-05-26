@@ -72,7 +72,7 @@ namespace Unicorn.Tests.Evaluator
 
 			evaluator.EvaluateNewSerializedItem(itemData);
 
-			deserializer.Received().Deserialize(itemData);
+			deserializer.Received().Deserialize(itemData, null);
 		}
 
 		[Fact]
@@ -103,7 +103,7 @@ namespace Unicorn.Tests.Evaluator
 
 			evaluator.EvaluateUpdate(CreateTestItem(), CreateTestItem());
 
-			deserializer.Received().Deserialize(Arg.Any<IItemData>());
+			deserializer.Received().Deserialize(Arg.Any<IItemData>(), null);
 		}
 
 		[Fact]
@@ -118,7 +118,7 @@ namespace Unicorn.Tests.Evaluator
 
 			evaluator.EvaluateUpdate(CreateTestItem(), CreateTestItem());
 
-			deserializer.DidNotReceive().Deserialize(Arg.Any<IItemData>());
+			deserializer.DidNotReceive().Deserialize(Arg.Any<IItemData>(), null);
 		}
 
 		private SerializedAsMasterEvaluator CreateTestEvaluator(ISerializedAsMasterEvaluatorLogger logger = null, IDeserializer deserializer = null, IItemComparer comparer = null)

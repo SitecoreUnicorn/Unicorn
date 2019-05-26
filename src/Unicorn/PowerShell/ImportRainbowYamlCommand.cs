@@ -41,14 +41,14 @@ namespace Unicorn.PowerShell
 					var item = yaml.ReadSerializedItem(stream, "(from PowerShell)");
 
 					consoleLogger.Info(item.Path);
-					deserializer.Deserialize(item);
+					deserializer.Deserialize(item, null);
 				}
 			}
 
 			if (Item != null)
 			{
 				consoleLogger.Info(Item.Path);
-				deserializer.Deserialize(Item);
+				deserializer.Deserialize(Item, null);
 			}
 		}
 

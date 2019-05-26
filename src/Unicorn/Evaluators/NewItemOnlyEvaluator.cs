@@ -50,7 +50,8 @@ namespace Unicorn.Evaluators
 
 			_logger.DeserializedNewItem(newItemData);
 
-			_sourceDataStore.Save(newItemData);
+			var result = _parentConfiguration.Resolve<IPredicate>().Includes(newItemData);
+			_sourceDataStore.Save(newItemData, result.FieldValueManipulator);
 
 			_logger.Evaluated(newItemData);
 

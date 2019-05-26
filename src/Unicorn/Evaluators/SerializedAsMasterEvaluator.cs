@@ -6,6 +6,7 @@ using Rainbow;
 using Rainbow.Diff;
 using Rainbow.Filtering;
 using Rainbow.Model;
+using Rainbow.Storage;
 using Sitecore.Data;
 using Sitecore.Data.Items;
 using Sitecore.Diagnostics;
@@ -68,14 +69,16 @@ namespace Unicorn.Evaluators
 
 			_logger.Evaluated(sourceItem ?? targetItem);
 
-			if (ShouldUpdateExisting(sourceItem, targetItem, deferredUpdateLog))
+			var result = _parentConfiguration.Resolve<IPredicate>().Includes(targetItem);
+
+			if (ShouldUpdateExisting(sourceItem, targetItem, deferredUpdateLog, result.FieldValueManipulator))
 			{
 				using (new LogTransaction(_globalLogger))
 				{
 					_logger.SerializedUpdatedItem(targetItem);
 					deferredUpdateLog.ExecuteDeferredActions(_logger);
 
-					_sourceDataStore.Save(targetItem);
+					_sourceDataStore.Save(targetItem, result.FieldValueManipulator);
 				}
 				return targetItem;
 			}
@@ -137,7 +140,7 @@ namespace Unicorn.Evaluators
 			return true;
 		}
 
-		protected virtual bool ShouldUpdateExisting(IItemData sourceItem, IItemData targetItem, DeferredLogWriter<ISerializedAsMasterEvaluatorLogger> deferredUpdateLog)
+		protected virtual bool ShouldUpdateExisting(IItemData sourceItem, IItemData targetItem, DeferredLogWriter<ISerializedAsMasterEvaluatorLogger> deferredUpdateLog, IFieldValueManipulator fieldValueManipulator)
 		{
 			Assert.ArgumentNotNull(targetItem, "targetItem");
 			Assert.ArgumentNotNull(sourceItem, "sourceItem");
@@ -147,6 +150,25 @@ namespace Unicorn.Evaluators
 			// filter out ignored fields before we do the comparison
 			var filteredTargetItem = new FilteredItem(targetItem, _fieldFilter);
 			var filteredSourceItem = new FilteredItem(sourceItem, _fieldFilter);
+
+			if (fieldValueManipulator != null)
+			{
+				// Taking a shortcut for now. If there is a dynamic field value manipiulator, it's true result can only really be obtained when doing the _actual_ write, not when trying to second guess if a write is needed
+				return true;
+
+				//foreach (var field in filteredSourceItem.SharedFields)
+				//{
+				//	var fieldValueTransformer = fieldValueManipulator.GetFieldValueTransformer(field.NameHint);
+				//	if (fieldValueTransformer != null)
+				//	{
+				//		var targetField = filteredTargetItem.SharedFields.First(f => f.NameHint.Equals(field.NameHint, StringComparison.OrdinalIgnoreCase));
+				//		if (fieldValueTransformer.ShouldDeployFieldValue(targetField.Value, field.Value))
+				//		{
+				//			field.Value = fieldValueTransformer.GetFieldValue(targetField.Value, field.Value);
+				//		}
+				//	}
+				//}
+			}
 
 			var comparison = _itemComparer.FastCompare(filteredSourceItem, filteredTargetItem);
 

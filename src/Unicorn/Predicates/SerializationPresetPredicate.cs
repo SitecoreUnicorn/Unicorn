@@ -44,6 +44,7 @@ namespace Unicorn.Predicates
 				if (result.IsIncluded)
 				{
 					result.PredicateComponentId = entry.Name;
+					result.FieldValueManipulator = entry.FieldValueManipulator;
 
 					return result; // it's definitely included if anything includes it
 				}

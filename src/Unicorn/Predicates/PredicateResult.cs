@@ -1,4 +1,6 @@
-﻿namespace Unicorn.Predicates
+﻿using Rainbow.Storage;
+
+namespace Unicorn.Predicates
 {
 	public class PredicateResult
 	{
@@ -21,5 +23,7 @@
 		/// With the SerializationPresetPredicate, this is the include entry name that matched.
 		/// </summary>
 		public string PredicateComponentId { get; set; }
+
+		public IFieldValueManipulator FieldValueManipulator { get; set; }
 	}
 }

@@ -476,7 +476,7 @@ namespace Unicorn
 			var predicateResult = predicate.Includes(item);
 			if (!predicateResult.IsIncluded) return predicateResult;
 
-			targetDataStore.Save(item);
+			targetDataStore.Save(item, predicateResult.FieldValueManipulator);
 			return predicateResult;
 		}
 

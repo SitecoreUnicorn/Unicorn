@@ -26,7 +26,7 @@ namespace Unicorn.Tests.Data.DataProvider
 
 				provider.CreateItem(CreateTestDefinition(), ID.NewID, CreateTestDefinition(id: parent.ID), CreateTestCallContext(db.Database));
 
-				target.DidNotReceive().Save(Arg.Any<IItemData>());
+				target.DidNotReceive().Save(Arg.Any<IItemData>(), null);
 			}
 		}
 
@@ -42,7 +42,7 @@ namespace Unicorn.Tests.Data.DataProvider
 
 				provider.CreateItem(CreateTestDefinition(), ID.NewID, CreateTestDefinition(id: parent.ID), CreateTestCallContext(db.Database));
 
-				target.Received().Save(Arg.Any<IItemData>());
+				target.Received().Save(Arg.Any<IItemData>(), null);
 			}
 		}
 
@@ -58,7 +58,7 @@ namespace Unicorn.Tests.Data.DataProvider
 
 				provider.CreateItem(CreateTestDefinition(), ID.NewID, CreateTestDefinition(id: parent.ID), CreateTestCallContext(db.Database));
 
-				target.Received().Save(Arg.Any<IItemData>());
+				target.Received().Save(Arg.Any<IItemData>(), null);
 			}
 		}
 	}

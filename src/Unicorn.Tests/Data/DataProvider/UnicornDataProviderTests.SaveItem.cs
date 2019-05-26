@@ -38,7 +38,7 @@ namespace Unicorn.Tests.Data.DataProvider
 
 				provider.SaveItem(CreateTestDefinition(), changes, CreateTestCallContext(db.Database));
 
-				target.Received().Save(Arg.Any<IItemData>());
+				target.Received().Save(Arg.Any<IItemData>(), null);
 			}
 		}
 
@@ -78,7 +78,7 @@ namespace Unicorn.Tests.Data.DataProvider
 
 				provider.SaveItem(CreateTestDefinition(), changes, CreateTestCallContext(db.Database));
 
-				target.DidNotReceive().Save(Arg.Any<IItemData>());
+				target.DidNotReceive().Save(Arg.Any<IItemData>(), null);
 			}
 		}
 	}
