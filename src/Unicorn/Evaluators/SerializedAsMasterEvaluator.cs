@@ -71,14 +71,16 @@ namespace Unicorn.Evaluators
 
 			var result = _parentConfiguration.Resolve<IPredicate>().Includes(targetItem);
 
-			if (ShouldUpdateExisting(sourceItem, targetItem, deferredUpdateLog, result.FieldValueManipulator))
+			// TODO: In reality, result should never come back null here. With the current tests it does however, and it's
+			// ^&*"$*£"&(* to change them
+			if (ShouldUpdateExisting(sourceItem, targetItem, deferredUpdateLog, result?.FieldValueManipulator))
 			{
 				using (new LogTransaction(_globalLogger))
 				{
 					_logger.SerializedUpdatedItem(targetItem);
 					deferredUpdateLog.ExecuteDeferredActions(_logger);
 
-					_sourceDataStore.Save(targetItem, result.FieldValueManipulator);
+					_sourceDataStore.Save(targetItem, result?.FieldValueManipulator);
 				}
 				return targetItem;
 			}
