@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Rainbow.Storage;
+using Sitecore.Pipelines.LoggingIn;
 using Sitecore.StringExtensions;
 
 namespace Unicorn.Predicates.Fields
@@ -183,6 +184,48 @@ namespace Unicorn.Predicates.Fields
 			}
 
 			return proposedValue;
+		}
+
+		public string Description
+		{
+			get
+			{
+				char prefix;
+
+				switch (FieldTransformDeployRule)
+				{
+					case FieldTransformDeployRule.ForceValue:
+						prefix = '+';
+						break;
+					case FieldTransformDeployRule.ScreamingSnake:
+						prefix = '~';
+						break;
+					case FieldTransformDeployRule.Clear:
+						prefix = '!';
+						break;
+					case FieldTransformDeployRule.LoremIpsumTitle:
+						prefix = ';';
+						break;
+					case FieldTransformDeployRule.LoremIpsumBody:
+						prefix = ':';
+						break;
+					case FieldTransformDeployRule.SitecoreSetting:
+						prefix = '$';
+						break;
+					case FieldTransformDeployRule.Ignore:
+						prefix = '-';
+						break;
+					case FieldTransformDeployRule.OnlyIfNullOrEmpty:
+						prefix = '?';
+						break;
+					default:
+						throw new InvalidOperationException($"Invalid Field Transform Prefix: {FieldTransformDeployRule.ToString()}");
+				}
+
+				if (!string.IsNullOrEmpty(ForcedValue))
+					return $"{prefix}{FieldName}[{ForcedValue}]";
+				return $"{prefix}{FieldName}";
+			}
 		}
 	}
 }

@@ -106,8 +106,9 @@ namespace Unicorn.Predicates
 			{
 				string basePath = entry.DatabaseName + ":" + entry.Path;
 				string excludes = GetExcludeDescription(entry);
+				string transforms = GetFieldTransformsDescription(entry);
 
-				configs.Add(new KeyValuePair<string, string>(entry.Name, basePath + excludes));
+				configs.Add(new KeyValuePair<string, string>(entry.Name, basePath + excludes + transforms));
 			}
 
 			return configs.ToArray();
@@ -120,6 +121,13 @@ namespace Unicorn.Predicates
 
 			// ReSharper disable once UseStringInterpolation
 			return string.Format(" (except {0})", string.Join(", ", entry.Exclusions.Select(exclude => exclude.Description)));
+		}
+
+		private string GetFieldTransformsDescription(PresetTreeRoot entry)
+		{
+			if (entry.FieldValueManipulator == null) return string.Empty;
+
+			return $"<br />- Field Transforms: {string.Join(", ", entry.FieldValueManipulator.GetFieldValueTransformers().Select(transformer => transformer.Description))}";
 		}
 
 		private IList<PresetTreeRoot> ParsePreset(XmlNode configuration, string configurationName)
