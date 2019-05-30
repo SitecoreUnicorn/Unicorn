@@ -21,6 +21,7 @@ using Sitecore.Data.Templates;
 using Sitecore.Diagnostics;
 using Sitecore.Eventing;
 using Sitecore.Globalization;
+using Sitecore.Reflection;
 using Unicorn.Loader;
 using Unicorn.Predicates;
 using ItemData = Rainbow.Storage.Sc.ItemData;
@@ -788,7 +789,8 @@ namespace Unicorn.Data.DataProvider
 					{
 						foreach (var index in ContentSearchManager.Indexes)
 						{
-							IndexCustodian.UpdateItem(index, new SitecoreItemUniqueId(item.Uri));
+							ReflectionUtil.CallMethod(typeof(IndexCustodian), "UpdateItem", true, true, true, new object[] {index, new SitecoreItemUniqueId(item.Uri)});
+							//IndexCustodian.UpdateItem(index, new SitecoreItemUniqueId(item.Uri));
 						}
 					}
 				}
