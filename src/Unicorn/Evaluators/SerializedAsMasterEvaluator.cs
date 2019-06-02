@@ -149,28 +149,12 @@ namespace Unicorn.Evaluators
 
 			if (sourceItem.Id == RootId) return false; // we never want to update the Sitecore root item
 
+			// Taking a shortcut for now. If there is a dynamic field value manipiulator, it's true result can only really be obtained when doing the _actual_ write, not when trying to second guess if a write is needed
+			if (fieldValueManipulator != null) return true;
+
 			// filter out ignored fields before we do the comparison
 			var filteredTargetItem = new FilteredItem(targetItem, _fieldFilter);
 			var filteredSourceItem = new FilteredItem(sourceItem, _fieldFilter);
-
-			if (fieldValueManipulator != null)
-			{
-				// Taking a shortcut for now. If there is a dynamic field value manipiulator, it's true result can only really be obtained when doing the _actual_ write, not when trying to second guess if a write is needed
-				return true;
-
-				//foreach (var field in filteredSourceItem.SharedFields)
-				//{
-				//	var fieldValueTransformer = fieldValueManipulator.GetFieldValueTransformer(field.NameHint);
-				//	if (fieldValueTransformer != null)
-				//	{
-				//		var targetField = filteredTargetItem.SharedFields.First(f => f.NameHint.Equals(field.NameHint, StringComparison.OrdinalIgnoreCase));
-				//		if (fieldValueTransformer.ShouldDeployFieldValue(targetField.Value, field.Value))
-				//		{
-				//			field.Value = fieldValueTransformer.GetFieldValue(targetField.Value, field.Value);
-				//		}
-				//	}
-				//}
-			}
 
 			var comparison = _itemComparer.FastCompare(filteredSourceItem, filteredTargetItem);
 
