@@ -5,6 +5,7 @@ using Sitecore.Data.Serialization;
 using Sitecore.Diagnostics;
 using Sitecore.Shell.Framework.Commands.Serialization;
 using Unicorn.Data;
+using Unicorn.Predicates;
 using ItemData = Rainbow.Storage.Sc.ItemData;
 
 namespace Unicorn.UI.Commands
@@ -43,8 +44,9 @@ namespace Unicorn.UI.Commands
 				Log.Warn("Unicorn: Unable to load item because it was not serialized.", this);
 				return base.LoadItem(item, options);
 			}
-			
-			sourceStore.Save(targetItem);
+
+			var result = configuration.Resolve<IPredicate>().Includes(targetItem);
+			sourceStore.Save(targetItem, result.FieldValueManipulator);
 
 			return Database.GetItem(item.Uri);
 		}

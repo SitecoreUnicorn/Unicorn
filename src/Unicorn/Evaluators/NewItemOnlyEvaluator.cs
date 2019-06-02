@@ -50,7 +50,10 @@ namespace Unicorn.Evaluators
 
 			_logger.DeserializedNewItem(newItemData);
 
-			_sourceDataStore.Save(newItemData);
+			var result = _parentConfiguration.Resolve<IPredicate>().Includes(newItemData);
+			// TODO: In reality, result should never come back null here. With the current tests it does however, and it's
+			// ^&*"$*£"&(* to change them
+			_sourceDataStore.Save(newItemData, result?.FieldValueManipulator);
 
 			_logger.Evaluated(newItemData);
 

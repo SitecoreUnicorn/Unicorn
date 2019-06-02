@@ -21,6 +21,7 @@ using Sitecore.Data.Templates;
 using Sitecore.Diagnostics;
 using Sitecore.Eventing;
 using Sitecore.Globalization;
+using Sitecore.Reflection;
 using Unicorn.Loader;
 using Unicorn.Predicates;
 using ItemData = Rainbow.Storage.Sc.ItemData;
@@ -188,7 +189,7 @@ namespace Unicorn.Data.DataProvider
 			}
 
 			// if we get here, it's just a save, not a rename
-			_targetDataStore.Save(changesAppliedItem);
+			_targetDataStore.Save(changesAppliedItem, null);
 
 			_logger.SavedItem(_targetDataStore.FriendlyName, changesAppliedItem, "Saved");
 		}
@@ -255,7 +256,7 @@ namespace Unicorn.Data.DataProvider
 
 			if (!_predicate.Includes(copyTargetItem).IsIncluded) return; // destination parent is not in a path that we are serializing, so skip out
 
-			_targetDataStore.Save(copyTargetItem);
+			_targetDataStore.Save(copyTargetItem, null);
 			_logger.CopiedItem(_targetDataStore.FriendlyName, existingItem, copyTargetItem);
 		}
 
@@ -275,7 +276,7 @@ namespace Unicorn.Data.DataProvider
 			var newItem = new ProxyItem(sourceItem); // note: sourceItem gets dumped. Because it has field changes made to it.
 			newItem.TemplateId = changeList.Target.ID.Guid;
 
-			_targetDataStore.Save(newItem);
+			_targetDataStore.Save(newItem, null);
 
 			_logger.SavedItem(_targetDataStore.FriendlyName, sourceItem, "TemplateChanged");
 		}
@@ -605,7 +606,7 @@ namespace Unicorn.Data.DataProvider
 
 			if (!_predicate.Includes(item).IsIncluded) return false;
 
-			_targetDataStore.Save(item);
+			_targetDataStore.Save(item, null);
 			_logger.SavedItem(_targetDataStore.FriendlyName, item, triggerReason);
 
 			return true;
@@ -788,7 +789,8 @@ namespace Unicorn.Data.DataProvider
 					{
 						foreach (var index in ContentSearchManager.Indexes)
 						{
-							IndexCustodian.UpdateItem(index, new SitecoreItemUniqueId(item.Uri));
+							ReflectionUtil.CallMethod(typeof(IndexCustodian), "UpdateItem", true, true, true, new object[] {index, new SitecoreItemUniqueId(item.Uri)});
+							//IndexCustodian.UpdateItem(index, new SitecoreItemUniqueId(item.Uri));
 						}
 					}
 				}

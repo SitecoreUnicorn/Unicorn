@@ -186,6 +186,9 @@
     <Compile Include="Predicates\Exclusions\ChildrenOfPathBasedPresetTreeExclusion.cs" />
     <Compile Include="Predicates\Exclusions\PathBasedPresetTreeExclusion.cs" />
     <Compile Include="Predicates\Exclusions\PathTool.cs" />
+    <Compile Include="Predicates\Fields\MagicTokenTransformer.cs" />
+    <Compile Include="Predicates\Fields\FieldTransformsCollection.cs" />
+    <Compile Include="Predicates\Fields\FieldTransformsExceptions.cs" />
     <Compile Include="Predicates\IPresetTreeExclusion.cs" />
     <Compile Include="SerializationEnabler.cs" />
     <Compile Include="TransparentSyncEnabler.cs" />

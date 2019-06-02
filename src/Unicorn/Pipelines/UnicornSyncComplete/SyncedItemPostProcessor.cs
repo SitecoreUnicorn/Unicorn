@@ -8,6 +8,7 @@ using Sitecore.ContentSearch;
 using Sitecore.ContentSearch.Maintenance;
 using Sitecore.Data;
 using Sitecore.Data.Items;
+using Sitecore.Reflection;
 using Unicorn.Configuration;
 using Unicorn.Loader;
 using Unicorn.Logging;
@@ -109,7 +110,8 @@ namespace Unicorn.Pipelines.UnicornSyncComplete
 			{
 				var changes = items.Select(change => new SitecoreItemUniqueId(change.Uri));
 
-				IndexCustodian.IncrementalUpdate(index, changes);
+				ReflectionUtil.CallMethod(typeof(IndexCustodian), "IncrementalUpdate", true, true, true, new object[] { index, changes });
+				//IndexCustodian.IncrementalUpdate(index, changes);
 			}
 
 			logger?.Debug($"> Queued updates for {items.Length} items in the search indexes. Will run async.");

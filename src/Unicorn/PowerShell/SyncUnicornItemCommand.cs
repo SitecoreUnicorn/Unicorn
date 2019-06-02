@@ -11,6 +11,7 @@ using Unicorn.Configuration;
 using Unicorn.Data;
 using Unicorn.Logging;
 using Unicorn.Pipelines.UnicornSyncEnd;
+using Unicorn.Predicates;
 using ItemData = Rainbow.Storage.Sc.ItemData;
 
 namespace Unicorn.PowerShell
@@ -64,6 +65,7 @@ namespace Unicorn.PowerShell
 				logger.Info(
 					$"Processing partial Unicorn configuration {itemData.GetDisplayIdentifier()} (Config: {configuration.Name})");
 
+				
 				using (new LoggingContext(logger, configuration))
 				{
 					if (Recurse.IsPresent)
@@ -73,7 +75,8 @@ namespace Unicorn.PowerShell
 					else
 					{
 						var sourceStore = configuration.Resolve<ISourceDataStore>();
-						sourceStore.Save(itemData);
+						var result = configuration.Resolve<IPredicate>().Includes(itemData);
+						sourceStore.Save(itemData, result.FieldValueManipulator);
 					}
 				}
 			}

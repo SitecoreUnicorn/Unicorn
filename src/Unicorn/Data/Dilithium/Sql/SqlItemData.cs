@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Rainbow.Model;
+using Rainbow.Storage;
 
 namespace Unicorn.Data.Dilithium.Sql
 {

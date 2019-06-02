@@ -23,9 +23,9 @@ namespace Unicorn.Data
 
 		public IDataStore InnerDataStore => _innerDataStore.Value;
 
-		public void Save(IItemData item)
+		public void Save(IItemData item, IFieldValueManipulator fieldValueManipulator)
 		{
-			_innerDataStore.Value.Save(item);
+			_innerDataStore.Value.Save(item, fieldValueManipulator);
 		}
 
 		public void MoveOrRenameItem(IItemData itemWithFinalPath, string oldPath)

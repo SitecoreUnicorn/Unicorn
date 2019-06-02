@@ -6,6 +6,7 @@ using Rainbow;
 using Rainbow.Diff;
 using Rainbow.Filtering;
 using Rainbow.Model;
+using Rainbow.Storage;
 using Sitecore.Data;
 using Sitecore.Data.Items;
 using Sitecore.Diagnostics;
@@ -68,14 +69,18 @@ namespace Unicorn.Evaluators
 
 			_logger.Evaluated(sourceItem ?? targetItem);
 
-			if (ShouldUpdateExisting(sourceItem, targetItem, deferredUpdateLog))
+			var result = _parentConfiguration.Resolve<IPredicate>().Includes(targetItem);
+
+			// TODO: In reality, result should never come back null here. With the current tests it does however, and it's
+			// ^&*"$*£"&(* to change them
+			if (ShouldUpdateExisting(sourceItem, targetItem, deferredUpdateLog, result?.FieldValueManipulator))
 			{
 				using (new LogTransaction(_globalLogger))
 				{
 					_logger.SerializedUpdatedItem(targetItem);
 					deferredUpdateLog.ExecuteDeferredActions(_logger);
 
-					_sourceDataStore.Save(targetItem);
+					_sourceDataStore.Save(targetItem, result?.FieldValueManipulator);
 				}
 				return targetItem;
 			}
@@ -137,12 +142,15 @@ namespace Unicorn.Evaluators
 			return true;
 		}
 
-		protected virtual bool ShouldUpdateExisting(IItemData sourceItem, IItemData targetItem, DeferredLogWriter<ISerializedAsMasterEvaluatorLogger> deferredUpdateLog)
+		protected virtual bool ShouldUpdateExisting(IItemData sourceItem, IItemData targetItem, DeferredLogWriter<ISerializedAsMasterEvaluatorLogger> deferredUpdateLog, IFieldValueManipulator fieldValueManipulator)
 		{
 			Assert.ArgumentNotNull(targetItem, "targetItem");
 			Assert.ArgumentNotNull(sourceItem, "sourceItem");
 
 			if (sourceItem.Id == RootId) return false; // we never want to update the Sitecore root item
+
+			// Taking a shortcut for now. If there is a dynamic field value manipiulator, it's true result can only really be obtained when doing the _actual_ write, not when trying to second guess if a write is needed
+			if (fieldValueManipulator != null) return true;
 
 			// filter out ignored fields before we do the comparison
 			var filteredTargetItem = new FilteredItem(targetItem, _fieldFilter);
