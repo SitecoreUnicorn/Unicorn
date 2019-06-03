@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
-using Cognifide.PowerShell.Commandlets;
 using Kamsar.WebConsole;
 using Unicorn.Configuration;
 using Unicorn.Logging;

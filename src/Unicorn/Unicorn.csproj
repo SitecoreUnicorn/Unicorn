@@ -36,10 +36,6 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Cognifide.PowerShell">
-      <HintPath>..\..\lib\Cognifide.PowerShell.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Configy, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Configy.1.0.0\lib\net45\Configy.dll</HintPath>
     </Reference>
@@ -169,6 +165,8 @@
     <Compile Include="Pipelines\UnicornSyncComplete\SyncedItemPostProcessor.cs" />
     <Compile Include="Pipelines\UnicornReserializeStart\IUnicornReserializeStartProcessor.cs" />
     <Compile Include="Pipelines\UnicornReserializeStart\UnicornReserializeStartPipelineArgs.cs" />
+    <Compile Include="PowerShell\AutocompleteSetAttribute.cs" />
+    <Compile Include="PowerShell\BaseCommand.cs" />
     <Compile Include="PowerShell\ConvertFromRainbowYamlCommand.cs" />
     <Compile Include="PowerShell\ImportRainbowYamlCommand.cs" />
     <Compile Include="PowerShell\ConvertToRainbowYamlCommand.cs" />

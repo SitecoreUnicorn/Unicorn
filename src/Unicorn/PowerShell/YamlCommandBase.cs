@@ -1,6 +1,5 @@
 ﻿using System.Management.Automation;
 using System.Xml;
-using Cognifide.PowerShell.Commandlets;
 using Rainbow.Filtering;
 using Rainbow.Storage.Yaml;
 

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Management.Automation;
-using Cognifide.PowerShell.Commandlets;
 using Rainbow.Model;
 using Sitecore.Data.Items;
 using Unicorn.Data;
