@@ -1,7 +1,5 @@
 ﻿using System.Linq;
 using System.Management.Automation;
-using Cognifide.PowerShell.Commandlets;
-using Cognifide.PowerShell.Core.Validation;
 using Unicorn.Configuration;
 
 namespace Unicorn.PowerShell
@@ -31,7 +29,7 @@ namespace Unicorn.PowerShell
 			}
 		}
 
-		[Parameter(Position = 0), AutocompleteSet("Autocomplete")]
+		[Parameter(Position = 0), AutocompleteSet(nameof(Autocomplete))]
 		public string Filter { get; set; }
 	}
 }

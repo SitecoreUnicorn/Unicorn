@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Management.Automation;
 using Rainbow.Model;
 using Rainbow.Storage.Sc;
