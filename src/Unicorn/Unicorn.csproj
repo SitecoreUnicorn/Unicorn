@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Unicorn</RootNamespace>
     <AssemblyName>Unicorn</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\</SolutionDir>
@@ -36,25 +36,42 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Kamsar.WebConsole, Version=1.2.2.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\packages\Kamsar.WebConsole.1.2.2.0\lib\net40\Kamsar.WebConsole.dll</HintPath>
+    <Reference Include="Cognifide.PowerShell">
+      <HintPath>..\..\lib\Cognifide.PowerShell.dll</HintPath>
+      <Private>False</Private>
     </Reference>
-    <Reference Include="MicroCHAP, Version=1.2.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\MicroCHAP.1.2.1.0\lib\net45\MicroCHAP.dll</HintPath>
+    <Reference Include="Configy, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Configy.1.0.0\lib\net45\Configy.dll</HintPath>
+    </Reference>
+    <Reference Include="Kamsar.WebConsole, Version=2.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Kamsar.WebConsole.2.0.1\lib\net40\Kamsar.WebConsole.dll</HintPath>
+    </Reference>
+    <Reference Include="MicroCHAP, Version=1.2.2.2, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\MicroCHAP.1.2.2.2\lib\net45\MicroCHAP.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Sitecore.ContentSearch">
-      <HintPath>..\..\lib\Sitecore\v7\Sitecore.ContentSearch.dll</HintPath>
+      <HintPath>..\..\packages\Sitecore.ContentSearch.NoReferences.8.2.160729\lib\net452\Sitecore.ContentSearch.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Sitecore.ExperienceEditor.Speak">
+      <HintPath>..\..\packages\Sitecore.ExperienceEditor.Speak.NoReferences.8.2.160729\lib\net452\Sitecore.ExperienceEditor.Speak.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Sitecore.ExperienceEditor.Speak.Ribbon">
+      <HintPath>..\..\packages\Sitecore.ExperienceEditor.Speak.Ribbon.NoReferences.8.2.160729\lib\net452\Sitecore.ExperienceEditor.Speak.Ribbon.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Sitecore.Kernel, Version=7.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\lib\Sitecore\v7\Sitecore.Kernel.dll</HintPath>
+      <HintPath>..\..\packages\Sitecore.Kernel.NoReferences.8.2.160729\lib\net452\Sitecore.Kernel.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Management.Automation, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" />
     <Reference Include="System.Web" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
@@ -63,16 +80,20 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="ConfigurationExtensions.cs" />
+    <Compile Include="Configuration\Dependencies\ImplicitConfigurationDependency.cs" />
     <Compile Include="Configuration\Dependencies\InterconfigurationDependencyResolver.cs" />
     <Compile Include="Configuration\Dependencies\ConfigurationDependencyResolver.cs" />
     <Compile Include="Configuration\Dependencies\ExplicitConfigurationDependency.cs" />
     <Compile Include="Configuration\Dependencies\IConfigurationDependency.cs" />
+    <Compile Include="Configuration\PipelineBasedVariablesReplacer.cs" />
     <Compile Include="ControlPanel\Controls\BatchProcessingControls.cs" />
     <Compile Include="ControlPanel\Controls\ConfigurationInfo.cs" />
     <Compile Include="ControlPanel\Controls\GlobalWarnings.cs" />
     <Compile Include="ControlPanel\Controls\QuickReference.cs" />
     <Compile Include="ControlPanel\Controls\NoConfigurations.cs" />
-    <Compile Include="ControlPanel\UnicornStringConsole.cs" />
+    <Compile Include="ControlPanel\Security\ChallengeStoreSitecoreLogger.cs" />
+    <Compile Include="ControlPanel\Security\ChapServerSitecoreLogger.cs" />
     <Compile Include="ControlPanel\Security\SitecoreDatabaseChallengeStore.cs" />
     <Compile Include="ControlPanel\VisualStudio\Pipelines\UnicornControlPanelRequest\ConfigurationHealthVerb.cs" />
     <Compile Include="ControlPanel\VisualStudio\StreamWriterExtensions.cs" />
@@ -105,24 +126,69 @@
     <Compile Include="Data\DataProvider\FieldChangeParser.cs" />
     <Compile Include="Data\DataProvider\ItemChangeApplyingItemData.cs" />
     <Compile Include="Data\DataProvider\IUnicornDataProviderConfiguration.cs" />
+    <Compile Include="Data\Dilithium\DilithiumExtensions.cs" />
+    <Compile Include="Data\Dilithium\DilithiumSerializationFileSystemDataStore.cs" />
+    <Compile Include="Data\DataProvider\RenamedItemData.cs" />
+    <Compile Include="Data\Dilithium\Rainbow\RainbowItemData.cs" />
+    <Compile Include="Data\Dilithium\Rainbow\RainbowDataCache.cs" />
+    <Compile Include="Data\Dilithium\Rainbow\RainbowPrecacheStore.cs" />
+    <Compile Include="Data\Dilithium\Sql\SqlDataCache.cs" />
+    <Compile Include="Data\Dilithium\Sql\SqlItemFieldValue.cs" />
+    <Compile Include="Data\Dilithium\Sql\SqlItemData.cs" />
+    <Compile Include="Data\Dilithium\Sql\SqlItemLanguage.cs" />
+    <Compile Include="Data\Dilithium\Sql\SqlItemVersion.cs" />
+    <Compile Include="Data\Dilithium\Sql\SqlPrecacheStore.cs" />
+    <Compile Include="Data\Dilithium\DilithiumSitecoreDataStore.cs" />
+    <Compile Include="Data\Dilithium\InitResult.cs" />
+    <Compile Include="Data\Dilithium\Pipelines\InitializeDilithium.cs" />
+    <Compile Include="Data\Dilithium\ReactorContext.cs" />
+    <Compile Include="Data\TransparentSyncStatusChecker.cs" />
     <Compile Include="DeserializationSoftFailureAggregateException.cs" />
     <Compile Include="Deserialization\UnicornDeserializer.cs" />
     <Compile Include="Evaluators\INewItemOnlyEvaluatorLogger.cs" />
     <Compile Include="Evaluators\NewItemOnlyEvaluator.cs" />
+    <Compile Include="ExperienceEditor.Speak.Ribbon.Requests.SaveItem\TransparentSyncAwareCheckRevision.cs" />
     <Compile Include="Loader\DefaultSyncConfiguration.cs" />
     <Compile Include="Loader\ISyncConfiguration.cs" />
     <Compile Include="Logging\Formatting\DeserializationExceptionFormatter.cs" />
     <Compile Include="Logging\Formatting\IExceptionFormatter.cs" />
     <Compile Include="Logging\Formatting\TemplateMissingFieldExceptionFormatter.cs" />
     <Compile Include="Logging\LogTransaction.cs" />
+    <Compile Include="OperationType.cs" />
     <Compile Include="Pipelines\SaveUi\TransparentSyncAwareCheckRevision.cs" />
+    <Compile Include="Pipelines\UnicornExpandConfigurationVariables\ConfigurationNameVariablesReplacer.cs" />
+    <Compile Include="Pipelines\UnicornExpandConfigurationVariables\HelixConventionVariablesReplacer.cs" />
+    <Compile Include="Pipelines\UnicornExpandConfigurationVariables\IUnicornExpandConfigurationVariablesProcessor.cs" />
+    <Compile Include="Pipelines\UnicornExpandConfigurationVariables\UnicornExpandConfigurationVariablesPipelineArgs.cs" />
+    <Compile Include="Pipelines\IUnicornOperationStartPipelineArgs.cs" />
+    <Compile Include="Pipelines\UnicornSyncStart\IUnicornSyncStartProcessor.cs" />
+    <Compile Include="Pipelines\UnicornSyncStart\UnicornSyncStartPipelineArgs.cs" />
     <Compile Include="Pipelines\UnicornReserializeComplete\IUnicornReserializeCompleteProcessor.cs" />
     <Compile Include="Pipelines\UnicornReserializeComplete\UnicornReserializeCompletePipelineArgs.cs" />
     <Compile Include="Pipelines\UnicornSyncComplete\DictionaryCacheClearer.cs" />
     <Compile Include="Pipelines\UnicornSyncComplete\SyncedItemPostProcessor.cs" />
+    <Compile Include="Pipelines\UnicornReserializeStart\IUnicornReserializeStartProcessor.cs" />
+    <Compile Include="Pipelines\UnicornReserializeStart\UnicornReserializeStartPipelineArgs.cs" />
+    <Compile Include="PowerShell\ConvertFromRainbowYamlCommand.cs" />
+    <Compile Include="PowerShell\ImportRainbowYamlCommand.cs" />
+    <Compile Include="PowerShell\ConvertToRainbowYamlCommand.cs" />
+    <Compile Include="PowerShell\NewUnicornItemSourceCommand.cs" />
+    <Compile Include="PowerShell\PowershellProgressStatus.cs" />
+    <Compile Include="PowerShell\GetUnicornConfiguration.cs" />
+    <Compile Include="PowerShell\ExportUnicornConfigurationCommand.cs" />
+    <Compile Include="PowerShell\ExportUnicornItemCommand.cs" />
+    <Compile Include="PowerShell\SyncUnicornItemCommand.cs" />
+    <Compile Include="PowerShell\SyncUnicornConfigurationCommand.cs" />
+    <Compile Include="PowerShell\YamlCommandBase.cs" />
+    <Compile Include="Predicates\ExceptionRule.cs" />
+    <Compile Include="Predicates\Exclusions\NameBasedPresetExclusion.cs" />
+    <Compile Include="Predicates\Exclusions\TemplateBasedPresetExclusion.cs" />
     <Compile Include="Predicates\Exclusions\ChildrenOfPathBasedPresetTreeExclusion.cs" />
     <Compile Include="Predicates\Exclusions\PathBasedPresetTreeExclusion.cs" />
     <Compile Include="Predicates\Exclusions\PathTool.cs" />
+    <Compile Include="Predicates\Fields\MagicTokenTransformer.cs" />
+    <Compile Include="Predicates\Fields\FieldTransformsCollection.cs" />
+    <Compile Include="Predicates\Fields\FieldTransformsExceptions.cs" />
     <Compile Include="Predicates\IPresetTreeExclusion.cs" />
     <Compile Include="SerializationEnabler.cs" />
     <Compile Include="TransparentSyncEnabler.cs" />
@@ -133,7 +199,6 @@
     <Compile Include="UI\Commands\UnicornDumpItemCommand.cs" />
     <Compile Include="Configuration\ConfigurationUtility.cs" />
     <Compile Include="Configuration\MicroConfiguration.cs" />
-    <Compile Include="Configuration\MicroResolutionException.cs" />
     <Compile Include="ControlPanel\Controls\AccessDenied.cs" />
     <Compile Include="ControlPanel\CheckIfFilterDisablerIsActive.cs" />
     <Compile Include="ControlPanel\Controls\ConfigurationDetails.cs" />
@@ -142,15 +207,15 @@
     <Compile Include="ControlPanel\UnicornControlPanelPipelineProcessor.cs" />
     <Compile Include="ControlPanel\ControlPanelUtility.cs" />
     <Compile Include="ControlPanel\Controls\Heading.cs" />
-    <Compile Include="ControlPanel\Controls\Html5Footer.cs" />
-    <Compile Include="ControlPanel\Controls\Html5HeadAndStyles.cs" />
+    <Compile Include="ControlPanel\Controls\HtmlFooter.cs" />
+    <Compile Include="ControlPanel\Controls\HtmlHeadAndStyles.cs" />
     <Compile Include="ControlPanel\Controls\IControlPanelControl.cs" />
     <Compile Include="ControlPanel\Controls\InitialSetup.cs" />
     <Compile Include="ControlPanel\Controls\Literal.cs" />
     <Compile Include="ControlPanel\Responses\WebConsoleResponse.cs" />
     <Compile Include="Data\ConfigurationDataStore.cs" />
     <Compile Include="Data\ISerializableItemExtensions.cs" />
-    <Compile Include="Configuration\XmlConfigurationProvider.cs" />
+    <Compile Include="Configuration\ConfigyConfigurationProvider.cs" />
     <Compile Include="Configuration\IConfigurationProvider.cs" />
     <Compile Include="Data\ISourceDataStore.cs" />
     <Compile Include="Data\ITargetDataStore.cs" />
@@ -219,6 +284,16 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="Standard Config Files\Unicorn.Dilithium.config.example">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Standard Config Files\Unicorn.PowerShell.config" />
+    <None Include="Standard Config Files\Unicorn.UI.IdentityServer.config.disabled">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Standard Config Files\Unicorn.zSharedSecret.config.example">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Standard Config Files\Unicorn.Configs.NewItemsOnly.example">
       <SubType>Designer</SubType>
     </None>
@@ -230,7 +305,7 @@
       <SubType>Designer</SubType>
     </None>
     <None Include="Standard Config Files\Unicorn.CustomSerializationFolder.config.example" />
-    <None Include="Standard Config Files\Unicorn.Deployed.config.disabled" />
+    <None Include="Standard Config Files\Unicorn.UI.DeployedContentEditorWarnings.config.disabled" />
     <None Include="Standard Config Files\Unicorn.Remote.config.disabled" />
     <None Include="Standard Config Files\Unicorn.Configs.Dependency.config.example" />
     <None Include="Standard Config Files\Unicorn.UI.config">
@@ -243,6 +318,10 @@
     <ProjectReference Include="..\..\..\Rainbow\src\Rainbow.Storage.Sc\Rainbow.Storage.Sc.csproj">
       <Project>{956afe8b-51cd-4d61-b8c1-bffdc749fd82}</Project>
       <Name>Rainbow.Storage.Sc</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Rainbow\src\Rainbow.Storage.Yaml\Rainbow.Storage.Yaml.csproj">
+      <Project>{371181c9-45dc-4885-8894-43ffc235d124}</Project>
+      <Name>Rainbow.Storage.Yaml</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\..\Rainbow\src\Rainbow\Rainbow.csproj">
       <Project>{8ff75c8b-2a9e-4d95-91ad-333071813199}</Project>
@@ -267,6 +346,7 @@
   <ItemGroup>
     <EmbeddedResource Include="ControlPanel\Headings\Allthethings.svg.html" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

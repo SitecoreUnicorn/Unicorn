@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using Kamsar.WebConsole;
 using Rainbow.Model;
 using Sitecore.Data;
 using Sitecore.Data.Items;
@@ -15,7 +14,7 @@ using ItemData = Rainbow.Storage.Sc.ItemData;
 
 namespace Unicorn.UI.Commands
 {
-	public class UnicornLoadTreeCommand : LoadItemCommand
+	public class UnicornLoadTreeCommand : LoadTreeCommand
 	{
 		private readonly SerializationHelper _helper;
 
@@ -56,7 +55,7 @@ namespace Unicorn.UI.Commands
 			{
 				logger.Info("Command Sync: Processing partial Unicorn configuration " + configuration.Name + " under " + itemData.Path);
 
-				helper.SyncTree(configuration, roots: new[] { itemData });
+				helper.SyncTree(configuration, partialSyncRoot: itemData);
 
 				logger.Info("Command Sync: Completed syncing partial Unicorn configuration " + configuration.Name + " under " + itemData.Path);
 			}
@@ -66,7 +65,7 @@ namespace Unicorn.UI.Commands
 				throw;
 			}
 
-			CorePipeline.Run("unicornSyncEnd", new UnicornSyncEndPipelineArgs(new StringProgressStatus(), configuration));
+			CorePipeline.Run("unicornSyncEnd", new UnicornSyncEndPipelineArgs(new SitecoreLogger(), true, configuration));
 
 			return Database.GetItem(item.Uri);
 		}

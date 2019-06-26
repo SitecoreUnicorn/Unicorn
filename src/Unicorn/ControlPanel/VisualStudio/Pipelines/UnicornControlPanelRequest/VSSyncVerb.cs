@@ -7,7 +7,7 @@ namespace Unicorn.ControlPanel.VisualStudio.Pipelines.UnicornControlPanelRequest
 	// ReSharper disable once InconsistentNaming
 	public class VSSyncVerb : SyncVerb
 	{
-		public VSSyncVerb() : base("VSSync")
+		public VSSyncVerb() : base("VSSync", new SerializationHelper())
 		{
 		}
 

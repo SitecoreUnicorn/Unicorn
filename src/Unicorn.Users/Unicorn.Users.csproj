@@ -9,8 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Unicorn.Users</RootNamespace>
     <AssemblyName>Unicorn.Users</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -30,8 +31,12 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Sitecore.Kernel">
-      <HintPath>..\..\lib\Sitecore\v7\Sitecore.Kernel.dll</HintPath>
+    <Reference Include="Configy, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Configy.1.0.0\lib\net45\Configy.dll</HintPath>
+    </Reference>
+    <Reference Include="Sitecore.Kernel, Version=10.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Sitecore.Kernel.NoReferences.8.2.160729\lib\NET452\Sitecore.Kernel.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -45,21 +50,38 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\SharedAssemblyInfo.cs">
+      <Link>Properties\SharedAssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="Data\IUserDataStore.cs" />
-    <Compile Include="Data\SerializedUserDataStore.cs" />
+    <Compile Include="Data\FilesystemUserDataStore.cs" />
     <Compile Include="Data\SyncUserFile.cs" />
     <Compile Include="Events\UnicornConfigurationUsersEventHandler.cs" />
     <Compile Include="Events\UnicornUsersEventHandler.cs" />
+    <Compile Include="Formatting\IUserSerializationFormatter.cs" />
+    <Compile Include="Formatting\YamlUserSerializationFormatter.cs" />
+    <Compile Include="Loader\DefaultUserSyncConfiguration.cs" />
+    <Compile Include="Loader\DefaultUserLoaderLogger.cs" />
+    <Compile Include="Loader\IUserSyncConfiguration.cs" />
+    <Compile Include="Loader\IUserLoaderLogger.cs" />
     <Compile Include="Loader\IUserLoader.cs" />
     <Compile Include="Loader\UserLoader.cs" />
+    <Compile Include="Loader\UserRoleUpdate.cs" />
+    <Compile Include="Loader\UserUpdate.cs" />
     <Compile Include="Pipelines\UnicornReserializeComplete\ReserializeUsers.cs" />
     <Compile Include="Pipelines\UnicornSyncComplete\SyncUsers.cs" />
-    <Compile Include="Predicates\ConfigurationUserPredicate.cs" />
-    <Compile Include="Predicates\IUserPredicate.cs" />
+    <Compile Include="UserPredicates\ConfigurationUserPredicate.cs" />
+    <Compile Include="UserPredicates\IUserPredicate.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
+    <None Include="packages.config" />
+    <None Include="TODO.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Standard Config Files\Unicorn.Configs.Default.Users.config.example">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Standard Config Files\Unicorn.Users.config">
       <SubType>Designer</SubType>
     </None>
@@ -68,6 +90,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\Rainbow\src\Rainbow.Storage.Yaml\Rainbow.Storage.Yaml.csproj">
+      <Project>{371181c9-45dc-4885-8894-43ffc235d124}</Project>
+      <Name>Rainbow.Storage.Yaml</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Unicorn\Unicorn.csproj">
       <Project>{82C4441B-E11E-4601-B6B7-C5AD71B2AB70}</Project>
       <Name>Unicorn</Name>

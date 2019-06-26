@@ -6,8 +6,8 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml;
 using Sitecore.Diagnostics;
-using Sitecore.Security.Accounts;
 using Unicorn.Predicates;
+using Unicorn.Roles.Model;
 
 namespace Unicorn.Roles.RolePredicates
 {
@@ -21,7 +21,8 @@ namespace Unicorn.Roles.RolePredicates
 
 			_includeEntries = ParseConfiguration(configNode);
 		}
-		public PredicateResult Includes(Role role)
+
+		public PredicateResult Includes(IRoleData role)
 		{
 			Assert.ArgumentNotNull(role, nameof(role));
 
@@ -46,13 +47,18 @@ namespace Unicorn.Roles.RolePredicates
 		/// <summary>
 		/// Checks if a preset includes a given item
 		/// </summary>
-		protected PredicateResult Includes(ConfigurationRolePredicateEntry entry, Role role)
+		protected PredicateResult Includes(ConfigurationRolePredicateEntry entry, IRoleData role)
 		{
+			var split = role.RoleName.Split('\\');
+
+			var domain = split[0];
+			var roleName = split.Last();
+
 			// domain match
-			if(role.Domain == null || !role.Domain.Name.Equals(entry.Domain, StringComparison.OrdinalIgnoreCase)) return new PredicateResult(false);
+			if(!string.IsNullOrWhiteSpace(entry.Domain) && !domain.Equals(entry.Domain, StringComparison.OrdinalIgnoreCase)) return new PredicateResult(false);
 
 			// pattern match
-			if(!string.IsNullOrWhiteSpace(entry.Pattern) && !Regex.IsMatch(role.Name.Split('\\').Last(), entry.Pattern, RegexOptions.IgnoreCase | RegexOptions.Compiled)) return new PredicateResult(false);
+			if(!string.IsNullOrWhiteSpace(entry.Pattern) && !Regex.IsMatch(roleName, entry.Pattern, RegexOptions.IgnoreCase | RegexOptions.Compiled)) return new PredicateResult(false);
 			
 			// pattern is either null or white space, or it matches
 			return new PredicateResult(true);

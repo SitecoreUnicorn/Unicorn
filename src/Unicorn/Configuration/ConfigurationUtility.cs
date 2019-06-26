@@ -1,4 +1,8 @@
-﻿namespace Unicorn.Configuration
+﻿using System;
+using System.IO;
+using System.Web.Hosting;
+
+namespace Unicorn.Configuration
 {
 	internal static class ConfigurationUtility
 	{
@@ -9,9 +13,15 @@
 		{
 			if (configPath.StartsWith("~/"))
 			{
-				return System.Web.Hosting.HostingEnvironment.MapPath("~") + configPath.Substring(2).Replace('/', '\\');
 				// +1 to Stack Overflow:
 				// http://stackoverflow.com/questions/4742257/how-to-use-server-mappath-when-httpcontext-current-is-nothing
+
+				// Support unit testing scenario where hosting environment is not initialized.
+				var hostingRoot = HostingEnvironment.IsHosted
+					? HostingEnvironment.MapPath("~/")
+					: AppDomain.CurrentDomain.BaseDirectory;
+
+				return Path.Combine(hostingRoot, configPath.Substring(2).Replace('/', '\\'));
 			}
 
 			return configPath;

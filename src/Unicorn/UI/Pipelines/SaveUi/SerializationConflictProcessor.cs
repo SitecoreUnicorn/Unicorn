@@ -71,8 +71,12 @@ namespace Unicorn.UI.Pipelines.SaveUi
 					// ignore conflict checks if Transparent Sync is turned on (in which case this is a tautology - 'get from database' would be 'get from disk' so it always matches
 					if (configuration.Resolve<IUnicornDataProviderConfiguration>().EnableTransparentSync) continue;
 
+					var result = configuration.Resolve<IPredicate>().Includes(existingSitecoreItem);
 					// ignore conflicts on items that Unicorn is not managing
-					if (!configuration.Resolve<IPredicate>().Includes(existingSitecoreItem).IsIncluded) continue;
+					if (!result.IsIncluded) continue;
+
+					// If a Field Value Manipulator is attached to the predicate, we _expect_ Serialized content to be different from what is in Sitecore
+					if (result.FieldValueManipulator != null) continue;
 
 					// evaluator signals that it does not care about conflicts (e.g. NIO)
 					if (!configuration.Resolve<IEvaluator>().ShouldPerformConflictCheck(existingItem)) continue;

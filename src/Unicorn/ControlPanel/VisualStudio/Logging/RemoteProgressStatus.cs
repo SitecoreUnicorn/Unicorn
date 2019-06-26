@@ -36,6 +36,6 @@ namespace Unicorn.ControlPanel.VisualStudio.Logging
 		{
 		}
 
-		public int Progress { get { return _percent; } }
+		public int Progress => _percent;
 	}
 }

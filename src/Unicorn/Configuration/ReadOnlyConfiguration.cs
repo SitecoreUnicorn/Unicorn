@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Sitecore.Diagnostics;
 
 namespace Unicorn.Configuration
 {
@@ -13,14 +12,16 @@ namespace Unicorn.Configuration
 
 		public ReadOnlyConfiguration(IConfiguration innerConfiguration)
 		{
-			Assert.ArgumentNotNull(innerConfiguration, "innerConfiguration");
+			Sitecore.Diagnostics.Assert.ArgumentNotNull(innerConfiguration, "innerConfiguration");
 
 			_innerConfiguration = innerConfiguration;
 		}
 
-		public string Name { get { return _innerConfiguration.Name; }}
-		public string Description { get { return _innerConfiguration.Description; } }
-		public string[] Dependencies { get { return _innerConfiguration.Dependencies; } }
+		public string Name => _innerConfiguration.Name;
+		public string Description => _innerConfiguration.Description;
+		public string Extends => _innerConfiguration.Extends;
+		public string[] Dependencies => _innerConfiguration.Dependencies;
+		public string[] IgnoredImplicitDependencies => _innerConfiguration.IgnoredImplicitDependencies;
 
 		public T Resolve<T>() where T : class
 		{
@@ -40,6 +41,21 @@ namespace Unicorn.Configuration
 		public object Activate(Type type, KeyValuePair<string, object>[] unmappedConstructorParameters)
 		{
 			return _innerConfiguration.Activate(type, unmappedConstructorParameters);
+		}
+
+		public void Assert(Type type)
+		{
+			_innerConfiguration.Assert(type);
+		}
+
+		public void AssertSingleton(Type type)
+		{
+			_innerConfiguration.AssertSingleton(type);
+		}
+
+		public void AssertTransient(Type type)
+		{
+			_innerConfiguration.AssertTransient(type);
 		}
 	}
 }

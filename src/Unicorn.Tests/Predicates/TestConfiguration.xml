@@ -6,23 +6,49 @@
 	-->
 	<include name="Basic" database="master" path="/sitecore/layout/Simulators">
 		<exclude path="/sitecore/layout/Simulators/Android Phone" />
-		<exclude path="iPhone" /> <!-- relative path exclusion based on parent include path -->
-		<exclude path="iPhone Apps/1.0" /> <!-- exclude where name starts with a different include -->
+		<exclude path="iPhone" />
+		<!-- relative path exclusion based on parent include path -->
+		<exclude path="iPhone Apps/1.0" />
+		<!-- exclude where name starts with a different include -->
 	</include>
 
 	<!-- 
 		EXPLICIT NO-CHILDREN: Include parent, but exclude children test
 	-->
 	<include name="No children" database="master" path="/nochildren">
-		<exclude children="true" /> <!-- include /nochildren, exclude all of /nochildren's children -->
+		<exclude children="true" />
+		<!-- include /nochildren, exclude all of /nochildren's children -->
 	</include>
-	
+
 	<!-- 
 		IMPLICIT NO-CHILDREN: Include parent, but exclude children test
 		NOTE: this works and has a test but favor EXPLICIT exclusion of children instead
 	-->
 	<include name="Implicit no children" database="master" path="/implicit-nochildren">
-		<exclude path="/implicit-nochildren/" /> <!-- implicit exclusion of a child path. NOTE: does not work for paths under the root (e.g. /implicit-nochildren/foo/) -->
+		<exclude path="/implicit-nochildren/" />
+		<!-- implicit exclusion of a child path. NOTE: does not work for paths under the root (e.g. /implicit-nochildren/foo/) -->
+	</include>
+
+	<!-- 
+		TEMPLATE ID: Exclude all children with a given templateId		
+		NOTE: children of items with the excluded template ID will also be excluded
+	-->
+	<include name="Template ID" database="master" path="/sitecore/allowed">
+		<exclude templateId="{3B4F2B85-778D-44F3-9B2D-BEFF1F3575E6}" />
+	</include>
+
+	<include name="Template ID - exclude" database="master" path="/sitecore/excluded">
+		<exclude templateId="{11111111-1111-1111-1111-111111111111}" />
+		<!--all test items are created with the following templateId-->
+	</include>
+	
+	<!-- 
+		NAME PATTERN: Exclude items whose name matches a regex pattern
+		NOTE: children of items whose name matches the pattern will also be excluded
+		NOTE: regex is case-insensitive (as Sitecore names are case-insensitive)
+	-->
+	<include name="Name pattern" database="master" path="/sitecore/namepattern">
+		<exclude namePattern="^__Standard values$" />
 	</include>
 
 	<!-- 
@@ -36,18 +62,91 @@
 	</include>
 
 	<!-- 
+		SOME-CHILDREN ONLY PARENTS: Include parent, exclude all children EXCEPT for specific ones, but no descendants
+	-->
+	<include name="Some children only parents" database="master" path="/somechildren-onlyparents">
+		<exclude children="true">
+			<except name="onlythis" includeChildren="false"/>
+			<except name="allofthis" includeChildren="true"/>
+			<!-- includeChildren defaults to true-->
+			<except name="allbydefault" />
+			<!-- Handpicked path-->
+			<except name="level1" includeChildren="false"/>
+			<except name="level1/level2" includeChildren="false"/>
+		</exclude>
+	</include>
+
+	<!-- 
+		MULTIPLE-EXCLUDES EXCEPTIONS: Exceptions for items on multiple excludes
+	-->
+	<include name="Multiple excludes with exceptions" database="master" path="/multiple-excludes-except">
+		<exclude childrenOfPath="DK">
+			<except name="SiteData" includeChildren="false"/>
+			<except name="SiteData/SiteConfiguration" includeChildren="false"/>
+			<except name="SiteData/Widgets" includeChildren="false"/>
+			<except name="Checkout"/>
+		</exclude>
+		<exclude childrenOfPath="SE">
+			<except name="SiteData" includeChildren="false"/>
+			<except name="SiteData/SiteConfiguration" includeChildren="false"/>
+			<except name="SiteData/Widgets" includeChildren="false"/>
+			<except name="Checkout"/>
+		</exclude>
+	</include>
+
+	<!-- 
 		CHILDREN-OF-CHILDREN: Exclusion that includes its specified path but excludes all children of the exclude
 	-->
 	<include name="Children of children" database="master" path="/CoC">
 		<exclude childrenOfPath="/CoC/stuff" />
-		<exclude childrenOfPath="morestuff" /> <!-- relative path to parent include -->
+		<exclude childrenOfPath="morestuff" />
+		<!-- relative path to parent include -->
 		<exclude childrenOfPath="yetmorestuff">
 			<except name="monkey" />
 		</exclude>
+	</include>
+
+	<!--
+		WILDCARD CHILDREN-OF-CHILDREN: Include all children of the specified path but none of those items' children
+		NOTE: Wildcards are only allowed as the last character of childrenOfPath.
+	-->
+	<include database="master" path="/Wild">
+		<exclude childrenOfPath="*" />
+	</include>
+	<include database="master" path="/ChildWild">
+		<exclude childrenOfPath="Mike/*" />
 	</include>
 
 	<!-- 
 		DB TEST: Checks that the database specified in the include is respected
 	-->
 	<include name="DB test" database="core" path="/sitecore/coredb" />
+
+	<!--
+		COMPOSITE EXAMPLE: Include parent item, one child, but no children of that child
+	-->
+	<include name="Composite" database="master" path="/sitecore/0xDEADBEEF/Example">
+		<exclude children="true">
+			<except name="Home" />
+		</exclude>
+		<exclude childrenOfPath="Home" />
+	</include>
+
+	<!--
+		WILDCARD ESCAPING: Literal matching of Sitecore wildcard items (named '*', escaped as \*)
+		Including literal exclusion of a child wildcard item.
+		Escape literals with a backslash. Note that technically escaping is not REQUIRED for 
+		a path inclusion (<include path="/foo/*"), but is supported and recommended for consistency's sake.
+	-->
+	<include name="Wildcard" database="master" path="/LiteralWild/\*">
+		<exclude children="true">
+			<except name="\*" />
+		</exclude>
+	</include>
+
+	<!--
+		PATH PREFIX TEST
+		Makes sure nothing bad happens when both /foo and /foot are included by path
+	-->
+	<include name="Prefix" database="master" path="/somechildrenofmine" />
 </predicate>

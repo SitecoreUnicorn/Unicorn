@@ -6,6 +6,7 @@ using NSubstitute.Core;
 using Xunit;
 using Rainbow.Model;
 using Unicorn.Data;
+using Unicorn.Data.DataProvider;
 using Unicorn.Evaluators;
 using Unicorn.Loader;
 using Unicorn.Logging;
@@ -240,7 +241,7 @@ namespace Unicorn.Tests.Loader
 
 			var pathResolver = new PredicateRootPathResolver(predicate, targetDataStore, sourceDataStore, mockLogger2);
 
-			return new SerializationLoader(sourceDataStore, targetDataStore, predicate, evaluator, logger, syncConfiguration, pathResolver);
+			return new SerializationLoader(sourceDataStore, targetDataStore, predicate, evaluator, logger, syncConfiguration, Substitute.For<IUnicornDataProviderConfiguration>(), pathResolver);
 		}
 
 		//private IItemData CreateTestTree(int depth)

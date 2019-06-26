@@ -15,23 +15,21 @@
 					NOTE: Configurations which include roles should not be using transparent sync. Roles do not sync transparently.
 					
 					How do roles sync?
-					Roles sync a bit differently from items, because they are a much simpler construct - essentially they are just a string,
-					and a set of strings for roles that are also in that role. You also cannot rename roles, which further simplifies things.
-					
-					So for role syncing:
-					- Roles that are serialized but are not in Sitecore are added
-					- Roles that are serialized and in Sitecore but have different roles-in-roles are updated
-					- Roles that are only in Sitecore are NOT MODIFIED. This is different from regular item sync where they would be deleted
+					Roles sync by default quite similarly to regular Unicorn items: roles on disk are the master.
+					Using the RoleSyncConfiguration you can set up to have roles not be deleted if they are not serialized.
 					
 					Note that because roles are just strings and have no internal ID (such as NTFS' SIDs), if a role is ever accidentally removed,
 					simply creating a new role of the same name will restore all permissions previously held by that role.
 				-->
 				<configuration name="Default Configuration">
 					<!-- 
-						Add the optional role predicate. Adding a role predicate tells Unicorn you want to sync roles with this configuration.
-						Note: the configuration must also define a predicate (e.g. to include items). You can either include items,
-						or use the empty predicate, which includes nothing:
-						<predicate type="Unicorn.Roles.Predicates.EmptyPredicate, Unicorn.Roles" singleInstance="true" />
+						Note: the configuration must also define a predicate (e.g. to include items),
+						or use the empty predicate, which includes nothing, for a roles-only configuration:
+					-->
+					<!--<predicate type="Unicorn.Roles.Predicates.EmptyPredicate, Unicorn.Roles" singleInstance="true" />-->
+					
+					<!-- 
+						Add the role predicate. Adding a role predicate tells Unicorn you want to sync roles with this configuration.
 					-->
 					<rolePredicate type="Unicorn.Roles.RolePredicates.ConfigurationRolePredicate, Unicorn.Roles" singleInstance="true">
 						<!--
@@ -40,17 +38,17 @@
 							
 							For regex pattern rules, note that the regex applies to the role not including the domain,
 							e.g. for "sitecore\foo" the regex pattern is checked against "foo" if the domain is set to "sitecore"
-							
-							NOTE: if you make a role a member of a role that is not serialized, that will not be recorded because roles serialize
-							only with THEIR members, not what other roles include them. This means for example that if you serialize sitecore\foo,
-							but add sitecore\foo to sitecore\Sitecore Client Users without serializing the system role that linkage will not be 
-							deserialized. You can still add it manually after the role exists and it won't go away, but Unicorn cannot keep it updated.
-							However the roles need not be included in the same Unicorn configuration, because roles are only tied by name.
-							So you can keep dependent system roles in a system config and add site specific roles to a site config, for example.
 						-->
 						<include domain="sitecore" />
 						<include domain="extranet" pattern="^MySite.*$" />
+						<!-- Note: you may include the same domain in multiple include elements, with different patterns -->
 					</rolePredicate>
+
+					<!-- 
+						If you set RemoveOrphans to true, role syncing will delete matching roles that are not serialized, like item syncing does.
+						If set to false, roles are only ever added or updated (similar to New Items Only item syncing but updates are also synced)
+					-->
+					<roleSyncConfiguration removeOrphans="true" type="Unicorn.Roles.Loader.DefaultRoleSyncConfiguration, Unicorn.Roles" singleInstance="true" />
 				</configuration>
 			</configurations>
 		</unicorn>

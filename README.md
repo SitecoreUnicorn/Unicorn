@@ -2,26 +2,26 @@
 
 Unicorn is a utility for Sitecore that solves the issue of moving templates, renderings, and other database items between Sitecore instances. This becomes problematic when developers have their own local instances - packages are error-prone and tend to be forgotten on the way to production. Unicorn solves this issue by writing serialized copies of Sitecore items to disk along with the code - this way, a copy of the necessary database items for a given codebase accompanies it in source control.
 
-For basic usage, Unicorn 3 has two moving parts:
+For basic usage, Unicorn has two moving parts:
 * Data provider - The default Sitecore data provider is extended to automatically serialize item changes as they are made to Sitecore. This means that at any given time, what's serialized is the "master copy."
 * Control panel - this tool (/unicorn.aspx) is a page that can sync the state of Sitecore to the state stored on disk (respecting presets and exclusions). You do this after you pull down someone else's serialized changes from source control.
 
-Unicorn avoids the need to manually select changes to merge unlike some other serialization-based solutions because the disk is always kept up to date by the data provider. This means that if you pull changes in from someone else's Sitecore instance you will have to immediately merge and/or conflict resolve the serialized files in your source control system - leaving the disk still the master copy of everything. Then if you execute the sync page, the merged changes are synced into your Sitecore database. Unicorn 3 uses the [Rainbow](https://github.com/kamsar/Rainbow) serialization engine, which uses some format enhancements that make it far simpler to merge than the Sitecore default format.
+Unicorn avoids the need to manually select changes to merge unlike some other serialization-based solutions because the disk is always kept up to date by the data provider. This means that if you pull changes in from someone else's Sitecore instance you will have to immediately merge and/or conflict resolve the serialized files in your source control system - leaving the disk always the master copy of everything. Then if you execute the sync page, the merged changes are synced into your Sitecore database. Unicorn uses the [Rainbow](https://github.com/kamsar/Rainbow) serialization engine, which uses some format enhancements that make it far simpler to merge than the Sitecore default format.
 
 ## Is this like TDS?
 
 Unicorn solves some of the same issues as [Hedgehog's TDS](https://www.hhogdev.com/products/team-development-for-sitecore/overview.aspx). The major difference in approach is that because Unicorn forces all of the merging to be done on the disk, you never have to manually select what to update when you're running a sync operation or remember to write changed items to disk. Unless you have actual collisions, this saves a lot of time because you can take advantage of Git, SVN, TFS, etc to do automerges for you. That said, TDS and Unicorn have different feature sets and goals. TDS is a monolithic product with commercial support and marketing that does a lot more than just serialization. Unicorn is relatively simple, free and open source, and does one thing well. Use whatever makes you happy :)
 
 ## Initial Setup
-* Upgrading from 2.x? [Read this](https://github.com/kamsar/Unicorn/wiki/Upgrading-to-Unicorn-3)
-* You'll need Sitecore 6.6 or later (including 8.x). Note that for 6.6 compatibility you must have .NET 4.5 installed.
+* Upgrading from Unicorn 3? Great: it's just a NuGet upgrade away. From [Unicorn 2.x](https://github.com/kamsar/Unicorn/wiki/Upgrading-to-Unicorn-3), you can follow the same directions for 2.x->3.x to go from 2 to 4.
+* You'll need Sitecore 7 or later (including 8.x).
 * Install Unicorn. This is as simple as adding the Unicorn NuGet package to your project.
 * When you install the NuGet package, a [README file](https://github.com/kamsar/Unicorn/blob/master/Build/Unicorn.nuget/readme.txt) will come up in Visual Studio with help to get you started.
 
 ## Using Unicorn
 When using Unicorn it's important to follow the expected workflow.
 
-* When you update/pull from your source control system, execute the Sync operation using `/unicorn.aspx` if any changes to .yml files were present. Note: Unicorn 3 supports _transparent syncing_ which allows you to skip this step during development.
+* When you update/pull from your source control system, execute the Sync operation using `/unicorn.aspx` if any changes to .yml files were present. Note: Unicorn supports _transparent syncing_ which allows you to skip this step during development.
 * When you commit to source control, include your changed items along with your code changes. Unicorn will automatically serialize item changes you make in Sitecore to items that match the predicate(s) configured.
 * Conflicts in items are resolved at the source control level - at any given time, the disk is considered the master copy of the Sitecore items (due to local changes being automatically serialized as they're made)
 
@@ -30,7 +30,7 @@ When using Unicorn it's important to follow the expected workflow.
 There are a few special features that Unicorn has that are worth mentioning.
 
 * You can define multiple _configurations_, which allow you a lot of flexibility: you can serialize items to different places on disk, set up groups that can be synced separately, and override any aspect of Unicorn in each configuration. Configurations may also define dependencies between each other to enforce a hierarchy.
-* Using Rainbow gives Unicorn 3 a unique, easy to manage [serialization format](http://kamsar.net/index.php/2015/07/Rethinking-the-Sitecore-Serialization-Format-Unicorn-3-Preview-part-1/) and hierarchy.
+* Using Rainbow gives Unicorn a unique, easy to manage [serialization format](http://kamsar.net/index.php/2015/07/Rethinking-the-Sitecore-Serialization-Format-Unicorn-3-Preview-part-1/) and hierarchy.
 * Unicorn rejects "inconsequential" changes to items. The Sitecore Template Editor likes to make a lot of item saves that change nothing but the last modified date and revision. These are ignored to reduce churn in your source control.
 * During a sync operation, Unicorn can detect improperly merged renamed items (e.g. two serialized items with the same ID in different files) and will report that fact as an error.
 * Automatic retries are performed in the event of a load failure during a sync, which means that syncing items with a missing template along with the template itself in the same sync session will work correctly.
@@ -42,14 +42,27 @@ There are a few special features that Unicorn has that are worth mentioning.
 * You can define custom ways to compare fields, if there are equivalencies that are more complex than string equality
 * There are event pipelines that can be used to hook to sync events. These can be used, for example, to auto-publish synced items.
 * Transparent syncing allows the data provider to read directly from the serialized items on disk, making them appear directly in Sitecore.
+* Super-fast syncing with the 'Dilithium' direct-SQL item reading engine (optional, considered mostly stable but sitll experimental)
+* Integration with [Sitecore PowerShell Extensions](https://www.gitbook.com/book/sitecorepowershell/sitecore-powershell-extensions/details) to perform Unicorn tasks
 
-There are also a series of blog posts detailing enhancements to Unicorn 3 (and Rainbow) specifically in greater detail at Kam's blog:
+You can find further details about Unicorn 4 at Kam's blog:
+* [Dilithium and Performance](https://kamsar.net/index.php/2017/02/Unicorn-4-Preview-Project-Dilithium/)
+* [Sitecore PowerShell + Unicorn](https://kamsar.net/index.php/2017/02/Unicorn-4-Preview-Part-2-SPE-Support/)
+* [Packaging Unicorn Configurations with SPE](https://kamsar.net/index.php/2017/02/Unicorn-4-Preview-Part-2-5-Generating-Packages-with-SPE/)
+* [Configuration Inheritance and Convention Support](https://kamsar.net/index.php/2017/02/Unicorn-4-Part-III-Configuration-Enhancements/)
+
+There is also a series of blog posts detailing Unicorn 3 (and why the Rainbow serialization format exists) at Kam's blog, which are still relevant:
 * [Unicorn 3: What's New?](http://kamsar.net/index.php/2015/09/Unicorn-3-What-s-new/)
 * [What is Rainbow?](http://kamsar.net/index.php/2015/09/Rainbow-Part-3-What-is-Rainbow/)
 * [Rethinking the Sitecore Serialization Format with Rainbow](http://kamsar.net/index.php/2015/07/Rethinking-the-Sitecore-Serialization-Format-Unicorn-3-Preview-part-1/)
 * [Reinventing the Serialization File System with Rainbow](http://kamsar.net/index.php/2015/08/Reinventing-the-Serialization-File-System-Rainbow-Preview-Part-2/)
 
-[Andrii Snigyr](https://twitter.com/berserkerdotnet) has written a [Unicorn Visual Studio Extension](https://visualstudiogallery.msdn.microsoft.com/64439022-f470-422a-b663-fbb89aaf6e86) that enables syncing from within Visual Studio 2013-2015. This tool is natively supported in Unicorn 3 without any additional installation; enable the `Unicorn.Remote.config.disabled` file by renaming it to `.config` to enable its APIs.
+## Best Practices
+
+* If using [Helix architecture](http://helix.sitecore.net/) plan to use one Unicorn configuration per module. You can use [Unicorn 4's configuration conventions](https://kamsar.net/index.php/2017/02/Unicorn-4-Part-III-Configuration-Enhancements/) to avoid repetition and promote a consistent item architecture across modules.
+* If using Sitecore 9 or the [Sitecore Configuration Roles module](https://github.com/Sitecore/Sitecore-Configuration-Roles), the Unicorn configuration files are automatically enabled or disabled based on the server role that they are deployed to. If not, make sure to enable and disable configuration files appropriately when developing, and deploying to CE/CM and CD environments. Each config file has a comment header that details when it should be enabled and disabled. Most important is to disable the data provider config when deployed.
+* Always automate your deployments of Unicorn items (see _Automated Deployment_ below). This ensures a consistent item state during deployments.
+* Consider automating _local development_ Unicorn syncing using scripts (e.g. PowerShell or Gulp), which can enable you to have a one-click "post-pull" experience that both builds your projects and syncs any item changes in. [Sitecore Habitat](https://github.com/sitecore/habitat) does this using a combination of Gulp and the Unicorn PowerShell API.
 
 ## Automated Deployment
 
@@ -61,9 +74,9 @@ When using [Transparent Sync](http://kamsar.net/index.php/2015/10/Unicorn-Introd
 ### Use the Automated Tool API
 Unicorn has an automated tool API whereby you can invoke actions in the Unicorn control panel from a script, such as invoking a sync after a code deployment.
 
-**NOTE: Automated Tool API is completely overhauled in Unicorn 3.1, and these instructions are for 3.1 only**
+**NOTE: Automated Tool API is completely overhauled in Unicorn 3.1 and later, and these instructions are for 3.1+ only**
 
-Tools are authenticated using a shared secret between the tool and the Sitecore server running Unicorn, which is relayed via [CHAP](https://en.wikipedia.org/wiki/Challenge-Handshake_Authentication_Protocol)+[HMAC](https://en.wikipedia.org/wiki/Hash-based_message_authentication_code)-SHA512. The practical upshot of this is that the shared secret never travels over the wire, the authentication key is unique every time, and replay attacks are not possible. You should still use the tool API over a TLS connection if possible.
+Tools are authenticated using a shared secret between the tool and the Sitecore server running Unicorn, which is relayed via [CHAP](https://en.wikipedia.org/wiki/Challenge-Handshake_Authentication_Protocol)+[HMAC](https://en.wikipedia.org/wiki/Hash-based_message_authentication_code)-SHA512. The practical upshot of this is that the shared secret never travels over the wire, the authentication key is unique every time, and replay attacks are not possible. You should still use the tool API over a TLS (SSL) connection if possible.
 
 Calls to the control panel from an automated tool behave a little differently from interactive control panel sessions. Specifically:
 
@@ -71,15 +84,16 @@ Calls to the control panel from an automated tool behave a little differently fr
 * Automated calls return HTTP 500 if an error occurs (interactive calls that fail return HTTP 200, because the HTTP headers have been sent long before the error occurs). In the example PS script above, this will throw a PowerShell exception.
 * The output is text formatted, instead of HTML formatted, so it is much easier to read in logs.
 
-
 Ok, ok. Shut up about crypto and tell me how to set it up.
 
 1. Generate a very long random shared secret key, preferably using a password generator. There are no limits on character count, character types, etc but it must be > 30 characters.
 2. Install the shared secret into the `Unicorn.UI.config` file - or a patch thereof, under the `authenticationProvider/SharedSecret` node. There are comments to help.
-3. To call the tool API from a script, a PowerShell module is provided. Acquire the module and its supporting files from the `doc\PowerShell Remote Scripting` folder of the Unicorn git repository.
+3. To call the tool API from a script, a PowerShell module is provided. Acquire the module and its supporting files from the `packages\Unicorn.version\tools\PSAPI` folder of where you installed the Unicorn NuGet package. (Alternatively, it's also in  `doc\PowerShell Remote Scripting` folder of the Unicorn git repository, however this is always the latest and not necessarily matching your installed Unicorn version)
 4. Review the `sample.ps1` file and adapt it to your needs, including putting the shared secret into it and setting the URL as needed. Don't worry the guts of `sample.ps1` are two simple lines of code :)
 
 NOTE: When deploying to a Content Editing or Content Delivery server, the Unicorn configuration should be trimmed down from development. Each config file in `App_Config/Include/Unicorn` has comments at the top designating what environment(s) it should live on. If you opt to use Transparent Sync as a deployment mechanism, make sure you do not disable the data provider config file.
+
+[Darren Guy](https://twitter.com/DarrenGuy) has written a practical dissertation on his experiences setting up [Unicorn 3 with TeamCity and Octopus Deploy](https://thesoftwaredudeblog.wordpress.com/2016/05/24/building-a-continuous-integration-environment-for-sitecore-part-8-using-unicorn-for-sitecore-item-syncronization/) that goes all the way from install to automated deployment. A recommended read if you're wanting to use a similar setup.
 
 [Andrew Lansdowne](https://twitter.com/Rangler2) has also written a post _(for version 1, so some of it is outdated but the concepts still apply)_ about [setting up Unicorn with TeamCity and WebDeploy](http://andrew.lansdowne.me/2013/06/07/auto-deploy-sitecore-items-using-unicorn-and-teamcity/) that may be useful when setting up automated deployments.
 
@@ -108,7 +122,7 @@ _Note: these rules concern the default Evaluator only. This is probably what mak
 
 ## Advanced Usage and Customization
 
-Unicorn 3 uses a very flexible configuration system based on Dependency Injection that allows you to plug in your own rules for almost any part of what Unicorn does.
+Unicorn uses a very flexible configuration system based on Dependency Injection that allows you to plug in your own rules for almost any part of what Unicorn does.
 
 ### Configurations
 

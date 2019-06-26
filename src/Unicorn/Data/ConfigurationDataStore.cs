@@ -21,9 +21,11 @@ namespace Unicorn.Data
 			_innerDataStore = innerDataStore;
 		}
 
-		public void Save(IItemData item)
+		public IDataStore InnerDataStore => _innerDataStore.Value;
+
+		public void Save(IItemData item, IFieldValueManipulator fieldValueManipulator)
 		{
-			_innerDataStore.Value.Save(item);
+			_innerDataStore.Value.Save(item, fieldValueManipulator);
 		}
 
 		public void MoveOrRenameItem(IItemData itemWithFinalPath, string oldPath)
@@ -81,8 +83,9 @@ namespace Unicorn.Data
 			_innerDataStore.Value.Clear();
 		}
 
-		public string FriendlyName { get { return DocumentationUtility.GetFriendlyName(_innerDataStore.Value); } }
-		public string Description { get { return DocumentationUtility.GetDescription(_innerDataStore.Value); } }
+		public string FriendlyName => DocumentationUtility.GetFriendlyName(_innerDataStore.Value);
+		public string Description => DocumentationUtility.GetDescription(_innerDataStore.Value);
+
 		public KeyValuePair<string, string>[] GetConfigurationDetails()
 		{
 			return DocumentationUtility.GetConfigurationDetails(_innerDataStore.Value);

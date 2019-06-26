@@ -8,9 +8,9 @@ using Unicorn.Configuration;
 
 namespace Unicorn.Roles.Events
 {
-  using Sitecore.Data.Events;
+	using Sitecore.Data.Events;
 
-  /// <summary>
+	/// <summary>
 	/// Sitecore event handler class that hooks to the role system to capture updates for Unicorn
 	/// </summary>
 	/// <remarks>
@@ -23,9 +23,9 @@ namespace Unicorn.Roles.Events
 	{
 		private readonly UnicornConfigurationRolesEventHandler[] _configurations;
 
-		public UnicornRolesEventHandler(): this(UnicornConfigurationManager.Configurations)
+		public UnicornRolesEventHandler() : this(UnicornConfigurationManager.Configurations)
 		{
-			
+
 		}
 
 		protected UnicornRolesEventHandler(IEnumerable<IConfiguration> configurations)
@@ -35,12 +35,12 @@ namespace Unicorn.Roles.Events
 
 		public virtual void RoleCreated(object sender, EventArgs e)
 		{
-      if (EventDisabler.IsActive)
-      {
-        return;
-      }
+			if (EventDisabler.IsActive)
+			{
+				return;
+			}
 
-      string roleName = Event.ExtractParameter<string>(e, 0);
+			string roleName = Event.ExtractParameter<string>(e, 0);
 
 			Assert.IsNotNullOrEmpty(roleName, "Role name was null or empty!");
 
@@ -52,12 +52,12 @@ namespace Unicorn.Roles.Events
 
 		public virtual void RoleRemoved(object sender, EventArgs e)
 		{
-      if (EventDisabler.IsActive)
-      {
-        return;
-      }
+			if (EventDisabler.IsActive)
+			{
+				return;
+			}
 
-      string roleName = Event.ExtractParameter<string>(e, 0);
+			string roleName = Event.ExtractParameter<string>(e, 0);
 
 			Assert.IsNotNullOrEmpty(roleName, "Role name was null or empty!");
 
@@ -69,14 +69,18 @@ namespace Unicorn.Roles.Events
 
 		public virtual void RolesInRolesRemoved(object sender, EventArgs e)
 		{
-      if (EventDisabler.IsActive)
-      {
-        return;
-      }
+			if (EventDisabler.IsActive)
+			{
+				return;
+			}
 
-      string roleName = Event.ExtractParameter<string>(e, 0);
+			string roleName = Event.ExtractParameter<string>(e, 0);
 
 			Assert.IsNotNullOrEmpty(roleName, "Role name was null or empty!");
+
+			// Sitecore can remove Roles In Roles from deleted roles
+			// without this we'd re-save a deleted role :)
+			if (!Role.Exists(roleName)) return;
 
 			foreach (var configuration in _configurations)
 			{
@@ -86,13 +90,13 @@ namespace Unicorn.Roles.Events
 
 		public virtual void RolesInRolesAltered(object sender, EventArgs e)
 		{
-      IEnumerable<Role> sourceRoles = Event.ExtractParameter<IEnumerable<Role>>(e, 0);
-      IEnumerable<Role> targetRoles = Event.ExtractParameter<IEnumerable<Role>>(e, 1);
+			IEnumerable<Role> sourceRoles = Event.ExtractParameter<IEnumerable<Role>>(e, 0);
+			IEnumerable<Role> targetRoles = Event.ExtractParameter<IEnumerable<Role>>(e, 1);
 
-		  if (EventDisabler.IsActive)
-		  {
-		    return;
-		  }
+			if (EventDisabler.IsActive)
+			{
+				return;
+			}
 
 			Assert.IsNotNull(targetRoles, "targetRoles was null!");
 

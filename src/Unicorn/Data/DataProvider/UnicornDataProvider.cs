@@ -8,6 +8,7 @@ using System.Threading;
 using Rainbow.Filtering;
 using Rainbow.Model;
 using Sitecore;
+using Sitecore.Caching;
 using Sitecore.Collections;
 using Sitecore.ContentSearch;
 using Sitecore.ContentSearch.Maintenance;
@@ -20,6 +21,7 @@ using Sitecore.Data.Templates;
 using Sitecore.Diagnostics;
 using Sitecore.Eventing;
 using Sitecore.Globalization;
+using Sitecore.Reflection;
 using Unicorn.Loader;
 using Unicorn.Predicates;
 using ItemData = Rainbow.Storage.Sc.ItemData;
@@ -35,7 +37,6 @@ namespace Unicorn.Data.DataProvider
 		public const string TransparentSyncUpdatedByValue = "serialization\\UnicornDataProvider";
 
 		private readonly ITargetDataStore _targetDataStore;
-		private readonly ISourceDataStore _sourceDataStore;
 		private readonly IPredicate _predicate;
 		private readonly IFieldFilter _fieldFilter;
 		private readonly IUnicornDataProviderLogger _logger;
@@ -66,7 +67,6 @@ namespace Unicorn.Data.DataProvider
 			_predicate = predicate;
 			_fieldFilter = fieldFilter;
 			_targetDataStore = targetDataStore;
-			_sourceDataStore = sourceDataStore;
 
 			// enable capturing recycle bin and archive restores to serialize the target item if included
 			EventManager.Subscribe<RestoreItemCompletedEvent>(HandleItemRestored);
@@ -150,37 +150,48 @@ namespace Unicorn.Data.DataProvider
 
 			if (!_predicate.Includes(sourceItem).IsIncluded) return;
 
-			string oldName = changes.Renamed ? changes.Properties["name"].OriginalValue.ToString() : string.Empty;
-			if (changes.Renamed && !oldName.Equals(sourceItem.Name, StringComparison.Ordinal))
-			// it's a rename, in which the name actually changed (template builder will cause 'renames' for the same name!!!)
+			// reject if only inconsequential fields (e.g. last updated, revision) were changed - again, template builder FTW with the junk saves
+			if (!HasConsequentialChanges(changes)) return;
+
+			string existingItemPath = sourceItem.Path;
+
+			// check if the save includes a rename as part of the operation, in which case we have to get the existing item, if any, from the OLD path pre-rename
+			// note that if an item is renamed to the same name this will simply fall through as not a rename
+			if (changes.Renamed)
 			{
-				using (new DatabaseCacheDisabler())
-				{
-					// disabling the DB caches while running this ensures that any children of the renamed item are retrieved with their proper post-rename paths and thus are not saved at their old location
-
-					// this allows us to filter out any excluded children by predicate when the data store moves children
-					var predicatedItem = new PredicateFilteredItemData(sourceItem, _predicate);
-
-					_targetDataStore.MoveOrRenameItem(predicatedItem, changes.Item.Paths.ParentPath + "/" + oldName);
-				}
-
-				_logger.RenamedItem(_targetDataStore.FriendlyName, sourceItem, oldName);
+				string oldName = changes.Properties["name"].OriginalValue.ToString();
+				existingItemPath = changes.Item.Paths.ParentPath + "/" + oldName;
 			}
-			else if (HasConsequentialChanges(changes))
-			// it's a simple update - but we reject it if only inconsequential fields (last updated, revision) were changed - again, template builder FTW
+
+			// we find the existing serialized item, with which we want to merge the item changes, if it exists. If not then the changes are the source of all truth.
+			var existingSerializedItem = _targetDataStore.GetByPathAndId(existingItemPath, sourceItem.Id, sourceItem.DatabaseName);
+
+			// generate an IItemData from the item changes we received, and apply those changes to the existing serialized item if any
+			var changesAppliedItem = existingSerializedItem != null ? new ItemChangeApplyingItemData(existingSerializedItem, changes) : new ItemChangeApplyingItemData(changes);
+
+			// put any media blob IDs on this item into the media blob cache (used for TpSync media - does not cache the blob just the filename it lives in)
+			AddBlobsToCache(changesAppliedItem);
+
+			// check for renamed item (existing path != source path -> rename)
+			if(!existingItemPath.Equals(sourceItem.Path, StringComparison.Ordinal))
 			{
-				var existingSerializedItem = _targetDataStore.GetByPathAndId(sourceItem.Path, sourceItem.Id, sourceItem.DatabaseName);
+				// this allows us to filter out any excluded children when the data store moves children to the renamed path
+				var predicatedItem = new PredicateFilteredItemData(changesAppliedItem, _predicate);
 
-				// generated an IItemData from the item changes we received, and apply those changes to the existing serialized item if any
-				if (existingSerializedItem != null) sourceItem = new ItemChangeApplyingItemData(existingSerializedItem, changes);
-				else sourceItem = new ItemChangeApplyingItemData(changes);
+				// change the item's name before sending it to the data store (note: the data store will normalize any child paths for us) 
+				var alteredPathItem = new RenamedItemData(predicatedItem, sourceItem.Name);
 
-				_targetDataStore.Save(sourceItem);
+				_targetDataStore.MoveOrRenameItem(alteredPathItem, existingItemPath);
 
-				AddBlobsToCache(sourceItem);
+				_logger.RenamedItem(_targetDataStore.FriendlyName, alteredPathItem, existingItemPath.Substring(existingItemPath.LastIndexOf('/') + 1));
 
-				_logger.SavedItem(_targetDataStore.FriendlyName, sourceItem, "Saved");
+				return;
 			}
+
+			// if we get here, it's just a save, not a rename
+			_targetDataStore.Save(changesAppliedItem, null);
+
+			_logger.SavedItem(_targetDataStore.FriendlyName, changesAppliedItem, "Saved");
 		}
 
 		public virtual void MoveItem(ItemDefinition itemDefinition, ItemDefinition destination, CallContext context)
@@ -197,8 +208,12 @@ namespace Unicorn.Data.DataProvider
 
 			if (destinationItem == null) return; // can occur with TpSync on, when this isn't the configuration we're moving for the data store will return null
 
-			if (!_predicate.Includes(destinationItem).IsIncluded) // if the destination we are moving to is NOT included for serialization, we delete the existing item
+			// rebase the path to the new destination path (this handles children too)
+			var rebasedSourceItem = new PathRebasingProxyItem(sourceItem, destinationItem.Path, destinationItem.Id);
+
+			if (!_predicate.Includes(rebasedSourceItem).IsIncluded)
 			{
+				// if the destination we are moving to is NOT included for serialization, we delete the existing item from serialization
 				var existingItem = _targetDataStore.GetByPathAndId(sourceItem.Path, sourceItem.Id, sourceItem.DatabaseName);
 
 				if (existingItem != null)
@@ -209,9 +224,6 @@ namespace Unicorn.Data.DataProvider
 
 				return;
 			}
-
-			// rebase the path to the new destination path (this handles children too)
-			var rebasedSourceItem = new PathRebasingProxyItem(sourceItem, destinationItem.Path, destinationItem.Id);
 
 			// this allows us to filter out any excluded children by predicate when the data store moves children
 			var predicatedItem = new PredicateFilteredItemData(rebasedSourceItem, _predicate);
@@ -244,7 +256,7 @@ namespace Unicorn.Data.DataProvider
 
 			if (!_predicate.Includes(copyTargetItem).IsIncluded) return; // destination parent is not in a path that we are serializing, so skip out
 
-			_targetDataStore.Save(copyTargetItem);
+			_targetDataStore.Save(copyTargetItem, null);
 			_logger.CopiedItem(_targetDataStore.FriendlyName, existingItem, copyTargetItem);
 		}
 
@@ -264,7 +276,7 @@ namespace Unicorn.Data.DataProvider
 			var newItem = new ProxyItem(sourceItem); // note: sourceItem gets dumped. Because it has field changes made to it.
 			newItem.TemplateId = changeList.Target.ID.Guid;
 
-			_targetDataStore.Save(newItem);
+			_targetDataStore.Save(newItem, null);
 
 			_logger.SavedItem(_targetDataStore.FriendlyName, sourceItem, "TemplateChanged");
 		}
@@ -278,6 +290,20 @@ namespace Unicorn.Data.DataProvider
 			var sourceItem = GetSourceFromIdIfIncluded(itemDefinition);
 
 			if (sourceItem == null) return; // not an included item
+
+			// if the source item came from the database (which we're somewhat hackily determining by type name)
+			// then because (a) DB cache is disabled and (b) the Sitecore data provider went first,
+			// the source item ALREADY contains the version we added. So all we have to do is update the serialized version.
+			if (sourceItem is ItemData)
+			{
+				SerializeItemIfIncluded(sourceItem, "Version Added");
+				return;
+			}
+
+			// on the other hand if the source item did not come from the database - e.g. transparent sync,
+			// and the item did not exist in the database, the sourceItem will be a YAML file on disk.
+			// in this case nobody has 'gone first' with adding the version, so we have to manually add it like
+			// Sitecore would to a database item.
 
 			// we make a clone of the item so that we can insert a new version on it
 			var versionAddProxy = new ProxyItem(sourceItem);
@@ -372,16 +398,30 @@ namespace Unicorn.Data.DataProvider
 		 *	As if they were database items.
 		 * 
 		*/
-		public virtual IEnumerable<ID> GetChildIds(ItemDefinition itemDefinition, CallContext context)
+
+		/// <summary>
+		/// Gets child IDs for the current Unicorn configuration
+		/// </summary>
+		/// <param name="itemDefinition">The parent item</param>
+		/// <param name="context">The context</param>
+		/// <param name="results">The resultant children items, if any. Is never null, but may be empty.</param>
+		/// <returns>True if the child list is authoritative (don't get any further children from the DB), false if it's not.</returns>
+		public virtual bool GetChildIds(ItemDefinition itemDefinition, CallContext context, out IEnumerable<ID> results)
 		{
-			if (DisableSerialization || DisableTransparentSync) return Enumerable.Empty<ID>();
+			results = Enumerable.Empty<ID>();
+
+			// transparent sync is off, or serialization is off: we're not authoritative
+			if (DisableSerialization || DisableTransparentSync) return false;
 
 			// expectation: do not return null, return empty enumerable for not included etc
 			var parentItem = GetTargetFromId(itemDefinition.ID);
 
-			if (parentItem == null) return Enumerable.Empty<ID>();
+			// if the parent item is not found, we are non-authoritative (this is a tree that does not include the item)
+			if (parentItem == null) return false;
 
-			return _targetDataStore.GetChildren(parentItem).Select(item => new ID(item.Id));
+			results = _targetDataStore.GetChildren(parentItem).Select(item => new ID(item.Id));
+
+			return true;
 		}
 
 		/// <summary>
@@ -508,7 +548,11 @@ namespace Unicorn.Data.DataProvider
 			// return null if not present
 			if (DisableSerialization || DisableTransparentSync) return null;
 
-			return GetChildIds(itemDefinition, context).Any();
+			IEnumerable<ID> childResults;
+
+			GetChildIds(itemDefinition, context, out childResults);
+
+			return childResults.Any();
 		}
 
 		public virtual IEnumerable<ID> GetTemplateItemIds(CallContext context)
@@ -548,13 +592,11 @@ namespace Unicorn.Data.DataProvider
 			// with it.
 			new Timer(state =>
 			{
-				var item = GetItemFromId(new ID(restoreItemCompletedEvent.ItemId), true);
+				var item = GetSourceItemDataFromId(new ID(restoreItemCompletedEvent.ItemId), true);
 
 				Assert.IsNotNull(item, "Item that was restored was null.");
 
-				var iitem = new ItemData(item);
-
-				SerializeItemIfIncluded(iitem, "Restored");
+				SerializeItemIfIncluded(item, "Restored");
 			}, null, 2000, Timeout.Infinite);
 		}
 
@@ -564,7 +606,7 @@ namespace Unicorn.Data.DataProvider
 
 			if (!_predicate.Includes(item).IsIncluded) return false;
 
-			_targetDataStore.Save(item);
+			_targetDataStore.Save(item, null);
 			_logger.SavedItem(_targetDataStore.FriendlyName, item, triggerReason);
 
 			return true;
@@ -609,7 +651,7 @@ namespace Unicorn.Data.DataProvider
 
 		protected virtual IItemData GetSourceFromId(ID id, bool useCache = false, bool allowTpSyncFallback = true)
 		{
-			var item = GetItemFromId(id, useCache);
+			var item = GetSourceItemDataFromId(id, useCache);
 
 			if (item == null)
 			{
@@ -623,23 +665,43 @@ namespace Unicorn.Data.DataProvider
 				return null;
 			}
 
-			return new ItemData(item);
+			return item;
 		}
 
 		/// <summary>
 		/// When items are acquired from the data provider they can be stale in cache, which fouls up serializing them.
-		/// Renames and template changes are particularly vulnerable to this.
+		/// Renames and template changes are particularly vulnerable to this. This method fully proxies the item including all versions with the cache settings.
 		/// </summary>
-		protected virtual Item GetItemFromId(ID id, bool useCache)
+		protected virtual IItemData GetSourceItemDataFromId(ID id, bool useCache)
 		{
 			if (!useCache)
 			{
-				using (new TransparentSyncDisabler())
+				using (new DataProviderDatabaseCacheDisabler())
 				{
-					using (new DatabaseCacheDisabler())
-					{
-						return Database.GetItem(id);
-					}
+					var item = Database.GetItem(id);
+					if (item == null) return null;
+
+					return new ItemData(item, () => new DataProviderDatabaseCacheDisabler());
+				}
+			}
+
+			var dbItem = Database.GetItem(id);
+			if (dbItem == null) return null;
+
+			return new ItemData(dbItem);
+		}
+
+		/// <summary>
+		/// Gets a source item with or without DB caching. Beware that some other operations, like 
+		/// getting versions, may execute DB operations without the same caching settings.
+		/// </summary>
+		protected virtual Item GetSourceItemFromId(ID id, bool useCache)
+		{
+			if (!useCache)
+			{
+				using (new DataProviderDatabaseCacheDisabler())
+				{
+					return Database.GetItem(id);
 				}
 			}
 
@@ -679,7 +741,9 @@ namespace Unicorn.Data.DataProvider
 			if (!_blobIdLookup.TryGetValue(blobId, out blobEntry)) return null;
 
 			var targetItem = _targetDataStore.GetByPathAndId(blobEntry.Item1, blobEntry.Item2, Database.Name);
+
 			if (targetItem == null) return null;
+
 			var targetFieldValue = targetItem.SharedFields.Concat(targetItem.Versions.SelectMany(version => version.Fields))
 					.FirstOrDefault(targetField => targetField.BlobId.HasValue && targetField.BlobId.Value == blobId);
 
@@ -690,41 +754,51 @@ namespace Unicorn.Data.DataProvider
 
 		protected virtual void RemoveItemFromCaches(IItemMetadata metadata, string databaseName)
 		{
-			if (databaseName != Database.Name) return;
-
-			// this is a bit heavy handed, sure.
-			// but the caches get interdependent stuff - like caching child IDs
-			// that make it difficult to cleanly remove a single item ID from all cases in the cache
-			// either way, this should be a relatively rare occurrence (from runtime changes on disk)
-			// and we're preserving prefetch, etc. Seems pretty zippy overall.
-			Database.Caches.DataCache.Clear();
-			Database.Caches.ItemCache.Clear();
-			Database.Caches.ItemPathsCache.Clear();
-			Database.Caches.PathCache.Clear();
-
-			if (metadata == null) return;
-			
-			if(metadata.TemplateId == TemplateIDs.Template.Guid || metadata.TemplateId == TemplateIDs.TemplateField.Guid || metadata.Path.EndsWith("__Standard Values", StringComparison.OrdinalIgnoreCase))
-				Database.Engines.TemplateEngine.Reset();
-
-			if (_syncConfiguration.UpdateLinkDatabase || _syncConfiguration.UpdateSearchIndex)
+			try
 			{
-				var item = GetItemFromId(new ID(metadata.Id), true);
+				if (databaseName != Database.Name) return;
 
-				if (item == null) return;
+				// this is a bit heavy handed, sure.
+				// but the caches get interdependent stuff - like caching child IDs
+				// that make it difficult to cleanly remove a single item ID from all cases in the cache
+				// either way, this should be a relatively rare occurrence (from runtime changes on disk)
+				// and we're preserving prefetch, etc. Seems pretty zippy overall.
+				CacheManager.ClearAllCaches();
 
-				if (_syncConfiguration.UpdateLinkDatabase)
+				if (metadata == null) return;
+
+				if (metadata.TemplateId == TemplateIDs.Template.Guid || 
+					metadata.TemplateId == TemplateIDs.TemplateField.Guid ||
+					(metadata.Path != null && metadata.Path.EndsWith("__Standard Values", StringComparison.OrdinalIgnoreCase)))
 				{
-					Globals.LinkDatabase.UpdateReferences(item);
+					Database.Engines.TemplateEngine.Reset();
 				}
 
-				if (_syncConfiguration.UpdateSearchIndex)
+				if (_syncConfiguration != null && (_syncConfiguration.UpdateLinkDatabase || _syncConfiguration.UpdateSearchIndex))
 				{
-					foreach (var index in ContentSearchManager.Indexes)
+					var item = GetSourceItemFromId(new ID(metadata.Id), true);
+
+					if (item == null) return;
+
+					if (_syncConfiguration.UpdateLinkDatabase)
 					{
-						IndexCustodian.UpdateItem(index, new SitecoreItemUniqueId(item.Uri));
+						Globals.LinkDatabase.UpdateReferences(item);
+					}
+
+					if (_syncConfiguration.UpdateSearchIndex)
+					{
+						foreach (var index in ContentSearchManager.Indexes)
+						{
+							ReflectionUtil.CallMethod(typeof(IndexCustodian), "UpdateItem", true, true, true, new object[] {index, new SitecoreItemUniqueId(item.Uri)});
+							//IndexCustodian.UpdateItem(index, new SitecoreItemUniqueId(item.Uri));
+						}
 					}
 				}
+			}
+			catch (Exception ex)
+			{
+				// we catch this because this method runs on a background thread. If an unhandled exception occurs there, the app pool terminates and that's Naughty(tm).
+				Log.Error($"[Unicorn] Exception occurred while processing a background item cache removal on {metadata?.Path ?? "unknown item"}", ex, this);
 			}
 		}
 
@@ -773,6 +847,24 @@ namespace Unicorn.Data.DataProvider
 				// ReSharper disable once SuspiciousTypeConversion.Global
 				var targetAsDisposable = _targetDataStore as IDisposable;
 				targetAsDisposable?.Dispose();
+			}
+		}
+
+		protected class DataProviderDatabaseCacheDisabler : IDisposable
+		{
+			private readonly DatabaseCacheDisabler _databaseCacheDisabler = new DatabaseCacheDisabler();
+			private readonly TransparentSyncDisabler _transparentSyncDisabler = new TransparentSyncDisabler();
+
+			public void Dispose()
+			{
+				try
+				{
+					_databaseCacheDisabler.Dispose();
+				}
+				finally
+				{
+					_transparentSyncDisabler.Dispose();
+				}
 			}
 		}
 	}

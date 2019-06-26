@@ -1,4 +1,5 @@
 ﻿using System;
+using Rainbow.Model;
 
 namespace Unicorn.Predicates.Exclusions
 {
@@ -28,9 +29,9 @@ namespace Unicorn.Predicates.Exclusions
 			_excludedPath = PathTool.EnsureTrailingSlash(_excludedPath);
 		}
 
-		public PredicateResult Evaluate(string itemPath)
+		public PredicateResult Evaluate(IItemData itemData)
 		{
-			itemPath = PathTool.EnsureTrailingSlash(itemPath);
+			var itemPath = PathTool.EnsureTrailingSlash(itemData.Path);
 
 			bool result = itemPath.StartsWith(_excludedPath, StringComparison.OrdinalIgnoreCase);
 

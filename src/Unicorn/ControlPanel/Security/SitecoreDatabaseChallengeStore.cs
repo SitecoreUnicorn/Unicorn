@@ -18,6 +18,8 @@ namespace Unicorn.ControlPanel.Security
 	public class SitecoreDatabaseChallengeStore : IChallengeStore
 	{
 		private readonly string _databaseName;
+		private readonly IChallengeStoreLogger _challengeStoreLogger;
+
 		protected virtual string ParentPath => "/sitecore/system";
 
 		protected virtual string ChildName => "Authentication Challenges";
@@ -34,6 +36,11 @@ namespace Unicorn.ControlPanel.Security
 			EnsurePathExists();
 		}
 
+		public SitecoreDatabaseChallengeStore(string databaseName, IChallengeStoreLogger challengeStoreLogger) : this(databaseName)
+		{
+			_challengeStoreLogger = challengeStoreLogger;
+		}
+
 		public void AddChallenge(string challenge, int expirationTimeInMsec)
 		{
 			using (new SecurityDisabler())
@@ -41,10 +48,11 @@ namespace Unicorn.ControlPanel.Security
 				EnsureTemplateExists();
 
 				var challengeItem = RootItem.Add("AUTH" + challenge, ChallengeTemplateId);
-				using (new EditContext(challengeItem))
-				{
-					challengeItem["Expires"] = DateTime.UtcNow.AddMilliseconds(expirationTimeInMsec).Ticks.ToString();
-				}
+				challengeItem.Editing.BeginEdit();
+				
+				challengeItem["Expires"] = DateTime.UtcNow.AddMilliseconds(expirationTimeInMsec).Ticks.ToString();
+
+				challengeItem.Editing.EndEdit();
 			}
 		}
 
@@ -56,7 +64,11 @@ namespace Unicorn.ControlPanel.Security
 			{
 				var existingChallenge = RootItem.Children["AUTH" + challenge];
 
-				if (existingChallenge == null) return false;
+				if (existingChallenge == null)
+				{
+					_challengeStoreLogger?.ChallengeUnknown(challenge);
+					return false;
+				}
 
 				// we know the token's timestamp was valid because we cleaned up expired tokens before getting it
 
@@ -75,8 +87,13 @@ namespace Unicorn.ControlPanel.Security
 				{
 					long expiresTicks;
 
-					if (!long.TryParse(challenge["Expires"], out expiresTicks)) challenge.Delete();
-					if (expiresTicks < DateTime.UtcNow.Ticks) challenge.Delete();
+					// if the value in the field is not a valid long (ticks) value, or the value is valid but too old, we kill it
+					if (!long.TryParse(challenge["Expires"], out expiresTicks) || expiresTicks < DateTime.UtcNow.Ticks)
+					{
+						// challenge name starts with 'AUTH'
+						_challengeStoreLogger?.ChallengeExpired(challenge.Name.Substring(4));
+						challenge.Delete();
+					}
 				}
 			}
 		}
@@ -114,10 +131,11 @@ namespace Unicorn.ControlPanel.Security
 				var section = template.Add("Challenge", new TemplateID(TemplateIDs.TemplateSection));
 				var expirationField = section.Add("Expires", new TemplateID(TemplateIDs.TemplateField));
 
-				using (new EditContext(expirationField))
+				expirationField.Editing.BeginEdit();
 				{
 					expirationField[TemplateFieldIDs.Shared] = "1";
 				}
+				expirationField.Editing.EndEdit();
 
 				ChallengeTemplateId = new TemplateID(template.ID);
 			}

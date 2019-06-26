@@ -6,6 +6,5 @@ namespace Unicorn.Tests.Loader
 	{
 		public bool UpdateLinkDatabase => false;
 		public bool UpdateSearchIndex => false;
-		public int MaxConcurrency => 1;
 	}
 }

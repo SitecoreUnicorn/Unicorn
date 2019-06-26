@@ -1,11 +1,14 @@
 ﻿using System.Linq;
+using System.Threading;
 using Sitecore.Configuration;
 using Sitecore.Data;
 using Sitecore.Data.Serialization;
 using Sitecore.Diagnostics;
 using Sitecore.Eventing;
-using Sitecore.Jobs;
+using Sitecore.Sites;
 using Unicorn.Predicates;
+
+// ReSharper disable UnusedMember.Global
 
 namespace Unicorn.Pipelines.UnicornSyncEnd
 {
@@ -13,9 +16,10 @@ namespace Unicorn.Pipelines.UnicornSyncEnd
 	{
 		public void Process(UnicornSyncEndPipelineArgs args)
 		{
-			var databases = args.SyncedConfigurations.SelectMany(config => config.Resolve<IPredicate>().GetRootPaths())
-					.Select(path => path.DatabaseName)
-					.Distinct();
+			var databases = args.SyncedConfigurations
+				.SelectMany(config => config.Resolve<IPredicate>().GetRootPaths())
+				.Select(path => path.DatabaseName)
+				.Distinct();
 
 			foreach (var database in databases)
 			{
@@ -28,18 +32,23 @@ namespace Unicorn.Pipelines.UnicornSyncEnd
 			Assert.ArgumentNotNullOrEmpty(databaseName, "databaseName");
 
 			// raising this event can take a long time. like 16 seconds. So we boot it as a job so it can go in the background.
-			Job asyncSerializationFinished = new Job(new JobOptions("Raise deserialization complete async", "serialization", "shell", this, "RaiseEvent", new object[] { databaseName }));
-			JobManager.Start(asyncSerializationFinished);
+
+			Log.Info($"Job started: Raise deserialization complete async ({typeof(SendSerializationCompleteEvent).FullName})", this);
+			ThreadPool.QueueUserWorkItem(RaiseEvent, databaseName);
 		}
 
-		public virtual void RaiseEvent(string databaseName)
+		public virtual void RaiseEvent(object state)
 		{
-			EventManager.RaiseEvent(new SerializationFinishedEvent());
-			Database database = Factory.GetDatabase(databaseName, false);
-			if (database != null)
+			using (new SiteContextSwitcher(SiteContext.GetSite("shell")))
 			{
-				database.RemoteEvents.Queue.QueueEvent(new SerializationFinishedEvent());
+				var databaseName = state.ToString();
+				EventManager.RaiseEvent(new SerializationFinishedEvent());
+				Database database = Factory.GetDatabase(databaseName, false);
+
+				database?.RemoteEvents.Queue.QueueEvent(new SerializationFinishedEvent());
 			}
+
+			Log.Info($"Job ended: Raise deserialization complete async ({typeof(SendSerializationCompleteEvent).FullName})", this);
 		}
 	}
 }

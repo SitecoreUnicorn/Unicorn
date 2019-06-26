@@ -8,78 +8,117 @@
 
 	See Unicorn.config for commentary on how configurations operate, or https://github.com/kamsar/Unicorn/blob/master/README.md
 -->
-<configuration xmlns:patch="http://www.sitecore.net/xmlconfig/">
+<configuration xmlns:patch="http://www.sitecore.net/xmlconfig/" xmlns:role="http://www.sitecore.net/xmlconfig/role/">
 	<sitecore>
 		<unicorn>
 			<configurations>
 				<!--
-					The default configuration defines a somewhat sane set of default dev artifacts to serialize.
-					You will probably want to customize the includes and excludes. Consider serializing a multisite installation
-					with a configuration for each site, as opposed to all templates and layout in one as defined below.
+					The default configuration is an example to start making other configurations from.
 
-					Configurations can override the default dependencies defined in Unicorn.config's <defaults> to apply
-					custom behaviors to specific configurations.
+					WHAT SHOULD I INCLUDE?
+					In general, include the fewest items possible. This both makes things faster and reduces the amount of things kept in source control.
+					The most common candidates for serialization are layout items and template items, but Unicorn can serialize any type of item or field including media.
 					
+					BEHAVIORS
+					Configurations can override the default dependency types defined in Unicorn.config's <defaults> to apply
+					custom behaviors to specific configurations. 
+					
+					If no 'type' attribute is specified, the default dependency type is inherited (e.g. Unicorn.Predicates.SerializationPresetPredicate for a predicate).
+					Attributes set on a type-less dependency are added or replace those on the base type (e.g. setting transparent sync to on/off without specifying a type).
+					Child elements of a type-less dependency are appended to any defined on the base (e.g. you can add includes to a predicate using this).
+					Specifying a type attribute completely overwrites any definitions made in a parent configuration.
+					
+					DEPENDENCIES
 					Configurations may also depend on each other. Add a comma-delimited list of configuration names to depend on to the 'dependencies' attribute on the configuration.
 					Dependent configurations do not force dependencies to sync if not selected, but syncs will always occur in dependency order if multiple dependent configurations sync at once.
 					Transitive dependency and multiple dependency (comma delimited) are supported.
+					
+					TIPS
+					Favor using several configurations over a single monolithic one.
+					Favor using more includes and fewer excludes in your predicates.
+					Start with minimal configurations and add includes as you need to serialize new things.
+					If you're using a convention-based system like Helix, you can create a base configuration that encodes your conventions using variables,
+						for example <include path="/sitecore/templates/$(layer)/$(module)" /> on the predicate. The base configuration will have 'abstract="true"' on the root element, and
+						inheritors will have 'extends="AbstractConfigName"' on their root element.
 				-->
-				<configuration name="Default Configuration" description="Write something here about why this configuration exists and what it's for. Or remove the attribute; it's optional.">
-					<predicate type="Unicorn.Predicates.SerializationPresetPredicate, Unicorn" singleInstance="true">
+				<configuration name="Feature.Sample" description="Write something here about why this configuration exists and what it's for. Or remove the attribute; it's optional.">
+					<predicate>
 						<!--
-							Each include can also exclude specific subitems by path:
-							<exclude path="/sitecore/content"/>
+							PREDICATE
+							
+							The predicate controls what items are included in the configuration.
+							
+							Each include can also exclude specific subitems in various ways. For a reference of the most current predicate grammar, consult the tests here:
+							https://github.com/kamsar/Unicorn/blob/master/src/Unicorn.Tests/Predicates/TestConfiguration.xml
 
-							Excludes may also exclude all children at once by adding a trailing slash, e.g. this would include the root /sitecore item but no children
-							<include path="/sitecore">
-								<exclude path="/sitecore/" />
-							</include>
-
-							NOTE: after changing what is included or excluded, you should reserialize all items, or at least the added items
-							NOTE: the "name" attribute controls the folder name the items will go into (for SFS). If unspecified, the last path segment is used. Names must be unique across the configuration.
+							NOTE: after changing what is included or excluded, you should reserialize all items, or at least the added items for additions.
+							NOTE: the "name" attribute controls the folder name the items will go into. If unspecified, the last path segment is used. Names must be unique across the configuration.
+							NOTE: You cannot use excludes with Transparent Sync. See https://github.com/kamsar/Unicorn/wiki/The-Transparent-Sync-Guide
+							NOTE: If your configuration is named in Helix format (Layer.Module), you can use $(layer) and $(module) here as variables.
 						-->
-
-						<!-- Core DB items: common customization locations for custom apps, custom experience buttons, etc -->
-						<include database="core" path="/sitecore/system/Field types"/>
-						<include name="Core Settings" database="core" path="/sitecore/system/Settings" />
-						<include name="Core Start Menu" database="core" path="/sitecore/content/Documents and settings/All users"/>
-						<include name="Core Applications" database="core" path="/sitecore/content/Applications"/>
-
-						<!-- Master Layout items (and renderings, sublayouts, etc) -->
-						<include database="master" path="/sitecore/layout">
-							<!-- NOTE: You cannot use excludes with Transparent Sync. See https://github.com/kamsar/Unicorn/wiki/The-Transparent-Sync-Guide -->
-							<exclude path="/sitecore/layout/Simulators" />
-							<exclude path="/sitecore/layout/Layouts/System" />
-							<exclude path="/sitecore/layout/Renderings/App Center Sync" />
-							<exclude path="/sitecore/layout/Renderings/System" />
-							<exclude path="/sitecore/layout/Renderings/Social MVC" />
-							<exclude path="/sitecore/layout/Sublayouts/App Center Sync" />
-							<exclude path="/sitecore/layout/Sublayouts/Social" />
-							<exclude path="/sitecore/layout/Placeholder Settings/App Center Sync" />
+						<include name="Layouts" database="master" path="/sitecore/layout/Layouts/YourSite" />
+						<include name="Templates" database="master" path="/sitecore/templates/YourSite" />
+						<include database="master" path="/sitecore/system/Languages" />
+						<include database="master" path="/sitecore/system/Tasks">
+							<exclude path="Schedules" />
 						</include>
-
-						<!-- Master System items (global settings, workflows, etc) -->
-						<include database="master" path="/sitecore/system">
-							<exclude path="/sitecore/system/Aliases"/>
-							<exclude path="/sitecore/system/Marketing Center"/>
-							<exclude path="/sitecore/system/Publishing targets" />
-							<exclude path="/sitecore/system/Modules/Web Forms for Marketers/Website" />
-							<exclude path="/sitecore/system/Modules/Web Forms for Marketers/Local Forms" />
-							<exclude path="/sitecore/system/Modules/Web Forms for Marketers/Sample forms" />
-							<exclude path="/sitecore/system/Modules/Azure" />
-							<exclude path="/sitecore/system/Aliases" />
-							<exclude path="/sitecore/system/Tasks/Schedules" />
-							<exclude path="/sitecore/system/Modules/PowerShell/Settings/ISE/sitecore" />
-						</include>
-
-						<!-- Master Templates (except system stuff) -->
-						<include database="master" path="/sitecore/templates">
-							<exclude path="/sitecore/templates/System"/>
-							<exclude path="/sitecore/templates/App Center Sync"/>
-							<exclude path="/sitecore/templates/List Manager"/>
-							<exclude path="/sitecore/templates/Branches/System"/>
-						</include>
+						<include database="master" path="/sitecore/system/Workflows" />
+						<include database="master" path="/sitecore/system/Settings" />
 					</predicate>
+
+					<!--
+						PREDICATE AND INCLUDE FIELD TRANSFORMS
+						
+						- These transforms ONLY APPLY to what gets deserialized into Sitecore. Field values on disk/serialized datastore remain complete - respecting only the Rainbow field filter settings
+						
+						IN OTHER WORDS:
+						
+						Example: "-title, -text, +ApiUrl[{$apiUrlToken$}]" => All fields get deployed as normal, except "title" and "text". And "ApiUrl" gets a forced value.
+						Example: "!title, -text" => "Title" gets reset (to standard value), "Text" gets ignored.
+						Example: "?title, ?text" => ALL fields gets deployed, but fields "Title" and "Text" will only get their value deployed if target field value is empty
+						Example: "?title, ?text, !apiUrl" => As above, but field "apiUrl" is reset
+						
+						"!field" => Reset this field unconditionally
+						"-field" => Ignore this field unconditionally
+						"?field" => Deploy this field if it has no value in target data store (Sitecore)
+						"+field[value]" => Force a new value into this field on target data store (Sitecore)
+						";field" => Force a "Lorem ipsum dolor" value into the field
+						":field" => Force a longer Lorem ipsum based HTML string into the field (around 2075 characters of Lorem Ipsum, broken up with <p> into sentences).
+						"$field[settingName]" => Grab the value of the Sitecore Setting `settingName` and force it as a value
+					-->
+					<predicate fieldTransforms=";Title,:Text,!Include In Sitemap,+Api Endpoint[{$apiEndPoint$}],?Default Product">
+						<include name="Sample Data" database="master" path="/sitecore/content/global/sample" fieldTransforms="-Title" /> /* Predicate transforms apply, but "Title" gets ignored on this include definition */
+					</predicate>
+
+
+					<!-- Clear Workflow fields on local development environments, but force a specific state upstream -->
+					<predicate>
+						<include role:require="Standalone" name="Sample Data" database="master" path="/sitecore/content/global/sample" fieldTransforms="!Workflow,!Workflow State" />
+						<include role:require="ContentManagement" name="Sample Data" database="master" path="/sitecore/content/global/sample" fieldTransforms="+Workflow[{2DE02B52-B95F-404A-A955-C36B290F1B57}],+Workflow State[{5ACE9C7F-8A18-4C77-BC30-03BE5A40E6B6}]"/>
+					</predicate>
+
+					<!--
+						SYNC TYPE
+						
+						Traditional Sync (the default) updates the state of the database only when a sync operation is run. It supports additional operations but can be more of a chore to remember to sync.
+						Transparent Sync (preferred) updates the state of Sitecore instantly as soon as changes to files occur. It is optimal for development purposes, but has a few limitations.
+						See the guide to help decide: https://github.com/kamsar/Unicorn/wiki/The-Transparent-Sync-Guide
+					-->
+					<dataProviderConfiguration enableTransparentSync="false" />
+
+					<!-- 
+						SYNC CONFIGURATION
+					
+						UpdateLinkDatabase: If true, the links will be updated for synced items after the sync has completed. If false (default) links are not updated for performance.
+							Updating links is important if you are syncing user-facing content where link tracking is important. It is not very important for system items (templates/renderings).
+						
+						UpdateSearchIndex: If true, the search index(es) containing the item will be updated with item changes after the sync has completed. If false, indexing will not be updated for performance.
+							Updating the index is important for content that relies on indexing, which may include most user-facing content items. Most of the time templates and renderings don't need indexing.
+						
+						NOTE: UpdateLinkDatabase and UpdateSearchIndex also apply to items that are reloaded from disk when using Transparent Sync, as well as normal Sync.
+						NOTE: Updating the links and search indexes will cause significant performance degradation during syncing.
+					-->
+					<syncConfiguration updateLinkDatabase="false" updateSearchIndex="false" />
 				</configuration>
 			</configurations>
 		</unicorn>

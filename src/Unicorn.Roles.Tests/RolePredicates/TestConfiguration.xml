@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+
+<predicate>
+	<include domain="allfather" />
+	<include domain="some" pattern="^gonk" />
+	<include domain="some" pattern="^snork" />
+</predicate>

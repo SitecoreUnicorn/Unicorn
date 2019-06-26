@@ -1,11 +1,10 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Xml;
 using FluentAssertions;
-using NSubstitute;
 using Rainbow.Model;
-using Rainbow.Storage;
 using Unicorn.Predicates;
 using Xunit;
 
@@ -13,13 +12,10 @@ namespace Unicorn.Tests.Predicates
 {
 	public class SitecorePresetPredicateTests
 	{
-		private const string ExcludedDatabase = "fake";
-		private const string IncludedDatabase = "master";
-
 		[Fact]
 		public void ctor_ThrowsArgumentNullException_WhenNodeIsNull()
 		{
-			Assert.Throws<ArgumentNullException>(() => new SerializationPresetPredicate(null));
+			Assert.Throws<ArgumentNullException>(() => new SerializationPresetPredicate(null, null, null));
 		}
 
 		//
@@ -41,7 +37,17 @@ namespace Unicorn.Tests.Predicates
 		[InlineData("/implicit-nochildren", true)]
 		[InlineData("/implicit-nochildren/ignoredchild", false)]
 		[InlineData("/implicit-nochildren/ignored/stillignored", false)]
-		[InlineData("/implicit-nochildrenwithextrachars", true)]
+		[InlineData("/implicit-nochildrenwithextrachars", false)]
+		// TEMPLATE ID test config
+		[InlineData("/sitecore/allowed", true)]
+		[InlineData("/sitecore/allowed/child", true)]
+		[InlineData("/sitecore/excluded", false)]
+		[InlineData("/sitecore/excluded/nochildrenwithexcludedparent", false)]
+		// NAME PATTERN test config
+		[InlineData("/sitecore/namepattern/foo", true)]
+		[InlineData("/sitecore/namepattern/not __Standard values", true)]
+		[InlineData("/sitecore/namepattern/__Standard values", false)]
+		[InlineData("/sitecore/namepattern/__Standard values/child-thereof", false)]
 		// SOME-CHILDREN test config
 		[InlineData("/somechildren", true)]
 		[InlineData("/somechildren/ignoredchild", false)]
@@ -49,6 +55,38 @@ namespace Unicorn.Tests.Predicates
 		[InlineData("/somechildren/tests/testschild", true)]
 		[InlineData("/somechildren/testswithextrachars", false)]
 		[InlineData("/somechildren/fests", true)]
+		// SOME-CHILDREN ONLY PARENTS test config
+		[InlineData("/somechildren-onlyparents", true)]
+		[InlineData("/somechildren-onlyparents/onlythis", true)]
+		[InlineData("/somechildren-onlyparents/onlythis/notthisdescendant", false)]
+		[InlineData("/somechildren-onlyparents/allofthis", true)]
+		[InlineData("/somechildren-onlyparents/allofthis/andthischild", true)]
+		[InlineData("/somechildren-onlyparents/allbydefault", true)]
+		[InlineData("/somechildren-onlyparents/allbydefault/andthischild", true)]
+		[InlineData("/somechildren-onlyparents/noneofthis", false)]
+		[InlineData("/somechildren-onlyparents/level1", true)]
+		[InlineData("/somechildren-onlyparents/level1/level2", true)]
+		[InlineData("/somechildren-onlyparents/level1/ignorethis", false)]
+		[InlineData("/somechildren-onlyparents/level1/level2/level3", false)]
+		// MULTIPLE-EXCLUDES EXCEPTIONS
+		[InlineData("/multiple-excludes-except/DK", true)]
+		[InlineData("/multiple-excludes-except/DK/SiteData", true)]
+		[InlineData("/multiple-excludes-except/DK/SiteData/SiteConfiguration", true)]
+		[InlineData("/multiple-excludes-except/DK/SiteData/Widgets", true)]
+		[InlineData("/multiple-excludes-except/DK/SiteData/Widgets/ignored-widget", false)]
+		[InlineData("/multiple-excludes-except/DK/SiteData/notthis", false)]
+		[InlineData("/multiple-excludes-except/DK/Checkout", true)]
+		[InlineData("/multiple-excludes-except/DK/Checkout/Basket", true)]
+		[InlineData("/multiple-excludes-except/DK/notthis", false)]
+		[InlineData("/multiple-excludes-except/SE", true)]
+		[InlineData("/multiple-excludes-except/SE/SiteData", true)]
+		[InlineData("/multiple-excludes-except/SE/SiteData/SiteConfiguration", true)]
+		[InlineData("/multiple-excludes-except/SE/SiteData/Widgets", true)]
+		[InlineData("/multiple-excludes-except/SE/SiteData/Widgets/ignored-widget", false)]
+		[InlineData("/multiple-excludes-except/SE/SiteData/notthis", false)]
+		[InlineData("/multiple-excludes-except/SE/Checkout", true)]
+		[InlineData("/multiple-excludes-except/SE/Checkout/Basket", true)]
+		[InlineData("/multiple-excludes-except/SE/notthis", false)]
 		// CHILDREN-OF-CHILDREN test config
 		[InlineData("/CoC", true)]
 		[InlineData("/CoC/stuff", true)]
@@ -59,6 +97,25 @@ namespace Unicorn.Tests.Predicates
 		[InlineData("/CoC/yetmorestuff", true)]
 		[InlineData("/CoC/yetmorestuff/gorilla", false)]
 		[InlineData("/CoC/yetmorestuff/monkey", true)]
+		// WILDCARD CHILDREN-OF-CHILREN test config
+		[InlineData("/Wild", true)]
+		[InlineData("/Wild/Wild Woozles", true)]
+		[InlineData("/Wild/MikesBeers", true)]
+		[InlineData("/Wild/MikesBeers/Unopened", false)]
+		// WILDCARD CHILDREN-OF-CHILREN subitem test config
+		[InlineData("/ChildWild", true)]
+		[InlineData("/ChildWild/Wild Woozles", true)]
+		[InlineData("/ChildWild/Mike", true)]
+		[InlineData("/ChildWild/Mike/Fridge", true)]
+		[InlineData("/ChildWild/Mike/Fridge/Beers", false)]
+		// LITERAL WILDCARDS (root/child)
+		[InlineData("/LiteralWild", false)]
+		[InlineData("/LiteralWild/*", true)]
+		[InlineData("/LiteralWild/*/Foo", false)]
+		[InlineData("/LiteralWild/*/*", true)]
+		// PATH PREFIX
+		[InlineData("/somechildrenofmine", true)]
+		[InlineData("/somechildrenofmine/somegrandchild", true)]
 		public void Includes_MatchesExpectedPathResult(string testPath, bool expectedResult)
 		{
 			var predicate = CreateTestPredicate(CreateTestConfiguration());
@@ -95,20 +152,24 @@ namespace Unicorn.Tests.Predicates
 		// Deps: BASIC and DB TEST test configs
 		public void GetRootItems_ReturnsExpectedRootValues()
 		{
-			var predicate = new SerializationPresetPredicate(CreateTestConfiguration());
+			var predicate = new SerializationPresetPredicate(CreateTestConfiguration(), null, null);
 
 			var roots = predicate.GetRootPaths();
 
-			roots.Length.Should().Be(6);
-			roots[0].DatabaseName.Should().Be("master");
-			roots[0].Path.Should().Be("/sitecore/layout/Simulators");
-			roots[5].DatabaseName.Should().Be("core");
-			roots[5].Path.Should().Be("/sitecore/coredb");
+			roots.Length.Should().Be(16);
+
+			var basicRoot = roots.FirstOrDefault(root => root.Name.Equals("Basic"));
+			basicRoot?.DatabaseName.Should().Be("master");
+			basicRoot?.Path.Should().Be("/sitecore/layout/Simulators");
+
+			var dbTestRoot = roots.FirstOrDefault(root => root.Name.Equals("DB test"));
+			dbTestRoot?.DatabaseName.Should().Be("core");
+			dbTestRoot?.Path.Should().Be("/sitecore/coredb");
 		}
 
 		private SerializationPresetPredicate CreateTestPredicate(XmlNode configNode)
 		{
-			return new SerializationPresetPredicate(configNode);
+			return new SerializationPresetPredicate(configNode, null, null);
 		}
 
 		private XmlNode CreateTestConfiguration()
@@ -128,9 +189,10 @@ namespace Unicorn.Tests.Predicates
 			return doc.DocumentElement;
 		}
 
-		private IItemData CreateTestItem(string path, string database = "master")
+		private IItemData CreateTestItem(string path, string database = "master", string templateId = "{11111111-1111-1111-1111-111111111111}")
 		{
-			return new ProxyItem { Path = path, DatabaseName = database };
+			var name = path.Substring(path.LastIndexOf('/') + 1);
+			return new ProxyItem { Name = name, Path = path, DatabaseName = database, TemplateId = new Guid(templateId) };
 		}
 	}
 }

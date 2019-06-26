@@ -1,0 +1,30 @@
+﻿<!--
+	Unicorn Deployed Configuration
+
+	This file configures Unicorn to throw up warnings and prompts when saving items that are included by Unicorn.
+
+	This is appropriate to use in a CE environment where Unicorn items are deployed to, as it will warn careless editors to not change items controlled by Unicorn.
+	Do not enable this in a development environment.
+	
+	IMPORTANT: THIS CONFIG PATCH *MUST* RUN AFTER Unicorn.UI.config, or you may receive errors in the content editor:
+	"Multiple controls with the same ID 'FContentSOMEGUIDHERESOMEGUIDHERESOMEGUID' were found. FindControl requires that controls have unique IDs."
+
+	http://github.com/kamsar/Unicorn
+-->
+<configuration xmlns:patch="http://www.sitecore.net/xmlconfig/" xmlns:role="http://www.sitecore.net/xmlconfig/role/">
+	<sitecore role:require="ContentManagement">
+		<processors>
+			<saveUI>
+				<!--
+					This processor will throw up a warning if you try to save an item that is controlled by Unicorn when it has been deployed.
+				-->
+				<processor patch:before="*[@type='Unicorn.UI.Pipelines.SaveUi.SerializationConflictProcessor, Unicorn']" mode="on" type="Unicorn.UI.Pipelines.SaveUi.SerializationChangeBlocker, Unicorn"/>
+			</saveUI>
+		</processors>
+
+		<settings>
+			<!-- Changes the text of the warning for items that are serialized by Unicorn. -->
+			<setting name="Unicorn.DevMode" value="false" />
+		</settings>
+	</sitecore>
+</configuration>

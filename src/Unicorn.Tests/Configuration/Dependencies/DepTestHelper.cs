@@ -1,6 +1,10 @@
-﻿using NSubstitute;
+﻿using System;
+using System.Linq;
+using NSubstitute;
+using Rainbow.Storage;
 using Unicorn.Configuration;
 using Unicorn.Configuration.Dependencies;
+using Unicorn.Predicates;
 
 namespace Unicorn.Tests.Configuration.Dependencies
 {
@@ -21,6 +25,26 @@ namespace Unicorn.Tests.Configuration.Dependencies
 			config.Name.Returns(name);
 			config.Dependencies.Returns(dependencies);
 			config.Resolve<ConfigurationDependencyResolver>().Returns(new ConfigurationDependencyResolver(config));
+
+			return config;
+		}
+
+		public static IConfiguration CreateImplicitTestConfiguration(string name, params Tuple<string, string>[] includedDbsAndPaths)
+		{
+			return CreateImplicitTestConfiguration(name, new string[0], includedDbsAndPaths);
+		}
+
+		public static IConfiguration CreateImplicitTestConfiguration(string name, string[] rejectedConfigurations, params Tuple<string, string>[] includedDbsAndPaths)
+		{
+			var config = Substitute.For<IConfiguration>();
+
+			var fakePredicate = Substitute.For<IPredicate>();
+			fakePredicate.GetRootPaths().Returns(info => includedDbsAndPaths.Select(include => new TreeRoot("Fakety Fake", include.Item2, include.Item1)).ToArray());
+
+			config.Name.Returns(name);
+			config.Resolve<IPredicate>().Returns(fakePredicate);
+			config.Resolve<ConfigurationDependencyResolver>().Returns(new ConfigurationDependencyResolver(config));
+			config.IgnoredImplicitDependencies.Returns(rejectedConfigurations ?? new string[0]);
 
 			return config;
 		}

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Rainbow.Model;
 using Rainbow.Storage;
 using Unicorn.Predicates;
@@ -7,7 +6,7 @@ using Unicorn.Predicates;
 namespace Unicorn.Roles.Predicates
 {
 	/// <summary>
-	/// A predicate that includes no items at all. Used to allow roles-only predicates.
+	/// A predicate that includes no items at all. Used to allow security-only predicates.
 	/// </summary>
 	public class EmptyPredicate : IPredicate, ITreeRootFactory
 	{

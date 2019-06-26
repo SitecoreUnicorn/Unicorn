@@ -1,7 +1,8 @@
+using Unicorn.Configuration;
+
 namespace Unicorn.Users.Loader
 {
-  using Unicorn.Configuration;
-  public interface IUserLoader
+	public interface IUserLoader
 	{
 		void Load(IConfiguration configuration);
 	}

@@ -46,14 +46,14 @@ namespace Unicorn.ControlPanel.Responses
 
 		protected virtual IEnumerable<IControlPanelControl> CreateHeaderControls(SecurityState securityState)
 		{
-			yield return new Html5HeadAndStyles();
+			yield return new HtmlHeadAndStyles();
 
 			yield return new Heading(securityState.IsAllowed);
 		}
 
 		protected virtual IEnumerable<IControlPanelControl> CreateFooterControls()
 		{
-			yield return new Html5Footer();
+			yield return new HtmlFooter();
 		} 
 	}
 }

@@ -4,14 +4,14 @@
     <id>Unicorn.Core</id>
     <version>$version$</version>
     <title>Unicorn.Core</title>
-    <authors>Kam Figy</authors>
+    <authors>Kam Figy, Mark Cassidy</authors>
     <owners>Kam Figy</owners>
     <licenseUrl>http://opensource.org/licenses/MIT</licenseUrl>
-    <projectUrl>https://github.com/kamsar/Unicorn</projectUrl>
+    <projectUrl>https://github.com/SitecoreUnicorn/Unicorn</projectUrl>
     <iconUrl>http://kamsar.net/nuget/unicorn/logo.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Unicorn is a utility for Sitecore that solves the issue of moving templates, renderings, and other database items between Sitecore instances.</description>
-    <copyright>Copyright 2016</copyright>
+    <copyright>Copyright 2018</copyright>
     <tags>sitecore serialization</tags>
     <dependencies>
 		<dependency id="Rainbow.Core" version="$rainbowversion$" />

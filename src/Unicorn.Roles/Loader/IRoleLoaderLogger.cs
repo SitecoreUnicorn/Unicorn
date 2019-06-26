@@ -1,10 +1,14 @@
-﻿using Unicorn.Roles.Data;
+﻿using Unicorn.Roles.Model;
 
 namespace Unicorn.Roles.Loader
 {
 	public interface IRoleLoaderLogger
 	{
-		void EvaluatedNewRole(SyncRoleFile role);
-		void RolesInRolesChanged(SyncRoleFile role, string[] addedRolesInRoles, string[] removedRolesInRoles);
+		void AddedNewRole(IRoleData role);
+
+		void AddedNewRoleMembership(IRoleData role);
+
+		void RoleMembershipChanged(IRoleData role, string[] updatedRoleMembership, string[] removedRoleMembership);
+		void RemovedOrphanRole(IRoleData orphan);
 	}
 }

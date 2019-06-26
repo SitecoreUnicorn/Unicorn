@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
+using Sitecore.Diagnostics;
+using Unicorn.Predicates;
 
 namespace Unicorn.Configuration.Dependencies
 {
@@ -12,9 +15,12 @@ namespace Unicorn.Configuration.Dependencies
 		private IConfiguration[] _dependents;
 		private IConfiguration[] _allConfigurations;
 		private readonly IConfiguration _configuration;
+		protected readonly object SyncLock = new object();
 
 		public ConfigurationDependencyResolver(IConfiguration configuration)
 		{
+			Assert.ArgumentNotNull(configuration, nameof(configuration));
+
 			_configuration = configuration;
 		}
 
@@ -42,14 +48,18 @@ namespace Unicorn.Configuration.Dependencies
 		/// </summary>
 		private IConfigurationDependency[] ResolveDependencies()
 		{
-			if (DependencyCache.ContainsKey(_configuration))
-				return DependencyCache[_configuration];
+			lock (SyncLock)
+			{
+				IConfigurationDependency[] result;
 
-			var dependencies = GetDependencies(_configuration);
+				if (DependencyCache.TryGetValue(_configuration, out result)) return result;
 
-			DependencyCache.Add(_configuration, dependencies);
+				var dependencies = GetDependencies(_configuration);
 
-			return dependencies;
+				DependencyCache.Add(_configuration, dependencies);
+
+				return dependencies;
+			}
 		}
 
 		/// <summary>
@@ -60,10 +70,64 @@ namespace Unicorn.Configuration.Dependencies
 			if (configuration.Dependencies == null)
 				return new IConfigurationDependency[0];
 
+			// Gets explicit (first) then implicit dependencies. The grouping is so that if an explicit dependency is declared, any implicit dependency for the same configuration gets supressed.
+			return GetExplicitDependencies(configuration).Concat(GetImplicitDependencies(configuration)).GroupBy(d => d.Configuration.Name).Select(g => g.First()).ToArray();
+		}
+
+		protected virtual IEnumerable<IConfigurationDependency> GetExplicitDependencies(IConfiguration configuration)
+		{
 			return AllConfigurations
-				.Where(config => configuration.Dependencies.Any(dependency => dependency.Equals(config.Name, StringComparison.OrdinalIgnoreCase)))
-				.Select(config => (IConfigurationDependency)new ExplicitConfigurationDependency(config))
-				.ToArray();
+				.Where(config => configuration.Dependencies.Any(dependency => IsWildcardMatch(config.Name, dependency)))
+				.Select(config => (IConfigurationDependency) new ExplicitConfigurationDependency(config));
+		}
+
+		protected virtual IEnumerable<IConfigurationDependency> GetImplicitDependencies(IConfiguration configuration)
+		{
+			var configRootPaths = configuration.Resolve<IPredicate>().GetRootPaths();
+
+			var nonIgnoredConfigurations = AllConfigurations
+				.Where(config => configuration.IgnoredImplicitDependencies
+					.All(ignoredDep => !IsWildcardMatch(config.Name, ignoredDep)
+				));
+
+			foreach (var config in nonIgnoredConfigurations)
+			{
+				if (config.Name.Equals(configuration.Name, StringComparison.OrdinalIgnoreCase)) continue; // don't depend on yourself :)
+
+				var candidateParentPaths = config.Resolve<IPredicate>().GetRootPaths();
+
+				bool match = false;
+
+				foreach (var candidateParent in candidateParentPaths)
+				{
+					foreach (var configRoot in configRootPaths)
+					{
+						// mismatching dbs = don't care about path
+						if (!configRoot.DatabaseName.Equals(candidateParent.DatabaseName)) continue;
+
+						var configRootPath = $"{configRoot.Path.TrimEnd('/')}/";
+						var candidateParentPath = $"{candidateParent.Path.TrimEnd('/')}/";
+						if (configRootPath.StartsWith(candidateParentPath) && !configRootPath.Equals(candidateParentPath, StringComparison.Ordinal))
+						{
+							match = true;
+							break;
+						}
+					}
+
+					if (match) break;
+				}
+
+				if (match) yield return new ImplicitConfigurationDependency(config);
+			}
+		}
+
+		/// <summary>
+		/// Checks if a string matches a wildcard argument (using regex)
+		/// </summary>
+		protected static bool IsWildcardMatch(string input, string wildcards)
+		{
+
+			return Regex.IsMatch(input, "^" + Regex.Escape(wildcards).Replace("\\*", ".*").Replace("\\?", ".") + "$", RegexOptions.IgnoreCase);
 		}
 	}
 }

@@ -40,11 +40,11 @@ namespace Unicorn.Pipelines.UnicornSyncEnd
 			Assert.IsTrue(dbs.Length > 0, "No valid databases specified to publish to.");
 			Assert.IsNotNull(trigger, "Invalid trigger item ID");
 
-			args.Console.ReportStatus(string.Empty);
-			args.Console.ReportStatus("[P] Auto-publishing of synced items is beginning.");
+			args.Logger.Info(string.Empty);
+			args.Logger.Info("[P] Auto-publishing of synced items is beginning.");
 			Log.Info("Unicorn: initiated synchronous publishing of synced items.", this);
 
-			if (ManualPublishQueueHandler.PublishQueuedItems(trigger, dbs, args.Console))
+			if (ManualPublishQueueHandler.PublishQueuedItems(trigger, dbs, args.Logger))
 			{
 				Log.Info("Unicorn: publishing of synced items is complete.", this);
 			}

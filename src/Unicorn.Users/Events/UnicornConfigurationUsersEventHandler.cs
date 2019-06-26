@@ -1,43 +1,44 @@
-﻿namespace Unicorn.Users.Events
+﻿using System.Web.Security;
+using Sitecore.Diagnostics;
+using Sitecore.Security.Accounts;
+using Sitecore.Security.Serialization;
+using Unicorn.Configuration;
+using Unicorn.Users.Data;
+using Unicorn.Users.UserPredicates;
+
+namespace Unicorn.Users.Events
 {
-  using Sitecore.Diagnostics;
-  using Sitecore.Security.Accounts;
-  using Unicorn.Configuration;
-  using Unicorn.Users.Data;
-  using Unicorn.Users.Predicates;
+	public class UnicornConfigurationUsersEventHandler
+	{
+		private readonly IUserPredicate _predicate;
+		private readonly IUserDataStore _dataStore;
 
-  class UnicornConfigurationUsersEventHandler
-  {
-    private readonly IUserPredicate _predicate;
-    private readonly IUserDataStore _dataStore;
+		public UnicornConfigurationUsersEventHandler(IConfiguration configuration)
+		{
+			Assert.ArgumentNotNull(configuration, nameof(configuration));
 
-    public UnicornConfigurationUsersEventHandler(IConfiguration configuration)
-    {
-      Assert.ArgumentNotNull(configuration, nameof(configuration));
+			_predicate = configuration.Resolve<IUserPredicate>();
+			_dataStore = configuration.Resolve<IUserDataStore>();
+		}
 
-      this._predicate = configuration.Resolve<IUserPredicate>();
-      this._dataStore = configuration.Resolve<IUserDataStore>();
-    }
+		public virtual void UserAlteredOrCreated(string userName)
+		{
+			var user = User.FromName(userName, false);
+			if (_predicate == null || !_predicate.Includes(user).IsIncluded)
+			{
+				return;
+			}
 
+			_dataStore.Save(UserSynchronization.BuildSyncUser(Membership.GetUser(user.Name)));
+		}
 
-    public virtual void UserAlteredOrCreated(string userName)
-    {
-      var user = User.FromName(userName, false);
-      if (this._predicate == null || !this._predicate.Includes(user).IsIncluded)
-      {
-        return;
-      }
+		public void UserDeleted(string userName)
+		{
+			var user = User.FromName(userName, false);
 
-      this._dataStore.Save(user);
-    }
+			if (_predicate == null || !_predicate.Includes(user).IsIncluded) return;
 
-    public void UserDeleted(string userName)
-    {
-      var user = User.FromName(userName, false);
-
-      if (this._predicate == null || !this._predicate.Includes(user).IsIncluded) return;
-
-      this._dataStore.Remove(user);
-    }
-  }
+			_dataStore.Remove(user.Name);
+		}
+	}
 }

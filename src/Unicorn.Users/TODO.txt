@@ -1,0 +1,3 @@
+﻿Future ideas:
+- Profile serialization is too aggressive. Some properties, like IsAdministrator and FullName, make total sense to serialize. Others, like /sitecore\[username]/Ribbon/My Strip, which are user prefs, probably do not.
+- Tests

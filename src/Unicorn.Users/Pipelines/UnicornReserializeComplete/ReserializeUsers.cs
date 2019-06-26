@@ -1,15 +1,19 @@
-﻿namespace Unicorn.Users.Pipelines.UnicornReserializeComplete
-{
-  using System.Linq;
-  using Sitecore.Security.Accounts;
-  using Unicorn.Logging;
-  using Unicorn.Pipelines.UnicornReserializeComplete;
-  using Unicorn.Users.Data;
-  using Unicorn.Users.Predicates;
+﻿using System.Linq;
+using System.Web.Security;
+using Sitecore.Diagnostics;
+using Sitecore.Security.Accounts;
+using Sitecore.Security.Serialization;
+using Unicorn.Logging;
+using Unicorn.Pipelines.UnicornReserializeComplete;
+using Unicorn.Users.Data;
+using Unicorn.Users.UserPredicates;
 
-  public class ReserializeUsers : IUnicornReserializeCompleteProcessor
+
+namespace Unicorn.Users.Pipelines.UnicornReserializeComplete
+{
+	public class ReserializeUsers : IUnicornReserializeCompleteProcessor
 	{
-		public void Process(UnicornReserializeCompletePipelineArgs args)
+		public virtual void Process(UnicornReserializeCompletePipelineArgs args)
 		{
 
 			var userPredicate = args.Configuration.Resolve<IUserPredicate>();
@@ -19,6 +23,9 @@
 
 			var dataStore = args.Configuration.Resolve<IUserDataStore>();
 			var logger = args.Configuration.Resolve<ILogger>();
+
+			Assert.IsNotNull(dataStore, $"The IUserDataStore was not registered for the {args.Configuration.Name} configuration.");
+			Assert.IsNotNull(logger, $"The ILogger was not registered for the {args.Configuration.Name} configuration.");
 
 			logger.Info(string.Empty);
 			logger.Info($"{args.Configuration.Name} users are being reserialized.");
@@ -31,7 +38,7 @@
 
 			foreach (var user in users)
 			{
-				dataStore.Save(user);
+				dataStore.Save(UserSynchronization.BuildSyncUser(Membership.GetUser(user.Name)));
 				userCount++;
 			}
 
