@@ -139,25 +139,27 @@ namespace Unicorn.Predicates.Fields
 
 		public bool ShouldDeployFieldValue(string existingValue, string proposedValue)
 		{
-			switch (FieldTransformDeployRule)
-			{
-				case FieldTransformDeployRule.ForceValue:
-				case FieldTransformDeployRule.ScreamingSnake:
-				case FieldTransformDeployRule.Clear:
-				case FieldTransformDeployRule.LoremIpsumTitle:
-				case FieldTransformDeployRule.LoremIpsumBody:
-				case FieldTransformDeployRule.SitecoreSetting:
-					return true;
-				case FieldTransformDeployRule.Ignore:
-					return false;
-				case FieldTransformDeployRule.OnlyIfNullOrEmpty:
-					if (string.IsNullOrEmpty(existingValue))
-						return true;
-					return false;
-			}
+			if (FieldTransformDeployRule == FieldTransformDeployRule.Ignore)
+				return false;
 
-			// Unknown deploy rule...   
-			return true;
+			if (FieldTransformDeployRule == FieldTransformDeployRule.Clear && existingValue == null)
+				return false;
+
+			if (FieldTransformDeployRule == FieldTransformDeployRule.OnlyIfNullOrEmpty && string.IsNullOrEmpty(existingValue))
+				return proposedValue != null;
+
+			if (FieldTransformDeployRule == FieldTransformDeployRule.OnlyIfNullOrEmpty && !string.IsNullOrEmpty(existingValue))
+				return false;
+
+			string transformedValue = GetFieldValue(existingValue, proposedValue);
+
+			if (existingValue == null && transformedValue == null)
+				return false;
+
+			if (existingValue == null) // implicitly, transformedValue has a non-null value since the null case was filtered out above
+				return true;
+
+			return !existingValue.Equals(transformedValue, StringComparison.Ordinal);
 		}
 
 		public string GetFieldValue(string existingValue, string proposedValue)

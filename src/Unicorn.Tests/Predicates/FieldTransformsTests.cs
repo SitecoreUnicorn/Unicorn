@@ -27,6 +27,7 @@ namespace Unicorn.Tests.Predicates
 			Assert.False(ff.ShouldDeployFieldValue(null, "Lootboxes"), "ExcludeFilter wanted to deploy field (null, value)");
 			Assert.False(ff.ShouldDeployFieldValue("P2W", null), "ExcludeFilter wanted to deploy field (value,null)");
 			Assert.False(ff.ShouldDeployFieldValue(null, null), "ExcludeFilter wanted to deploy field (null, null)");
+			Assert.False(ff.ShouldDeployFieldValue("samevalue", "samevalue"), "ExcludeFilter wanted to deploy field (samevalue, samevalue)");
 
 			// Calling GetResult on an explicitly ignored field should unconditionally fail as all calls to ShouldDeployFieldValue() would have returned false
 			Assert.Throws(typeof(InvalidOperationException), () => ff.GetFieldValue("P2W", "Lootboxes"));
@@ -50,7 +51,8 @@ namespace Unicorn.Tests.Predicates
 			Assert.False(ff.ShouldDeployFieldValue("P2W", "Lootboxes"), "OnlyIfNullOrEmptyFilter wanted to deploy field (value,value)");
 			Assert.True(ff.ShouldDeployFieldValue(null, "Lootboxes"), "OnlyIfNullOrEmptyFilter did not want to deploy field (null, value)");
 			Assert.False(ff.ShouldDeployFieldValue("P2W", null), "OnlyIfNullOrEmptyFilter wanted to deploy field (value,null)");
-			Assert.True(ff.ShouldDeployFieldValue(null, null), "OnlyIfNullOrEmptyFilter did not want to deploy field (null, null)");
+			Assert.False(ff.ShouldDeployFieldValue(null, null), "OnlyIfNullOrEmptyFilter did not want to deploy field (null, null)");
+			Assert.False(ff.ShouldDeployFieldValue("samevalue", "samevalue"), "OnlyIfNullOrEmptyFilter wanted to deploy field (samevalue, samevalue)");
 
 			Assert.Throws(typeof(InvalidOperationException), () =>  ff.GetFieldValue("P2W", "Lootboxes"));
 			Assert.Equal("Lootboxes", ff.GetFieldValue(null, "Lootboxes"));
@@ -71,9 +73,10 @@ namespace Unicorn.Tests.Predicates
 			Assert.Equal("Electronic Arts", ff.FieldName);
 
 			Assert.True(ff.ShouldDeployFieldValue("P2W", "Lootboxes"), "ClearFilter did not want to deploy field (value,value)");
-			Assert.True(ff.ShouldDeployFieldValue(null, "Lootboxes"), "ClearFilter did not want to deploy field (null, value)");
+			Assert.False(ff.ShouldDeployFieldValue(null, "Lootboxes"), "ClearFilter wanted to deploy field (null, value)");
 			Assert.True(ff.ShouldDeployFieldValue("P2W", null), "ClearFilter did not want to deploy field (value,null)");
-			Assert.True(ff.ShouldDeployFieldValue(null, null), "ClearFilter did not want to deploy field (null, null)");
+			Assert.False(ff.ShouldDeployFieldValue(null, null), "ClearFilter wanted to deploy field (null, null)");
+			Assert.True(ff.ShouldDeployFieldValue("samevalue", "samevalue"), "ClearFilter did not want to deploy field (samevalue, samevalue)");
 
 			Assert.Null(ff.GetFieldValue("P2W", "Lootboxes"));
 			Assert.Null(ff.GetFieldValue(null, "Lootboxes"));
@@ -97,7 +100,8 @@ namespace Unicorn.Tests.Predicates
 			Assert.True(ff.ShouldDeployFieldValue("P2W", "Lootboxes"), "ScreamingSnakeFilter did not want to deploy field (value,value)");
 			Assert.True(ff.ShouldDeployFieldValue(null, "Lootboxes"), "ScreamingSnakeFilter did not want to deploy field (null, value)");
 			Assert.True(ff.ShouldDeployFieldValue("P2W", null), "ScreamingSnakeFilter did not want to deploy field (value,null)");
-			Assert.True(ff.ShouldDeployFieldValue(null, null), "ScreamingSnakeFilter did not want to deploy field (null, null)");
+			Assert.False(ff.ShouldDeployFieldValue(null, null), "ScreamingSnakeFilter wanted to deploy field (null, null)");
+			Assert.False(ff.ShouldDeployFieldValue("SAMEVALUE_IS_GOOD", "samevalue is good"), "ScreamingSnakeFilter wanted deploy field (targetValue, samevalue)");
 
 			Assert.Equal("LOOTBOXES", ff.GetFieldValue("P2W", "Lootboxes"));
 			Assert.Equal("LOOTBOXES", ff.GetFieldValue(null, "Lootboxes"));
@@ -124,6 +128,7 @@ namespace Unicorn.Tests.Predicates
 			Assert.True(ff.ShouldDeployFieldValue(null, "Lootboxes"), "ForcedFieldValueFilter did not want to deploy field (null, value)");
 			Assert.True(ff.ShouldDeployFieldValue("P2W", null), "ForcedFieldValueFilter did not want to deploy field (value,null)");
 			Assert.True(ff.ShouldDeployFieldValue(null, null), "ForcedFieldValueFilter did not want to deploy field (null, null)");
+			Assert.False(ff.ShouldDeployFieldValue("${settings:Lootboxes}", "samevalue"), "ForcedFieldValueFilter wanted to deploy field (targetValue, samevalue)");
 
 			Assert.Equal("${settings:Lootboxes}", ff.GetFieldValue("P2W", "Lootboxes"));
 			Assert.Equal("${settings:Lootboxes}", ff.GetFieldValue(null, "Lootboxes"));
@@ -145,10 +150,10 @@ namespace Unicorn.Tests.Predicates
 			Assert.Equal("Configuration.Lootboxes", ff.ForcedValue);
 
 			// SitecoreSettings always forces a value (duh), it should always deploy
-			Assert.True(ff.ShouldDeployFieldValue("P2W", "Lootboxes"), "ForcedFieldValueFilter did not want to deploy field (value,value)");
-			Assert.True(ff.ShouldDeployFieldValue(null, "Lootboxes"), "ForcedFieldValueFilter did not want to deploy field (null, value)");
-			Assert.True(ff.ShouldDeployFieldValue("P2W", null), "ForcedFieldValueFilter did not want to deploy field (value,null)");
-			Assert.True(ff.ShouldDeployFieldValue(null, null), "ForcedFieldValueFilter did not want to deploy field (null, null)");
+			Assert.True(ff.ShouldDeployFieldValue("P2W", "Lootboxes"), "SitecoreSettingsValueFilter did not want to deploy field (value,value)");
+			Assert.True(ff.ShouldDeployFieldValue(null, "Lootboxes"), "SitecoreSettingsValueFilter did not want to deploy field (null, value)");
+			Assert.True(ff.ShouldDeployFieldValue("P2W", null), "SitecoreSettingsValueFilter did not want to deploy field (value,null)");
+			Assert.True(ff.ShouldDeployFieldValue(null, null), "SitecoreSettingsValueFilter did not want to deploy field (null, null)");
 
 			using (new SettingsSwitcher("Configuration.Lootboxes", "false"))
 			{
@@ -156,6 +161,9 @@ namespace Unicorn.Tests.Predicates
 				Assert.Equal("false", ff.GetFieldValue(null, "Lootboxes"));
 				Assert.Equal("false", ff.GetFieldValue("P2W", null));
 				Assert.Equal("false", ff.GetFieldValue(null, null));
+
+				// except when the field value already matches the setting
+				Assert.False(ff.ShouldDeployFieldValue("false", "samevalue"), "SitecoreSettingsValueFilter wanted to deploy field (targetValue, samevalue)");
 			}
 		}
 
@@ -176,6 +184,9 @@ namespace Unicorn.Tests.Predicates
 			Assert.True(ff.ShouldDeployFieldValue(null, "Lootboxes"), "LoremIpsumBodyFilterTests did not want to deploy field (null, value)");
 			Assert.True(ff.ShouldDeployFieldValue("P2W", null), "LoremIpsumBodyFilterTests did not want to deploy field (value,null)");
 			Assert.True(ff.ShouldDeployFieldValue(null, null), "LoremIpsumBodyFilterTests did not want to deploy field (null, null)");
+
+			// Except when the LoremIpsumBody is already on the field
+			Assert.False(ff.ShouldDeployFieldValue(MagicTokenTransformer.LoremIpsumBody, MagicTokenTransformer.LoremIpsumBody), "LoremIpsumBodyFilterTests wanted to deploy field (lib, lib)");
 
 			Assert.Equal(MagicTokenTransformer.LoremIpsumBody, ff.GetFieldValue("P2W", "Lootboxes"));
 			Assert.Equal(MagicTokenTransformer.LoremIpsumBody, ff.GetFieldValue(null, "Lootboxes"));
@@ -200,6 +211,9 @@ namespace Unicorn.Tests.Predicates
 			Assert.True(ff.ShouldDeployFieldValue(null, "Lootboxes"), "LoremIpsumBodyFilterTests did not want to deploy field (null, value)");
 			Assert.True(ff.ShouldDeployFieldValue("P2W", null), "LoremIpsumBodyFilterTests did not want to deploy field (value,null)");
 			Assert.True(ff.ShouldDeployFieldValue(null, null), "LoremIpsumBodyFilterTests did not want to deploy field (null, null)");
+
+			// Except when the LoremIpsumTitle is already on the field
+			Assert.False(ff.ShouldDeployFieldValue(MagicTokenTransformer.LoremIpsumTitle, MagicTokenTransformer.LoremIpsumTitle), "LoremIpsumBodyFilterTests wanted to deploy field (lit, lit)");
 
 			Assert.Equal(MagicTokenTransformer.LoremIpsumTitle, ff.GetFieldValue("P2W", "Lootboxes"));
 			Assert.Equal(MagicTokenTransformer.LoremIpsumTitle, ff.GetFieldValue(null, "Lootboxes"));
