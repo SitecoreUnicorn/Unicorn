@@ -37,19 +37,19 @@ namespace Unicorn.ControlPanel
 		{
 			if (string.IsNullOrWhiteSpace(_activationUrl)) return;
 
-			if (args.Context.Request.RawUrl.StartsWith(_activationUrl, StringComparison.OrdinalIgnoreCase))
+			if (HttpContext.Current.Request.RawUrl.StartsWith(_activationUrl, StringComparison.OrdinalIgnoreCase))
 			{
 				if (string.IsNullOrWhiteSpace(_activationSite))
 				{
-					ProcessRequest(args.Context);
-					args.Context.Response.End();
+					ProcessRequest(HttpContext.Current);
+					HttpContext.Current.Response.End();
 				}
 				else
 				{
 					using (new SiteContextSwitcher(Factory.GetSite(_activationSite)))
 					{
-						ProcessRequest(args.Context);
-						args.Context.Response.End();
+						ProcessRequest(HttpContext.Current);
+						HttpContext.Current.Response.End();
 					}
 				}
 			}

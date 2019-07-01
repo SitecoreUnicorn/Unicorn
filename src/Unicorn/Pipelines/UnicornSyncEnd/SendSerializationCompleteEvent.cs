@@ -44,8 +44,18 @@ namespace Unicorn.Pipelines.UnicornSyncEnd
 				var databaseName = state.ToString();
 				EventManager.RaiseEvent(new SerializationFinishedEvent());
 				Database database = Factory.GetDatabase(databaseName, false);
+				
+				var remoteEvents = database?.RemoteEvents;
+				var remoteEventsType = remoteEvents.GetType();
+				var eventQueue = remoteEventsType.GetProperties().FirstOrDefault(property => property.GetType().GetMethod("QueueEvent") != null);
+				if (eventQueue == null)
+				{
+					Log.Error("Cannot find property with 'QueueEvent' method. SerializationFinishedEvent is not rised.", this);
+					return;
+				}
+				var eventQueueInstance = eventQueue.GetValue(remoteEvents);
 
-				database?.RemoteEvents.Queue.QueueEvent(new SerializationFinishedEvent());
+				eventQueue?.GetType()?.GetMethod("QueueEvent")?.Invoke(eventQueueInstance, new object[] { new SerializationFinishedEvent() });				
 			}
 
 			Log.Info($"Job ended: Raise deserialization complete async ({typeof(SendSerializationCompleteEvent).FullName})", this);
