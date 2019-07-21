@@ -153,6 +153,7 @@
     <Compile Include="Configuration\Dependencies\InterconfigurationDependencyResolverTests.cs" />
     <None Include="app.config" />
     <Compile Include="ControlPanel\Security\SitecoreDatabaseChallengeStoreTests.cs" />
+    <Compile Include="ControlPanel\Utility\ProgressBarTests.cs" />
     <Compile Include="ControlPanel\Utility\WildcardPatternMatchingTest.cs" />
     <Compile Include="Data\DataProvider\ItemChangeApplyingItemDataTests.cs" />
     <Compile Include="Data\DataProvider\UnicornDataProviderTests.AddVersion.cs" />

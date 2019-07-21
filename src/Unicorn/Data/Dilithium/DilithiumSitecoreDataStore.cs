@@ -18,11 +18,11 @@ namespace Unicorn.Data.Dilithium
 		public override string FriendlyName => "Dilithium Sitecore Data Store";
 		public override string Description => "Reads and writes data from a Sitecore database. Reads are performed with direct SQL batches for extreme speed.";
 
-		public override void Save(IItemData item, IFieldValueManipulator fieldValueManipulator)
+		public override bool Save(IItemData item, IFieldValueManipulator fieldValueManipulator)
 		{
 			if (ReactorContext.SqlPrecache != null) ReactorContext.SqlPrecache.Update(item);
 
-			base.Save(item, fieldValueManipulator);
+			return base.Save(item, fieldValueManipulator);
 		}
 
 		public override bool Remove(IItemData item)

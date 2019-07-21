@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
-using Cognifide.PowerShell.Commandlets.Packages;
 using Sitecore.Configuration;
 using Sitecore.Data;
 using Sitecore.Data.Items;
@@ -28,7 +27,7 @@ namespace Unicorn.PowerShell
 	/// </summary>
 	[Cmdlet(VerbsCommon.New, "UnicornItemSource")]
 	[OutputType(typeof(ExplicitItemSource))]
-	public class NewUnicornItemSourceCommand : BasePackageCommand
+	public class NewUnicornItemSourceCommand : BaseCommand
 	{
 		[Parameter(ValueFromPipeline = true, ValueFromPipelineByPropertyName = true, Mandatory = true)]
 		public IConfiguration Configuration { get; set; }

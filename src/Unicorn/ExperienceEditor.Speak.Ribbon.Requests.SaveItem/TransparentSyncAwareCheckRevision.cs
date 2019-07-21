@@ -19,7 +19,13 @@ namespace Unicorn.ExperienceEditor.Speak.Ribbon.Requests.SaveItem
 			SaveArgs.SaveItem saveItem = RequestContext.GetSaveArgs().Items[0];
 			PipelineProcessorResponseValue processorResponseValue = new PipelineProcessorResponseValue();
 
-			Item existingItem = RequestContext.Item.Database.GetItem(saveItem.ID, Language.Parse(RequestContext.Language), Sitecore.Data.Version.Parse(RequestContext.Version));
+			Item existingItem;
+
+			// Change made in relation to https://github.com/SitecoreUnicorn/Unicorn/issues/351
+			if (saveItem.Language != null && saveItem.Version != null)
+				existingItem = RequestContext.Item.Database.GetItem(saveItem.ID, saveItem.Language, saveItem.Version);
+			else
+				existingItem = RequestContext.Item.Database.GetItem(saveItem.ID, Language.Parse(RequestContext.Language), Sitecore.Data.Version.Parse(RequestContext.Version));
 
 			if (existingItem == null)
 			{

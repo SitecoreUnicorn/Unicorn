@@ -19,7 +19,7 @@ namespace Unicorn.ControlPanel
 			if (taskNumber > totalTasks) throw new ArgumentException("taskNumber was greater than the number of totalTasks!");
 
 			int start = (int)Math.Round(((taskNumber - 1) / (double)totalTasks) * 100d);
-			int end = start + (int)Math.Round((1d / totalTasks) * 100d);
+			int end = start + (int)Math.Round(0.5d + ((1d / totalTasks) * 100d));
 
 			SetRangeTaskProgress(progress, Math.Max(start, 0), Math.Min(end, 100), taskPercent);
 		}

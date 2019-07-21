@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
-using Cognifide.PowerShell.Commandlets;
 using Kamsar.WebConsole;
 using Rainbow.Model;
 using Sitecore.Data.Items;
