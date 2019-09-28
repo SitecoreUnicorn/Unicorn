@@ -24,7 +24,7 @@ services:
     volumes:
       - C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\Common7\IDE\Remote Debugger:C:\remote_debugger:ro
       - .\deploy:C:\src
-      - .\unicorntestfiles:C:\unicorn
+      - .\unicorntestfiles:C:/inetpub/sc/app_data/unicorn
       - .\data\cm:C:\inetpub\sc\App_Data\logs
     ports:
       - "44001:80"
