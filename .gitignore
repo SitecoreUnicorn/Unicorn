@@ -23,3 +23,7 @@ src/*/license.xml
 packages/*
 !packages/repositories.config
 Build/*.nupkg
+
+# Docker related files
+data/*
+deploy/*
