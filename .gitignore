@@ -25,6 +25,4 @@ packages/*
 Build/*.nupkg
 
 # Docker related files
-data/*
-deploy/*
-unicorntestfiles/*
+test/*
