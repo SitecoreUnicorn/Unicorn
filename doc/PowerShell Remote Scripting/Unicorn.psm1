@@ -2,13 +2,17 @@ $ErrorActionPreference = 'Stop'
 $ScriptPath = Split-Path $MyInvocation.MyCommand.Path
 $MicroCHAP = $ScriptPath + '\MicroCHAP.dll'
 Add-Type -Path $MicroCHAP
+$global:unicornErrors = @{}
+$global:unicornWarnings = @{}
+[string]$Global:unicornEndOfWork = ""
+[string]$Global:unicornLog = ""
 
 Function Sync-Unicorn {
 	Param(
-		[Parameter(Mandatory=$True)]
+		[Parameter(Mandatory = $True)]
 		[string]$ControlPanelUrl,
 
-		[Parameter(Mandatory=$True)]
+		[Parameter(Mandatory = $True)]
 		[string]$SharedSecret,
 
 		[string[]]$Configurations,
@@ -17,31 +21,34 @@ Function Sync-Unicorn {
 
 		[switch]$SkipTransparentConfigs,
 
-		[switch]$DebugSecurity
+		[switch]$DebugSecurity,
+		
+		# defines, if logs shall be streamed to output
+		[switch]$StreamLogs
 	)
 
 	# PARSE THE URL TO REQUEST
 	$parsedConfigurations = '' # blank/default = all
 	
-	if($Configurations) {
+	if ($Configurations) {
 		$parsedConfigurations = ($Configurations) -join "^"
 	}
 
 	$skipValue = 0
-	if($SkipTransparentConfigs) {
+	if ($SkipTransparentConfigs) {
 		$skipValue = 1
 	}
 
 	$url = "{0}?verb={1}&configuration={2}&skipTransparentConfigs={3}" -f $ControlPanelUrl, $Verb, $parsedConfigurations, $skipValue 
 
-	if($DebugSecurity) {
+	if ($DebugSecurity) {
 		Write-Host "Sync-Unicorn: Preparing authorization for $url"
 	}
 
 	# GET AN AUTH CHALLENGE
 	$challenge = Get-Challenge -ControlPanelUrl $ControlPanelUrl
 
-	if($DebugSecurity) {
+	if ($DebugSecurity) {
 		Write-Host "Sync-Unicorn: Received challenge from remote server: $challenge"
 	}
 
@@ -50,7 +57,7 @@ Function Sync-Unicorn {
 
 	$signature = $signatureService.CreateSignature($challenge, $url, $null)
 
-	if($DebugSecurity) {
+	if ($DebugSecurity) {
 		Write-Host "Sync-Unicorn: MAC '$($signature.SignatureSource)'"
 		Write-Host "Sync-Unicorn: HMAC '$($signature.SignatureHash)'"
 		Write-Host "Sync-Unicorn: If you get authorization failures compare the values above to the Sitecore logs."
@@ -62,7 +69,7 @@ Function Sync-Unicorn {
 	[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 	$result = Invoke-StreamingWebRequest -Uri $url -Mac $signature.SignatureHash -Nonce $challenge
 
-	if($result.TrimEnd().EndsWith('****ERROR OCCURRED****')) {
+	if ($result.TrimEnd().EndsWith('****ERROR OCCURRED****')) {
 		throw "Unicorn $Verb to $url returned an error. See the preceding log for details."
 	}
 
@@ -72,7 +79,7 @@ Function Sync-Unicorn {
 
 Function Get-Challenge {
 	Param(
-		[Parameter(Mandatory=$True)]
+		[Parameter(Mandatory = $True)]
 		[string]$ControlPanelUrl
 	)
 
@@ -84,8 +91,26 @@ Function Get-Challenge {
 	$result.Content
 }
 
+function Get-ProjectName {
+	param (
+		[Parameter(Mandatory = $True)]
+		[string]$Line,
+		[Parameter(Mandatory = $True)]
+		[string]$ProjectIndicator
+	)
+	
+	# collecting project name
+	$resultingString = $Line.Substring(0, $Line.IndexOf($ProjectIndicator))
+	# remove INFO: from project name
+	$resultingString = $resultingString.Substring(6)
+	return $resultingString
+}
+
 Function Invoke-StreamingWebRequest($Uri, $MAC, $Nonce) {
-	$responseText = new-object -TypeName "System.Text.StringBuilder"
+	# this is needed to collect publishing data
+	$publishingData = new-object -TypeName "System.Text.StringBuilder"
+	$publishIndicator = $false
+	$projectLineIndicator = ' is being synced with '
 
 	$request = [System.Net.WebRequest]::Create($Uri)
 	$request.Headers["X-MC-MAC"] = $MAC
@@ -95,30 +120,78 @@ Function Invoke-StreamingWebRequest($Uri, $MAC, $Nonce) {
 	$response = $request.GetResponse()
 	$responseStream = $response.GetResponseStream()
 	$responseStreamReader = new-object System.IO.StreamReader $responseStream
+	$project = "Init"
 	
-	while(-not $responseStreamReader.EndOfStream) {
-		$line = $responseStreamReader.ReadLine()
-
-		if($line.StartsWith('Error:')) {
-			Write-Host $line.Substring(7) -ForegroundColor Red
+	if ($StreamLogs) {
+		$responseText = new-object -TypeName "System.Text.StringBuilder"
+		while (-not $responseStreamReader.EndOfStream) {
+			$line = $responseStreamReader.ReadLine()
+			
+			if ($line.Contains($projectLineIndicator)) {
+				$project = Get-ProjectName -Line $line -ProjectIndicator $projectLineIndicator
+			}
+			if ($line.StartsWith('Error:')) {
+				Write-Host $line.Substring(7) -ForegroundColor Red
+				$global:unicornErrors[$project] += @($line)
+			}
+			elseif ($line.StartsWith('Warning:')) {
+				$Global:unicornWarnings[$project] += @($line)
+				Write-Host $line.Substring(9) -ForegroundColor Yellow
+			}
+			elseif ($line.StartsWith('Debug:')) {
+				Write-Host $line.Substring(7) -ForegroundColor Gray
+			}
+			elseif ($line.StartsWith('Info:')) {
+				Write-Host $line.Substring(6) -ForegroundColor White
+			}
+			else {
+				Write-Host $line -ForegroundColor White
+			}
+	
+			if ($publishIndicator) {
+				# appending data for further analysis in script
+				[void]$publishingData.AppendLine($line)
+			}
+			if ($line.Contains('[P] Auto-publishing of synced items is beginning')) {
+				# this means that work is done and we are collecting this for further analysis in script
+				$publishIndicator = $true
+			}
+			[void]$responseText.AppendLine($line)
 		}
-		elseif($line.StartsWith('Warning:')) {
-			Write-Host $line.Substring(9) -ForegroundColor Yellow
+		$resultingData = $responseText.ToString()
+	} 
+	else {
+		$resultingData = $responseStreamReader.ReadToEnd()
+		Write-Host $resultingData
+		
+		foreach ($line in $resultingData.Split([Environment]::NewLine)) {
+			if ($line.Contains($projectLineIndicator)) {
+				$project = Get-ProjectName -Line $line -ProjectIndicator $projectLineIndicator
+			}
+	
+			if ($line.StartsWith('Error:')) {
+				$Global:unicornErrors[$project] += @($line)
+			}
+			elseif ($line.StartsWith('Warning:')) {
+				$Global:unicornWarnings[$project] += @($line)
+			}
+	
+			if ($publishIndicator) {
+				# appending data for further analysis in script
+				[void]$publishingData.AppendLine($line)
+			}
+			if ($line.Contains('[P] Auto-publishing of synced items is beginning')) {
+				# this means that work is done and we are collecting this for further analysis in script
+				$publishIndicator = $true
+			}
 		}
-		elseif($line.StartsWith('Debug:')) {
-			Write-Host $line.Substring(7) -ForegroundColor Gray
-		}
-		elseif($line.StartsWith('Info:')) {
-			Write-Host $line.Substring(6) -ForegroundColor White
-		}
-		else {
-			Write-Host $line -ForegroundColor White
-		}
-
-		[void]$responseText.AppendLine($line)
 	}
+	
+	# exposing collected data to host process here
+	$Global:unicornEndOfWork = $publishingData.ToString()
+	$Global:unicornLog = $resultingData
 
-	return $responseText.ToString()
+	return $resultingData
 }
 
 Export-ModuleMember -Function Sync-Unicorn
