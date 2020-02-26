@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Reflection;
 using System.Threading;
 using Sitecore.Configuration;
 using Sitecore.Data;
@@ -46,11 +47,30 @@ namespace Unicorn.Pipelines.UnicornSyncEnd
 				Database database = Factory.GetDatabase(databaseName, false);
 				
 				var remoteEvents = database?.RemoteEvents;
+				if (remoteEvents == null)
+				{
+					Log.Warn("Remote Events not configured for this instance. SerializationFinishedEvent is not raised.", this);
+					return;
+				}
+
 				var remoteEventsType = remoteEvents.GetType();
-				var eventQueue = remoteEventsType.GetProperties().FirstOrDefault(property => property.GetType().GetMethod("QueueEvent") != null);
+
+				// Pre 9.3, you could access the Queue property
+				// 9.3+ you need to access the EventQueue property
+
+				// All of this in the Sitecore.Data.Eventing.DatabaseRemoteEvents
+
+				// Try for 9.3 (some versions of 9.x also has this property)
+				var eventQueue = remoteEventsType?.GetProperty("EventQueue", BindingFlags.GetProperty | BindingFlags.Public | BindingFlags.Instance);
 				if (eventQueue == null)
 				{
-					Log.Error("Cannot find property with 'QueueEvent' method. SerializationFinishedEvent is not rised.", this);
+					// Try for v.Prev
+					eventQueue = remoteEventsType?.GetProperty("Queue", BindingFlags.GetProperty | BindingFlags.Public | BindingFlags.Instance);
+				}
+
+				if (eventQueue == null)
+				{
+					Log.Error("Cannot locate Queue/EventQueue property on [Database].RemoteEvents. SerializationFinishedEvent is not raised.", this);
 					return;
 				}
 				var eventQueueInstance = eventQueue.GetValue(remoteEvents);
