@@ -42,7 +42,7 @@ There are a few special features that Unicorn has that are worth mentioning.
 * You can define custom ways to compare fields, if there are equivalencies that are more complex than string equality
 * There are event pipelines that can be used to hook to sync events. These can be used, for example, to auto-publish synced items.
 * Transparent syncing allows the data provider to read directly from the serialized items on disk, making them appear directly in Sitecore.
-* Super-fast syncing with the 'Dilithium' direct-SQL item reading engine (optional, considered mostly stable but sitll experimental)
+* Super-fast syncing with the 'Dilithium' direct-SQL item reading engine (optional, considered mostly stable but still experimental)
 * Integration with [Sitecore PowerShell Extensions](https://www.gitbook.com/book/sitecorepowershell/sitecore-powershell-extensions/details) to perform Unicorn tasks
 
 You can find further details about Unicorn 4 at Kam's blog:
