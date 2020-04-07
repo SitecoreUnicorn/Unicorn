@@ -82,7 +82,10 @@
     <Compile Include="Configuration\Dependencies\ConfigurationDependencyResolver.cs" />
     <Compile Include="Configuration\Dependencies\ExplicitConfigurationDependency.cs" />
     <Compile Include="Configuration\Dependencies\IConfigurationDependency.cs" />
+    <Compile Include="Configuration\IPredicatePresetHandler.cs" />
     <Compile Include="Configuration\PipelineBasedVariablesReplacer.cs" />
+    <Compile Include="Configuration\PredicatePreset.cs" />
+    <Compile Include="Configuration\PredicatePresetHandler.cs" />
     <Compile Include="ControlPanel\Controls\BatchProcessingControls.cs" />
     <Compile Include="ControlPanel\Controls\ConfigurationInfo.cs" />
     <Compile Include="ControlPanel\Controls\GlobalWarnings.cs" />
