@@ -49,11 +49,11 @@
 							The predicate controls what items are included in the configuration.
 							
 							Each include can also exclude specific subitems in various ways. For a reference of the most current predicate grammar, consult the tests here:
-							https://github.com/kamsar/Unicorn/blob/master/src/Unicorn.Tests/Predicates/TestConfiguration.xml
+							https://github.com/SitecoreUnicorn/Unicorn/blob/master/src/Unicorn.Tests/Predicates/TestConfiguration.xml
 
 							NOTE: after changing what is included or excluded, you should reserialize all items, or at least the added items for additions.
 							NOTE: the "name" attribute controls the folder name the items will go into. If unspecified, the last path segment is used. Names must be unique across the configuration.
-							NOTE: You cannot use excludes with Transparent Sync. See https://github.com/kamsar/Unicorn/wiki/The-Transparent-Sync-Guide
+							NOTE: You cannot use excludes with Transparent Sync. See https://github.com/SitecoreUnicorn/Unicorn/wiki/The-Transparent-Sync-Guide
 							NOTE: If your configuration is named in Helix format (Layer.Module), you can use $(layer) and $(module) here as variables.
 						-->
 						<include name="Layouts" database="master" path="/sitecore/layout/Layouts/YourSite" />
