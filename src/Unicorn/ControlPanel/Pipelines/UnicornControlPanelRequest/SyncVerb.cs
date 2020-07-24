@@ -16,7 +16,7 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 {
 	public class SyncVerb : UnicornControlPanelRequestPipelineProcessor
 	{
-		private readonly SerializationHelper _helper;
+		protected readonly SerializationHelper _helper;
 
 		public SyncVerb() : this("Sync", new SerializationHelper())
 		{
@@ -57,7 +57,10 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 			{
 				targetConfigurations = targetConfigurations.SkipTransparentSync().ToArray();
 
-				if (targetConfigurations.Length == 0) Log.Warn("[Unicorn] All configurations were transparent sync and skipTransparentConfigs was active. Syncing nothing.", this);
+				if (targetConfigurations.Length == 0)
+				{
+					Log.Warn("[Unicorn] All configurations were transparent sync and skipTransparentConfigs was active. Syncing nothing.", this);
+				}
 			}
 
 			return targetConfigurations;
