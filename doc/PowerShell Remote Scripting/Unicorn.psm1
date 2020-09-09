@@ -2,10 +2,12 @@ $ErrorActionPreference = 'Stop'
 $ScriptPath = Split-Path $MyInvocation.MyCommand.Path
 $MicroCHAP = $ScriptPath + '\MicroCHAP.dll'
 Add-Type -Path $MicroCHAP
-$global:unicornErrors = @{}
-$global:unicornWarnings = @{}
+$global:unicornErrors = @{ }
+$global:unicornWarnings = @{ }
 [string]$Global:unicornEndOfWork = ""
 [string]$Global:unicornLog = ""
+[int]$Global:syncedProjectCount
+[int]$Global:totalProjectCount
 
 Function Sync-Unicorn {
 	Param(
@@ -24,7 +26,8 @@ Function Sync-Unicorn {
 		[switch]$DebugSecurity,
 		
 		# defines, if logs shall be streamed to output
-		[switch]$StreamLogs
+		[switch]$StreamLogs, 
+		[int]$SleepTime = 30
 	)
 
 	# PARSE THE URL TO REQUEST
@@ -65,9 +68,22 @@ Function Sync-Unicorn {
 
 	Write-Host "Sync-Unicorn: Executing $Verb..."
 
+	# setting default values
+	$Global:syncedProjectCount = 0
+	$Global:totalProjectCount = 0
+
 	# USING THE SIGNATURE, EXECUTE UNICORN
 	[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-	$result = Invoke-StreamingWebRequest -Uri $url -Mac $signature.SignatureHash -Nonce $challenge
+	$result = Invoke-StreamingWebRequest -Uri $url -Mac $signature.SignatureHash -Nonce $challenge -RequestVerb $Verb
+
+	while ($result.Trim().ToLowerInvariant() -eq "Sync in progress".ToLowerInvariant()) {
+		Write-Host "Sync is still running, sleeping for $SleepTime seconds"
+		Start-Sleep $SleepTime
+		# renew challenge and signature
+		$challenge = Get-Challenge -ControlPanelUrl $ControlPanelUrl
+		$signature = $signatureService.CreateSignature($challenge, $url, $null)
+		$result = Invoke-StreamingWebRequest -Uri $url -Mac $signature.SignatureHash -Nonce $challenge -RequestVerb $Verb
+	}
 
 	if ($result.TrimEnd().EndsWith('****ERROR OCCURRED****')) {
 		throw "Unicorn $Verb to $url returned an error. See the preceding log for details."
@@ -103,14 +119,24 @@ function Get-ProjectName {
 	$resultingString = $Line.Substring(0, $Line.IndexOf($ProjectIndicator))
 	# remove INFO: from project name
 	$resultingString = $resultingString.Substring(6)
+	$Global:syncedProjectCount = $Global:syncedProjectCount + 1
 	return $resultingString
 }
 
-Function Invoke-StreamingWebRequest($Uri, $MAC, $Nonce) {
+function Set-TotalProjectsCount {
+	param (
+		[Parameter(Mandatory = $True)]
+		[string]$Line
+	)
+	$Global:totalProjectCount = $Line -replace "[^0-9]" , ''
+}
+
+Function Invoke-StreamingWebRequest($Uri, $MAC, $Nonce, $RequestVerb) {
 	# this is needed to collect publishing data
 	$publishingData = new-object -TypeName "System.Text.StringBuilder"
 	$publishIndicator = $false
 	$projectLineIndicator = ' is being synced with '
+	$totalProjectsCountLineIndicator = 'Precaching items in '
 
 	$request = [System.Net.WebRequest]::Create($Uri)
 	$request.Headers["X-MC-MAC"] = $MAC
@@ -118,15 +144,23 @@ Function Invoke-StreamingWebRequest($Uri, $MAC, $Nonce) {
 	$request.Timeout = 10800000
 
 	$response = $request.GetResponse()
+	
 	$responseStream = $response.GetResponseStream()
 	$responseStreamReader = new-object System.IO.StreamReader $responseStream
 	$project = "Init"
+	# cleaning up previous errors (even if they where present)
+	$global:unicornErrors = @{ }
+	$global:unicornWarnings = @{ }
 	
 	if ($StreamLogs) {
 		$responseText = new-object -TypeName "System.Text.StringBuilder"
 		while (-not $responseStreamReader.EndOfStream) {
 			$line = $responseStreamReader.ReadLine()
 			
+			if ($line.Contains($totalProjectsCountLineIndicator)) {
+				Set-TotalProjectsCount -Line $line
+			}
+
 			if ($line.Contains($projectLineIndicator)) {
 				$project = Get-ProjectName -Line $line -ProjectIndicator $projectLineIndicator
 			}
@@ -134,7 +168,7 @@ Function Invoke-StreamingWebRequest($Uri, $MAC, $Nonce) {
 				Write-Host $line.Substring(7) -ForegroundColor Red
 				$global:unicornErrors[$project] += @($line)
 			}
-			elseif ($line.StartsWith('Warning:')) {
+			elseif ($line.StartsWith('Warn:')) {
 				$Global:unicornWarnings[$project] += @($line)
 				Write-Host $line.Substring(9) -ForegroundColor Yellow
 			}
@@ -165,6 +199,10 @@ Function Invoke-StreamingWebRequest($Uri, $MAC, $Nonce) {
 		Write-Host $resultingData
 		
 		foreach ($line in $resultingData.Split([Environment]::NewLine)) {
+			if ($line.Contains($totalProjectsCountLineIndicator)) {
+				Set-TotalProjectsCount -Line $line
+			}
+
 			if ($line.Contains($projectLineIndicator)) {
 				$project = Get-ProjectName -Line $line -ProjectIndicator $projectLineIndicator
 			}
@@ -172,7 +210,7 @@ Function Invoke-StreamingWebRequest($Uri, $MAC, $Nonce) {
 			if ($line.StartsWith('Error:')) {
 				$Global:unicornErrors[$project] += @($line)
 			}
-			elseif ($line.StartsWith('Warning:')) {
+			elseif ($line.StartsWith('Warn:')) {
 				$Global:unicornWarnings[$project] += @($line)
 			}
 	
@@ -190,7 +228,7 @@ Function Invoke-StreamingWebRequest($Uri, $MAC, $Nonce) {
 	# exposing collected data to host process here
 	$Global:unicornEndOfWork = $publishingData.ToString()
 	$Global:unicornLog = $resultingData
-
+	$response.Close();
 	return $resultingData
 }
 
