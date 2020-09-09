@@ -145,8 +145,9 @@ namespace Unicorn.Predicates
 			if (_predicatePresetHandler != null)
 			{
 				var predicatePresetElements = configuration.ChildNodes
-					.Cast<XmlElement>()
+					.Cast<XmlNode>()
 					.Where(node => node.Name == "preset")
+					.Cast<XmlElement>()
 					.ToList();
 
 				foreach (var element in predicatePresetElements)
