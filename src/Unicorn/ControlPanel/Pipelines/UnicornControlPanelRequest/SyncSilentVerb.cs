@@ -51,7 +51,7 @@ namespace Unicorn.ControlPanel.Pipelines.UnicornControlPanelRequest
 			return new PlainTextResponse(message);
 		}
 
-		private async void ProcessAsync(IProgressStatus progress, ILogger additionalLogger, Configuration.IConfiguration[] configurations)
+		private void ProcessAsync(IProgressStatus progress, ILogger additionalLogger, Configuration.IConfiguration[] configurations)
 		{
 			Status = SyncStatus.Started;
 			_helper.SyncConfigurations(configurations, progress, additionalLogger);
