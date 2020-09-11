@@ -37,10 +37,10 @@ namespace Unicorn.ControlPanel.Controls
 	<!-- <li><a href=""https://unicorn.kamsar.net/"">Unicorn Book</a></li> -->
 	<li><a href=""#"">Unicorn Book temporarily out of stock. Awaiting reprint.</a></li>
 	<li><a href=""https://github.com/SitecoreUnicorn/Unicorn/tree/master/src/Unicorn/Standard%20Config%20Files"">Default Configuration Files</a></li>
-	<li><a href=""http://kamsar.net/index.php/category/Unicorn/"">Kam Figy's Unicorn Blog Posts</a></li>
+	<li><a href=""https://kamsar.net/index.php/category/Unicorn/"">Kam Figy's Unicorn Blog Posts</a></li>
 	<li><a href=""https://intothecloud.blog/tags/unicorn/"">Mark Cassidy's Unicorn Blog Posts</a></li>
 	<li><a href=""https://intothecloud.blog/tags/rainbow/"">Mark Cassidy's Rainbow Blog Posts</a></li>
-	<li><a href=""https://visualstudiogallery.msdn.microsoft.com/64439022-f470-422a-b663-fbb89aaf6e86"">Unicorn Control Panel for Visual Studio</a></li>
+	<li><a href=""https://marketplace.visualstudio.com/items?itemName=BerserkerDotNet.UnicornControlPanel"">Unicorn Control Panel for Visual Studio</a></li>
 	<li><a href=""https://github.com/SitecoreUnicorn/Unicorn/issues/new"">Found a problem? Report an issue on GitHub.</a></li>
 </ul>
 ");

@@ -3,7 +3,7 @@
 
 	This is an example of how to configure a basic Unicorn configuration to include a set of security roles to sync.
 
-	http://github.com/kamsar/Unicorn
+	https://github.com/SitecoreUnicorn/Unicorn
 -->
 <configuration xmlns:patch="http://www.sitecore.net/xmlconfig/">
 	<sitecore>
