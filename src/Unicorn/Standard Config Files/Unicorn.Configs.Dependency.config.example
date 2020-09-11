@@ -3,7 +3,7 @@
 
 	Enabled configuration definition patches should be present on all environments Unicorn is present on.
 
-	See Unicorn.config for commentary on how configurations operate, or https://github.com/kamsar/Unicorn/blob/master/README.md
+	See Unicorn.config for commentary on how configurations operate, or https://github.com/SitecoreUnicorn/Unicorn/blob/master/README.md
 -->
 <configuration xmlns:patch="http://www.sitecore.net/xmlconfig/">
 	<sitecore>

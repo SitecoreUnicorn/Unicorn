@@ -14,7 +14,7 @@ namespace Unicorn.Configuration
 			if (configPath.StartsWith("~/"))
 			{
 				// +1 to Stack Overflow:
-				// http://stackoverflow.com/questions/4742257/how-to-use-server-mappath-when-httpcontext-current-is-nothing
+				// https://stackoverflow.com/questions/4742257/how-to-use-server-mappath-when-httpcontext-current-is-nothing
 
 				// Support unit testing scenario where hosting environment is not initialized.
 				var hostingRoot = HostingEnvironment.IsHosted

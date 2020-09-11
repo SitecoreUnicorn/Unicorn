@@ -6,12 +6,12 @@
     <title>Unicorn.Roles.Core</title>
     <authors>Kam Figy, Mark Cassidy</authors>
     <owners>Kam Figy</owners>
-    <licenseUrl>http://opensource.org/licenses/MIT</licenseUrl>
+    <licenseUrl>https://opensource.org/licenses/MIT</licenseUrl>
     <projectUrl>https://github.com/SitecoreUnicorn/Unicorn</projectUrl>
-    <iconUrl>http://kamsar.net/nuget/unicorn/logo.png</iconUrl>
+    <iconUrl>https://kamsar.net/nuget/unicorn/logo.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Adds security role syncing to Unicorn. Install the non-core package to get config files.</description>
-    <copyright>Copyright 2018</copyright>
+    <copyright>Copyright 2020</copyright>
     <tags>sitecore serialization</tags>
     <dependencies>
 		<dependency id="Rainbow.Core" version="$rainbowversion$" />

@@ -5,12 +5,12 @@
 		<version>$version$</version>
 		<authors>Kam Figy, Mark Cassidy</authors>
 		<owners>Kam Figy</owners>
-		<licenseUrl>http://opensource.org/licenses/MIT</licenseUrl>
+		<licenseUrl>https://opensource.org/licenses/MIT</licenseUrl>
 		<projectUrl>https://github.com/SitecoreUnicorn/Unicorn</projectUrl>
-		<iconUrl>http://kamsar.net/nuget/unicorn/logo.png</iconUrl>
+		<iconUrl>https://kamsar.net/nuget/unicorn/logo.png</iconUrl>
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
 		<description>Adds user syncing to Unicorn. This package contains both the core library and the configuration for it, which is appropriate for web projects. Install Unicorn.Users.Core if you only want the library.</description>
-		<copyright>Copyright 2018</copyright>
+		<copyright>Copyright 2020</copyright>
 		<tags>sitecore serialization</tags>
 	<dependencies>
 		<dependency id="Unicorn.Users.Core" version="$version$" />

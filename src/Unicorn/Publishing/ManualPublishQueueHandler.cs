@@ -12,7 +12,7 @@ namespace Unicorn.Publishing
 {
 	/// <summary>
 	/// Maintains a manual publish queue that arbitrary items can be added to
-	/// See http://www.velir.com/blog/index.php/2013/11/22/how-to-create-a-custom-publish-queue-in-sitecore/ among other sources
+	/// See https://www.velir.com/blog/2013/11/22/how-create-custom-publish-queue-sitecore among other sources
 	/// </summary>
 	public class ManualPublishQueueHandler : PublishProcessor
 	{
