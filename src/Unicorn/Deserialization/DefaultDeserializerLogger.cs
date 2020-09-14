@@ -24,7 +24,7 @@ namespace Unicorn.Deserialization
 
 		public virtual void MovedItemToNewParent(Item newParentItem, Item oldParentItem, Item movedItem)
 		{
-			_logger.Debug($"* [M] from {oldParentItem.ID} to {newParentItem.ID}");
+			_logger.Debug($"* [M] from {oldParentItem.ID.Guid:P} to {newParentItem.ID.Guid:P}");
 		}
 
 		public virtual void RemovingOrphanedVersion(Item versionToRemove)
@@ -39,7 +39,7 @@ namespace Unicorn.Deserialization
 
 		public virtual void ChangedBranchTemplate(Item targetItem, string oldBranchId)
 		{
-			_logger.Debug($"* [B] from {oldBranchId} to {targetItem.BranchId}");
+			_logger.Debug($"* [B] from {oldBranchId} to {targetItem.BranchId.Guid:P}");
 		}
 
 		public virtual void ChangedTemplate(Item targetItem, TemplateItem oldTemplate)
