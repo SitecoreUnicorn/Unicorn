@@ -18,10 +18,13 @@ namespace Unicorn.Predicates
 	public class SerializationPresetPredicate : IPredicate, ITreeRootFactory
 	{
 		private readonly IList<PresetTreeRoot> _includeEntries;
+		private readonly IPredicatePresetHandler _predicatePresetHandler;
 
 		public SerializationPresetPredicate(XmlNode configNode, IUnicornDataProviderConfiguration dataProviderConfiguration, IConfiguration configuration)
 		{
 			Assert.ArgumentNotNull(configNode, "configNode");
+
+			_predicatePresetHandler = configuration.Resolve<IPredicatePresetHandler>();
 
 			_includeEntries = ParsePreset(configNode, configuration?.Name);
 
@@ -137,14 +140,48 @@ namespace Unicorn.Predicates
 			if(!string.IsNullOrEmpty(fieldTransforms))
 				filters = MagicTokenTransformer.GetFieldTransforms(fieldTransforms);
 
-			var presets = configuration.ChildNodes
+			List<XmlNode> predicatePresetNodes = new List<XmlNode>();
+
+			if (_predicatePresetHandler != null)
+			{
+				var predicatePresetElements = configuration.ChildNodes
+					.Cast<XmlNode>()
+					.Where(node => node.Name == "preset")
+					.Cast<XmlElement>()
+					.ToList();
+
+				foreach (var element in predicatePresetElements)
+				{
+					var id = element.Attributes["id"]?.Value;
+					var predicatePreset = _predicatePresetHandler.GetPresetById(id);
+					if (predicatePreset == null)
+					{
+						if (string.IsNullOrWhiteSpace(id))
+						{
+							id = "blank/missing";
+						}
+
+						throw new InvalidOperationException($"Configuration '{configurationName}' referenced a Predicate Preset with id '{id}' that could not be located.");
+					}
+
+					predicatePresetNodes.AddRange(predicatePreset.ApplyPreset(element));
+				}
+			}
+
+			var predicatePresets = predicatePresetNodes
+				.Select(x => CreateIncludeEntry(x, filters))
+				.ToList();
+
+			var includePresets = configuration.ChildNodes
 				.Cast<XmlNode>()
 				.Where(node => node.Name == "include")
 				.Select(x => CreateIncludeEntry(x, filters))
 				.ToList();
 
+			includePresets.AddRange(predicatePresets);
+
 			var names = new HashSet<string>();
-			foreach (var preset in presets)
+			foreach (var preset in includePresets)
 			{
 				if (!names.Contains(preset.Name))
 				{
@@ -155,7 +192,7 @@ namespace Unicorn.Predicates
 				throw new InvalidOperationException($"Multiple predicate include nodes in configuration '{configurationName}' had the same name '{preset.Name}'. This is not allowed. Note that this can occur if you did not specify the name attribute and two include entries end in an item with the same name. Use the name attribute on the include tag to give a unique name.");
 			}
 
-			return presets;
+			return includePresets;
 		}
 
 		protected virtual void EnsureEntriesExist(string configurationName)

@@ -1,0 +1,58 @@
+version: "2.4"
+
+services:
+  sql:
+    image: ${REGISTRY}sitecore-xm-spe-sqldev:${SITECORE_VERSION}-windowsservercore-${WINDOWSSERVERCORE_VERSION}
+    volumes:
+      - .\data\sql:C:\Data
+    mem_limit: 2GB
+    ports:
+      - "44010:1433"
+    environment:
+      SA_PASSWORD: ${SQL_SA_PASSWORD}
+      ACCEPT_EULA: "Y"
+
+  solr:
+    image: ${REGISTRY}sitecore-xm-solr:${SITECORE_VERSION}-nanoserver-${NANOSERVER_VERSION}
+    volumes:
+      - .\data\solr:C:\Data
+    mem_limit: 1GB
+    ports:
+      - "44011:8983"
+    environment:
+      SOLR_LOG_LEVEL: INFO
+
+  cm:
+    image: ${REGISTRY}sitecore-xm-spe-cm:${SITECORE_VERSION}-windowsservercore-${WINDOWSSERVERCORE_VERSION}
+    entrypoint: powershell.exe -Command "& C:\\tools\\entrypoints\\iis\\Development.ps1"
+    volumes:
+      - C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\Common7\IDE\Remote Debugger:C:\remote_debugger:ro
+      - .\deploy:C:\src
+      - .\unicorntestfiles:C:/inetpub/wwwroot/app_data/unicorn
+      - .\data\cm:C:\inetpub\wwwroot\App_Data\logs
+      - D:\Dropbox\Sitecore Licenses:C:\license
+    ports:
+      - "44001:80"
+    environment:
+      SITECORE_LICENSE_LOCATION: C:\license\license.xml
+      SITECORE_APPSETTINGS_ROLE:DEFINE: ContentManagement, Indexing
+      SITECORE_CONNECTIONSTRINGS_CORE: Data Source=sql;Initial Catalog=Sitecore.Core;User ID=sa;Password=${SQL_SA_PASSWORD}
+      SITECORE_CONNECTIONSTRINGS_SECURITY: Data Source=sql;Initial Catalog=Sitecore.Core;User ID=sa;Password=${SQL_SA_PASSWORD}
+      SITECORE_CONNECTIONSTRINGS_MASTER: Data Source=sql;Initial Catalog=Sitecore.Master;User ID=sa;Password=${SQL_SA_PASSWORD}
+      SITECORE_CONNECTIONSTRINGS_WEB: Data Source=sql;Initial Catalog=Sitecore.Web;User ID=sa;Password=${SQL_SA_PASSWORD}
+      SITECORE_CONNECTIONSTRINGS_EXPERIENCEFORMS: Data Source=sql;Initial Catalog=Sitecore.ExperienceForms;User ID=sa;Password=${SQL_SA_PASSWORD}
+      SITECORE_CONNECTIONSTRINGS_SOLR.SEARCH: http://solr:8983/solr
+      SITECORE_APPSETTINGS_TELERIK.ASYNCUPLOAD.CONFIGURATIONENCRYPTIONKEY: ${TELERIK_ENCRYPTION_KEY}
+      SITECORE_APPSETTINGS_TELERIK.UPLOAD.CONFIGURATIONHASHKEY: ${TELERIK_ENCRYPTION_KEY}
+      SITECORE_APPSETTINGS_TELERIK.WEB.UI.DIALOGPARAMETERSENCRYPTIONKEY: ${TELERIK_ENCRYPTION_KEY}
+      ENTRYPOINT_STDOUT_IIS_ACCESS_LOG_ENABLED: 'false'
+      ENTRYPOINT_STDOUT_IIS_ERROR_LOG_ENABLED: 'false'
+      ENTRYPOINT_STDOUT_SITECORE_LOG_ENABLED: 'true'
+    depends_on:
+      - sql
+      - solr
+
+networks:
+  default:
+    external:
+      name: nat
