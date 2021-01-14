@@ -91,6 +91,7 @@
     <Compile Include="ControlPanel\Controls\GlobalWarnings.cs" />
     <Compile Include="ControlPanel\Controls\QuickReference.cs" />
     <Compile Include="ControlPanel\Controls\NoConfigurations.cs" />
+    <Compile Include="ControlPanel\Pipelines\UnicornControlPanelRequest\PublishVerb.cs" />
     <Compile Include="ControlPanel\Pipelines\UnicornControlPanelRequest\SyncSilentVerb.cs" />
     <Compile Include="ControlPanel\Security\ChallengeStoreSitecoreLogger.cs" />
     <Compile Include="ControlPanel\Security\ChapServerSitecoreLogger.cs" />
