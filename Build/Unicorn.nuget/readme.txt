@@ -1,5 +1,33 @@
 UNICORN README
 
+
+
+                                            ─────█▀▀▀▀▀▀▀▀█───
+                                            ───▄▀──────────█──
+                                            ──▄▀───────────█──
+                                            ─▄▀─█───────────█─
+                                            █──▄█────────▄──█─
+                                            ─▀▀─█──█──█──█▄▀
+                                            ────█──█──█▀▀
+                                            ────█──█▄▄█
+                                            ────█──█
+                                            ────▀▄▄▀
+
+
+**** IMPORTANT NOTE FOR SITECORE VERSION 10.1+ ****
+
+- Sitecore 10.1 introduces a change in the <database> and <dataProviders> sections of the Sitecore configuration.
+- There is no easy way to make a patch configuration file that targets both
+- Therefore; if you are on Sitecore 10.1 or above, replace
+  - Unicorn.DataProvider.config                     (delete it)                                         WITH
+  - Unicorn.DataProvider.10.1.config.disabled       (rename it to Unicorn.DataProvider.10.1.config)
+
+ABSOLUTELY DO READ THIS :P
+
+****************************************************
+
+
+
 Thanks for installing Unicorn! Here are some tips to get you started:
 
 First, you should set up a configuration. This tells Unicorn what you want to keep serialized, among other things. 

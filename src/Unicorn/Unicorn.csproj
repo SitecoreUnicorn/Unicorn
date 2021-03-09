@@ -289,6 +289,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="Standard Config Files\Unicorn.DataProvider.10.1.config.disabled" />
     <None Include="Standard Config Files\Unicorn.Dilithium.config.example">
       <SubType>Designer</SubType>
     </None>

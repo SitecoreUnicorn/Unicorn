@@ -1,0 +1,41 @@
+<!--
+		Sitecore 10.1 introduces a change in the way dataproviders are registered and there is no easy way to make a configuration patch that can handle both cases.
+
+		If you are on Sitecore 10.1 or above, you must remove the original "Unicorn.DataProvider.config" with this file
+-->
+<configuration xmlns:patch="http://www.sitecore.net/xmlconfig/" xmlns:role="http://www.sitecore.net/xmlconfig/role/">
+	<sitecore role:require="Standalone">
+		<dataProviders>
+			<unicorn type="Unicorn.Data.DataProvider.Unicorn$(database)DataProvider, Unicorn">
+				<param connectionStringName="$(1)"/>
+				<Name>$(1)</Name>
+			</unicorn>
+		</dataProviders>
+
+		<!-- The below will correctly patch in the Unicorn dataprovider for Sitecore versions 10.1+ -->
+		<databases>
+			<database id="master">
+				<dataProviders>
+					<dataProvider>
+						<param desc="headProvider">
+							<dataProvider ref="dataProviders/main" param1="$(id)">
+								<patch:attribute name="ref">dataProviders/unicorn</patch:attribute>
+							</dataProvider>
+						</param>
+					</dataProvider>
+				</dataProviders>
+			</database>
+			<database id="core">
+				<dataProviders>
+					<dataProvider>
+						<param desc="headProvider">
+							<dataProvider ref="dataProviders/main" param1="$(id)">
+								<patch:attribute name="ref">dataProviders/unicorn</patch:attribute>
+							</dataProvider>
+						</param>
+					</dataProvider>
+				</dataProviders>
+			</database>
+		</databases>
+	</sitecore>
+</configuration>
