@@ -68,13 +68,18 @@ namespace Unicorn.Configuration
 			// ReSharper disable once PossibleNullReferenceException
 			foreach (XmlNode att in clone.Attributes)
 			{
-				while (att.Value.Contains("$"))
+				if (att.Value.Contains("$"))
 				{
 					didReplacement = true;
 
 					foreach (var replacerKey in replacers.Keys)
 					{
 						att.Value = Regex.Replace(att.Value, "\\$" + replacerKey, replacers[replacerKey], RegexOptions.IgnoreCase);
+					}
+
+					if (att.Value.Contains("$"))
+					{
+						throw new InvalidOperationException($"Predicate Preset '{((XmlElement)includeElement.ParentNode).Attributes["id"].Value}' could not be expanded, there are unresolved token attributes '{att.Value}'");
 					}
 				}
 			}
