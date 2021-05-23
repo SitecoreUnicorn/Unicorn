@@ -80,5 +80,10 @@ namespace Unicorn.Deserialization
 		{
 			
 		}
+
+		public void LogSystemMessage(string message)
+		{
+			_logger.Debug($"* {message}");
+		}
 	}
 }
