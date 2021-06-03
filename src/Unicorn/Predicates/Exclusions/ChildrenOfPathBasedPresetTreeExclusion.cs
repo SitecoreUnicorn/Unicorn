@@ -42,24 +42,15 @@ namespace Unicorn.Predicates.Exclusions
 			// you may preserve certain children from exclusion
 			foreach (var exception in _exceptions)
 			{
-				var fullPath = exception.Item1;
+				var exceptionPath = exception.Item1;
 				var exceptionRule = exception.Item2;
+				var escapedItemPath = itemPath.Replace("*", @"\*");
 
-				var unescapedExceptionPath = fullPath.Replace(@"\*", "*");
-
-				if (exceptionRule.IncludeChildren)
+				if (PathTool.ComparePathSegments(PathTool.ExplodePath(escapedItemPath), 
+													PathTool.ExplodePath(exceptionPath), 
+													exceptionRule.IncludeChildren))
 				{
-					if (itemPath.StartsWith(unescapedExceptionPath, StringComparison.OrdinalIgnoreCase))
-					{
-						return new PredicateResult(true);
-					}
-				}
-				else
-				{
-					if (itemPath.Equals(unescapedExceptionPath, StringComparison.OrdinalIgnoreCase))
-					{
-						return new PredicateResult(true);
-					}
+					return new PredicateResult(true);
 				}
 			}
 
