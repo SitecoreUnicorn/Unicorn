@@ -18,6 +18,15 @@ Sync-Unicorn -ControlPanelUrl 'https://localhost/unicorn.aspx' -SharedSecret 'yo
 # SYNC ALL CONFIGURATIONS WITHOUT KEEPING CONNECTION OPEN ALL THE TIME (specify configurations if you need only some of them). This is introduced to fix edge case, described https://github.com/SitecoreUnicorn/Unicorn/issues/387 
 Sync-Unicorn -ControlPanelUrl 'https://localhost/unicorn.aspx' -SharedSecret 'your-sharedsecret-here' -Verb 'SyncSilent'
 
+# PUBLISH UNICORN MANUAL QUEUE
+Publish-Unicorn -ControlPanelUrl 'https://localhost/unicorn.aspx' -SharedSecret 'your-sharedsecret-here'
+
+# PUBLISH UNICORN MANUAL QUEUE, CUSTOM TARGETS
+Publish-Unicorn -ControlPanelUrl 'https://localhost/unicorn.aspx' -SharedSecret 'your-sharedsecret-here' -Targets @('web','preview')
+
+# PUBLISH UNICORN MANUAL QUEUE, SPECIFIC TRIGGER ITEM
+Publish-Unicorn -ControlPanelUrl 'https://localhost/unicorn.aspx' -SharedSecret 'your-sharedsecret-here' -TriggerItem 'item-path-or-id'
+
 # Note: you may pass -Verb 'Reserialize' for remote reserialize. Usually not needed though.
 
 # Note: If you are having authorization issues, add -DebugSecurity to your cmdlet invocation; this will display the raw signatures being used to compare to the server.

@@ -10,6 +10,7 @@ $global:unicornWarnings = @{ }
 [int]$Global:totalProjectCount
 
 Function Sync-Unicorn {
+	[cmdletbinding()]
 	Param(
 		[Parameter(Mandatory = $True)]
 		[string]$ControlPanelUrl,
@@ -19,7 +20,7 @@ Function Sync-Unicorn {
 
 		[string[]]$Configurations,
 
-		[string]$Verb = 'Sync',
+		[string]$Verb = "Sync",
 
 		[switch]$SkipTransparentConfigs,
 
@@ -42,10 +43,88 @@ Function Sync-Unicorn {
 		$skipValue = 1
 	}
 
-	$url = "{0}?verb={1}&configuration={2}&skipTransparentConfigs={3}" -f $ControlPanelUrl, $Verb, $parsedConfigurations, $skipValue 
+	$url = "{0}?verb={1}&configuration={2}&skipTransparentConfigs={3}" -f $ControlPanelUrl, $Verb, $parsedConfigurations, $skipValue
 
+	$params = @{
+		ControlPanelUrl = $ControlPanelUrl
+		VerbUrl = $url
+		SharedSecret = $SharedSecret
+		SleepTime = $SleepTime
+	}
 	if ($DebugSecurity) {
-		Write-Host "Sync-Unicorn: Preparing authorization for $url"
+		$params["DebugSecurity"] = $true
+	}
+	if ($StreamLogs) {
+		$params["StreamLogs"] = $true
+	}
+
+	Invoke-UnicornControlPanel @params
+}
+
+Function Publish-Unicorn {
+	[cmdletbinding()]
+	Param(
+		[Parameter(Mandatory = $True)]
+		[string]$ControlPanelUrl,
+
+		[Parameter(Mandatory = $True)]
+		[string]$SharedSecret,
+
+		[string]$Verb = "Publish",
+
+		# Item ID or path to an item used as Publish Trigger
+		[string]$TriggerItem = "/sitecore/templates/common/folder",
+
+		# List of Publish target database names
+		[string[]]$Targets = @("web"),
+
+		[switch]$DebugSecurity,
+		
+		# defines, if logs shall be streamed to output
+		[switch]$StreamLogs, 
+		[int]$SleepTime = 30
+	)
+
+	$parsedTargets = $Targets -join ","
+
+	$url = "{0}?verb={1}&trigger={2}&targets={3}" -f $ControlPanelUrl, $Verb, $TriggerItem, $parsedTargets
+
+	$params = @{
+		ControlPanelUrl = $ControlPanelUrl
+		VerbUrl = $url
+		SharedSecret = $SharedSecret
+		SleepTime = $SleepTime
+	}
+	if ($DebugSecurity) {
+		$params["DebugSecurity"] = $true
+	}
+	if ($StreamLogs) {
+		$params["StreamLogs"] = $true
+	}
+
+	Invoke-UnicornControlPanel @params
+}
+
+Function Invoke-UnicornControlPanel {
+	Param(
+		[Parameter(Mandatory = $True)]
+		[string]$ControlPanelUrl,
+
+		[Parameter(Mandatory = $True)]
+		[string]$VerbUrl,
+
+		[Parameter(Mandatory = $True)]
+		[string]$SharedSecret,
+
+		[switch]$DebugSecurity,
+		
+		# defines, if logs shall be streamed to output
+		[switch]$StreamLogs, 
+		[int]$SleepTime = 30
+	)
+	
+	if ($DebugSecurity) {
+		Write-Host "Sync-Unicorn: Preparing authorization for $VerbUrl"
 	}
 
 	# GET AN AUTH CHALLENGE
@@ -58,7 +137,7 @@ Function Sync-Unicorn {
 	# CREATE A SIGNATURE WITH THE SHARED SECRET AND CHALLENGE
 	$signatureService = New-Object MicroCHAP.SignatureService -ArgumentList $SharedSecret
 
-	$signature = $signatureService.CreateSignature($challenge, $url, $null)
+	$signature = $signatureService.CreateSignature($challenge, $VerbUrl, $null)
 
 	if ($DebugSecurity) {
 		Write-Host "Sync-Unicorn: MAC '$($signature.SignatureSource)'"
@@ -74,19 +153,19 @@ Function Sync-Unicorn {
 
 	# USING THE SIGNATURE, EXECUTE UNICORN
 	[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-	$result = Invoke-StreamingWebRequest -Uri $url -Mac $signature.SignatureHash -Nonce $challenge -RequestVerb $Verb
+	$result = Invoke-StreamingWebRequest -Uri $VerbUrl -Mac $signature.SignatureHash -Nonce $challenge -RequestVerb $Verb
 
 	while ($result.Trim().ToLowerInvariant() -eq "Sync in progress".ToLowerInvariant()) {
 		Write-Host "Sync is still running, sleeping for $SleepTime seconds"
 		Start-Sleep $SleepTime
 		# renew challenge and signature
 		$challenge = Get-Challenge -ControlPanelUrl $ControlPanelUrl
-		$signature = $signatureService.CreateSignature($challenge, $url, $null)
-		$result = Invoke-StreamingWebRequest -Uri $url -Mac $signature.SignatureHash -Nonce $challenge -RequestVerb $Verb
+		$signature = $signatureService.CreateSignature($challenge, $VerbUrl, $null)
+		$result = Invoke-StreamingWebRequest -Uri $VerbUrl -Mac $signature.SignatureHash -Nonce $challenge -RequestVerb $Verb
 	}
 
 	if ($result.TrimEnd().EndsWith('****ERROR OCCURRED****')) {
-		throw "Unicorn $Verb to $url returned an error. See the preceding log for details."
+		throw "Unicorn Control Panel invoke of $VerbUrl returned an error. See the preceding log for details."
 	}
 
 	# Uncomment this if you want the console results to be returned by the function
@@ -232,4 +311,4 @@ Function Invoke-StreamingWebRequest($Uri, $MAC, $Nonce, $RequestVerb) {
 	return $resultingData
 }
 
-Export-ModuleMember -Function Sync-Unicorn
+Export-ModuleMember -Function Sync-Unicorn,Publish-Unicorn
