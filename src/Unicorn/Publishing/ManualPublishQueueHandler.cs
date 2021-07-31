@@ -18,9 +18,8 @@ namespace Unicorn.Publishing
 	public class ManualPublishQueueHandler : PublishProcessor
 	{
 		private static readonly ConcurrentQueue<ID> ManuallyAddedCandidates = new ConcurrentQueue<ID>();
-		protected static bool UsePublishManager = Settings.GetBoolSetting("Unicorn.UsePublishManager", true);
-		protected static bool UsePublishingService = Settings.GetBoolSetting("Unicorn.UsePublishingService", false);
-		protected static int PublishingServiceMaxItemsToQueue = Settings.GetIntSetting("Unicorn.PublishingServiceMaxItemsToQueue", 50);
+		protected static bool LegacyPublishing = Settings.GetBoolSetting("Unicorn.LegacyPublishing", false);
+		protected static int MaxItemsToQueue = Settings.GetIntSetting("Unicorn.MaxItemsToQueue", 50);
 
 		public static void AddItemToPublish(Guid itemId)
 		{
@@ -35,48 +34,29 @@ namespace Unicorn.Publishing
 			var suffix = ManuallyAddedCandidates.Count == 1 ? string.Empty : "s";
 			var compareRevisions = false;
 
-			if (!UsePublishingService)
+			if (LegacyPublishing)
 			{
 				foreach (var database in targets)
 				{
 					logger?.Debug($"> Publishing {ManuallyAddedCandidates.Count} synced item{suffix} in queue to {database.Name}");
-					var publishOptions = new PublishOptions(triggerItem.Database, database, PublishMode.SingleItem, triggerItem.Language, DateTime.UtcNow) { RootItem = triggerItem, CompareRevisions = compareRevisions, RepublishAll = true };
-					if (UsePublishManager)
-					{
-						// this works much faster then `new Publisher(publishOptions, triggerItem.Database.Languages).PublishWithResult();`
-						var handle = PublishManager.Publish(new PublishOptions[] { publishOptions });
-						var publishingSucces = PublishManager.WaitFor(handle);
-
-						if (publishingSucces)
-						{
-							logger?.Debug($"> Published synced item{suffix} to {database.Name}. Statistics is not retrievable when Publish Manager is used (see setting Unicorn.UsePublishManager comments).");
-						}
-						else
-						{
-							logger?.Error($"> Error happened during publishing. Check Sitecore logs for details.");
-						}
-
-					}
-					else
-					{
-						var result = new Publisher(publishOptions, triggerItem.Database.Languages).PublishWithResult();
-
-						logger?.Debug($"> Published synced item{suffix} to {database.Name} (New: {result.Statistics.Created}, Updated: {result.Statistics.Updated}, Deleted: {result.Statistics.Deleted} Skipped: {result.Statistics.Skipped})");
-					}
+					var publishOptions = new PublishOptions(triggerItem.Database, database, PublishMode.SingleItem, triggerItem.Language, DateTime.UtcNow) {RootItem = triggerItem, CompareRevisions = compareRevisions, RepublishAll = true};
+					var result = new Publisher(publishOptions, triggerItem.Database.Languages).PublishWithResult();
+					logger?.Debug($"> Published synced item{suffix} to {database.Name} (New: {result.Statistics.Created}, Updated: {result.Statistics.Updated}, Deleted: {result.Statistics.Deleted} Skipped: {result.Statistics.Skipped})");
 				}
-			}
-			else
+			} 
+			else 
 			{
 				var counter = 0;
 				var triggerItemDatabase = triggerItem.Database;
 				var deepModePublish = false;
 				var publishRelatedItems = false;
 
-				logger?.Debug($"> Queueing {ManuallyAddedCandidates.Count} synced item{suffix} in publishing service.");
+				logger?.Debug($"> Queueing {ManuallyAddedCandidates.Count} synced item{suffix}");
 
-				if (ManuallyAddedCandidates.Count <= PublishingServiceMaxItemsToQueue)
+				if (ManuallyAddedCandidates.Count <= MaxItemsToQueue)
 				{
-					// using publishing service to manually queue items in publishing service
+					logger?.Debug($"Processing queue 1-by-1 since queue is {ManuallyAddedCandidates.Count} and Unicorn.MaxItemsToQueue is {MaxItemsToQueue}");
+
 					while (ManuallyAddedCandidates.Count > 0)
 					{
 						ID itemId;
@@ -89,14 +69,11 @@ namespace Unicorn.Publishing
 							PublishManager.PublishItem(publishCandidateItem, targets, triggerItemDatabase.Languages, deepModePublish, compareRevisions, publishRelatedItems);
 						}
 					}
-
-					logger?.Debug($"> Queued {counter} synced item{suffix} in publishing service.");
 				} 
 				else
 				{
-					// we have more than maxItemsToQueue
+					logger?.Debug($"Executing system-wide Smart Publish since queue {ManuallyAddedCandidates.Count} and Unicorn.MaxItemsToQueue is {MaxItemsToQueue}");
 					PublishManager.PublishSmart(triggerItemDatabase, targets, triggerItemDatabase.Languages);
-					logger?.Debug($"> Since we have more than {PublishingServiceMaxItemsToQueue} synced items - it is counter-productive to queue them one-by-one, so we are publishing whole database to all targets.");
 				}
 			}
 
