@@ -2,12 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
-using Sitecore;
 using Sitecore.Diagnostics;
 
 namespace Unicorn.Configuration
 {
-	[UsedImplicitly]
 	public class PredicatePresetHandler : IPredicatePresetHandler
 	{
 		// ReSharper disable once InconsistentNaming
