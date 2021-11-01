@@ -158,6 +158,7 @@
     <Compile Include="Data\DataProvider\ItemChangeApplyingItemDataTests.cs" />
     <Compile Include="Data\DataProvider\UnicornDataProviderTests.AddVersion.cs" />
     <Compile Include="Data\DataProvider\UnicornDataProviderTests.SaveItem.cs" />
+    <Compile Include="Evaluator\AddOnlyEvaluatorTests.cs" />
     <Compile Include="Evaluator\SerializedAsMasterEvaluatorTests.cs" />
     <Compile Include="Configuration\TestConfigyConfigurationProvider.cs" />
     <Compile Include="Configuration\ConfigyConfigurationProviderTests.cs" />
@@ -190,14 +191,14 @@
     <EmbeddedResource Include="Configuration\TestXmlConfiguration.xml" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Rainbow\src\Rainbow.Storage.Sc\Rainbow.Storage.Sc.csproj">
-      <Project>{956afe8b-51cd-4d61-b8c1-bffdc749fd82}</Project>
-      <Name>Rainbow.Storage.Sc</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\Rainbow\src\Rainbow\Rainbow.csproj">
-      <Project>{8ff75c8b-2a9e-4d95-91ad-333071813199}</Project>
-      <Name>Rainbow</Name>
-    </ProjectReference>
+	  <ProjectReference Include="..\..\..\Rainbow\src\Rainbow.Storage.Sc\Rainbow.Storage.Sc.csproj">
+		  <Project>{956afe8b-51cd-4d61-b8c1-bffdc749fd82}</Project>
+		  <Name>Rainbow.Storage.Sc</Name>
+	  </ProjectReference>
+	  <ProjectReference Include="..\..\..\Rainbow\src\Rainbow\Rainbow.csproj">
+		  <Project>{8ff75c8b-2a9e-4d95-91ad-333071813199}</Project>
+		  <Name>Rainbow</Name>
+	  </ProjectReference>
     <ProjectReference Include="..\Unicorn\Unicorn.csproj">
       <Project>{82c4441b-e11e-4601-b6b7-c5ad71b2ab70}</Project>
       <Name>Unicorn</Name>

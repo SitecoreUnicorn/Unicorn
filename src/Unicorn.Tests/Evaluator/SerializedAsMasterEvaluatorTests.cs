@@ -28,9 +28,12 @@ namespace Unicorn.Tests.Evaluator
 		}
 
 		[Theory, AutoDbData]
-		public void EvaluateOrphans_RecyclesOrphanItem(Db db, Item item)
+		public void EvaluateOrphans_RecyclesOrphanItem(Db db, DbItem dbItem)
 		{
 			var evaluator = CreateTestEvaluator();
+
+			db.Add(dbItem);
+			var item = db.GetItem(dbItem.ID);
 
 			evaluator.EvaluateOrphans(new IItemData[] { new ItemData(item) });
 

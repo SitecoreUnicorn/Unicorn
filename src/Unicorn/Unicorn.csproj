@@ -148,6 +148,9 @@
     <Compile Include="Data\TransparentSyncStatusChecker.cs" />
     <Compile Include="DeserializationSoftFailureAggregateException.cs" />
     <Compile Include="Deserialization\UnicornDeserializer.cs" />
+    <Compile Include="Evaluators\AddOnlyEvaluator.cs" />
+    <Compile Include="Evaluators\DefaultAddOnlyEvaluatorLogger.cs" />
+    <Compile Include="Evaluators\IAddOnlyEvaluatorLogger.cs" />
     <Compile Include="Evaluators\INewItemOnlyEvaluatorLogger.cs" />
     <Compile Include="Evaluators\NewItemOnlyEvaluator.cs" />
     <Compile Include="ExperienceEditor.Speak.Ribbon.Requests.SaveItem\TransparentSyncAwareCheckRevision.cs" />
@@ -320,20 +323,20 @@
     <None Include="Standard Config Files\Unicorn.DataProvider.config" />
     <None Include="Unicorn.nuspec" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\Rainbow\src\Rainbow.Storage.Sc\Rainbow.Storage.Sc.csproj">
-      <Project>{956afe8b-51cd-4d61-b8c1-bffdc749fd82}</Project>
-      <Name>Rainbow.Storage.Sc</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\Rainbow\src\Rainbow.Storage.Yaml\Rainbow.Storage.Yaml.csproj">
-      <Project>{371181c9-45dc-4885-8894-43ffc235d124}</Project>
-      <Name>Rainbow.Storage.Yaml</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\Rainbow\src\Rainbow\Rainbow.csproj">
-      <Project>{8ff75c8b-2a9e-4d95-91ad-333071813199}</Project>
-      <Name>Rainbow</Name>
-    </ProjectReference>
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\Rainbow\src\Rainbow.Storage.Sc\Rainbow.Storage.Sc.csproj">
+			<Project>{956afe8b-51cd-4d61-b8c1-bffdc749fd82}</Project>
+			<Name>Rainbow.Storage.Sc</Name>
+		</ProjectReference>
+		<ProjectReference Include="..\..\..\Rainbow\src\Rainbow.Storage.Yaml\Rainbow.Storage.Yaml.csproj">
+			<Project>{371181c9-45dc-4885-8894-43ffc235d124}</Project>
+			<Name>Rainbow.Storage.Yaml</Name>
+		</ProjectReference>
+		<ProjectReference Include="..\..\..\Rainbow\src\Rainbow\Rainbow.csproj">
+			<Project>{8ff75c8b-2a9e-4d95-91ad-333071813199}</Project>
+			<Name>Rainbow</Name>
+		</ProjectReference>
+	</ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="ControlPanel\Headings\Unicorn.html" />
     <EmbeddedResource Include="ControlPanel\Headings\Unicorn.svg.html" />
