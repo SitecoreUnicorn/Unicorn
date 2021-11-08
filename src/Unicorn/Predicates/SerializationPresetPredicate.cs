@@ -24,7 +24,7 @@ namespace Unicorn.Predicates
 		{
 			Assert.ArgumentNotNull(configNode, "configNode");
 
-			_predicatePresetHandler = configuration.Resolve<IPredicatePresetHandler>();
+			_predicatePresetHandler = configuration?.Resolve<IPredicatePresetHandler>();
 
 			_includeEntries = ParsePreset(configNode, configuration?.Name);
 
