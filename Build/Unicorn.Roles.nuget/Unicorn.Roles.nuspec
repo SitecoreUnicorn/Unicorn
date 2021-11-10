@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<package >
+<package>
 	<metadata>
 		<id>Unicorn.Roles</id>
 		<version>$version$</version>
@@ -12,15 +12,23 @@
 		<description>Adds security role syncing to Unicorn. This package contains both the core library and the configuration for it, which is appropriate for web projects. Install Unicorn.Roles.Core if you only want the library.</description>
 		<copyright>Copyright 2020</copyright>
 		<tags>sitecore serialization</tags>
-	<dependencies>
-		<dependency id="Unicorn" version="$version$" />
-		<dependency id="Unicorn.Roles.Core" version="$version$" />
-	</dependencies>
+		<dependencies>
+			<dependency id="Unicorn" version="$version$"/>
+			<dependency id="Unicorn.Roles.Core" version="$version$"/>
+		</dependencies>
+		<!-- PackageReference support -->
+		<contentFiles>
+			<files buildAction="Content" copyToOutput="true" include="any/**/*"/>
+		</contentFiles>
 	</metadata>
 	<files>
-		<file src="..\..\src\Unicorn.Roles\Standard Config Files\Unicorn.Roles.config" target="content\App_Config\Include\Unicorn" />
-		<file src="..\..\src\Unicorn.Roles\Standard Config Files\Unicorn.Roles.DataProvider.config" target="content\App_Config\Include\Unicorn" />
-		<file src="..\..\src\Unicorn.Roles\Standard Config Files\Unicorn.Configs.Default.Roles.config.example" target="content\App_Config\Include\Unicorn" />
-		<file src="readme.txt" target="" />
+		<!-- PackageReference support -->
+		<file src="..\..\src\Unicorn.Roles\Standard Config Files\*" target="contentFiles\any\any\App_Config\Include\Unicorn"/>
+		<!-- legacy content folder -->
+		<file src="..\..\src\Unicorn.Roles\Standard Config Files\Unicorn.Roles.config" target="content\App_Config\Include\Unicorn"/>
+		<file src="..\..\src\Unicorn.Roles\Standard Config Files\Unicorn.Roles.DataProvider.config" target="content\App_Config\Include\Unicorn"/>
+		<file src="..\..\src\Unicorn.Roles\Standard Config Files\Unicorn.Configs.Default.Roles.config.example" target="content\App_Config\Include\Unicorn"/>
+		<!-- Other assets -->
+		<file src="readme.txt" target=""/>
 	</files>
 </package>

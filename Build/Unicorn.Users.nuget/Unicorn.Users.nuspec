@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<package >
+<package>
 	<metadata>
 		<id>Unicorn.Users</id>
 		<version>$version$</version>
@@ -12,14 +12,22 @@
 		<description>Adds user syncing to Unicorn. This package contains both the core library and the configuration for it, which is appropriate for web projects. Install Unicorn.Users.Core if you only want the library.</description>
 		<copyright>Copyright 2020</copyright>
 		<tags>sitecore serialization</tags>
-	<dependencies>
-		<dependency id="Unicorn.Users.Core" version="$version$" />
-	</dependencies>
+		<dependencies>
+			<dependency id="Unicorn.Users.Core" version="$version$"/>
+		</dependencies>
+		<!-- PackageReference support -->
+		<contentFiles>
+			<files buildAction="Content" copyToOutput="true" include="any/**/*"/>
+		</contentFiles>
 	</metadata>
 	<files>
-		<file src="..\..\src\Unicorn.Users\Standard Config Files\Unicorn.Users.config" target="content\App_Config\Include\Unicorn" />
-		<file src="..\..\src\Unicorn.Users\Standard Config Files\Unicorn.Users.DataProvider.config" target="content\App_Config\Include\Unicorn" />
-		<file src="..\..\src\Unicorn.Users\Standard Config Files\Unicorn.Configs.Default.Users.config.example" target="content\App_Config\Include\Unicorn" />
-		<file src="readme.txt" target="" />
+		<!-- PackageReference support -->
+		<file src="..\..\src\Unicorn.Users\Standard Config Files\*" target="contentFiles\any\any\App_Config\Include\Unicorn"/>
+		<!-- legacy content folder -->
+		<file src="..\..\src\Unicorn.Users\Standard Config Files\Unicorn.Users.config" target="content\App_Config\Include\Unicorn"/>
+		<file src="..\..\src\Unicorn.Users\Standard Config Files\Unicorn.Users.DataProvider.config" target="content\App_Config\Include\Unicorn"/>
+		<file src="..\..\src\Unicorn.Users\Standard Config Files\Unicorn.Configs.Default.Users.config.example" target="content\App_Config\Include\Unicorn"/>
+		<!-- Other assets -->
+		<file src="readme.txt" target=""/>
 	</files>
 </package>

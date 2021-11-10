@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<package >
+<package>
 	<metadata>
 		<id>Unicorn</id>
 		<version>$version$</version>
@@ -12,16 +12,34 @@
 		<description>Unicorn is a utility for Sitecore that solves the issue of moving templates, renderings, and other database items between Sitecore instances. This package contains both the Unicorn core library and the configuration for it, which is appropriate for web projects. Install Unicorn.Core if you only want the library.</description>
 		<copyright>Copyright 2020</copyright>
 		<tags>sitecore serialization</tags>
-	<dependencies>
-		<dependency id="Unicorn.Core" version="$version$" />
-		<dependency id="Rainbow" version="$rainbowversion$" />
-	</dependencies>
+		<dependencies>
+			<dependency id="Unicorn.Core" version="$version$"/>
+			<dependency id="Rainbow" version="$rainbowversion$"/>
+		</dependencies>
+		<!--
+		PackageReference support
+		Describes how assets will be restored when the pacakge is consumed
+		We want all assets to be used as content files
+		The include path is rooted to the contentFiles path
+	-->
+		<contentFiles>
+			<files buildAction="Content" copyToOutput="true" include="any/**/*"/>
+		</contentFiles>
 	</metadata>
 	<files>
-		<file src="..\..\src\Unicorn\Standard Config Files\*.config" target="content\App_Config\Include\Unicorn" />
-		<file src="..\..\src\Unicorn\Standard Config Files\*.disabled" target="content\App_Config\Include\Unicorn" />
-		<file src="..\..\src\Unicorn\Standard Config Files\*.example" target="content\App_Config\Include\Unicorn" />
-		<file src="readme.txt" target="" />
-		<file src="..\..\doc\PowerShell Remote Scripting\*.*" target="tools\PSAPI" />
+		<!--
+			PackageReference support
+			contentFiles\{language}\{tfm}
+			lanuguage - cs, vb etc. We use any as the assets are not language specific
+			tfm - net462,netstandard2.0 etc - We use any as the assets are not runtime specific
+		-->
+		<file src="..\..\src\Unicorn\Standard Config Files\*" target="contentFiles\any\any\App_Config\Include\Unicorn"/>
+		<!-- legacy content folder -->
+		<file src="..\..\src\Unicorn\Standard Config Files\*.config" target="content\App_Config\Include\Unicorn"/>
+		<file src="..\..\src\Unicorn\Standard Config Files\*.disabled" target="content\App_Config\Include\Unicorn"/>
+		<file src="..\..\src\Unicorn\Standard Config Files\*.example" target="content\App_Config\Include\Unicorn"/>
+		<!-- Other assets -->
+		<file src="readme.txt" target=""/>
+		<file src="..\..\doc\PowerShell Remote Scripting\*.*" target="tools\PSAPI"/>
 	</files>
 </package>
