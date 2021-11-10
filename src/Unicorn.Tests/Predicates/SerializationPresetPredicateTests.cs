@@ -129,6 +129,32 @@ namespace Unicorn.Tests.Predicates
 			predicate.Includes(mismatchedCasePathItem).IsIncluded.Should().Be(expectedResult);
 		}
 
+
+		//
+		// TEMPLATE ID INCLUSION/EXCLUSION
+		//
+
+		[Theory]
+		// TEMPLATE ID
+		[InlineData("/sitecore/allowed/excludedchild", "{3B4F2B85-778D-44F3-9B2D-BEFF1F3575E6}", false)]
+		[InlineData("/sitecore/allowed/includedchild", "{11111111-1111-1111-1111-111111111111}", true)]
+		// TEMPLATE ID - exclude
+		[InlineData("/sitecore/excluded/includedchild", "{3B4F2B85-778D-44F3-9B2D-BEFF1F3575E6}", true)]
+		[InlineData("/sitecore/excluded/excludedchild", "{11111111-1111-1111-1111-111111111111}", false)]
+		// EXCLUDE EXCEPT TEMPLATE
+		[InlineData("/sitecore/exclude-except-template/excluded", "{11111111-1111-1111-1111-111111111111}", false)]
+		[InlineData("/sitecore/exclude-except-template/included", "{A87A00B1-E6DB-45AB-8B54-636FEC3B5523}", true)]
+		[InlineData("/sitecore/exclude-except-template/another/included", "{FE5DD826-48C6-436D-B87A-7C4210C7413B}", true)]
+		public void Includes_MatchesExpectedTemplateIdResult(string testPath, string templateId, bool expectedResult)
+		{
+			var predicate = CreateTestPredicate(CreateTestConfiguration());
+			var item = CreateTestItem(testPath, "master", templateId);
+
+			var actualResult = predicate.Includes(item);
+
+			actualResult.IsIncluded.Should().Be(expectedResult);
+		}
+
 		//
 		// DATABASE INCLUSION/EXCLUSION
 		//
@@ -156,7 +182,7 @@ namespace Unicorn.Tests.Predicates
 
 			var roots = predicate.GetRootPaths();
 
-			roots.Length.Should().Be(16);
+			roots.Length.Should().Be(17);
 
 			var basicRoot = roots.FirstOrDefault(root => root.Name.Equals("Basic"));
 			basicRoot?.DatabaseName.Should().Be("master");

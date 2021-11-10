@@ -274,16 +274,25 @@ namespace Unicorn.Predicates
 
 			ExceptionRule[] exclusions = excludeNode.ChildNodes
 				.OfType<XmlElement>()
-				.Where(element => element.Name.Equals("except") && element.HasAttribute("name"))
+				.Where(element => element.Name.Equals("except") && element.HasAttribute("name") || element.HasAttribute("templateId"))
 				.Select(element =>
 				{
-					var name = GetExpectedAttribute(element, "name");
-					var excludeChildren = bool.FalseString.Equals(element.Attributes["includeChildren"]?.Value, StringComparison.InvariantCultureIgnoreCase);
-					return new ExceptionRule
+					// Exceptions should not use either Name or TemplateId, not both. Name will take precedence if both are present. 
+					var exceptionRule = new ExceptionRule();
+					var name = GetOptionalAttribute(element, "name");
+					if (!string.IsNullOrEmpty(name))
 					{
-						Name = name,
-						IncludeChildren = !excludeChildren
-					};
+						var excludeChildren = bool.FalseString.Equals(GetOptionalAttribute(element, "includeChildren"),
+							StringComparison.InvariantCultureIgnoreCase);
+						exceptionRule.Name = name;
+						exceptionRule.IncludeChildren = !excludeChildren;
+					}
+					else
+					{
+						exceptionRule.TemplateId = GetOptionalAttribute(element, "templateId");
+					}
+
+					return exceptionRule;
 				})
 				.ToArray();
 
