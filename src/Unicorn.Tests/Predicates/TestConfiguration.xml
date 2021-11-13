@@ -41,6 +41,17 @@
 		<exclude templateId="{11111111-1111-1111-1111-111111111111}" />
 		<!--all test items are created with the following templateId-->
 	</include>
+
+	<!-- 
+		EXCLUDE EXCEPT TEMPLATE: Include parent, exclude all children EXCEPT for specific ones
+		NOTE: template ID exceptions DO NOT support includeChildren
+	-->
+	<include name="Some children by template" database="master" path="/sitecore/exclude-except-template">
+		<exclude children="true">
+			<except templateId="{A87A00B1-E6DB-45AB-8B54-636FEC3B5523}" />
+			<except templateId="{FE5DD826-48C6-436D-B87A-7C4210C7413B}"  />
+		</exclude>
+	</include>
 	
 	<!-- 
 		NAME PATTERN: Exclude items whose name matches a regex pattern

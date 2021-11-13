@@ -23,8 +23,15 @@ namespace Unicorn.Tests.Configuration
 		[Fact]
 		public void ResolveConfigurationPath_ResolvesExpectedPath_WhenPathIsRelative()
 		{
+			// some test runners (e.g. Resharper) already have the trailing '\\' on BaseDirectory
+			var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+			if (!baseDirectory.EndsWith("\\"))
+			{
+				baseDirectory += "\\";
+			}
+
 			// HostingEnvironment returns null out of web context so root = empty string
-			ConfigurationUtility.ResolveConfigurationPath("~/../hello").Should().Be($"{AppDomain.CurrentDomain.BaseDirectory}\\..\\hello");
+			ConfigurationUtility.ResolveConfigurationPath("~/../hello").Should().Be($"{baseDirectory}..\\hello"); 
 		}
 	}
 }
