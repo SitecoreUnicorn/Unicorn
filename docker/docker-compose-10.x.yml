@@ -1,0 +1,47 @@
+services:
+  mssql:
+    isolation: ${ISOLATION}
+    image: ${SITECORE_DOCKER_REGISTRY}sitecore-xm1-mssql:${SITECORE_VERSION}
+    environment:
+      SA_PASSWORD: ${SQL_SA_PASSWORD}
+      SITECORE_ADMIN_PASSWORD: ${SITECORE_ADMIN_PASSWORD}
+      ACCEPT_EULA: "Y"
+    mem_limit: ${MEM_LIMIT_SQL:-2GB}
+    restart: always
+
+  cm:
+    isolation: ${ISOLATION}
+    image: ${REGISTRY}${COMPOSE_PROJECT_NAME}-xm1-cm:${VERSION:-latest}
+    build:
+      context: ./build/10.x/cm
+      args:
+        BASE_IMAGE: ${SITECORE_DOCKER_REGISTRY}sitecore-xm1-cm:${SITECORE_VERSION}
+        TOOLING_IMAGE: ${SITECORE_TOOLS_REGISTRY}sitecore-docker-tools-assets:${TOOLS_VERSION}
+    depends_on:
+      mssql:
+        condition: service_healthy
+    environment:
+      Sitecore_AppSettings_instanceNameMode:define: default
+      Sitecore_ConnectionStrings_Core: Data Source=mssql;Initial Catalog=Sitecore.Core;User ID=sa;Password=${SQL_SA_PASSWORD}
+      Sitecore_ConnectionStrings_Security: Data Source=mssql;Initial Catalog=Sitecore.Core;User ID=sa;Password=${SQL_SA_PASSWORD}
+      Sitecore_ConnectionStrings_Master: Data Source=mssql;Initial Catalog=Sitecore.Master;User ID=sa;Password=${SQL_SA_PASSWORD}
+      Sitecore_ConnectionStrings_Web: Data Source=mssql;Initial Catalog=Sitecore.Web;User ID=sa;Password=${SQL_SA_PASSWORD}
+      Sitecore_ConnectionStrings_ExperienceForms: Data Source=mssql;Initial Catalog=Sitecore.ExperienceForms;User ID=sa;Password=${SQL_SA_PASSWORD}
+      Sitecore_ConnectionStrings_Solr.Search: http://solr:8983/solr;solrCloud=true
+      Sitecore_ConnectionStrings_Sitecoreidentity.secret: ${SITECORE_IDSECRET}
+      Sitecore_AppSettings_Telerik.AsyncUpload.ConfigurationEncryptionKey: ${TELERIK_ENCRYPTION_KEY}
+      Sitecore_AppSettings_Telerik.Upload.ConfigurationHashKey: ${TELERIK_ENCRYPTION_KEY}
+      Sitecore_AppSettings_Telerik.Web.UI.DialogParametersEncryptionKey: ${TELERIK_ENCRYPTION_KEY}
+      Sitecore_License: 
+      MEDIA_REQUEST_PROTECTION_SHARED_SECRET: ${MEDIA_REQUEST_PROTECTION_SHARED_SECRET}
+      SITECORE_LICENSE_LOCATION: C:\license\license.xml
+      SITECORE_DEVELOPMENT_PATCHES: DevEnvOn,CustomErrorsOff,DebugOn,DiagnosticsOff,InitMessagesOff,RobotDetectionOff
+    volumes:
+      - .\deploy\cm:C:\deploy
+      - ${LICENSE_PATH}:C:\license
+    healthcheck:
+      test: ["CMD", "powershell", "-command", "C:/Healthchecks/Healthcheck.ps1"]
+      timeout: 300s
+    entrypoint: powershell -Command "& C:\tools\entrypoints\iis\Development.ps1"
+    mem_limit: ${MEM_LIMIT_CM:-4GB}
+    restart: always
