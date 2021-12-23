@@ -54,13 +54,30 @@ services:
 # ******************************************************************************************************************
   mssql10200:
     isolation: ${ISOLATION}
-    image: ${SITECORE_DOCKER_REGISTRY}sitecore-xm1-mssql:10.1-${OS_VERSION}
+    image: ${SITECORE_DOCKER_REGISTRY}nonproduction/mssql-developer:2017-10.2-${OS_VERSION}
     environment:
       SA_PASSWORD: ${SQL_SA_PASSWORD}
       SITECORE_ADMIN_PASSWORD: ${SITECORE_ADMIN_PASSWORD}
       ACCEPT_EULA: "Y"
     mem_limit: ${MEM_LIMIT_SQL:-2GB}
     restart: always
+
+  mssql10200-init:
+    isolation: ${ISOLATION}
+    image: ${SITECORE_DOCKER_REGISTRY}sitecore-xm1-mssql-init:10.2-${OS_VERSION}
+    environment:
+      SQL_SERVER: mssql10200
+      SQL_ADMIN_LOGIN: sa
+      SQL_ADMIN_PASSWORD: ${SQL_SA_PASSWORD}
+      SITECORE_ADMIN_PASSWORD: ${SITECORE_ADMIN_PASSWORD}
+      POST_DEPLOYMENT_WAIT_PERIOD: 300
+    healthcheck:
+      test: ["CMD", "powershell", "-command", "if ([System.Environment]::GetEnvironmentVariable('DatabasesDeploymentStatus', 'Machine') -eq 'Complete') { exit 0 } else { exit 1}"]
+      start_period: 300s
+      interval: 5s
+    depends_on:
+      mssql10200:
+        condition: service_healthy
 
   cm10200:
     isolation: ${ISOLATION}
@@ -72,7 +89,7 @@ services:
         BASE_IMAGE: ${SITECORE_DOCKER_REGISTRY}sitecore-xm1-cm:10.2.0-${OS_VERSION}
         TOOLING_IMAGE: ${SITECORE_TOOLS_REGISTRY}sitecore-docker-tools-assets:${TOOLS_VERSION}
     depends_on:
-      mssql10200:
+      mssql10200-init:
         condition: service_healthy
     ports:
       - "10200:80"
