@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<configuration xmlns:xdt="http://schemas.microsoft.com/XML-Document-Transform">
+    <system.web>
+        <sessionState cookieSameSite="Lax" xdt:Transform="SetAttributes" />
+        <httpCookies sameSite="Lax" requireSSL="false" xdt:Transform="SetAttributes" />
+    </system.web>
+</configuration>

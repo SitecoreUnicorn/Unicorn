@@ -10,3 +10,13 @@ SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPref
 
 # Copy development tools and entrypoint
 COPY --from=tooling \tools\ \tools\
+
+# Copy in additional tooling
+COPY .\tools\ \tools\dev-patches\
+
+# Disable Identity Server
+# Source: https://mskutta.github.io/2020/11/07/sitecore-how-to-disable-identity-server/
+RUN Copy-Item -Path 'C:\\inetpub\\wwwroot\\App_Config\\Include\\Examples\\Sitecore.Owin.Authentication.IdentityServer.Disabler.config.example' `
+              -Destination 'C:\\inetpub\\wwwroot\\App_Config\\Include\\Sitecore.Owin.Authentication.IdentityServer.Disabler.config';
+RUN Copy-Item -Path 'C:\\inetpub\\wwwroot\\App_Config\\Include\\Examples\\Sitecore.Owin.Authentication.Disabler.config.example' `
+              -Destination 'C:\\inetpub\\wwwroot\\App_Config\\Include\\Sitecore.Owin.Authentication.Disabler.config';
