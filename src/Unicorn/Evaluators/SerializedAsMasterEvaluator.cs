@@ -136,6 +136,13 @@ namespace Unicorn.Evaluators
 				message.Append($"<br><b>Physical path</b>: <span style=\"font-family: consolas, monospace\">{existingTargetItem.SerializedItemId}</span>");
 			}
 
+			var configNode = Sitecore.Configuration.Factory.GetConfigNode("dataProviders/unicorn");
+			if (IsDevMode && configNode == null)
+			{
+				message.Append("<br><br><b style=\"color: red; \">The Unicorn DataProvider is not configured. Changes will not be saved to the local file system. Please enable the appropriate Unicorn.DataProvider.config for your Sitecore version.</b><br>");
+				message.Append("<b style=\"color: red; \">See this github <a target=\"blank\" href=\"https://github.com/SitecoreUnicorn/Unicorn/issues/423\">issue</a> for details.</b><br>");
+			}
+
 			return new Warning(title, message.ToString());
 		}
 
